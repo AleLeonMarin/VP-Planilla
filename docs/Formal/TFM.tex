@@ -16,6 +16,8 @@
 % -------------------------------
 \input{include/configuracion}
 \usetikzlibrary{positioning, arrows.meta, shadows, calc}
+\usepackage{pdfpages}
+
 
 % Documento
 \begin{document}
@@ -138,9 +140,33 @@
 \appendix
 \chapter{Anexos}
 \section{Anexo 1}
+Diagrama de Base de datos
 \section{Anexo 2}
+Diagrama de clases
 \section{Anexo 3}
+Casos de prueba
 \section{Anexo 4}
+Fragmentos de codigo
 \section{Anexo 5}
+Pantallas del sistema
+\section{Anexo 6}
+A continuación se incluye la minuta oficial de la reunión con el patrocinador, según el formato establecido por la cátedra.
+\includepdf[pages=-]{media/minuta1.pdf}
+\section{Anexo 7}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.20\textwidth]{media/Logo.png}
+	\caption{Logo de la empresa}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.20\textwidth]{media/Equipo.jpg}
+	\caption{Personal de la empresa}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.20\textwidth]{media/Local.jpg}
+	\caption{Personal de la empresa}
+\end{figure}
 
 \end{document}

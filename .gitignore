@@ -10,5 +10,6 @@
 *.synctex.gz
 *.fls
 *.fdb_latexmk
-*.pdf
+/docs/Formal/TFM.pdf
 *.txt
+*.synctex(busy)
