@@ -600,7 +600,7 @@ En definición
 	\begin{tabular}{|p{5cm}|p{9cm}|}
 		\hline
 		\textbf{Especificación de Caso de Uso} & CU05 - Calcular nómina \\ \hline
-		\textbf{Versión}                       & 1.0                    \\ \hline
+		\textbf{Versión}                       & 1.1                    \\ \hline
 		\textbf{CU de Negocio}                 & Cálculo de Salarios    \\ \hline
 		\textbf{Fecha}                         & 08/04/2025             \\ \hline
 		\textbf{Código del Caso de Uso}        & CU05                   \\ \hline
@@ -608,13 +608,14 @@ En definición
 \end{table}
 
 \subsubsection*{Descripción}
-Este caso de uso permite al administrador calcular la nómina mensual de todos los empleados, tomando en cuenta los eventos laborales registrados, salario base, deducciones obligatorias y horas trabajadas.
+Este caso de uso permite al administrador calcular la nómina mensual de todos los empleados, tomando en cuenta los eventos laborales registrados, salario base, deducciones obligatorias, horas trabajadas y, en el mes de diciembre, el cálculo del aguinaldo conforme a la legislación laboral costarricense.
 
 \subsubsection*{Precondiciones}
 \begin{itemize}
 	\item El usuario debe haber iniciado sesión.
 	\item Deben existir empleados registrados en el sistema.
 	\item Los eventos laborales deben estar actualizados.
+	\item En diciembre, deben estar disponibles los registros de salario bruto de los últimos 12 meses para cada empleado.
 \end{itemize}
 
 \subsubsection*{Poscondiciones}
@@ -622,6 +623,7 @@ Este caso de uso permite al administrador calcular la nómina mensual de todos l
 	\item La nómina mensual queda registrada.
 	\item Se generan comprobantes de pago individuales por empleado.
 	\item Se habilita la generación de reportes para instituciones oficiales.
+	\item Si el cálculo corresponde a diciembre, se incluye el aguinaldo como una línea separada en el comprobante de pago.
 \end{itemize}
 
 \subsubsection*{Referencias}
@@ -639,6 +641,7 @@ CU02, CU03, CU04
 		\textbf{Acción del actor}                            & \textbf{Respuesta del sistema}                              \\ \hline
 		El usuario selecciona el mes y año a calcular        & El sistema carga los datos de empleados y eventos laborales \\ \hline
 		El usuario confirma el cálculo                       & El sistema realiza el cálculo automático de salarios        \\ \hline
+		Si el mes es diciembre                               & El sistema calcula el aguinaldo como promedio anual de salarios brutos y lo agrega al resumen final \\ \hline
 		El sistema muestra un resumen con los montos totales & Se habilita la opción de guardar y emitir comprobantes      \\ \hline
 	\end{tabular}
 \end{table}
@@ -666,9 +669,10 @@ CU02, CU03, CU04
 	\caption{Excepciones del caso de uso CU05}
 	\begin{tabular}{|p{4cm}|p{6cm}|p{6cm}|}
 		\hline
-		\textbf{Código Excepción} & \textbf{Evento}              & \textbf{Excepción}                     \\ \hline
-		E001                      & No hay empleados activos     & Mostrar mensaje de error               \\ \hline
-		E002                      & Datos incompletos en eventos & Mostrar advertencia y bloquear cálculo \\ \hline
+		\textbf{Código Excepción} & \textbf{Evento}              & \textbf{Excepción}                                                                 \\ \hline
+		E001                      & No hay empleados activos     & Mostrar mensaje de error                                                           \\ \hline
+		E002                      & Datos incompletos en eventos & Mostrar advertencia y bloquear cálculo                                             \\ \hline
+		E003                      & Datos de salario anual incompletos (diciembre) & Mostrar advertencia: "No es posible calcular el aguinaldo por falta de información" \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -683,7 +687,7 @@ En definición
 	\begin{tabular}{|p{5cm}|p{9cm}|}
 		\hline
 		\textbf{Especificación de Caso de Uso} & CU06 - Generar reporte para la CCSS \\ \hline
-		\textbf{Versión}                       & 1.0                                 \\ \hline
+		\textbf{Versión}                       & 1.1                                 \\ \hline
 		\textbf{CU de Negocio}                 & Generación de reportes oficiales    \\ \hline
 		\textbf{Fecha}                         & 10/04/2025                          \\ \hline
 		\textbf{Código del Caso de Uso}        & CU06                                \\ \hline
@@ -691,19 +695,21 @@ En definición
 \end{table}
 
 \subsubsection*{Descripción}
-Este caso de uso permite al administrador generar el reporte oficial de la nómina de un mes determinado, en el formato requerido por la Caja Costarricense del Seguro Social (CCSS). El reporte puede exportarse en PDF o Excel.
+Este caso de uso permite al administrador generar el reporte oficial de la nómina de un mes determinado, en el formato requerido por la Caja Costarricense del Seguro Social (CCSS). El reporte puede exportarse en PDF o Excel. Si el mes seleccionado es diciembre, el sistema incluirá el aguinaldo correspondiente como una línea separada en el reporte, conforme a lo estipulado por la normativa nacional.
 
 \subsubsection*{Precondiciones}
 \begin{itemize}
 	\item El usuario debe haber iniciado sesión como administrador.
 	\item Debe existir una nómina calculada para el mes seleccionado.
 	\item Los datos de empleados y deducciones deben estar actualizados.
+	\item Si el mes es diciembre, debe haberse calculado el aguinaldo.
 \end{itemize}
 
 \subsubsection*{Poscondiciones}
 \begin{itemize}
 	\item Se genera un archivo descargable con el reporte oficial.
 	\item El evento queda registrado en la bitácora del sistema.
+	\item Si el mes es diciembre, el reporte incluye una sección específica para el aguinaldo.
 \end{itemize}
 
 \subsubsection*{Referencias}
@@ -718,6 +724,7 @@ CU01, CU05, RS01
 		\textbf{Acción del actor}                          & \textbf{Respuesta del sistema}                                 \\ \hline
 		El administrador selecciona “Generar reporte CCSS” & El sistema muestra el formulario de selección de mes y formato \\ \hline
 		El administrador selecciona el mes y formato       & El sistema valida que exista nómina registrada para ese mes    \\ \hline
+		Si el mes es diciembre                             & El sistema verifica la existencia del cálculo de aguinaldo y lo incluye en el reporte \\ \hline
 		El administrador hace clic en “Generar”            & El sistema genera el archivo y lo presenta para descarga       \\ \hline
 	\end{tabular}
 \end{table}
@@ -731,6 +738,7 @@ CU01, CU05, RS01
 		\textbf{Acción del actor}                               & \textbf{Respuesta del sistema}                                             \\ \hline
 		El administrador selecciona un mes sin nómina calculada & El sistema muestra advertencia: "No hay datos de nómina para este periodo" \\ \hline
 		El administrador selecciona un formato no soportado     & El sistema muestra error: "Formato de exportación no disponible"           \\ \hline
+		En diciembre, no se ha calculado el aguinaldo           & El sistema muestra advertencia: "No se ha calculado el aguinaldo para este periodo" \\ \hline
 	\end{tabular}
 \end{table}
 
@@ -745,12 +753,12 @@ CU01, CU05, RS01
 		\textbf{Código Excepción} & \textbf{Evento}                    & \textbf{Excepción}                                                 \\ \hline
 		E001                      & Error al generar el archivo        & Mostrar mensaje: 'No se pudo generar el archivo, intente de nuevo' \\ \hline
 		E002                      & Plantilla de reporte no encontrada & Mostrar mensaje: 'Plantilla de reporte dañada o ausente'           \\ \hline
+		E003                      & Aguinaldo no disponible en diciembre & Mostrar mensaje: 'Falta el cálculo del aguinaldo para este periodo' \\ \hline
 	\end{tabular}
 \end{table}
 
 \subsubsection*{Estado}
 En definición
-
 
 \subsubsection*{Especificación de Caso de Uso: CU07 - Consultar comprobante de pago}
 

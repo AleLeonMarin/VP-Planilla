@@ -277,58 +277,61 @@ Estas historias se utilizarán como base para guiar el diseño, implementación 
 \end{table}
 
 
-
 \begin{table}[h]
 	\centering
 	\caption{Historia de Usuario HU-03}
 	\begin{tabular}{|p{5cm}|p{9cm}|}
 		\hline
 		\textbf{Número:}                          & HU-03                                          \\ \hline
-		\textbf{Nombre:}                          & Visualización y entrega del historial de pagos \\ \hline
+		\textbf{Nombre:}                          & Entrega automática de comprobantes de pago     \\ \hline
 		\textbf{Usuario:}                         & Colaborador                                    \\ \hline
-		\textbf{Modificación de Historia Número:} & Nueva                                          \\ \hline
+		\textbf{Modificación de Historia Número:} & Actualización - acceso por correo electrónico  \\ \hline
 		\textbf{Prioridad en Negocio:}            & Media                                          \\ \hline
 		\textbf{Riesgo en Desarrollo:}            & Bajo                                           \\ \hline
 		\textbf{Iteración Asignada:}              & Sprint 5: Cálculo de Nóminas                   \\ \hline
 		\textbf{Puntos Estimados:}                & 5                                              \\ \hline
 		\textbf{Puntos Reales:}                   & --                                             \\ \hline
 		\textbf{Descripción:}                     &
-		El sistema permitirá a los colaboradores consultar su historial de pagos desde su perfil. Cada entrada mostrará la fecha del pago, el monto neto recibido, y un enlace para visualizar o descargar el comprobante oficial correspondiente.
+		El sistema enviará automáticamente al colaborador un comprobante de pago por correo electrónico cada vez que se procese una nómina. El comprobante incluirá el monto neto recibido, fecha del pago, deducciones y cualquier concepto adicional, como aguinaldo.
 
-		Además, por cumplimiento legal, el sistema enviará automáticamente una copia del comprobante de pago al correo electrónico registrado de cada colaborador al momento de realizar el cálculo de nómina.
+		El colaborador no accede al sistema. El correo de destino deberá haber sido previamente registrado por un administrador en su ficha de empleado.
 
-		Las operaciones involucradas en este módulo consideran:
+		\textbf{CRUD:}
 		\begin{itemize}
-			\item \textbf{Crear:} El sistema generará un nuevo registro de pago cada vez que se procese una nómina.
-			\item \textbf{Leer:} Los colaboradores pueden consultar su historial filtrando por rango de fechas.
-			\item \textbf{Actualizar:} No aplica para el colaborador. Solo los administradores pueden rectificar datos desde el módulo de nómina.
-			\item \textbf{Eliminar:} Los registros no podrán ser eliminados por los usuarios. Solo se podrán ocultar si hay rectificación con auditoría.
+			\item \textbf{Crear:} El sistema crea el comprobante al procesar la nómina.
+			\item \textbf{Leer:} No aplica para el colaborador. El sistema genera y envía automáticamente el comprobante.
+			\item \textbf{Actualizar:} El administrador podrá corregir un comprobante si hay rectificación en la nómina.
+			\item \textbf{Eliminar:} No se eliminan comprobantes. Si es necesario, se envía una versión corregida.
 		\end{itemize}
 		\\ \hline
 		\textbf{Observaciones:}                   &
-		Se debe asegurar la confidencialidad de los datos financieros mediante autenticación de usuario y cifrado de información. El comprobante de pago deberá cumplir con los requisitos legales del Ministerio de Trabajo y será enviado automáticamente al correo del colaborador una vez generado.
+		Todo comprobante será enviado al correo proporcionado y validado por el colaborador al ser registrado. El contenido del correo será cifrado si la organización así lo define, y deberá cumplir con los lineamientos del Ministerio de Trabajo.
 		\\ \hline
 	\end{tabular}
 \end{table}
 
 
 
+
+
 \begin{table}[h]
 	\centering
 	\caption{Historia de Usuario HU-04}
-	\begin{tabular}{|p{5cm}|p{9cm}|}
+	\begin{tabular}{|p{5cm}|p{10cm}|}
 		\hline
 		\textbf{Número:}                          & HU-04                                      \\ \hline
 		\textbf{Nombre:}                          & Generación y gestión de reportes de nómina \\ \hline
 		\textbf{Usuario:}                         & Gerente                                    \\ \hline
-		\textbf{Modificación de Historia Número:} & Nueva                                      \\ \hline
+		\textbf{Modificación de Historia Número:} & Actualización - incluye aguinaldo          \\ \hline
 		\textbf{Prioridad en Negocio:}            & Alta                                       \\ \hline
 		\textbf{Riesgo en Desarrollo:}            & Alto                                       \\ \hline
 		\textbf{Iteración Asignada:}              & Sprint 6: Generación de Reportes           \\ \hline
 		\textbf{Puntos Estimados:}                & 5                                          \\ \hline
 		\textbf{Puntos Reales:}                   & --                                         \\ \hline
 		\textbf{Descripción:}                     &
-		El sistema permitirá al gerente generar, visualizar y gestionar reportes de nómina. Desde el módulo correspondiente, el usuario podrá seleccionar el mes deseado y obtener un archivo PDF que incluya detalles de salarios brutos, deducciones, aportes patronales y salario neto total.
+		El sistema permitirá al gerente generar, visualizar y gestionar reportes de nómina. Desde el módulo correspondiente, el usuario podrá seleccionar el mes deseado y obtener un archivo PDF que incluya detalles de salarios brutos, deducciones, aportes patronales y salario neto total. 
+
+		En el mes de diciembre, el reporte incluirá una línea separada con el cálculo del aguinaldo de cada empleado, conforme a la normativa laboral vigente.
 
 		Las operaciones CRUD asociadas a esta historia son:
 		\begin{itemize}
@@ -340,10 +343,11 @@ Estas historias se utilizarán como base para guiar el diseño, implementación 
 		Todos los reportes deberán conservar trazabilidad en la bitácora del sistema y permitir exportación a PDF.
 		\\ \hline
 		\textbf{Observaciones:}                   &
-		Esta funcionalidad estará restringida exclusivamente a usuarios con rol de Gerente. El sistema debe validar la autenticación y el rol activo antes de permitir acceso. Todos los archivos generados deberán protegerse mediante encriptación y almacenamiento seguro.
+		Esta funcionalidad estará restringida exclusivamente a usuarios con rol de Gerente. El sistema debe validar la autenticación y el rol activo antes de permitir acceso. Todos los archivos generados deberán protegerse mediante encriptación y almacenamiento seguro. En el caso del aguinaldo, el sistema deberá asegurar que los datos provienen del cálculo realizado previamente, y mostrar el monto correspondiente de forma clara y diferenciada.
 		\\ \hline
 	\end{tabular}
 \end{table}
+
 
 \begin{table}[h]
 	\centering
@@ -443,29 +447,31 @@ Estas historias se utilizarán como base para guiar el diseño, implementación 
 
 \subsection*{Especificación de Requerimientos de Software (SRS)}
 \input{elements/SRS.tex}
-
+\newpage
 \subsection{Cronograma de Desarrollo y Pruebas}
 
 \begin{table}[h]
 	\centering
-	\caption{Cronograma de Desarrollo y Pruebas del Proyecto}
 	\renewcommand{\arraystretch}{1.2}
-	\begin{tabular}{|p{4.2cm}|p{2.5cm}|p{2.5cm}|p{2.2cm}|p{3.5cm}|}
+	\begin{tabular}{|p{5.5cm}|p{3cm}|p{3cm}|p{3.5cm}|}
 		\hline
-		\textbf{Sprint / Actividad}             & \textbf{Fecha de Inicio} & \textbf{Fecha de Finalización} & \textbf{Duración} & \textbf{Periodo}                \\ \hline
-		Sprint 1: Setup del Proyecto            & 15 mayo 2025             & 31 mayo 2025                   & 2 semanas         & Mayo 2025 (segunda mitad)       \\ \hline
-		Sprint 2: Módulo de Login               & 1 junio 2025             & 15 junio 2025                  & 2 semanas         & Junio 2025 (primera mitad)      \\ \hline
-		Sprint 3: Módulo de Interfaz de Usuario & 16 junio 2025            & 15 julio 2025                  & 4 semanas         & Junio - Julio 2025              \\ \hline
-		Sprint 4: Admin. de Eventos Laborales   & 16 julio 2025            & 15 agosto 2025                 & 4 semanas         & Julio - Agosto 2025             \\ \hline
-		Sprint 5: Cálculo de Nóminas            & 16 agosto 2025           & 15 septiembre 2025             & 4 semanas         & Agosto - Septiembre 2025        \\ \hline
-		Sprint 6: Generación de Reportes        & 16 septiembre 2025       & 30 septiembre 2025             & 2 semanas         & Septiembre 2025 (segunda mitad) \\ \hline
-		Sprint 7: Módulo de Seguridad           & 1 octubre 2025           & 31 octubre 2025                & 4 semanas         & Octubre 2025                    \\ \hline
-		Sprint 8: Pruebas y Entrega             & 1 febrero 2026           & 30 junio 2026                  & 5 meses           & Febrero - Junio 2026            \\ \hline
+		\textbf{Sprint / Actividad}             & \textbf{Fecha de Inicio} & \textbf{Fecha de Finalización} & \textbf{Semestre Académico}         \\ \hline
+		Sprint 1: Setup del Proyecto            & 15 mayo 2025             & 31 mayo 2025                   & I Semestre 2025                      \\ \hline
+		Sprint 2: Módulo de Login               & 1 junio 2025             & 15 junio 2025                  & I Semestre 2025                      \\ \hline
+		Sprint 3: Módulo de Interfaz de Usuario & 16 junio 2025            & 15 julio 2025                  & Intersemestral 2025                  \\ \hline
+		Sprint 4: Admin. de Eventos Laborales   & 16 julio 2025            & 15 agosto 2025                 & II Semestre 2025                     \\ \hline
+		Sprint 5: Cálculo de Nóminas            & 16 agosto 2025           & 15 septiembre 2025             & II Semestre 2025                     \\ \hline
+		Sprint 6: Generación de Reportes        & 16 septiembre 2025       & 30 septiembre 2025             & II Semestre 2025                     \\ \hline
+		Sprint 7: Módulo de Seguridad           & 1 octubre 2025           & 31 octubre 2025                & II Semestre 2025                     \\ \hline
 		\rowcolor{gray!10}
-		\textbf{Etapa de Pruebas Funcionales}   & 1 febrero 2026           & 30 abril 2026                  & 3 meses           & Febrero - Abril 2026            \\ \hline
+		\textbf{Pausa por vacaciones}           & 1 noviembre 2025         & 31 enero 2026                  & Vacaciones institucionales           \\ \hline
+		Sprint 8: Pruebas y Entrega             & 1 febrero 2026           & 30 junio 2026                  & I Semestre 2026                      \\ \hline
 		\rowcolor{gray!10}
-		\textbf{Revisión y Documentación Final} & 1 mayo 2026              & 30 junio 2026                  & 2 meses           & Mayo - Junio 2026               \\ \hline
+		\textbf{Etapa de Pruebas Funcionales}   & 1 febrero 2026           & 30 abril 2026                  & I Semestre 2026                      \\ \hline
+		\rowcolor{gray!10}
+		\textbf{Revisión y Documentación Final} & 1 mayo 2026              & 30 junio 2026                  & I Semestre 2026                      \\ \hline
 	\end{tabular}
+	\caption{Cronograma de Desarrollo y Pruebas del Proyecto por Semestre Académico}
 \end{table}
 
 

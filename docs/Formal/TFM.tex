@@ -19,6 +19,7 @@
 \input{include/configuracion}
 \usetikzlibrary{positioning, arrows.meta, shadows, calc}
 \usepackage{pdfpages}
+\usepackage{adjustbox} % Asegúrate de incluir esto en el preámbulo
 
 
 % Documento
@@ -144,21 +145,29 @@
 % -------------------------------
 
 \chapter{\textbf{Capitulo XI: Anexos}}
-\section{Anexos}
 \section*{Anexo 1}
-Diagrama de Base de datos
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.50\textwidth]{media/VP Planillas Database.png}
+	\caption{Diagrama de Base de datos del sistema}
+\end{figure}
+
+\newpage
 \section*{Anexo 2}
-Diagrama de clases
+\includepdf[pages=-]{media/VP Planillas Database Schema.pdf}
+\newpage
 \section*{Anexo 3}
-Casos de prueba
+\input{elements/dataDictionary}
 \section*{Anexo 4}
-Fragmentos de codigo
+Casos de prueba
 \section*{Anexo 5}
-Pantallas del sistema
+Fragmentos de codigo
 \section*{Anexo 6}
+Pantallas del sistema
+\section*{Anexo 7}
 A continuación se incluye la minuta oficial de la reunión con el patrocinador, según el formato establecido por la cátedra.
 \includepdf[pages=-]{media/minuta1.pdf}
-\section*{Anexo 7}
+\section*{Anexo 8}
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.20\textwidth]{media/Logo.png}

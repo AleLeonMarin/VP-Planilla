@@ -1,0 +1,362 @@
+\section{Diccionario de Datos: Enterprise Structure}
+\begin{center}
+	\subsection{Tabla \texttt{vpg\_enterprise}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único de la empresa   \\
+		name           & varchar(50)           & NOT NULL               & Nombre de la empresa                \\
+		image          & bytea                 & NOT NULL               & Logo o imagen asociada a la empresa \\
+		creation\_date & date                  & NOT NULL               & Fecha de creación de la empresa     \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                \\
+		\hline
+	\end{tabular}
+
+	\subsection{Tabla \texttt{vpg\_branches}}
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}               \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único de la sucursal \\
+		branch\_name   & varchar(50)           & NOT NULL               & Nombre de la sucursal              \\
+		location       & varchar(100)          & NOT NULL               & Ubicación de la sucursal           \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro               \\
+		\hline
+	\end{tabular}
+
+	\subsection{Tabla \texttt{vpg\_enterprise\_branch}}
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}     \\
+		\hline
+		enterprise\_id & integer               & FK, NOT NULL           & Referencia a la empresa  \\
+		branch\_id     & integer               & FK, NOT NULL           & Referencia a la sucursal \\
+		\hline
+	\end{tabular}
+
+	\subsection{Tabla \texttt{vpg\_branch\_employee}}
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}     \\
+		\hline
+		branch\_id     & integer               & FK, NOT NULL           & Referencia a la sucursal \\
+		employee\_id   & integer               & FK, NOT NULL           & Referencia al empleado   \\
+		\hline
+	\end{tabular}
+\end{center}
+
+
+\section{Diccionario de Datos: Employee Management}
+\begin{center}
+	\subsection{Tabla \texttt{vpg\_positions}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}            \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del puesto  \\
+		name           & varchar(50)           & NOT NULL               & Nombre del puesto               \\
+		description    & text                  & NOT NULL               & Descripción general del puesto  \\
+		base\_salary   & decimal(10,2)         & NOT NULL               & Salario base asociado al puesto \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro            \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_employees}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                                    \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del empleado                        \\
+		first\_name    & varchar(50)           & NOT NULL               & Primer nombre del empleado                              \\
+		last\_name     & varchar(50)           & NOT NULL               & Primer apellido del empleado                            \\
+		middle\_name   & varchar(50)           & NOT NULL               & Segundo nombre/apellido del empleado                    \\
+		national\_id   & varchar(30)           & NOT NULL               & Cédula de identidad                                     \\
+		email          & varchar(100)          & NOT NULL               & Correo electrónico institucional                        \\
+		position\_id   & integer               & FK, NOT NULL           & Referencia al puesto                                    \\
+		hire\_date     & date                  & NOT NULL               & Fecha de contratación                                   \\
+		status         & char(1)               & NOT NULL               & Estado laboral: A (Activo), I (Inactivo), T (Terminado) \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                                    \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_employee\_documents}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador del documento         \\
+		employee\_id   & integer               & FK, NOT NULL           & Referencia al empleado              \\
+		file\_path     & varchar(255)          & NOT NULL               & Ruta de almacenamiento del archivo  \\
+		document\_type & varchar(50)           & NOT NULL               & Tipo de documento cargado           \\
+		uploaded\_at   & timestamp             & NOT NULL               & Fecha y hora de carga del documento \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+\end{center}
+\section{Diccionario de Datos: Payroll and Deductions Management}
+\begin{center}
+	\subsection{Tabla \texttt{vpg\_payroll\_types}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                                        \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del tipo de planilla                    \\
+		name           & varchar(50)           & NOT NULL               & Nombre del tipo de planilla (ej. Ordinaria, Extraordinaria) \\
+		description    & text                  & NOT NULL               & Descripción detallada del tipo de planilla                  \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                                        \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_payrolls}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo}    & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                          \\
+		\hline
+		id                & integer               & PK, NOT NULL           & Identificador único de la planilla            \\
+		payroll\_type\_id & integer               & FK, NOT NULL           & Referencia al tipo de planilla                \\
+		period\_start     & date                  & NOT NULL               & Fecha de inicio del periodo de la planilla    \\
+		period\_end       & date                  & NOT NULL               & Fecha de fin del periodo de la planilla       \\
+		payment\_date     & date                  & NOT NULL               & Fecha de pago de la planilla                  \\
+		status            & varchar(20)           & NOT NULL               & Estado de la planilla (ej. pendiente, pagada) \\
+		version           & integer               & DEFAULT 1, NOT NULL    & Versión del registro                          \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_payroll\_employee}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo}    & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}           \\
+		\hline
+		payroll\_id       & integer               & FK, NOT NULL           & Referencia a la planilla       \\
+		employee\_id      & integer               & FK, NOT NULL           & Referencia al empleado         \\
+		gross\_salary     & decimal(10,2)         & NOT NULL               & Salario bruto del empleado     \\
+		total\_deductions & decimal(10,2)         & NOT NULL               & Total de deducciones aplicadas \\
+		net\_salary       & decimal(10,2)         & NOT NULL               & Salario neto recibido          \\
+		version           & integer               & DEFAULT 1, NOT NULL    & Versión del registro           \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_deductions}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                       \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único de la deducción        \\
+		name           & varchar(100)          & NOT NULL               & Nombre de la deducción (ej. CCSS, embargo) \\
+		description    & text                  & NOT NULL               & Descripción detallada de la deducción      \\
+		percentage     & decimal(5,2)          &                        & Porcentaje a aplicar sobre el salario      \\
+		fixed\_amount  & decimal(10,2)         &                        & Monto fijo de la deducción si aplica       \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                       \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_employee\_deduction}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}               \\
+		\hline
+		employee\_id   & integer               & FK, NOT NULL           & Referencia al empleado             \\
+		deduction\_id  & integer               & FK, NOT NULL           & Referencia a la deducción aplicada \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_bonuses}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}               \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del bono       \\
+		employee\_id   & integer               & FK, NOT NULL           & Referencia al empleado beneficiado \\
+		description    & varchar(255)          & NOT NULL               & Descripción o motivo del bono      \\
+		amount         & decimal(10,2)         & NOT NULL               & Monto del bono otorgado            \\
+		granted\_at    & date                  & NOT NULL               & Fecha en que se otorgó el bono     \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}
+\section{Diccionario de Datos: Users and Access Control}
+\begin{center}
+
+
+	\subsection{Tabla \texttt{vpg\_users}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                          \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del usuario               \\
+		first\_name    & varchar(50)           & NOT NULL               & Nombre del usuario                            \\
+		last\_name     & varchar(50)           & NOT NULL               & Apellido del usuario                          \\
+		middle\_name   & varchar(50)           & NOT NULL               & Segundo nombre o apellido                     \\
+		national\_id   & varchar(30)           & NOT NULL               & Cédula o identificación del usuario           \\
+		email          & varchar(100)          & NOT NULL               & Correo electrónico del usuario                \\
+		username       & varchar(50)           & NOT NULL               & Nombre de usuario para login                  \\
+		password       & varchar(255)          & NOT NULL               & Contraseña (almacenada de forma segura)       \\
+		role           & varchar(20)           & NOT NULL               & Rol del usuario (ej. administrador, operador) \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                          \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_audit\_logs}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                            \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del log de auditoría        \\
+		user\_id       & integer               & FK, NOT NULL           & Referencia al usuario que realizó la acción     \\
+		action         & varchar(100)          & NOT NULL               & Tipo de acción (INSERT, UPDATE, DELETE)         \\
+		entity         & varchar(100)          & NOT NULL               & Nombre de la entidad afectada                   \\
+		entity\_id     & integer               & NOT NULL               & Identificador del registro afectado             \\
+		timestamp      & timestamp             & NOT NULL               & Fecha y hora de la acción                       \\
+		details        & text                  &                        & Detalles adicionales sobre el cambio registrado \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}
+\section{Diccionario de Datos: Clock / Attendance Management}
+\begin{center}
+
+	\subsection{Tabla \texttt{vpg\_clock\_logs}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                          \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del registro de marcación \\
+		employee\_id   & integer               & FK, NOT NULL           & Referencia al empleado que marcó              \\
+		timestamp      & timestamp             & NOT NULL               & Fecha y hora de la marcación                  \\
+		log\_type      & varchar(10)           & NOT NULL               & Tipo de marca (ej. IN, OUT)                   \\
+		remarks        & text                  &                        & Observaciones adicionales (opcional)          \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                          \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}
+\section{Diccionario de Datos: Labor Events Management}
+\begin{center}
+
+	\subsection{Tabla \texttt{vpg\_labor\_events}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                   \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del evento laboral \\
+		name           & varchar(100)          & NOT NULL               & Nombre del evento laboral              \\
+		description    & text                  & NOT NULL               & Descripción detallada del evento       \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                   \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_employee\_labor\_event}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo}   & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                          \\
+		\hline
+		id               & integer               & PK, NOT NULL           & Identificador del evento asignado al empleado \\
+		employee\_id     & integer               & FK, NOT NULL           & Referencia al empleado involucrado            \\
+		labor\_event\_id & integer               & FK, NOT NULL           & Referencia al evento laboral                  \\
+		start\_date      & date                  & NOT NULL               & Fecha de inicio del evento                    \\
+		end\_date        & date                  &                        & Fecha de finalización del evento (si aplica)  \\
+		status           & varchar(20)           & NOT NULL               & Estado del evento (ej. activo, finalizado)    \\
+		version          & integer               & DEFAULT 1, NOT NULL    & Versión del registro                          \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}
+\section{Diccionario de Datos: Report Management}
+\begin{center}
+	\subsection{Tabla \texttt{vpg\_report\_logs}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                                \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único del reporte generado            \\
+		report\_type   & varchar(50)           & NOT NULL               & Tipo de reporte (ej. CCSS, MTSS, Resumen Planilla)  \\
+		generated\_by  & integer               & FK, NOT NULL           & Usuario que generó el reporte                       \\
+		generated\_at  & timestamp             & NOT NULL               & Fecha y hora de generación                          \\
+		period\_start  & date                  & NOT NULL               & Fecha de inicio del periodo reportado               \\
+		period\_end    & date                  & NOT NULL               & Fecha de fin del periodo reportado                  \\
+		file\_path     & varchar(255)          & NOT NULL               & Ruta de almacenamiento del archivo                  \\
+		status         & varchar(20)           & NOT NULL               & Estado del reporte (ej. generado, enviado, fallido) \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                                \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_report\_versions}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo}  & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                            \\
+		\hline
+		id              & integer               & PK, NOT NULL           & Identificador de la versión del reporte         \\
+		report\_log\_id & integer               & FK, NOT NULL           & Referencia al reporte principal                 \\
+		created\_at     & timestamp             & NOT NULL               & Fecha de creación de esta versión               \\
+		file\_path      & varchar(255)          & NOT NULL               & Ruta del archivo correspondiente a esta versión \\
+		remarks         & text                  &                        & Comentarios o notas adicionales                 \\
+		\hline
+	\end{tabular}
+	\normalsize
+
+	\subsection{Tabla \texttt{vpg\_report\_targets}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                      \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador de la institución receptora \\
+		institution    & varchar(100)          & NOT NULL               & Nombre de la institución (ej. CCSS, MTSS) \\
+		endpoint\_url  & varchar(255)          & NOT NULL               & URL de destino para envío del reporte     \\
+		auth\_token    & varchar(255)          & NOT NULL               & Token de autenticación para el API        \\
+		contact\_email & varchar(100)          & NOT NULL               & Correo de contacto de la institución      \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                      \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}
+\section{Diccionario de Datos: Mail Server Settings}
+\begin{center}
+	\subsection{Tabla \texttt{vpg\_mail\_server\_settings}}
+	\small
+	\begin{tabular}{|l|l|l|p{6cm}|}
+		\hline
+		\textbf{Campo} & \textbf{Tipo de Dato} & \textbf{Restricciones} & \textbf{Descripción}                          \\
+		\hline
+		id             & integer               & PK, NOT NULL           & Identificador único de la configuración       \\
+		host           & varchar(100)          & NOT NULL               & Dirección del servidor SMTP                   \\
+		port           & integer               & NOT NULL               & Puerto del servidor SMTP                      \\
+		username       & varchar(100)          & NOT NULL               & Nombre de usuario para autenticación          \\
+		password       & varchar(255)          & NOT NULL               & Contraseña (debe almacenarse de forma segura) \\
+		from\_address  & varchar(100)          & NOT NULL               & Correo desde el cual se enviarán los mensajes \\
+		use\_ssl       & boolean               & NOT NULL               & Indica si se usa SSL                          \\
+		use\_tls       & boolean               & NOT NULL               & Indica si se usa TLS                          \\
+		version        & integer               & DEFAULT 1, NOT NULL    & Versión del registro                          \\
+		\hline
+	\end{tabular}
+	\normalsize
+\end{center}

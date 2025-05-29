@@ -1,9 +1,74 @@
-\chapter{\textbf{Capitulo IV: Diseño}}
+\chapter{Capítulo IV: Diseño}
+\section{Diseño General del Sistema}
 
-\section{Diseño}
+El sistema \textbf{VP Planillas} fue concebido bajo una arquitectura de software cliente-servidor, estructurada en \textbf{capas lógicas} que separan las responsabilidades funcionales. Esta decisión permite una mejor escalabilidad, mantenibilidad y posibilidad de integración con futuros sistemas.
 
-\subsection{Diseño de la Base de Datos}
+\subsection{Arquitectura del Sistema}
 
-\subsubsection{Modelo Relacional (Anexo)}
-\subsubsection{Scripts - Backup (Anexo)}
-\subsubsection{Diccionario de datos (Anexo)}
+El sistema sigue una arquitectura en \textit{n capas}, compuesta por:
+
+\begin{itemize}
+	\item \textbf{Capa de presentación (Frontend):} desarrollada con \textit{Next.js} y \textit{TypeScript}, proporciona una interfaz amigable y responsiva.
+	\item \textbf{Capa de lógica de negocio (Backend):} construida con \textit{Node.js} y \textit{Express.js}. Gestiona la lógica, validaciones y flujos de datos.
+	\item \textbf{Capa de datos (Persistencia):} implementada con \textit{PostgreSQL} y gestionada mediante \textit{Prisma ORM}.
+\end{itemize}
+
+La comunicación entre frontend y backend se maneja mediante APIs RESTful protegidas con cifrado HTTPS (TLS).
+
+\subsection{Módulos Funcionales}
+
+El sistema contempla los siguientes módulos principales:
+
+\begin{itemize}
+	\item Autenticación y control de acceso.
+	\item Gestión de empleados (CRUD).
+	\item Cálculo automático de nómina.
+	\item Registro de eventos laborales (vacaciones, incapacidades, permisos).
+	\item Generación de reportes oficiales.
+	\item Emisión de comprobantes de pago.
+	\item Configuración del sistema.
+\end{itemize}
+
+\subsection{Interfaces de Usuario}
+
+Las interfaces siguen principios de \textit{accesibilidad (WCAG)} y \textit{usabilidad}, con diseño responsivo y tipografía \textit{INTER}, utilizando React y Tailwind CSS. Las vistas incluyen:
+
+\begin{itemize}
+	\item Inicio de sesión.
+	\item Panel principal.
+	\item Gestión de empleados.
+	\item Cálculo de nómina.
+	\item Gestión de eventos laborales.
+	\item Reportes.
+	\item Comprobantes de pago.
+	\item Configuración del sistema.
+\end{itemize}
+
+\subsection{Estándares y Convenciones Aplicadas}
+
+\begin{itemize}
+	\item \textbf{Base de datos:} tablas con prefijo \texttt{VPG\_}, campos en \texttt{snake\_case}, normalización hasta 3FN.
+	\item \textbf{Código fuente:} uso de \texttt{TypeScript}, control de versiones con Git, repositorio en GitHub, estructura por dominios.
+	\item \textbf{Seguridad:} cifrado de contraseñas, tokens de autenticación, roles de usuario, bitácora de trazabilidad.
+	\item \textbf{Pruebas:} funcionales por sprint, revisiones por pares, validaciones con usuarios reales.
+\end{itemize}
+
+\subsection{Diseño de Base de Datos}
+
+El diseño de base de datos del sistema está basado en una estructura relacional robusta que sigue principios de normalización y nomenclatura estandarizada. Las entidades, relaciones, claves primarias y foráneas han sido cuidadosamente definidas para asegurar integridad y eficiencia.
+
+\begin{itemize}
+	\item \textbf{Modelo Relacional:} Se encuentra en el Anexo 1 y muestra gráficamente todas las tablas del sistema.
+	\item \textbf{Scripts - Backup:} Incluidos en el Anexo 2, con el código SQL para la creación e inserción de datos base.
+	\item \textbf{Diccionario de datos:} Documentado en el Anexo 3, describe los atributos, tipos de datos, restricciones y relaciones de cada tabla.
+\end{itemize}
+
+\textbf{Nota:} Todos estos elementos técnicos han sido incorporados como anexos para facilitar su consulta y validación por parte del equipo evaluador.
+
+
+\subsection{Consideraciones de Integración}
+
+\begin{itemize}
+	\item Integración con reloj marcador vía archivos CSV/Excel o API.
+	\item Emisión de reportes en formatos \texttt{PDF} o \texttt{Excel} mediante bibliotecas como \texttt{PDFKit} o \texttt{jsPDF}.
+\end{itemize}

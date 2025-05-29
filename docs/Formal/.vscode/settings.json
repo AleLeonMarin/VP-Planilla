@@ -17,5 +17,6 @@
       "args": ["%DOCFILE%"]
     }
   ],
-  "cSpell.enabled": false
+  "cSpell.enabled": false,
+  "editor.formatOnSave": true
 }
