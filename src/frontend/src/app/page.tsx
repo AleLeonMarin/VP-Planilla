@@ -1,17 +1,8 @@
-"use client"
-// pages/home.tsx
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+'use client';
 
-const Home = () => {
-  const router = useRouter();
+import { redirect } from 'next/navigation';
 
-  useEffect(() => {
-    // Redirect to pages/auth
-    router.push('/pages/auth');
-  }, [router]);
-
-  return null; // Or a loading spinner
-};
-
-export default Home;
+export default function Home() {
+  redirect('/pages/auth');
+  return null;
+}
