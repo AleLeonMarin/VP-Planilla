@@ -78,6 +78,7 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 -- === END OF SEQUENCES === --
+
 -- === TABLES === --
 -- === Enterprise Structure === --
 CREATE TABLE
@@ -86,7 +87,7 @@ CREATE TABLE
         name varchar(50) not null,
         image bytea not null,
         creation_date date not null,
-        version integer default 1 not null,
+        version integer default 1 not null
     );
 
 CREATE TABLE
@@ -251,7 +252,7 @@ CREATE TABLE
 -- === Report Management === --
 CREATE TABLE
     vpg_report_logs (
-        id integer primary key default nextval ('seq_vpg_report_logs_14'),
+        id integer primary key default nextval ('seq_vpg_report_logs_13'),
         report_type varchar(50) not null,
         generated_by integer not null,
         generated_at timestamp not null,
@@ -264,7 +265,7 @@ CREATE TABLE
 
 CREATE TABLE
     vpg_report_versions (
-        id integer primary key default nextval ('seq_vpg_report_versions_15'),
+        id integer primary key default nextval ('seq_vpg_report_versions_14'),
         report_log_id integer not null,
         created_at timestamp not null,
         file_path varchar(255) not null,
@@ -273,7 +274,7 @@ CREATE TABLE
 
 CREATE TABLE
     vpg_report_targets (
-        id integer primary key default nextval ('seq_vpg_report_targets_16'),
+        id integer primary key default nextval ('seq_vpg_report_targets_15'),
         institution varchar(100) not null,
         endpoint_url varchar(255) not null,
         auth_token varchar(255) not null,
@@ -283,7 +284,7 @@ CREATE TABLE
 
 -- === Mail Server Settings === --
 CREATE TABLE vpg_mail_server_settings (
-    id integer primary key default nextval('seq_vpg_mail_server_settings_17'),
+    id integer primary key default nextval('seq_vpg_mail_server_settings_16'),
     host varchar(100) not null,
     port integer not null,
     username varchar(100) not null,
