@@ -50,3 +50,89 @@ export function useUser() {
 
   return { user, setUser, isUserLoaded };
 }
+
+// Funciones utilitarias para el localStorage
+export const userStorage = {
+  getUser: (): AuthenticatedUser | null => {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const savedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('authToken');
+      
+      if (savedUser && token) {
+        return JSON.parse(savedUser);
+      }
+    } catch (error) {
+      console.error('Error parsing saved user:', error);
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+    
+    return null;
+  },
+
+  setUser: (user: AuthenticatedUser | null): void => {
+    if (typeof window === 'undefined') return;
+    
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      console.log('Usuario guardado:', {
+        fullName: `${user.first_name} ${user.middle_name} ${user.last_name}`.trim(),
+        username: user.username,
+        role: user.role
+      });
+    } else {
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+  },
+
+  getToken: (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('authToken');
+  },
+
+  setToken: (token: string): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('authToken', token);
+  },
+
+  clearAuth: (): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+  }
+};
+
+// Función utilitaria para obtener el nombre completo
+export const getFullName = (user: AuthenticatedUser | null): string => {
+  if (!user) return "Usuario";
+
+  const { first_name, middle_name, last_name } = user;
+  
+  const nameParts = [
+    first_name?.trim(),
+    middle_name?.trim(), 
+    last_name?.trim()
+  ].filter(Boolean);
+
+  return nameParts.length > 0 ? nameParts.join(" ") : "Usuario";
+};
+
+// Define the AuthenticatedUser type if not already defined elsewhere
+export type AuthenticatedUser = {
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  username?: string;
+  role?: string;
+  // Add other fields as needed
+};
+
+export type UserContextType = {
+  user: AuthenticatedUser | null;
+  setUser: (user: AuthenticatedUser | null) => void;
+  isUserLoaded: boolean;
+};
+
