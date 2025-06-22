@@ -77,8 +77,11 @@ CREATE SEQUENCE seq_vpg_employee_labor_event_19 START
 WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
--- === END OF SEQUENCES === --
+CREATE SEQUENCE seq_vpg_vacations_20 START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
+-- === END OF SEQUENCES === --
 -- === TABLES === --
 -- === Enterprise Structure === --
 CREATE TABLE
@@ -121,9 +124,12 @@ CREATE TABLE
         last_name varchar(50) not null,
         middle_name varchar(50) not null,
         national_id varchar(30) not null,
+        social_code varchar(100) not null,
         email varchar(100) not null,
         position_id integer not null,
         hire_date date not null,
+        exit_date date,
+        fired boolean default false not null,
         status char(1) not null check (status in ('A', 'I', 'T')),
         version integer default 1 not null
     );
@@ -178,18 +184,40 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    vpg_employee_deduction (
-        employee_id integer not null,
-        deduction_id integer not null
+    vpg_vacations (
+        id INTEGER PRIMARY KEY DEFAULT nextval ('seq_vpg_vacations_20'),
+        employee_id INTEGER NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        total_days INTEGER GENERATED ALWAYS AS (end_date - start_date + 1) STORED,
+        paid BOOLEAN DEFAULT TRUE,
+        status VARCHAR(20) DEFAULT 'Aprobado', -- Pendiente, Aprobado, Rechazado
+        version INTEGER DEFAULT 1 NOT NULL
+    );
+
+CREATE TABLE
+    vpg_employee_deductions (
+        employee_id INTEGER NOT NULL,
+        deduction_id INTEGER NOT NULL,
+        payroll_id INTEGER NOT NULL, -- A cuál planilla pertenece esta deducción
+        year INTEGER NOT NULL, -- Año fiscal
+        month INTEGER NOT NULL, -- Mes de la deducción
+        amount DECIMAL(10, 2) NOT NULL, -- Monto aplicado al empleado en esta planilla
+        version INTEGER DEFAULT 1 NOT NULL,
+        PRIMARY KEY (employee_id, deduction_id, payroll_id)
     );
 
 CREATE TABLE
     vpg_bonuses (
-        id integer primary key default nextval ('seq_vpg_bonuses_08'),
-        employee_id integer not null,
-        description varchar(255) not null,
-        amount decimal(10, 2) not null,
-        granted_at date not null
+        id INTEGER PRIMARY KEY DEFAULT nextval ('seq_vpg_bonuses_08'),
+        employee_id INTEGER NOT NULL,
+        payroll_id INTEGER NOT NULL, -- Planilla en la que se pagó el bono
+        year INTEGER NOT NULL, -- Año contable
+        month INTEGER NOT NULL, -- Mes contable
+        description VARCHAR(255) NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        granted_at DATE NOT NULL, -- Fecha en que se concedió
+        version INTEGER DEFAULT 1 NOT NULL
     );
 
 -- === Users and Access Control === --
@@ -283,166 +311,106 @@ CREATE TABLE
     );
 
 -- === Mail Server Settings === --
-CREATE TABLE vpg_mail_server_settings (
-    id integer primary key default nextval('seq_vpg_mail_server_settings_16'),
-    host varchar(100) not null,
-    port integer not null,
-    username varchar(100) not null,
-    password varchar(255) not null,
-    from_address varchar(100) not null,
-    use_ssl boolean not null,
-    use_tls boolean not null,
-    version integer default 1 not null
-);
+CREATE TABLE
+    vpg_mail_server_settings (
+        id integer primary key default nextval ('seq_vpg_mail_server_settings_16'),
+        host varchar(100) not null,
+        port integer not null,
+        username varchar(100) not null,
+        password varchar(255) not null,
+        from_address varchar(100) not null,
+        use_ssl boolean not null,
+        use_tls boolean not null,
+        version integer default 1 not null
+    );
 
 -- === END OF TABLES === --
-
 -- === Relationships === --
+alter table vpg_enterprise_branch add constraint fk_vpg_enterprise_branch_enterprise_01 foreign key (enterprise_id) references vpg_enterprise (id);
 
-alter table vpg_enterprise_branch
-add constraint fk_vpg_enterprise_branch_enterprise_01
-foreign key (enterprise_id)
-references vpg_enterprise(id);
+alter table vpg_enterprise_branch add constraint fk_vpg_enterprise_branch_branches_02 foreign key (branch_id) references vpg_branches (id);
 
-alter table vpg_enterprise_branch
-add constraint fk_vpg_enterprise_branch_branches_02
-foreign key (branch_id)
-references vpg_branches(id);
+alter table vpg_branch_employee add constraint fk_vpg_branch_employee_branches_03 foreign key (branch_id) references vpg_branches (id);
 
-alter table vpg_branch_employee
-add constraint fk_vpg_branch_employee_branches_03
-foreign key (branch_id)
-references vpg_branches(id);
+alter table vpg_branch_employee add constraint fk_vpg_branch_employee_employees_04 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_branch_employee
-add constraint fk_vpg_branch_employee_employees_04
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_employees add constraint fk_vpg_employees_positions_05 foreign key (position_id) references vpg_positions (id);
 
-alter table vpg_employees
-add constraint fk_vpg_employees_positions_05
-foreign key (position_id)
-references vpg_positions(id);
+alter table vpg_payrolls add constraint fk_vpg_payrolls_payroll_types_06 foreign key (payroll_type_id) references vpg_payroll_types (id);
 
-alter table vpg_payrolls
-add constraint fk_vpg_payrolls_payroll_types_06
-foreign key (payroll_type_id)
-references vpg_payroll_types(id);
+alter table vpg_payroll_employee add constraint fk_vpg_payroll_employee_payrolls_07 foreign key (payroll_id) references vpg_payrolls (id);
 
-alter table vpg_payroll_employee
-add constraint fk_vpg_payroll_employee_payrolls_07
-foreign key (payroll_id)
-references vpg_payrolls(id);
+alter table vpg_payroll_employee add constraint fk_vpg_payroll_employee_employees_08 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_payroll_employee
-add constraint fk_vpg_payroll_employee_employees_08
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_employee_deduction add constraint fk_vpg_employee_deduction_employees_09 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_employee_deduction
-add constraint fk_vpg_employee_deduction_employees_09
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_employee_deduction add constraint fk_vpg_employee_deduction_deductions_10 foreign key (deduction_id) references vpg_deductions (id);
 
-alter table vpg_employee_deduction
-add constraint fk_vpg_employee_deduction_deductions_10
-foreign key (deduction_id)
-references vpg_deductions(id);
+alter table vpg_employee_deductions add constraint fk_vpg_employee_deductions_employees_01 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_clock_logs
-add constraint fk_vpg_clock_logs_employees_11
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_employee_deductions add constraint fk_vpg_employee_deductions_deductions_01 foreign key (deduction_id) references vpg_deductions (id);
 
-alter table vpg_report_logs
-add constraint fk_vpg_report_logs_users_12
-foreign key (generated_by)
-references vpg_users(id);
+alter table vpg_employee_deductions add constraint fk_vpg_employee_deductions_payrolls_01 foreign key (payroll_id) references vpg_payrolls (id);
 
-alter table vpg_report_versions
-add constraint fk_vpg_report_versions_report_logs_13
-foreign key (report_log_id)
-references vpg_report_logs(id);
+alter table vpg_bonuses add constraint fk_vpg_bonuses_employees_01 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_audit_logs
-add constraint fk_vpg_audit_logs_users_14
-foreign key (user_id)
-references vpg_users(id);
+alter table vpg_bonuses add constraint fk_vpg_bonuses_payrolls_01 foreign key (payroll_id) references vpg_payrolls (id);
 
-alter table vpg_bonuses
-add constraint fk_vpg_bonuses_employees_15
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_clock_logs add constraint fk_vpg_clock_logs_employees_11 foreign key (employee_id) references vpg_employees (id);
 
-alter table vpg_employee_documents
-add constraint fk_vpg_employee_documents_employees_16
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_report_logs add constraint fk_vpg_report_logs_users_12 foreign key (generated_by) references vpg_users (id);
 
-alter table vpg_employee_labor_event
-add constraint fk_vpg_employee_labor_event_employees_17
-foreign key (employee_id)
-references vpg_employees(id);
+alter table vpg_report_versions add constraint fk_vpg_report_versions_report_logs_13 foreign key (report_log_id) references vpg_report_logs (id);
 
-alter table vpg_employee_labor_event
-add constraint fk_vpg_employee_labor_event_labor_events_18
-foreign key (labor_event_id)
-references vpg_labor_events(id);
+alter table vpg_audit_logs add constraint fk_vpg_audit_logs_users_14 foreign key (user_id) references vpg_users (id);
+
+alter table vpg_bonuses add constraint fk_vpg_bonuses_employees_15 foreign key (employee_id) references vpg_employees (id);
+
+alter table vpg_employee_documents add constraint fk_vpg_employee_documents_employees_16 foreign key (employee_id) references vpg_employees (id);
+
+alter table vpg_employee_labor_event add constraint fk_vpg_employee_labor_event_employees_17 foreign key (employee_id) references vpg_employees (id);
+
+alter table vpg_employee_labor_event add constraint fk_vpg_employee_labor_event_labor_events_18 foreign key (labor_event_id) references vpg_labor_events (id);
+
+alter table vpg_vacations add constraint fk_vpg_vacations_employees_01 foreign key (employee_id) references vpg_employees (id);
 
 -- === END OF RELATIONSHIPS === --
 -- === Indexes === --
-create index idx_vpg_enterprise_branch_enterprise_id
-on vpg_enterprise_branch(enterprise_id);
+create index idx_vpg_enterprise_branch_enterprise_id on vpg_enterprise_branch (enterprise_id);
 
-create index idx_vpg_enterprise_branch_branch_id
-on vpg_enterprise_branch(branch_id);
+create index idx_vpg_enterprise_branch_branch_id on vpg_enterprise_branch (branch_id);
 
-create index idx_vpg_branch_employee_branch_id
-on vpg_branch_employee(branch_id);
+create index idx_vpg_branch_employee_branch_id on vpg_branch_employee (branch_id);
 
-create index idx_vpg_branch_employee_employee_id
-on vpg_branch_employee(employee_id);
+create index idx_vpg_branch_employee_employee_id on vpg_branch_employee (employee_id);
 
-create index idx_vpg_employees_position_id
-on vpg_employees(position_id);
+create index idx_vpg_employees_position_id on vpg_employees (position_id);
 
-create index idx_vpg_payrolls_payroll_type_id
-on vpg_payrolls(payroll_type_id);
+create index idx_vpg_payrolls_payroll_type_id on vpg_payrolls (payroll_type_id);
 
-create index idx_vpg_payroll_employee_payroll_id
-on vpg_payroll_employee(payroll_id);
+create index idx_vpg_payroll_employee_payroll_id on vpg_payroll_employee (payroll_id);
 
-create index idx_vpg_payroll_employee_employee_id
-on vpg_payroll_employee(employee_id);
+create index idx_vpg_payroll_employee_employee_id on vpg_payroll_employee (employee_id);
 
-create index idx_vpg_employee_deduction_employee_id
-on vpg_employee_deduction(employee_id);
+create index idx_vpg_employee_deduction_employee_id on vpg_employee_deduction (employee_id);
 
-create index idx_vpg_employee_deduction_deduction_id
-on vpg_employee_deduction(deduction_id);
+create index idx_vpg_employee_deduction_deduction_id on vpg_employee_deduction (deduction_id);
 
-create index idx_vpg_clock_logs_employee_id
-on vpg_clock_logs(employee_id);
+create index idx_vpg_clock_logs_employee_id on vpg_clock_logs (employee_id);
 
-create index idx_vpg_report_logs_generated_by
-on vpg_report_logs(generated_by);
+create index idx_vpg_report_logs_generated_by on vpg_report_logs (generated_by);
 
-create index idx_vpg_report_versions_report_log_id
-on vpg_report_versions(report_log_id);
+create index idx_vpg_report_versions_report_log_id on vpg_report_versions (report_log_id);
 
-create index idx_vpg_audit_logs_user_id
-on vpg_audit_logs(user_id);
+create index idx_vpg_audit_logs_user_id on vpg_audit_logs (user_id);
 
-create index idx_vpg_bonuses_employee_id
-on vpg_bonuses(employee_id);
+create index idx_vpg_bonuses_employee_id on vpg_bonuses (employee_id);
 
-create index idx_vpg_employee_documents_employee_id
-on vpg_employee_documents(employee_id);
+create index idx_vpg_employee_documents_employee_id on vpg_employee_documents (employee_id);
 
-create index idx_vpg_employee_labor_event_employee_id
-on vpg_employee_labor_event(employee_id);
+create index idx_vpg_employee_labor_event_employee_id on vpg_employee_labor_event (employee_id);
 
-create index idx_vpg_employee_labor_event_labor_event_id
-on vpg_employee_labor_event(labor_event_id);
+create index idx_vpg_employee_labor_event_labor_event_id on vpg_employee_labor_event (labor_event_id);
+
 -- === END OF INDEXES === --
 -- === End of Script === --
