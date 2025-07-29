@@ -7,12 +7,3 @@ export interface AuditLog {
   timestamp: Date;
   details?: string;
 }
-
-export interface CreateAuditLogDto {
-  user_id: number;
-  action: string;
-  entity: string;
-  entity_id: number;
-  timestamp: Date;
-  details?: string;
-}

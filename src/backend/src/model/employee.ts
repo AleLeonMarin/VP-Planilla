@@ -1,34 +1,15 @@
 export interface Employee {
   id: number;
-  first_name: string;
+  name: string;
   last_name: string;
-  middle_name: string;
+  middle_name: string; 
   national_id: string;
+  social_code: string;
   email: string;
   position_id: number;
   hire_date: Date;
-  status: 'A' | 'I' | 'T'; // Active, Inactive, Terminated
+  exit_date?: Date;
+  fired: boolean;
+  status: string; // e.g., 'active', 'inactive'
   version: number;
-}
-
-export interface CreateEmployeeDto {
-  first_name: string;
-  last_name: string;
-  middle_name: string;
-  national_id: string;
-  email: string;
-  position_id: number;
-  hire_date: Date;
-  status: 'A' | 'I' | 'T';
-}
-
-export interface UpdateEmployeeDto {
-  first_name?: string;
-  last_name?: string;
-  middle_name?: string;
-  national_id?: string;
-  email?: string;
-  position_id?: number;
-  hire_date?: Date;
-  status?: 'A' | 'I' | 'T';
 }
