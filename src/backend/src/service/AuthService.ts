@@ -38,21 +38,35 @@ export class AuthService {
       console.log('Authenticating user:', username);
 
       // Buscar usuario por username usando el modelo User
-      const user: User | null = await prisma.vpg_users.findFirst({
+      const dbUser = await prisma.vpg_users.findFirst({
         where: {
-          username: username
+          user_username: username
         }
       });
 
-      console.log('User found:', user ? 'Yes' : 'No');
+      console.log('User found:', dbUser ? 'Yes' : 'No');
 
       // Verificar si el usuario existe
-      if (!user) {
+      if (!dbUser) {
         return {
           success: false,
           message: 'Usuario no encontrado'
         };
       }
+
+      // Mapear campos de snake_case a camelCase para el modelo User
+      const user: User = {
+        id: dbUser.user_id,
+        first_name: dbUser.user_first_name,
+        last_name: dbUser.user_last_name,
+        middle_name: dbUser.user_middle_name,
+        national_id: dbUser.user_national_id,
+        email: dbUser.user_email,
+        username: dbUser.user_username,
+        password: dbUser.user_password,
+        role: dbUser.user_role,
+        version: dbUser.user_version
+      };
 
       console.log('Verifying password for user:', user.username);
 
@@ -158,13 +172,27 @@ export class AuthService {
    */
   static async getUserById(id: number): Promise<AuthenticatedUser | null> {
     try {
-      const user: User | null = await prisma.vpg_users.findUnique({
-        where: { id }
+      const dbUser = await prisma.vpg_users.findUnique({
+        where: { user_id: id }
       });
 
-      if (!user) {
+      if (!dbUser) {
         return null;
       }
+
+      // Mapear campos de snake_case a camelCase para el modelo User
+      const user: User = {
+        id: dbUser.user_id,
+        first_name: dbUser.user_first_name,
+        last_name: dbUser.user_last_name,
+        middle_name: dbUser.user_middle_name,
+        national_id: dbUser.user_national_id,
+        email: dbUser.user_email,
+        username: dbUser.user_username,
+        password: dbUser.user_password,
+        role: dbUser.user_role,
+        version: dbUser.user_version
+      };
 
       // Convertir User a AuthenticatedUser (sin password)
       return {
@@ -187,9 +215,26 @@ export class AuthService {
    */
   static async getUserByUsername(username: string): Promise<User | null> {
     try {
-      const user: User | null = await prisma.vpg_users.findFirst({
-        where: { username }
+      const dbUser = await prisma.vpg_users.findFirst({
+        where: { user_username: username }
       });
+
+      if (!dbUser) {
+        return null;
+      }
+
+      const user: User = {
+        id: dbUser.user_id,
+        first_name: dbUser.user_first_name,
+        last_name: dbUser.user_last_name,
+        middle_name: dbUser.user_middle_name,
+        national_id: dbUser.user_national_id,
+        email: dbUser.user_email,
+        username: dbUser.user_username,
+        password: dbUser.user_password,
+        role: dbUser.user_role,
+        version: dbUser.user_version
+      };
 
       return user;
     } catch (error) {
