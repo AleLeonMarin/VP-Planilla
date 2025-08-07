@@ -13,8 +13,8 @@ export default function Sidebar() {
       icon: "/images/layout/employees.png",
       text: "Empleados",
       subItems: [
-        { href: "pages/employee/list", text: "Lista de Empleados" },
-        { href: "pages/employee/add", text: "Agregar Empleado" },
+        { href: "/pages/employee/list", text: "Lista de Empleados" },
+        { href: "/pages/employee/add", text: "Agregar Empleado" },
       ],
     },
     { href: "pages/attendance", icon: "/images/layout/attendance.png", text: "Registro de asistencia" },

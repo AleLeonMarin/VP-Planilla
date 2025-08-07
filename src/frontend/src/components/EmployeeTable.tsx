@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import EmployeeProfileModal from './EmployeeProfileModal';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -31,6 +32,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 }) => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedEmployeeData, setSelectedEmployeeData] = useState<Employee | null>(null);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -57,6 +60,39 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   };
 
   return (
+    <>
+    <EmployeeProfileModal 
+      isOpen={showProfileModal} 
+      onClose={() => { setShowProfileModal(false); setSelectedEmployeeData(null); }}
+      employeeData={selectedEmployeeData ? {
+        id: selectedEmployeeData.id,
+        name: selectedEmployeeData.name,
+        position: selectedEmployeeData.position,
+        phone: "+506 8731 0761", // Placeholder
+        status: selectedEmployeeData.status === 'active' ? 'Al día' : 
+                selectedEmployeeData.status === 'vacation' ? 'Vacaciones' :
+                selectedEmployeeData.status === 'incomplete_assistance' ? 'Asistencia incompleta' :
+                'Incapacidad/maternidad',
+        incidences: {
+          faltaTiempo: 2,
+          llegadaTardia: 1,
+          sobraTiempo: 0,
+          sinMarcas: 0
+        },
+        attendanceRecords: [
+          { date: "1 Lun", schedule: "Mañana 8h", entryTime: "08:00 AM", exitTime: "4:00 PM", total: "08:00hr", balance: "00:00" },
+          { date: "2 Mar", schedule: "Mañana 8h", entryTime: "08:00 AM", exitTime: "4:31 PM", total: "08:00hr", balance: "+00:31" },
+          { date: "3 Mié", schedule: "Mañana 8h", entryTime: "08:00 AM", exitTime: "4:00 PM", total: "08:00hr", balance: "00:00" },
+          { date: "4 Jue", schedule: "Mañana 8h", entryTime: "-", exitTime: "-", total: "00:00hr", balance: "-08:00" },
+          { date: "5 Vie", schedule: "Mañana 8h", entryTime: "08:00 AM", exitTime: "4:00 PM", total: "08:00hr", balance: "00:00" },
+          { date: "6 Sáb", schedule: "No se esperan registros", entryTime: "", exitTime: "", total: "", balance: "", isWeekend: true },
+          { date: "7 Dom", schedule: "No se esperan registros", entryTime: "", exitTime: "", total: "", balance: "", isWeekend: true },
+          { date: "8 Lun", schedule: "Mañana 8h", entryTime: "08:00 AM", exitTime: "4:00 PM", total: "08:00hr", balance: "00:00" },
+          { date: "9 Mar", schedule: "Tarde 8h", entryTime: "2:30 PM", exitTime: "9:07 PM", total: "06:37hr", balance: "-01:22" },
+          { date: "10 Mié", schedule: "Tarde 8h", entryTime: "2:42 AM", exitTime: "9:00 PM", total: "08:00hr", balance: "00:00" }
+        ]
+      } : undefined}
+    />
     <div className="bg-[#F9F1DC] rounded-lg">
       {/* Table Header with Search and Filter */}
       <div className="p-3 bg-[#D5CDB3] rounded-t-lg">
@@ -137,7 +173,11 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       <div className="absolute right-0 z-10 w-48 mt-2 bg-[#F9F1DC] border rounded-md shadow-lg">
                         <div className="py-1">
                           <button
-                            onClick={() => handleEmployeeAction('view', employee.id)}
+                            onClick={() => { 
+                              setSelectedEmployeeData(employee); 
+                              setShowProfileModal(true); 
+                              setSelectedEmployee(null); 
+                            }}
                             className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1]"
                           >
                             <EyeIcon className="w-4 h-4" />
@@ -169,6 +209,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         </table>
       </div>
     </div>
+    </>
   );
 };
 
