@@ -47,7 +47,10 @@ export class EmployeeController {
     const employeeData = req.body;
 
     try {
-      const updatedEmployee = await EmployeeService.updateEmployee(employeeId, employeeData);
+      const updatedEmployee = await EmployeeService.updateEmployee(
+        employeeId,
+        employeeData
+      );
       if (!updatedEmployee) {
         return res.status(404).json({ error: "Employee not found" });
       }
