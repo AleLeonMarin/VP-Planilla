@@ -13,17 +13,21 @@ import { useModal } from '@/hooks/useModal';
 const LaborEventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | undefined>();
   const [showEventModal, setShowEventModal] = useState(false);
+  const [previewEvent, setPreviewEvent] = useState<Partial<EmployeeLaborEvent> | null>(null);
+  const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
   const { events, isLoading, createEvent, updateEvent, deleteEvent, assignEventToEmployee, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
   const { showError, showSuccess } = useModal();
 
   const handleEventClick = (event: EmployeeLaborEvent) => {
     setSelectedEvent(event);
+    setModalInitialDates(null);
     setShowEventModal(true);
   };
 
   const handleDateSelect = (start: Date, end: Date) => {
     setSelectedEvent(undefined);
+    setModalInitialDates({ start, end });
     setShowEventModal(true);
   };
 
@@ -37,9 +41,8 @@ const LaborEventsPage: React.FC = () => {
         showSuccess('Éxito', 'Evento creado correctamente');
       }
       setShowEventModal(false);
-
-      // No explicit refresh here: the hook updates state (createEvent calls fetchEvents and
-      // updateEvent updates local state). Removing redundant double-refresh to avoid flicker.
+      setModalInitialDates(null);
+      // preview will be cleared by modal via onPreviewChange(null)
     } catch (error) {
       showError('Error', 'No se pudo guardar el evento. Por favor intente nuevamente.');
     }
@@ -60,6 +63,7 @@ const LaborEventsPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 text-[#3B4D36] transition-colors bg-[#A7AA94] rounded-lg hover:bg-[#6F7153]/80"
             onClick={() => {
               setSelectedEvent(undefined);
+              setModalInitialDates(null); // ensure default (today)
               setShowEventModal(true);
             }}
           >
@@ -76,15 +80,18 @@ const LaborEventsPage: React.FC = () => {
           isLoading={isLoading}
           refreshEvents={refreshEvents}
           deleteAssignment={deleteAssignment}
+          preview={previewEvent}
         />
 
         {/* Modal de Evento */}
         <LaborEventModal
           isOpen={showEventModal}
-          onClose={() => setShowEventModal(false)}
+          onClose={() => { setShowEventModal(false); setModalInitialDates(null); setPreviewEvent(null); }}
           onSubmit={handleSubmit}
           event={selectedEvent}
           employees={employees}
+          onPreviewChange={(p) => setPreviewEvent(p)}
+          initialDates={modalInitialDates}
         />
       </div>
     </div>

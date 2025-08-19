@@ -23,9 +23,10 @@ interface Props {
   isLoading: boolean;
   refreshEvents: () => Promise<void>;
   deleteAssignment: (id: number) => Promise<void>;
+  preview?: Partial<EmployeeLaborEvent> | null;
 }
 
-const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, events, isLoading, refreshEvents, deleteAssignment }) => {
+const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, events, isLoading, refreshEvents, deleteAssignment, preview }) => {
   const { employees } = useEmployeeList();
   const { showError } = useModal();
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -74,6 +75,27 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
       extendedProps: { ...event }
     };
   });
+
+  // Add preview event if provided
+  if (preview) {
+    const emp = employees.find(e => String(e.id) === String(preview.employee_id));
+    const empName = emp ? emp.name : 'Empleado';
+    const title = (preview as any).labor_event_name || 'Evento (previsualización)';
+    const start = (preview.start_date as string) || (preview.start_date instanceof Date ? (preview.start_date as Date).toISOString() : undefined) || undefined;
+    const end = (preview.end_date as string) || (preview.end_date instanceof Date ? (preview.end_date as Date).toISOString() : undefined) || undefined;
+    if (start) {
+      calendarEvents.push({
+        id: 'preview',
+        title: `${title} - ${empName}`,
+        start,
+        end: end || undefined,
+        backgroundColor: '#3B4D36',
+        borderColor: '#3B4D36',
+        textColor: '#fff',
+        extendedProps: { ...(preview as any), __isPreview: true }
+      });
+    }
+  }
 
   const openMenuForEvent = (ev: any, clientX: number, clientY: number) => {
     const eventObj = events.find(e => String(e.id) === String(ev.id));
@@ -173,9 +195,6 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
                 openMenuForEvent(evObj, e.clientX || 0, e.clientY || 0);
               } catch (ex) {}
             });
-
-            // REMOVED COMPLEX DOM MANIPULATION - Let FullCalendar handle event rendering
-            // The CSS styles will handle the visual appearance
 
           } catch (e) {
             // ignore
