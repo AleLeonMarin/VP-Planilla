@@ -4,9 +4,9 @@ import {
   calculateEmployeeStats, 
   filterEmployees, 
   getPositionName, 
-  getPositionSalary,
-  generateEmployeeId 
-} from '@/utils/employeeUtils';
+  getPositionSalary
+} from '@/utils/employeeUtils'
+import { getEmployees as apiGetEmployees, createEmployee as apiCreateEmployee } from '@/services/employeeService';
 
 /**
  * Hook para manejar la lógica de la lista de empleados
@@ -23,31 +23,33 @@ const useEmployeeList = () => {
     incapacityMaternity: 0
   });
 
-  // Datos de ejemplo - reemplazar con llamada a API
+  // Cargar empleados desde el backend
   useEffect(() => {
-    const loadSampleEmployees = () => {
-      const sampleEmployees: Employee[] = [
-        { id: '1', name: 'María Solano Rojas', position: 'Encargado(a) de caja', salary: 360000, status: 'active' },
-        { id: '2', name: 'José Andrés Chavarría Soto', position: 'Cocinero(a) principal', salary: 450000, status: 'incomplete_assistance' },
-        { id: '3', name: 'Gabriela Solano Méndez', position: 'Salonero(a)', salary: 320000, status: 'vacation' },
-        { id: '4', name: 'Kevin Vargas Umaña', position: 'Barista', salary: 320000, status: 'active' },
-        { id: '5', name: 'Maritza Días Hidalgo', position: 'Barista', salary: 320000, status: 'active' },
-        { id: '6', name: 'Esteban Soto Solís', position: 'Barista', salary: 320000, status: 'active' },
-        { id: '7', name: 'Karen Vargas Solorzano', position: 'Salonero(a)', salary: 320000, status: 'incomplete_assistance' },
-        { id: '8', name: 'Miguel Díaz Díaz', position: 'Salonero(a)', salary: 320000, status: 'active' },
-        { id: '9', name: 'Mathew Ureña Jiménez', position: 'Cocinero(a)', salary: 320000, status: 'active' },
-        { id: '10', name: 'Laura Chinchilla Chavez', position: 'Cocinero(a)', salary: 320000, status: 'active' },
-        { id: '11', name: 'Oscar Arias Solís', position: 'Ayudante de cocina', salary: 320000, status: 'active' },
-        { id: '12', name: 'Carlos León Jiménez', position: 'Barista', salary: 320000, status: 'active' },
-        { id: '13', name: 'Douglas Calvo Campos', position: 'Salonero(a)', salary: 320000, status: 'vacation' }
-      ];
+    const loadEmployees = async () => {
+      try {
+        const apiEmployees = await apiGetEmployees();
+        // Mapear modelo del backend al frontend Employee
+        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => ({
+          id: String(e.employee_id ?? e.id),
+          name: [e.name, e.middle_name, e.last_name].filter(Boolean).join(' '),
+          position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
+          salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
+          status: (e.status ?? e.employee_status ?? 'active') as any
+        }));
 
-      setEmployees(sampleEmployees);
-      setFilteredEmployees(sampleEmployees);
-      updateStats(sampleEmployees);
+        setEmployees(mapped);
+        setFilteredEmployees(mapped);
+        updateStats(mapped);
+      } catch (error) {
+        console.error('Error loading employees from API', error);
+        // Si falla, dejar la lista vacía (o podríamos mantener datos locales)
+        setEmployees([]);
+        setFilteredEmployees([]);
+        updateStats([]);
+      }
     };
 
-    loadSampleEmployees();
+    loadEmployees();
   }, []);
 
   // Filtrar empleados basado en el término de búsqueda
@@ -80,21 +82,29 @@ const useEmployeeList = () => {
   };
 
   /**
-   * Añade un nuevo empleado
+   * Añade un nuevo empleado (persistido en backend)
    */
-  const handleAddEmployee = (employeeData: EmployeeFormData) => {
-    const newEmployee: Employee = {
-      id: generateEmployeeId(),
-      name: `${employeeData.employee_first_name} ${employeeData.employee_middle_name} ${employeeData.employee_last_name}`.trim(),
-      position: getPositionName(employeeData.employee_position_id),
-      salary: getPositionSalary(employeeData.employee_position_id),
-      status: 'active'
-    };
+  const handleAddEmployee = async (employeeData: EmployeeFormData) => {
+    try {
+      const created = await apiCreateEmployee(employeeData);
+      const createdObj = created as any;
 
-    const updatedEmployees = [...employees, newEmployee];
-    setEmployees(updatedEmployees);
-    setFilteredEmployees(updatedEmployees);
-    updateStats(updatedEmployees);
+      const newEmployee: Employee = {
+        id: String(createdObj.employee_id ?? createdObj.id),
+        name: [createdObj.name, createdObj.middle_name, createdObj.last_name].filter(Boolean).join(' '),
+        position: getPositionName(String(createdObj.position_id ?? createdObj.employee_position_id ?? '')),
+        salary: getPositionSalary(String(createdObj.position_id ?? createdObj.employee_position_id ?? '')),
+        status: (createdObj.status ?? createdObj.employee_status ?? 'active') as any
+      };
+
+      const updatedEmployees = [...employees, newEmployee];
+      setEmployees(updatedEmployees);
+      setFilteredEmployees(updatedEmployees);
+      updateStats(updatedEmployees);
+    } catch (error) {
+      console.error('Error creating employee', error);
+      alert('No se pudo guardar el empleado. Revisa la consola para más detalles.');
+    }
   };
 
   /**

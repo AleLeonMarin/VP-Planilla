@@ -27,18 +27,53 @@ export const useLaborEvents = () => {
 
   const createEvent = async (eventData: LaborEventFormData) => {
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/create`, {
+      // If the client provided a labor_event_id it means the type already exists; otherwise create the labor event first
+      let laborEventId: number | undefined = (eventData as any).labor_event_id;
+      let created: any = undefined;
+
+      if (!laborEventId && (eventData.name || eventData.description)) {
+        // Create labor event (type)
+        const resCreate = await fetch(`${API_CONFIG.baseUrl}/labor-events/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: eventData.name, description: eventData.description }),
+        });
+        if (!resCreate.ok) throw new Error('Error al crear tipo de evento');
+        created = await resCreate.json();
+        laborEventId = created.id;
+      }
+
+      // Now assign to employee
+      const assignPayload = {
+        employee_id: eventData.employee_id,
+        labor_event_id: laborEventId,
+        start_date: eventData.start_date instanceof Date ? eventData.start_date.toISOString() : eventData.start_date,
+        end_date: eventData.end_date ? (eventData.end_date instanceof Date ? eventData.end_date.toISOString() : eventData.end_date) : null,
+        status: eventData.status || 'active'
+      };
+
+      const resAssign = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(eventData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(assignPayload),
       });
-      
-      if (!response.ok) throw new Error('Error al crear evento');
-      const newEvent = await response.json();
-      setEvents(prev => [...prev, newEvent]);
-      return newEvent;
+
+      if (!resAssign.ok) {
+        let err = 'Error al asignar evento';
+        try { const j = await resAssign.json(); err = JSON.stringify(j); } catch {};
+        throw new Error(err);
+      }
+
+      const assignedEvent = await resAssign.json();
+      // Enrich assigned event with name if we created the labor event just now or provided a name
+      const enriched: any = {
+        ...assignedEvent,
+        labor_event_name: (eventData as any).name || (created ? created.name : undefined),
+        start_date: assignPayload.start_date,
+        end_date: assignPayload.end_date,
+      };
+      setEvents(prev => [...prev, enriched]);
+      return enriched;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear evento');
       throw err;
