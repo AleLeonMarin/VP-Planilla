@@ -45,6 +45,30 @@
 
 .calendar-container .fc-event {
   cursor: pointer;
+  background-color: #A7AA94 !important;
+  border: 1px solid #6F7153 !important;
+  color: #3B4D36 !important;
+  border-radius: 12px !important;
+  padding: 4px 8px !important;
+  margin: 2px 1px !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.calendar-container .fc-event .fc-event-title {
+  color: #3B4D36 !important;
+  font-weight: 500 !important;
+}
+
+.calendar-container .fc-event:hover {
+  background-color: #6F7153 !important;
+  color: white !important;
+}
+
+.calendar-container .fc-event:hover .fc-event-title {
+  color: white !important;
 }
 
 .calendar-container .fc .fc-timegrid-slot-label-cushion {

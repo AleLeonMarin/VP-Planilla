@@ -13,12 +13,17 @@ export const useLaborEvents = () => {
     setIsLoading(true);
     setError(null);
     try {
+      console.log('Fetching events from API...'); // DEBUG
       const response = await fetch(`${API_CONFIG.baseUrl}/labor-events`);
       if (!response.ok) throw new Error('Error al cargar eventos');
       const data = await response.json();
+      console.log('Raw API response:', data); // DEBUG
+      
       // API now returns { laborEvents, employeeEvents }
       const types: any[] = data.laborEvents || [];
       const employeeEvents: any[] = data.employeeEvents || [];
+      console.log('Types:', types.length, 'Employee events:', employeeEvents.length); // DEBUG
+      
       // Map assignments to frontend shape and attach labor event name
       const mapped = employeeEvents.map(ev => {
         const type = types.find(t => t.id === ev.labor_event_id);
@@ -33,6 +38,7 @@ export const useLaborEvents = () => {
           labor_event_name: type?.name || ev.labor_event_name || null,
         } as any;
       });
+      console.log('Mapped events:', mapped.length, mapped); // DEBUG
       setEvents(mapped as any[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -43,12 +49,14 @@ export const useLaborEvents = () => {
   };
 
   const createEvent = async (eventData: LaborEventFormData) => {
+    console.log('createEvent called with:', eventData); // DEBUG
     try {
       // If the client provided a labor_event_id it means the type already exists; otherwise create the labor event first
       let laborEventId: number | undefined = (eventData as any).labor_event_id;
       let created: any = undefined;
 
       if (!laborEventId && (eventData.name || eventData.description)) {
+        console.log('Creating labor event type...'); // DEBUG
         // Create labor event (type)
         const resCreate = await fetch(`${API_CONFIG.baseUrl}/labor-events/create`, {
           method: 'POST',
@@ -58,8 +66,10 @@ export const useLaborEvents = () => {
         if (!resCreate.ok) throw new Error('Error al crear tipo de evento');
         created = await resCreate.json();
         laborEventId = created.id;
+        console.log('Labor event type created:', created); // DEBUG
       }
 
+      console.log('Assigning event to employee...'); // DEBUG
       // Now assign to employee
       const assignPayload = {
         employee_id: eventData.employee_id,
@@ -82,16 +92,24 @@ export const useLaborEvents = () => {
       }
 
       const assignedEvent = await resAssign.json();
-      // Enrich assigned event with name if we created the labor event just now or provided a name
+      console.log('Event assigned successfully:', assignedEvent); // DEBUG
+      
+      // Force immediate refresh from server to ensure data consistency
+      console.log('Calling fetchEvents to refresh...'); // DEBUG
+      await fetchEvents();
+      console.log('fetchEvents completed'); // DEBUG
+      
+      // Return enriched event data
       const enriched: any = {
         ...assignedEvent,
         labor_event_name: (eventData as any).name || (created ? created.name : undefined),
         start_date: assignPayload.start_date,
         end_date: assignPayload.end_date,
       };
-      setEvents(prev => [...prev, enriched]);
+      
       return enriched;
     } catch (err) {
+      console.error('Error in createEvent:', err); // DEBUG
       setError(err instanceof Error ? err.message : 'Error al crear evento');
       throw err;
     }
@@ -133,6 +151,22 @@ export const useLaborEvents = () => {
     }
   };
 
+  // Delete an employee-assignment using the new backend endpoint
+  const deleteAssignment = async (id: number) => {
+    try {
+      const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar asignación');
+      // Refresh from server to get updated data
+      await fetchEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar asignación');
+      throw err;
+    }
+  };
+
   const assignEventToEmployee = async (eventData: EmployeeLaborEvent) => {
     try {
       const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign`, {
@@ -145,7 +179,8 @@ export const useLaborEvents = () => {
 
       if (!response.ok) throw new Error('Error al asignar evento');
       const assignedEvent = await response.json();
-      setEvents(prev => [...prev, assignedEvent]);
+      // Refresh from server to get complete updated data
+      await fetchEvents();
       return assignedEvent;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al asignar evento');
@@ -166,6 +201,7 @@ export const useLaborEvents = () => {
     updateEvent,
     deleteEvent,
     assignEventToEmployee,
+    deleteAssignment,
     refreshEvents: fetchEvents,
   };
 };

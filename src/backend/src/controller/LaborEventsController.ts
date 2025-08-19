@@ -136,4 +136,27 @@ export class LaborEventsController {
       });
     }
   }
+
+  /**
+   * Delete an employee labor event assignment
+   * DELETE /labor-events/assign/:id
+   */
+  static async deleteEmployeeLaborEvent(req: Request, res: Response) {
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid id parameter' });
+      }
+
+      const deleted = await LaborEventsService.deleteEmployeeLaborEvent(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Employee labor event not found' });
+      }
+
+      return res.status(200).json({ message: 'Deleted', deleted });
+    } catch (error) {
+      console.error('Error deleting employee labor event', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
 }

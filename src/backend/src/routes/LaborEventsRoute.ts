@@ -8,5 +8,6 @@ router.get("/labor-events", LaborEventsController.getAllLaborEvents);
 router.put("/labor-events/:id", LaborEventsController.updateLaborEvent);
 router.delete("/labor-events/:id", LaborEventsController.deleteLaborEvent);
 router.post("/labor-events/assign", LaborEventsController.assignLaborEventsToEmployee);
+router.delete('/labor-events/assign/:id', LaborEventsController.deleteEmployeeLaborEvent);
 
 export default router;

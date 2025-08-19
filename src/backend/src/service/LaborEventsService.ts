@@ -177,4 +177,30 @@ export class LaborEventsService {
 
     return employeeLaborEvent;
   }
+
+  /**
+   * Delete an employee labor event assignment by id
+   */
+  static async deleteEmployeeLaborEvent(id: number): Promise<EmployeeLaborEvent | null> {
+    try {
+      const deleted = await prisma.vpg_employee_labor_event.delete({
+        where: { employee_labor_event_id: id },
+      });
+
+      const result: EmployeeLaborEvent = {
+        id: deleted.employee_labor_event_id,
+        employee_id: deleted.employee_labor_event_employee_id,
+        labor_event_id: deleted.employee_labor_event_labor_event_id,
+        start_date: deleted.employee_labor_event_start_date,
+        end_date: deleted.employee_labor_event_end_date,
+        status: deleted.employee_labor_event_status,
+        version: deleted.employee_labor_event_version,
+      };
+
+      return result;
+    } catch (error) {
+      // If not found Prisma will throw; return null to indicate not found
+      return null;
+    }
+  }
 }

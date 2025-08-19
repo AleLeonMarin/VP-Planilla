@@ -13,7 +13,7 @@ import { useModal } from '@/hooks/useModal';
 const LaborEventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | undefined>();
   const [showEventModal, setShowEventModal] = useState(false);
-  const { createEvent, updateEvent, deleteEvent, assignEventToEmployee } = useLaborEvents();
+  const { events, isLoading, createEvent, updateEvent, deleteEvent, assignEventToEmployee, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
   const { showError, showSuccess } = useModal();
 
@@ -36,6 +36,13 @@ const LaborEventsPage: React.FC = () => {
         await createEvent(data);
         showSuccess('Éxito', 'Evento creado correctamente');
       }
+      setShowEventModal(false);
+      
+      // Double refresh to ensure calendar updates - with slight delay
+      await refreshEvents();
+      setTimeout(async () => {
+        await refreshEvents();
+      }, 200);
     } catch (error) {
       showError('Error', 'No se pudo guardar el evento. Por favor intente nuevamente.');
     }
@@ -68,6 +75,10 @@ const LaborEventsPage: React.FC = () => {
         <LaborEventsCalendar 
           onEventClick={handleEventClick}
           onDateSelect={handleDateSelect}
+          events={events}
+          isLoading={isLoading}
+          refreshEvents={refreshEvents}
+          deleteAssignment={deleteAssignment}
         />
 
         {/* Modal de Evento */}
