@@ -8,6 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { EmployeeLaborEvent } from '@/types/laborEvent';
 import { useModal } from '@/hooks/useModal';
 import { useLaborEvents } from '@/hooks/useLaborEvents';
+import useEmployeeList from '@/hooks/useEmployeeList';
 import '@/styles/calendar.css';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 
 const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect }) => {
   const { events, isLoading } = useLaborEvents();
+  const { employees } = useEmployeeList();
   const { showError } = useModal();
 
   // Función auxiliar para determinar el color del evento según su estado
@@ -34,15 +36,21 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect }) =>
   };
 
   // Convertir eventos a formato FullCalendar
-  const calendarEvents = events.map(event => ({
-    id: String(event.id),
-    title: `Evento #${event.labor_event_id}`,
-    start: event.start_date,
-    end: event.end_date || undefined,
-    backgroundColor: getEventColor(event.status),
-    borderColor: getEventColor(event.status),
-    extendedProps: { ...event }
-  }));
+  const calendarEvents = events.map(event => {
+    const emp = employees.find(e => String(e.id) === String(event.employee_id || (event as any).employee_labor_event_employee_id));
+    const employeeName = emp ? emp.name : 'Empleado';
+    const titleName = (event as any).labor_event_name || `Evento #${event.labor_event_id}`;
+
+    return {
+      id: String(event.id),
+      title: `${titleName} - ${employeeName}`,
+      start: event.start_date,
+      end: event.end_date || undefined,
+      backgroundColor: getEventColor(event.status),
+      borderColor: getEventColor(event.status),
+      extendedProps: { ...event }
+    };
+  });
 
   const handleEventClick = (info: any) => {
     const event = events.find(e => String(e.id) === info.event.id);

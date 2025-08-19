@@ -112,6 +112,31 @@ export class LaborEventsService {
   }
 
   /**
+   * Get all assigned labor events (employee assignments)
+   */
+  static async getAllEmployeeLaborEvents(): Promise<EmployeeLaborEvent[]> {
+    const prismaEvents = await prisma.vpg_employee_labor_event.findMany({
+      include: {
+        vpg_labor_events: true,
+      },
+    });
+
+    const employeeLaborEvents: EmployeeLaborEvent[] = prismaEvents.map((pe) => ({
+      id: pe.employee_labor_event_id,
+      employee_id: pe.employee_labor_event_employee_id,
+      labor_event_id: pe.employee_labor_event_labor_event_id,
+      start_date: pe.employee_labor_event_start_date,
+      end_date: pe.employee_labor_event_end_date,
+      status: pe.employee_labor_event_status,
+      version: pe.employee_labor_event_version,
+    }));
+
+    // Attach labor event names/descriptions as enriched data by querying the included relation
+    // Note: we can't add non-model fields to the returned type, the frontend will join names via an extended prop if needed
+    return employeeLaborEvents;
+  }
+
+  /**
    * Assign labor events to employees
    * @param data - The employee labor event data
    * @returns The updated employee with the assigned labor events

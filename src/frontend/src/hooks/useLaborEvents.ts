@@ -16,7 +16,24 @@ export const useLaborEvents = () => {
       const response = await fetch(`${API_CONFIG.baseUrl}/labor-events`);
       if (!response.ok) throw new Error('Error al cargar eventos');
       const data = await response.json();
-      setEvents(data);
+      // API now returns { laborEvents, employeeEvents }
+      const types: any[] = data.laborEvents || [];
+      const employeeEvents: any[] = data.employeeEvents || [];
+      // Map assignments to frontend shape and attach labor event name
+      const mapped = employeeEvents.map(ev => {
+        const type = types.find(t => t.id === ev.labor_event_id);
+        return {
+          id: ev.id,
+          employee_id: ev.employee_labor_event_employee_id || ev.employee_id || ev.employee_id,
+          labor_event_id: ev.labor_event_id || ev.employee_labor_event_labor_event_id,
+          start_date: ev.start_date || ev.employee_labor_event_start_date,
+          end_date: ev.end_date || ev.employee_labor_event_end_date,
+          status: ev.status || ev.employee_labor_event_status,
+          version: ev.version || ev.employee_labor_event_version,
+          labor_event_name: type?.name || ev.labor_event_name || null,
+        } as any;
+      });
+      setEvents(mapped as any[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       console.error('Error fetching events:', err);

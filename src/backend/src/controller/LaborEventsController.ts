@@ -34,8 +34,10 @@ export class LaborEventsController {
     res: Response
   ): Promise<Response> {
     try {
+      // Return both event types and assignments for the calendar
       const laborEvents = await LaborEventsService.getAllLaborEvents();
-      return res.status(200).json(laborEvents);
+      const employeeEvents = await LaborEventsService.getAllEmployeeLaborEvents();
+      return res.status(200).json({ laborEvents, employeeEvents });
     } catch (error) {
       console.error("Failed to retrieve labor events:", error);
       return res.status(500).json({ error: "Failed to retrieve labor events" });
