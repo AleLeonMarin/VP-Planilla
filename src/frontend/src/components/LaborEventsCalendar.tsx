@@ -24,9 +24,11 @@ interface Props {
   refreshEvents: () => Promise<void>;
   deleteAssignment: (id: number) => Promise<void>;
   preview?: Partial<EmployeeLaborEvent> | null;
+  // New: update event handler provided by parent
+  updateEvent?: (id: number, data: Partial<any>) => Promise<any>;
 }
 
-const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, events, isLoading, refreshEvents, deleteAssignment, preview }) => {
+const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, events, isLoading, refreshEvents, deleteAssignment, preview, updateEvent }) => {
   const { employees } = useEmployeeList();
   const { showError } = useModal();
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -58,17 +60,56 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
     }
   };
 
+  // Helper: parse backend date strings into local Date objects while avoiding UTC-midnight shifts
+  function parseBackendDateToLocal(dateStr?: string | null) {
+    if (!dateStr) return undefined;
+    try {
+      // If backend provided a UTC-midnight string like 2025-08-18T00:00:00Z
+      // treat it as a local all-day date (preserve Y-M-D) to avoid shifting to previous day in local timezone.
+      const utcMidnightRegex = /^(\d{4}-\d{2}-\d{2})T00:00:00(?:\.000)?Z$/;
+      const m = String(dateStr).match(utcMidnightRegex);
+      if (m) {
+        const [y, mo, d] = m[1].split('-').map(Number);
+        return new Date(y, mo - 1, d, 0, 0, 0);
+      }
+
+      // Otherwise, try normal Date parsing (keeps time component)
+      const parsed = new Date(dateStr);
+      if (isNaN(parsed.getTime())) return undefined;
+      return parsed;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
   // Convertir eventos a formato FullCalendar
   const calendarEvents = events.map(event => {
     const emp = employees.find(e => String(e.id) === String(event.employee_id || (event as any).employee_labor_event_employee_id));
     const employeeName = emp ? emp.name : 'Empleado';
     const titleName = (event as any).labor_event_name || `Evento #${event.labor_event_id}`;
 
+    const startDate = parseBackendDateToLocal(event.start_date as any);
+    let endDate = parseBackendDateToLocal(event.end_date as any);
+
+    // If backend sent a UTC-midnight string we treat as allDay. Ensure endDate is exclusive (add 1 day)
+    const isAllDay = typeof event.start_date === 'string' && /T00:00:00(?:\.000)?Z$/.test(String(event.start_date));
+    if (isAllDay) {
+      // If endDate not provided or not after startDate, set endDate = startDate + 1 day so it renders as full single-day event
+      if (!endDate || (startDate && endDate && endDate.getTime() <= (startDate.getTime()))) {
+        if (startDate) {
+          const nd = new Date(startDate);
+          nd.setDate(nd.getDate() + 1);
+          endDate = nd;
+        }
+      }
+    }
+
     return {
       id: String(event.id),
       title: `${titleName} - ${employeeName}`,
-      start: event.start_date,
-      end: event.end_date || undefined,
+      start: startDate,
+      end: endDate || undefined,
+      allDay: isAllDay,
       backgroundColor: '#A7AA94',
       borderColor: '#6F7153',
       textColor: '#3B4D36',
@@ -81,14 +122,27 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
     const emp = employees.find(e => String(e.id) === String(preview.employee_id));
     const empName = emp ? emp.name : 'Empleado';
     const title = (preview as any).labor_event_name || 'Evento (previsualización)';
-    const start = (preview.start_date as string) || (preview.start_date instanceof Date ? (preview.start_date as Date).toISOString() : undefined) || undefined;
-    const end = (preview.end_date as string) || (preview.end_date instanceof Date ? (preview.end_date as Date).toISOString() : undefined) || undefined;
+    const start = preview.start_date ? (preview.start_date instanceof Date ? preview.start_date : parseBackendDateToLocal(String(preview.start_date))) : undefined;
+    let end = preview.end_date ? (preview.end_date instanceof Date ? preview.end_date : parseBackendDateToLocal(String(preview.end_date))) : undefined;
+    const isAllDayPreview = typeof preview.start_date === 'string' && /T00:00:00(?:\.000)?Z$/.test(String(preview.start_date));
+
+    if (isAllDayPreview) {
+      if (!end || (start && end && end.getTime() <= start.getTime())) {
+        if (start) {
+          const nd = new Date(start);
+          nd.setDate(nd.getDate() + 1);
+          end = nd;
+        }
+      }
+    }
+
     if (start) {
       calendarEvents.push({
         id: 'preview',
         title: `${title} - ${empName}`,
         start,
         end: end || undefined,
+        allDay: isAllDayPreview,
         backgroundColor: '#3B4D36',
         borderColor: '#3B4D36',
         textColor: '#fff',
@@ -167,6 +221,80 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
     }
   };
 
+  // Handle event resizing (drag to extend duration)
+  const handleEventResize = async (resizeInfo: any) => {
+    const eventId = Number(resizeInfo.event.id);
+    const payload = {
+      start_date: resizeInfo.event.start ? resizeInfo.event.start.toISOString() : null,
+      end_date: resizeInfo.event.end ? resizeInfo.event.end.toISOString() : null,
+    };
+
+    try {
+      // Try parent provided updater first
+      if (updateEvent) {
+        try {
+          await updateEvent(eventId, payload);
+        } catch (errUpdate) {
+          // If updateEvent exists but fails, fall through to attempt PATCH on assign endpoint
+          console.warn('updateEvent failed, attempting fallback PATCH', errUpdate);
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/labor-events/assign/${eventId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+      } else {
+        // fallback: call assign PATCH endpoint
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/labor-events/assign/${eventId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      await refreshEvents();
+    } catch (err) {
+      // revert UI change
+      try { resizeInfo.revert(); } catch(e){}
+      showError('Error', 'No se pudo actualizar la duración del evento');
+    }
+  };
+
+  // Handle event drag and drop (move to different dates)
+  const handleEventDrop = async (dropInfo: any) => {
+    const eventId = Number(dropInfo.event.id);
+    const payload = {
+      start_date: dropInfo.event.start ? dropInfo.event.start.toISOString() : null,
+      end_date: dropInfo.event.end ? dropInfo.event.end.toISOString() : null,
+    };
+
+    try {
+      if (updateEvent) {
+        try {
+          await updateEvent(eventId, payload);
+        } catch (errUpdate) {
+          console.warn('updateEvent failed, attempting fallback PATCH', errUpdate);
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/labor-events/assign/${eventId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+      } else {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/labor-events/assign/${eventId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      await refreshEvents();
+    } catch (err) {
+      try { dropInfo.revert(); } catch(e){}
+      showError('Error', 'No se pudo mover el evento');
+    }
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Cargando eventos...</div>;
   }
@@ -183,6 +311,16 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         }}
         events={calendarEvents}
+        // Ensure FullCalendar uses local timezone to avoid day-shifts
+        timeZone="local"
+        // Enable event resizing and dragging
+        editable={true}
+        eventResizableFromStart={true}
+        eventDurationEditable={true}
+        eventStartEditable={true}
+        // Event interaction handlers
+        eventResize={handleEventResize}
+        eventDrop={handleEventDrop}
         // Prevent browser context menu on event elements
         eventDidMount={(info) => {
           try {
@@ -203,7 +341,6 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
         eventClick={handleEventClick}
         select={handleDateSelect}
         selectable={true}
-        editable={true}
         locale="es"
         height="auto"
       />
