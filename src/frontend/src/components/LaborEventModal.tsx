@@ -12,6 +12,16 @@ interface Props {
   employees: Employee[];
 }
 
+// Local form state where dates are strings for datetime-local inputs
+type FormState = {
+  name: string;
+  description: string;
+  employee_id?: number | undefined;
+  start_date?: string | null; // format: 'YYYY-MM-DDTHH:mm'
+  end_date?: string | null;
+  status: 'active' | 'completed' | 'cancelled';
+};
+
 const LaborEventModal: React.FC<Props> = ({
   isOpen,
   onClose,
@@ -19,11 +29,11 @@ const LaborEventModal: React.FC<Props> = ({
   event,
   employees
 }) => {
-  const [formData, setFormData] = useState<LaborEventFormData>({
+  const [formData, setFormData] = useState<FormState>({
     name: '',
     description: '',
     employee_id: undefined,
-    start_date: new Date(),
+    start_date: new Date().toISOString().slice(0,16),
     end_date: undefined,
     status: 'active'
   });
@@ -31,19 +41,40 @@ const LaborEventModal: React.FC<Props> = ({
   useEffect(() => {
     if (event) {
       setFormData({
-        name: event.name || '',
-        description: event.description || '',
-        employee_id: event.employee_id,
-        start_date: new Date(event.start_date),
-        end_date: event.end_date ? new Date(event.end_date) : undefined,
+        name: (event as any).labor_event_name || '',
+        description: (event as any).labor_event_description || '',
+        employee_id: event.employee_id ?? undefined,
+        start_date: event.start_date ? new Date(event.start_date).toISOString().slice(0,16) : new Date().toISOString().slice(0,16),
+        end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0,16) : undefined,
         status: event.status
       });
+    } else {
+      // reset to defaults when opening for new event
+      setFormData(prev => ({
+        ...prev,
+        name: '',
+        description: '',
+        employee_id: undefined,
+        start_date: new Date().toISOString().slice(0,16),
+        end_date: undefined,
+        status: 'active'
+      }));
     }
   }, [event]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+
+    const payload: LaborEventFormData = {
+      name: formData.name,
+      description: formData.description,
+      employee_id: formData.employee_id,
+      start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
+      end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
+      status: formData.status
+    };
+
+    await onSubmit(payload);
     onClose();
   };
 
@@ -87,8 +118,11 @@ const LaborEventModal: React.FC<Props> = ({
               Empleado
             </label>
             <select
-              value={formData.employee_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, employee_id: Number(e.target.value) }))}
+              value={formData.employee_id ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormData(prev => ({ ...prev, employee_id: val === '' ? undefined : Number(val) }));
+              }}
               className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               required
             >
@@ -108,8 +142,8 @@ const LaborEventModal: React.FC<Props> = ({
               </label>
               <input
                 type="datetime-local"
-                value={formData.start_date?.toISOString().slice(0, 16)}
-                onChange={(e) => setFormData(prev => ({ ...prev, start_date: new Date(e.target.value) }))}
+                value={formData.start_date ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                 className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
                 required
               />
@@ -121,8 +155,8 @@ const LaborEventModal: React.FC<Props> = ({
               </label>
               <input
                 type="datetime-local"
-                value={formData.end_date?.toISOString().slice(0, 16)}
-                onChange={(e) => setFormData(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
+                value={formData.end_date ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                 className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               />
             </div>
