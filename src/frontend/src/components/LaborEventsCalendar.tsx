@@ -90,25 +90,12 @@ const LaborEventsCalendar: React.FC<Props> = ({
       }
     }
 
-    // Color based on status
-    let backgroundColor, borderColor;
-    switch (event.status) {
-      case 'active':
-        backgroundColor = '#10B981';
-        borderColor = '#059669';
-        break;
-      case 'completed':
-        backgroundColor = '#3B82F6';
-        borderColor = '#2563EB';
-        break;
-      case 'cancelled':
-        backgroundColor = '#EF4444';
-        borderColor = '#DC2626';
-        break;
-      default:
-        backgroundColor = '#6B7280';
-        borderColor = '#4B5563';
-    }
+    // Assign a semantic class name based on status so CSS can control the pill colors
+    const statusClass = event.status === 'completed'
+      ? 'status-completed'
+      : event.status === 'cancelled'
+        ? 'status-inactive'
+        : 'status-active';
 
     return {
       id: String(event.id),
@@ -116,9 +103,9 @@ const LaborEventsCalendar: React.FC<Props> = ({
       start: startDate,
       end: endDate || undefined,
       allDay: isAllDay,
-      backgroundColor,
-      borderColor,
+      // keep text color consistent; let CSS handle background/border via the status class
       textColor: '#FFFFFF',
+      classNames: [statusClass],
       extendedProps: { ...event }
     };
   });
@@ -132,7 +119,8 @@ const LaborEventsCalendar: React.FC<Props> = ({
     let end = preview.end_date ? (preview.end_date instanceof Date ? preview.end_date : parseBackendDateToLocal(String(preview.end_date))) : undefined;
 
     if (start) {
-      calendarEvents.push({
+      // cast to any so we can include backgroundColor/borderColor for preview without TS errors
+      calendarEvents.push(({
         id: 'preview',
         title: `${title} - ${empName}`,
         start,
@@ -141,8 +129,9 @@ const LaborEventsCalendar: React.FC<Props> = ({
         backgroundColor: '#F59E0B',
         borderColor: '#D97706',
         textColor: '#FFFFFF',
+        classNames: ['status-preview'],
         extendedProps: { ...(preview as any), __isPreview: true }
-      });
+      } as any));
     }
   }
 

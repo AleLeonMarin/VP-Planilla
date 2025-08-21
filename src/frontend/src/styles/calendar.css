@@ -45,6 +45,7 @@
 
 .calendar-container .fc-event {
   cursor: pointer;
+  /* Default pill appearance is preserved; specific status colors are applied via additional classes */
   background-color: #A7AA94 !important;
   border: 1px solid #6F7153 !important;
   color: #3B4D36 !important;
@@ -78,6 +79,32 @@
 .calendar-container .fc th,
 .calendar-container .fc td {
   border-color: #D2B48C;
+}
+
+/* Status-specific colors: keep same pill shape/size and hover behavior */
+.calendar-container .fc-event.status-active {
+  background-color: #A7AA94 !important; /* keep original warm neutral for active */
+  border: 1px solid #6F7153 !important;
+  color: #3B4D36 !important;
+}
+
+.calendar-container .fc-event.status-completed {
+  background-color: #94aa9d !important; /* light green background */
+  border: 1px solid #4b5750 !important; /* green border */
+  color: #065F46 !important; /* darker green text */
+}
+
+.calendar-container .fc-event.status-inactive {
+  background-color: #c0c7c3 !important; /* very light gray */
+  border: 1px solid #818386 !important; /* muted gray border */
+  color: #6B7280 !important; /* muted text color */
+}
+
+/* Preview event uses an amber tone but keeps pill styling */
+.calendar-container .fc-event.status-preview {
+  background-color: #F59E0B !important;
+  border: 1px solid #D97706 !important;
+  color: #FFFFFF !important;
 }
 
 .calendar-container .fc-view {
