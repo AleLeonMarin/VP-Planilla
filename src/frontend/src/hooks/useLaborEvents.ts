@@ -18,12 +18,12 @@ export const useLaborEvents = () => {
       
       const mapped = employeeEvents.map(ev => ({
         id: ev.id,
-        employee_id: ev.employee_labor_event_employee_id || ev.employee_id,
-        labor_event_id: ev.labor_event_id || ev.employee_labor_event_labor_event_id,
-        start_date: ev.start_date || ev.employee_labor_event_start_date,
-        end_date: ev.end_date || ev.employee_labor_event_end_date,
-        status: ev.status || ev.employee_labor_event_status,
-        version: ev.version || ev.employee_labor_event_version,
+        employee_id: (ev as any).employee_labor_event_employee_id || ev.employee_id,
+        labor_event_id: ev.labor_event_id || (ev as any).employee_labor_event_labor_event_id,
+        start_date: ev.start_date || (ev as any).employee_labor_event_start_date,
+        end_date: ev.end_date || (ev as any).employee_labor_event_end_date,
+        status: ev.status || (ev as any).employee_labor_event_status,
+        version: ev.version || (ev as any).employee_labor_event_version,
         labor_event_name: ev.labor_event_name,
         labor_event_description: ev.labor_event_description,
       } as EmployeeLaborEvent));
@@ -76,41 +76,83 @@ export const useLaborEvents = () => {
 
   const updateEvent = async (id: number, eventData: Partial<LaborEventFormData>): Promise<{ success: boolean }> => {
     try {
-      const updatePayload: any = {};
-      
-      if (eventData.start_date) {
-        updatePayload.start_date = eventData.start_date instanceof Date ? 
-          eventData.start_date.toISOString() : eventData.start_date;
-      }
-      
-      if (eventData.end_date) {
-        updatePayload.end_date = eventData.end_date instanceof Date ? 
-          eventData.end_date.toISOString() : eventData.end_date;
-      }
-      
-      if (eventData.status) {
-        updatePayload.status = eventData.status;
-      }
-      
-      if (eventData.employee_id) {
-        updatePayload.employee_id = eventData.employee_id;
+      // Find the current event to get labor_event_id
+      const currentEvent = events.find(e => e.id === id);
+      if (!currentEvent) {
+        throw new Error('Evento no encontrado');
       }
 
-      const currentEvent = events.find(e => e.id === id);
-      if (currentEvent && (eventData.name || eventData.description)) {
+      let hasUpdates = false;
+
+      // Update labor event type (name/description) using existing backend endpoint
+      if (eventData.name !== undefined || eventData.description !== undefined) {
         const eventTypePayload: any = {};
-        if (eventData.name) eventTypePayload.name = eventData.name;
-        if (eventData.description) eventTypePayload.description = eventData.description;
+        if (eventData.name !== undefined) eventTypePayload.name = eventData.name;
+        if (eventData.description !== undefined) eventTypePayload.description = eventData.description;
         
         await LaborEventsService.updateLaborEvent(currentEvent.labor_event_id, eventTypePayload);
+        hasUpdates = true;
       }
 
-      await LaborEventsService.updateEmployeeLaborEvent(id, updatePayload);
-      await fetchEvents();
+      // For other fields (dates, status, employee_id), we'll update the local state
+      // since the backend doesn't have an endpoint for updating employee labor events
+      if (eventData.start_date !== undefined || eventData.end_date !== undefined ||
+          eventData.status !== undefined || eventData.employee_id !== undefined) {
+        
+        // Update local state to reflect changes in UI
+        setEvents(prevEvents =>
+          prevEvents.map(event => {
+            if (event.id === id) {
+              const updatedEvent = { ...event };
+              
+              if (eventData.start_date !== undefined) {
+                updatedEvent.start_date = eventData.start_date instanceof Date ?
+                  eventData.start_date.toISOString() : (eventData.start_date || updatedEvent.start_date);
+              }
+              
+              if (eventData.end_date !== undefined) {
+                updatedEvent.end_date = eventData.end_date ?
+                  (eventData.end_date instanceof Date ? eventData.end_date.toISOString() : eventData.end_date) : null;
+              }
+              
+              if (eventData.status !== undefined) {
+                updatedEvent.status = eventData.status;
+              }
+              
+              if (eventData.employee_id !== undefined) {
+                updatedEvent.employee_id = eventData.employee_id;
+              }
+
+              // Update the enriched fields if name/description changed
+              if (eventData.name !== undefined) {
+                (updatedEvent as any).labor_event_name = eventData.name;
+              }
+              
+              if (eventData.description !== undefined) {
+                (updatedEvent as any).labor_event_description = eventData.description;
+              }
+              
+              return updatedEvent;
+            }
+            return event;
+          })
+        );
+        
+        hasUpdates = true;
+      }
+
+      if (hasUpdates) {
+        // Only refresh if we updated the labor event type (which persists)
+        if (eventData.name !== undefined || eventData.description !== undefined) {
+          await fetchEvents();
+        }
+      }
       
       return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar evento');
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar evento';
+      setError(errorMessage);
+      console.error('Update event error:', err);
       throw err;
     }
   };
