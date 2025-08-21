@@ -6,6 +6,7 @@ import {
   getPositionName, 
   getPositionSalary
 } from '@/utils/employeeUtils'
+import { EMPLOYEE_STATUS } from '@/constants';
 import { getEmployees as apiGetEmployees, createEmployee as apiCreateEmployee } from '@/services/employeeService';
 
 /**
@@ -29,13 +30,23 @@ const useEmployeeList = () => {
       try {
         const apiEmployees = await apiGetEmployees();
         // Mapear modelo del backend al frontend Employee
-        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => ({
-          id: String(e.employee_id ?? e.id),
-          name: [e.name, e.middle_name, e.last_name].filter(Boolean).join(' '),
-          position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
-          salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
-          status: (e.status ?? e.employee_status ?? 'active') as any
-        }));
+        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => {
+          const rawStatus = String(e.status ?? e.employee_status ?? 'active');
+          let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
+          // Map common single-letter or legacy codes to normalized constants
+          if (rawStatus === 'A' || rawStatus.toLowerCase() === 'active' || rawStatus === 'Al día') normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
+          else if (rawStatus === 'V' || rawStatus.toLowerCase() === 'vacation' || rawStatus === 'Vacaciones') normalizedStatus = EMPLOYEE_STATUS.VACATION;
+          else if (rawStatus === 'I' || rawStatus.toLowerCase() === 'incomplete' || rawStatus === 'Asistencia incompleta') normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
+          else if (rawStatus.toLowerCase().includes('incap')) normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
+
+          return {
+            id: String(e.employee_id ?? e.id),
+            name: [e.name, e.middle_name, e.last_name].filter(Boolean).join(' '),
+            position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
+            salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
+            status: normalizedStatus as any
+          } as Employee;
+        });
 
         setEmployees(mapped);
         setFilteredEmployees(mapped);
@@ -49,7 +60,10 @@ const useEmployeeList = () => {
       }
     };
 
-    loadEmployees();
+  loadEmployees();
+
+  // expose a refresh function by returning it from closure
+  // (we'll create a named function below to call from outside via returned object)
   }, []);
 
   // Filtrar empleados basado en el término de búsqueda
@@ -127,6 +141,35 @@ const useEmployeeList = () => {
     handleAddEmployee,
     openAddEmployeeModal,
     closeAddEmployeeModal
+    ,
+    // Provide a refresh function so pages can re-fetch employees on demand
+    refreshEmployees: async () => {
+      try {
+        const apiEmployees = await apiGetEmployees();
+        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => {
+          const rawStatus = String(e.status ?? e.employee_status ?? 'active');
+          let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
+          if (rawStatus === 'A' || rawStatus.toLowerCase() === 'active' || rawStatus === 'Al día') normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
+          else if (rawStatus === 'V' || rawStatus.toLowerCase() === 'vacation' || rawStatus === 'Vacaciones') normalizedStatus = EMPLOYEE_STATUS.VACATION;
+          else if (rawStatus === 'I' || rawStatus.toLowerCase() === 'incomplete' || rawStatus === 'Asistencia incompleta') normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
+          else if (rawStatus.toLowerCase().includes('incap')) normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
+
+          return {
+            id: String(e.employee_id ?? e.id),
+            name: [e.name, e.middle_name, e.last_name].filter(Boolean).join(' '),
+            position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
+            salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
+            status: normalizedStatus as any
+          } as Employee;
+        });
+
+        setEmployees(mapped);
+        setFilteredEmployees(mapped);
+        updateStats(mapped);
+      } catch (error) {
+        console.error('Error refreshing employees', error);
+      }
+    }
   };
 };
 
