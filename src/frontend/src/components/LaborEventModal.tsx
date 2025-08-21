@@ -118,7 +118,7 @@ const LaborEventModal: React.FC<Props> = ({
       start_date: defaultStart, 
       end_date: undefined 
     });
-  }, [isOpen, event, initialDates]); // Removed reset and onPreviewChange
+  }, [isOpen, event, initialDates]);
 
   // Update preview when form values change (only when creating new event)
   useEffect(() => {
@@ -130,7 +130,7 @@ const LaborEventModal: React.FC<Props> = ({
         end_date: watchedValues.end_date || undefined,
       });
     }
-  }, [watchedValues.name, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen]); // More specific dependencies
+  }, [watchedValues.name, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen]);
 
   const onFormSubmit = async (data: FormData) => {
     const payload: LaborEventFormData = {
@@ -150,156 +150,201 @@ const LaborEventModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-6 right-6 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-[#3B4D36]">
-          {event ? 'Editar Evento' : 'Nuevo Evento'}
-        </h2>
-        
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#3B4D36]">
-              Nombre del Evento
-            </label>
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="text"
-                  className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                />
-              )}
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4D36]">
-              Descripción
-            </label>
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <textarea
-                  {...field}
-                  className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                  rows={3}
-                />
-              )}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4D36]">
-              Empleado
-            </label>
-            <Controller
-              name="employee_id"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                >
-                  <option value={0}>Seleccionar empleado</option>
-                  {employees.map(employee => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.employee_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.employee_id.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#3B4D36]">
-                Fecha Inicio
-              </label>
-              <Controller
-                name="start_date"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="datetime-local"
-                    className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                  />
-                )}
-              />
-              {errors.start_date && (
-                <p className="mt-1 text-sm text-red-600">{errors.start_date.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#3B4D36]">
-                Fecha Fin
-              </label>
-              <Controller
-                name="end_date"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="datetime-local"
-                    className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#3B4D36]">
-              Estado
-            </label>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
-                >
-                  <option value="active">Activo</option>
-                  <option value="completed">Completado</option>
-                  <option value="cancelled">Cancelado</option>
-                </select>
-              )}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 mt-6">
+    <>
+      {/* Backdrop con animación de fade */}
+      <div 
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={onClose}
+      />
+      
+      {/* Modal Container flotante centrado con animación de scale y fade */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className={`w-full max-w-lg bg-white rounded-xl shadow-2xl border border-[#E0D6B7] transition-all duration-500 ease-out ${
+            isOpen 
+              ? 'transform scale-100 opacity-100 translate-y-0' 
+              : 'transform scale-95 opacity-0 translate-y-4'
+          }`}
+          onClick={(e) => e.stopPropagation()} // Prevenir cierre al hacer click en el modal
+        >
+          {/* Header del modal */}
+          <div className="bg-[#6F7153] px-6 py-4 rounded-t-xl flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">
+              {event ? 'Editar Evento' : 'Nuevo Evento'}
+            </h2>
             <button
-              type="button"
-              onClick={() => { onPreviewChange?.(null); onClose(); }}
-              className="px-4 py-2 text-[#3B4D36] border border-[#3B4D36] rounded-lg hover:bg-[#E7DCC1]"
-              disabled={isSubmitting}
+              onClick={onClose}
+              className="text-white hover:text-gray-200 transition-colors p-1 hover:bg-white/10 rounded-full"
             >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#3B4D36] text-white rounded-lg hover:bg-[#6F7153] disabled:opacity-50"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Guardando...' : (event ? 'Guardar Cambios' : 'Crear Evento')}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        </form>
+
+          {/* Contenido del formulario con altura máxima y scroll */}
+          <div className="max-h-[70vh] overflow-y-auto p-6">
+            <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                  Nombre del Evento
+                </label>
+                <Controller
+                  name="name"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      type="text"
+                      className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all"
+                      placeholder="Ingrese el nombre del evento"
+                    />
+                  )}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600 animate-pulse">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                  Descripción
+                </label>
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <textarea
+                      {...field}
+                      className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all resize-none"
+                      rows={3}
+                      placeholder="Descripción opcional del evento"
+                    />
+                  )}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                  Empleado
+                </label>
+                <Controller
+                  name="employee_id"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all"
+                    >
+                      <option value={0}>Seleccionar empleado</option>
+                      {employees.map(employee => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                {errors.employee_id && (
+                  <p className="mt-1 text-sm text-red-600 animate-pulse">{errors.employee_id.message}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                    Fecha Inicio
+                  </label>
+                  <Controller
+                    name="start_date"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="datetime-local"
+                        className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all"
+                      />
+                    )}
+                  />
+                  {errors.start_date && (
+                    <p className="mt-1 text-sm text-red-600 animate-pulse">{errors.start_date.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                    Fecha Fin
+                  </label>
+                  <Controller
+                    name="end_date"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="datetime-local"
+                        className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#3B4D36] mb-2">
+                  Estado
+                </label>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      className="w-full rounded-lg border border-[#D2B48C] p-3 focus:ring-2 focus:ring-[#6F7153] focus:border-transparent transition-all"
+                    >
+                      <option value="active">Activo</option>
+                      <option value="completed">Completado</option>
+                      <option value="cancelled">Cancelado</option>
+                    </select>
+                  )}
+                />
+              </div>
+            </form>
+          </div>
+
+          {/* Footer con botones */}
+          <div className="border-t border-[#E0D6B7] p-6 bg-[#F5F1E8] rounded-b-xl">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { onPreviewChange?.(null); onClose(); }}
+                className="flex-1 px-4 py-3 text-[#3B4D36] border border-[#3B4D36] rounded-lg hover:bg-[#E7DCC1] transition-all duration-200 font-medium"
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                onClick={handleSubmit(onFormSubmit)}
+                className="flex-1 px-4 py-3 bg-[#6F7153] text-white rounded-lg hover:bg-[#5D614A] transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Guardando...
+                  </div>
+                ) : (
+                  event ? 'Guardar Cambios' : 'Crear Evento'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
