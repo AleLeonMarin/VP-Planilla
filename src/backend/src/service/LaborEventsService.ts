@@ -129,10 +129,12 @@ export class LaborEventsService {
       end_date: pe.employee_labor_event_end_date,
       status: pe.employee_labor_event_status,
       version: pe.employee_labor_event_version,
-    }));
+      // Agregar los datos del evento laboral desde la relación incluida
+      labor_event_name: pe.vpg_labor_events?.labor_events_name || null,
+      labor_event_description: pe.vpg_labor_events?.labor_events_description || null,
+    } as any));
 
-    // Attach labor event names/descriptions as enriched data by querying the included relation
-    // Note: we can't add non-model fields to the returned type, the frontend will join names via an extended prop if needed
+
     return employeeLaborEvents;
   }
 

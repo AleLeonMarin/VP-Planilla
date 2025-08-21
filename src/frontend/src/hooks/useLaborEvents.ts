@@ -26,16 +26,19 @@ export const useLaborEvents = () => {
       
       // Map assignments to frontend shape and attach labor event name
       const mapped = employeeEvents.map(ev => {
-        const type = types.find(t => t.id === ev.labor_event_id);
+        console.log('Raw employee event from backend:', ev); // DEBUG - para ver la estructura real
+        
         return {
           id: ev.id,
-          employee_id: ev.employee_labor_event_employee_id || ev.employee_id || ev.employee_id,
+          employee_id: ev.employee_labor_event_employee_id || ev.employee_id,
           labor_event_id: ev.labor_event_id || ev.employee_labor_event_labor_event_id,
           start_date: ev.start_date || ev.employee_labor_event_start_date,
           end_date: ev.end_date || ev.employee_labor_event_end_date,
           status: ev.status || ev.employee_labor_event_status,
           version: ev.version || ev.employee_labor_event_version,
-          labor_event_name: type?.name || ev.labor_event_name || null,
+          // Ahora el backend envía estos campos correctamente
+          labor_event_name: ev.labor_event_name,
+          labor_event_description: ev.labor_event_description,
         } as any;
       });
       console.log('Mapped events:', mapped.length, mapped); // DEBUG
@@ -117,21 +120,82 @@ export const useLaborEvents = () => {
 
   const updateEvent = async (id: number, eventData: Partial<LaborEventFormData>) => {
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/${id}`, {
+      console.log('updateEvent called with:', { id, eventData }); // DEBUG
+      
+      // Cuando editamos un evento, necesitamos actualizar la asignación del empleado, no el tipo de evento
+      // El id que recibimos es el ID de la asignación (employee_labor_event_id)
+      
+      // Preparar el payload para actualizar la asignación
+      const updatePayload: any = {};
+      
+      if (eventData.start_date) {
+        updatePayload.start_date = eventData.start_date instanceof Date ? 
+          eventData.start_date.toISOString() : eventData.start_date;
+      }
+      
+      if (eventData.end_date) {
+        updatePayload.end_date = eventData.end_date instanceof Date ? 
+          eventData.end_date.toISOString() : eventData.end_date;
+      }
+      
+      if (eventData.status) {
+        updatePayload.status = eventData.status;
+      }
+      
+      if (eventData.employee_id) {
+        updatePayload.employee_id = eventData.employee_id;
+      }
+
+      console.log('Update payload being sent:', updatePayload); // DEBUG
+
+      // Si se está actualizando el nombre o descripción del evento, necesitamos actualizar el tipo de evento
+      const currentEvent = events.find(e => e.id === id);
+      if (currentEvent && (eventData.name || eventData.description)) {
+        const eventTypePayload: any = {};
+        if (eventData.name) eventTypePayload.name = eventData.name;
+        if (eventData.description) eventTypePayload.description = eventData.description;
+        
+        console.log('Updating event type with:', eventTypePayload); // DEBUG
+        
+        // Actualizar el tipo de evento
+        const eventTypeResponse = await fetch(`${API_CONFIG.baseUrl}/labor-events/${currentEvent.labor_event_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventTypePayload),
+        });
+        
+        if (!eventTypeResponse.ok) {
+          throw new Error('Error al actualizar el tipo de evento');
+        }
+      }
+
+      // Actualizar la asignación del empleado usando el endpoint PUT
+      console.log('Sending PUT request to:', `${API_CONFIG.baseUrl}/labor-events/assign/${id}`); // DEBUG
+      const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(eventData),
+        body: JSON.stringify(updatePayload),
       });
 
-      if (!response.ok) throw new Error('Error al actualizar evento');
-      const updatedEvent = await response.json();
-      setEvents(prev => prev.map(event => 
-        event.id === id ? updatedEvent : event
-      ));
-      return updatedEvent;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('PUT request failed:', response.status, errorText); // DEBUG
+        throw new Error('Error al actualizar evento');
+      }
+      
+      const responseData = await response.json();
+      console.log('PUT response received:', responseData); // DEBUG
+      
+      // Refrescar los eventos desde el servidor para obtener los datos actualizados
+      await fetchEvents();
+      
+      // Retornar éxito sin intentar buscar el evento actualizado
+      // ya que fetchEvents() actualizará el estado y los componentes se re-renderizarán
+      return { success: true };
     } catch (err) {
+      console.error('Error in updateEvent:', err); // DEBUG
       setError(err instanceof Error ? err.message : 'Error al actualizar evento');
       throw err;
     }

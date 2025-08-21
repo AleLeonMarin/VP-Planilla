@@ -18,13 +18,11 @@ import {
 interface Props {
   onEventClick?: (event: EmployeeLaborEvent) => void;
   onDateSelect?: (start: Date, end: Date) => void;
-  // New props to receive events and control functions from parent hook
   events: EmployeeLaborEvent[];
   isLoading: boolean;
   refreshEvents: () => Promise<void>;
   deleteAssignment: (id: number) => Promise<void>;
   preview?: Partial<EmployeeLaborEvent> | null;
-  // New: update event handler provided by parent
   updateEvent?: (id: number, data: Partial<any>) => Promise<any>;
 }
 
@@ -35,6 +33,7 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
   const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | null>(null);
   const menuOpenedAtRef = React.useRef<number | null>(null);
   const [calendarKey, setCalendarKey] = useState(0); // Force re-render key
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Force calendar re-render when events change
   React.useEffect(() => {
@@ -184,17 +183,17 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
       // Prevent default to stop browser context menu appearing
       jsEvent.preventDefault();
       jsEvent.stopPropagation();
-      // If right-click (button === 2) don't open the custom menu
+      
+      // Si es click derecho (button === 2), no hacer nada aquí
+      // El menú se abrirá via el event listener de contextmenu
       if (jsEvent.button === 2) return;
     }
 
+    // Solo manejar click izquierdo: abrir modal de edición
     const event = events.find(e => String(e.id) === info.event.id);
     if (event && onEventClick) {
       onEventClick(event);
     }
-    // open the small options menu near cursor (offset a little)
-    const { clientX = 0, clientY = 0 } = jsEvent || {};
-    openMenuForEvent(info.event.toPlainObject(), clientX + 6, clientY + 6);
   };
 
   // Close menu on outside click
@@ -295,88 +294,223 @@ const LaborEventsCalendar: React.FC<Props> = ({ onEventClick, onDateSelect, even
     }
   };
 
+  // Función para obtener eventos del mes actual
+  const getCurrentMonthEvents = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    return events.filter(event => {
+      const startDate = parseBackendDateToLocal(event.start_date as any);
+      if (!startDate) return false;
+      
+      return startDate.getFullYear() === year && startDate.getMonth() === month;
+    }).sort((a, b) => {
+      const dateA = parseBackendDateToLocal(a.start_date as any);
+      const dateB = parseBackendDateToLocal(b.start_date as any);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    });
+  };
+
+  // Función para formatear la fecha en español
+  const formatEventDate = (dateStr: string | Date) => {
+    const date = parseBackendDateToLocal(dateStr as any);
+    if (!date) return '';
+    
+    const day = date.getDate();
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dayName = dayNames[date.getDay()];
+    
+    return `${day} ${dayName}`;
+  };
+
+  // Función para obtener el nombre del mes actual
+  const getCurrentMonthName = () => {
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Cargando eventos...</div>;
   }
 
+  const monthEvents = getCurrentMonthEvents();
+
   return (
-    <div className="calendar-container bg-white rounded-lg shadow p-4">
-      <FullCalendar
-        key={calendarKey} // Force re-render when events change
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
-        events={calendarEvents}
-        // Ensure FullCalendar uses local timezone to avoid day-shifts
-        timeZone="local"
-        // Enable event resizing and dragging
-        editable={true}
-        eventResizableFromStart={true}
-        eventDurationEditable={true}
-        eventStartEditable={true}
-        // Event interaction handlers
-        eventResize={handleEventResize}
-        eventDrop={handleEventDrop}
-        // Prevent browser context menu on event elements
-        eventDidMount={(info) => {
-          try {
-            // prevent default context menu and open our custom one
-            info.el.addEventListener('contextmenu', (e: MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                const evObj = info.event.toPlainObject();
-                openMenuForEvent(evObj, e.clientX || 0, e.clientY || 0);
-              } catch (ex) {}
-            });
+    <div className="flex gap-6">
+      {/* Calendario principal */}
+      <div className="flex-1 calendar-container bg-white rounded-lg shadow p-4">
+        <FullCalendar
+          key={calendarKey} // Force re-render when events change
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          events={calendarEvents}
+          // Ensure FullCalendar uses local timezone to avoid day-shifts
+          timeZone="local"
+          // Enable event resizing and dragging
+          editable={true}
+          eventResizableFromStart={true}
+          eventDurationEditable={true}
+          eventStartEditable={true}
+          // Event interaction handlers
+          eventResize={handleEventResize}
+          eventDrop={handleEventDrop}
+          // Prevent browser context menu on event elements
+          eventDidMount={(info) => {
+            try {
+              // prevent default context menu and open our custom one
+              info.el.addEventListener('contextmenu', (e: MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const evObj = info.event.toPlainObject();
+                  openMenuForEvent(evObj, e.clientX || 0, e.clientY || 0);
+                } catch (ex) {}
+              });
 
-          } catch (e) {
-            // ignore
-          }
-        }}
-        eventClick={handleEventClick}
-        select={handleDateSelect}
-        selectable={true}
-        locale="es"
-        height="auto"
-      />
+            } catch (e) {
+              // ignore
+            }
+          }}
+          eventClick={handleEventClick}
+          select={handleDateSelect}
+          selectable={true}
+          locale="es"
+          height="auto"
+          datesSet={(dateInfo) => {
+            // Usar la fecha del centro de la vista para obtener el mes correcto
+            // dateInfo.start puede ser del mes anterior si la vista incluye días de otros meses
+            const viewCenter = new Date(dateInfo.start.getTime() + (dateInfo.end.getTime() - dateInfo.start.getTime()) / 2);
+            setCurrentDate(viewCenter);
+          }}
+        />
 
-      {/* Options popover */}
-      {anchor && selectedEvent && (
-        <div
-          style={{ position: 'fixed', left: anchor.x, top: anchor.y, transform: 'translate(6px, 6px)' }}
-          className="laborevent-options-menu z-50 w-48 bg-[#F9F1DC] border rounded-md shadow-lg"
-        >
-          <div className="py-1">
-            <button
-              onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
-              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
-            >
-              <EyeIcon className="w-4 h-4" />
-              Ver Perfil
-            </button>
-            <button
-              onClick={() => { /* TODO: open edit modal */ closeMenu(); }}
-              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
-            >
-              <PencilIcon className="w-4 h-4" />
-              Editar Información
-            </button>
-            <div className="border-t border-[#E7DCC1] mx-2 my-1"></div>
-            <button
-              onClick={handleDeleteClick}
-              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-[#E7DCC1] transition-colors"
-            >
-              <TrashIcon className="w-4 h-4" />
-              Eliminar
-            </button>
+        {/* Options popover */}
+        {anchor && selectedEvent && (
+          <div
+            style={{ position: 'fixed', left: anchor.x, top: anchor.y, transform: 'translate(6px, 6px)' }}
+            className="laborevent-options-menu z-50 w-48 bg-[#F9F1DC] border rounded-md shadow-lg"
+          >
+            <div className="py-1">
+              <button
+                onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
+                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
+              >
+                <EyeIcon className="w-4 h-4" />
+                Ver Perfil
+              </button>
+              <button
+                onClick={() => { /* TODO: open edit modal */ closeMenu(); }}
+                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
+              >
+                <PencilIcon className="w-4 h-4" />
+                Editar Información
+              </button>
+              <div className="border-t border-[#E7DCC1] mx-2 my-1"></div>
+              <button
+                onClick={handleDeleteClick}
+                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-[#E7DCC1] transition-colors"
+              >
+                <TrashIcon className="w-4 h-4" />
+                Eliminar
+              </button>
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Minimenu lateral de eventos del mes */}
+      <div className="w-80 bg-[#F5F1E8] rounded-lg shadow-sm border border-[#E0D6B7] flex flex-col h-fit max-h-[670px]">
+        {/* Header del minimenu */}
+        <div className="bg-[#E7DCC1] px-4 py-3 rounded-t-lg border-b border-[#D2B48C] flex-shrink-0">
+          <h3 className="text-sm font-semibold text-[#3B4D36] uppercase tracking-wider">
+            Eventos - {getCurrentMonthName()}
+          </h3>
         </div>
-      )}
+
+        {/* Lista de eventos */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {monthEvents.length === 0 ? (
+            <div className="p-4 text-center text-[#8B8B8B] text-sm">
+              No hay eventos este mes
+            </div>
+          ) : (
+            <div className="divide-y divide-[#E0D6B7]">
+              {monthEvents.map((event) => {
+                const employee = employees.find(e => String(e.id) === String(event.employee_id));
+                const eventName = (event as any).labor_event_name || `Evento #${event.labor_event_id}`;
+                const startDate = parseBackendDateToLocal(event.start_date as any);
+                const endDate = parseBackendDateToLocal(event.end_date as any);
+                
+                return (
+                  <div 
+                    key={event.id} 
+                    className="p-3 hover:bg-[#FDFCF9] transition-colors cursor-pointer"
+                    onClick={() => onEventClick?.(event)}
+                  >
+                    {/* Fecha del evento */}
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="flex flex-col items-center min-w-[40px]">
+                        <div className="text-lg font-bold text-[#3B4D36]">
+                          {startDate ? startDate.getDate() : '??'}
+                        </div>
+                        <div className="text-xs text-[#5D4E37] uppercase">
+                          {formatEventDate(event.start_date).split(' ')[1]}
+                        </div>
+                      </div>
+                      
+                      {/* Información del evento */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-[#3B4D36] text-sm truncate">
+                          {eventName}
+                        </h4>
+                        <p className="text-xs text-[#5D4E37] truncate">
+                          {employee ? employee.name : 'Empleado no asignado'}
+                        </p>
+                        {endDate && endDate.getTime() !== startDate?.getTime() && (
+                          <p className="text-xs text-[#8B8B8B]">
+                            Hasta: {event.end_date ? formatEventDate(event.end_date) : ''}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Estado del evento */}
+                      <div className="flex flex-col items-end">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          event.status === 'active' ? 'bg-green-100 text-green-800' :
+                          event.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {event.status === 'active' ? 'Activo' :
+                           event.status === 'completed' ? 'Completado' :
+                           event.status === 'cancelled' ? 'Cancelado' :
+                           'Pendiente'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Descripción si existe */}
+                    {(event as any).labor_event_description && (
+                      <p className="text-xs text-[#8B8B8B] mt-1 line-clamp-2">
+                        {(event as any).labor_event_description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

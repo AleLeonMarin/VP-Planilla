@@ -53,6 +53,10 @@ const LaborEventModal: React.FC<Props> = ({
     if (!isOpen) return;
 
     if (event) {
+      console.log('Modal received event:', event); // DEBUG
+      console.log('Event labor_event_name:', (event as any).labor_event_name); // DEBUG
+      console.log('Event labor_event_description:', (event as any).labor_event_description); // DEBUG
+      
       const startIsoLocal = event.start_date ? toLocalInput(new Date(event.start_date)) : toLocalInput(new Date());
       const endIsoLocal = event.end_date ? toLocalInput(new Date(event.end_date)) : undefined;
       setFormData({
@@ -63,14 +67,8 @@ const LaborEventModal: React.FC<Props> = ({
         end_date: endIsoLocal,
         status: event.status
       });
-      // notify parent of preview when editing existing event - pass local strings
-      onPreviewChange?.({
-        id: event.id,
-        labor_event_name: (event as any).labor_event_name,
-        employee_id: event.employee_id,
-        start_date: startIsoLocal,
-        end_date: endIsoLocal,
-      });
+      // NO crear preview cuando se está editando un evento existente
+      // El evento ya existe en el calendario
       return;
     }
 
@@ -102,6 +100,9 @@ const LaborEventModal: React.FC<Props> = ({
       status: formData.status
     };
 
+    console.log('Modal submitting payload:', payload); // DEBUG
+    console.log('Current formData.status:', formData.status); // DEBUG
+
     await onSubmit(payload);
     // clear preview
     onPreviewChange?.(null);
@@ -126,7 +127,13 @@ const LaborEventModal: React.FC<Props> = ({
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => { setFormData(prev => ({ ...prev, name: e.target.value })); onPreviewChange?.({ labor_event_name: e.target.value, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id }); }}
+              onChange={(e) => { 
+                setFormData(prev => ({ ...prev, name: e.target.value })); 
+                // Solo crear preview si NO estamos editando un evento existente
+                if (!event) {
+                  onPreviewChange?.({ labor_event_name: e.target.value, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id });
+                }
+              }}
               className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               required
             />
@@ -138,7 +145,13 @@ const LaborEventModal: React.FC<Props> = ({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => { setFormData(prev => ({ ...prev, description: e.target.value })); onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id }); }}
+              onChange={(e) => { 
+                setFormData(prev => ({ ...prev, description: e.target.value })); 
+                // Solo crear preview si NO estamos editando un evento existente
+                if (!event) {
+                  onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id });
+                }
+              }}
               className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               rows={3}
             />
@@ -154,7 +167,10 @@ const LaborEventModal: React.FC<Props> = ({
                 const val = e.target.value;
                 const numeric = val === '' ? undefined : Number(val);
                 setFormData(prev => ({ ...prev, employee_id: numeric }));
-                onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: numeric });
+                // Solo crear preview si NO estamos editando un evento existente
+                if (!event) {
+                  onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: formData.end_date ?? undefined, employee_id: numeric });
+                }
               }}
               className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               required
@@ -176,7 +192,13 @@ const LaborEventModal: React.FC<Props> = ({
               <input
                 type="datetime-local"
                 value={formData.start_date ?? ''}
-                onChange={(e) => { setFormData(prev => ({ ...prev, start_date: e.target.value })); onPreviewChange?.({ labor_event_name: formData.name, start_date: e.target.value, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id }); }}
+                onChange={(e) => { 
+                  setFormData(prev => ({ ...prev, start_date: e.target.value })); 
+                  // Solo crear preview si NO estamos editando un evento existente
+                  if (!event) {
+                    onPreviewChange?.({ labor_event_name: formData.name, start_date: e.target.value, end_date: formData.end_date ?? undefined, employee_id: formData.employee_id });
+                  }
+                }}
                 className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
                 required
               />
@@ -189,7 +211,13 @@ const LaborEventModal: React.FC<Props> = ({
               <input
                 type="datetime-local"
                 value={formData.end_date ?? ''}
-                onChange={(e) => { setFormData(prev => ({ ...prev, end_date: e.target.value })); onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: e.target.value, employee_id: formData.employee_id }); }}
+                onChange={(e) => { 
+                  setFormData(prev => ({ ...prev, end_date: e.target.value })); 
+                  // Solo crear preview si NO estamos editando un evento existente
+                  if (!event) {
+                    onPreviewChange?.({ labor_event_name: formData.name, start_date: formData.start_date ?? undefined, end_date: e.target.value, employee_id: formData.employee_id });
+                  }
+                }}
                 className="mt-1 block w-full rounded-md border border-[#D2B48C] p-2"
               />
             </div>
