@@ -5,6 +5,8 @@ import authRoutes from './routes/AuthRoute'
 import employeeRoutes from './routes/EmployeeRoute';
 import laborEventsRoutes from './routes/LaborEventsRoute';
 import deductionsRoutes from './routes/DeductionsRoute';
+import payrollTypeRoutes from './routes/PayrollTypeRoute';
+import payrollRoutes from './routes/PayrollRoutes';
 dotenv.config();
 
 const app = express();
@@ -37,6 +39,8 @@ app.use('/api', authRoutes);
 app.use('/api', employeeRoutes);
 app.use('/api', laborEventsRoutes);
 app.use('/api', deductionsRoutes);
+app.use('/api', payrollTypeRoutes);
+app.use('/api', payrollRoutes);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌐 Servidor escuchando en http://0.0.0.0:${PORT}`);
