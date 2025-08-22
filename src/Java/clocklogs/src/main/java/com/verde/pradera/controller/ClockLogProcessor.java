@@ -51,20 +51,35 @@ public class ClockLogProcessor {
 
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
-
-                    if (kind == StandardWatchEventKinds.OVERFLOW) {
-                        continue;
-                    }
-
-                    // The filename is the context of the event.
+                    if (kind == StandardWatchEventKinds.OVERFLOW) continue;
                     @SuppressWarnings("unchecked")
                     WatchEvent<Path> ev = (WatchEvent<Path>) event;
                     Path fileName = ev.context();
+                    Path fullPath = directoryPath.resolve(fileName);
 
-                    if (fileName.toString().endsWith(".ser")) {
-                        Path fullPath = directoryPath.resolve(fileName);
-                        System.out.println("\n✅ New .ser file detected: " + fileName);
-                        processFile(fullPath.toFile(), errorDir);
+                    List<clockLogsDB> clockLogs = null;
+                    try {
+                        if (fileName.toString().endsWith(".ser")) {
+                            System.out.println("\n✅ New .ser file detected: " + fileName);
+                            clockLogs = reader.readAndProcess(fullPath.toFile());
+                        } else if (fileName.toString().endsWith(".csv")) {
+                            System.out.println("\n✅ New .csv file detected: " + fileName);
+                            clockLogs = reader.readCSV(fullPath.toFile());
+                        } else if (fileName.toString().endsWith(".xlsx") || fileName.toString().endsWith(".xls")) {
+                            System.out.println("\n✅ New .xls file detected: " + fileName);
+                            clockLogs = reader.readXLS(fullPath.toFile());
+                        }
+                        if (clockLogs != null && !clockLogs.isEmpty()) {
+                            printProcessedLogs(clockLogs);
+                            saveClockLogsToDatabase(clockLogs);
+                            fullPath.toFile().delete();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("❌ Failed to process file '" + fileName + "'.");
+                        e.printStackTrace();
+                        Path targetPath = errorDir.resolve(fileName);
+                        Files.move(fullPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                        System.out.println("❌ Moved failed file to: " + targetPath);
                     }
                 }
 
@@ -77,46 +92,6 @@ public class ClockLogProcessor {
         } catch (IOException e) {
             System.err.println("A critical I/O error occurred in the watch service: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Processes a single .ser file. After processing, the file is deleted if
-     * successful,
-     * or moved to an error directory if it fails.
-     * 
-     * @param serFile  The file to process.
-     * @param errorDir The directory to move failed files to.
-     */
-    private void processFile(File serFile, Path errorDir) {
-        boolean success = false;
-        try {
-            // Give the file system a moment to finish writing the file.
-            Thread.sleep(500);
-
-            List<clockLogsDB> clockLogs = reader.readAndProcess(serFile);
-            if (!clockLogs.isEmpty()) {
-                printProcessedLogs(clockLogs);
-                saveClockLogsToDatabase(clockLogs);
-            }
-            success = true;
-        } catch (Exception e) {
-            System.err.println("❌ Failed to process file '" + serFile.getName() + "'. See error below:");
-            e.printStackTrace();
-        } finally {
-            if (success) {
-                if (serFile.delete()) {
-                    System.out.println("✅ Successfully processed and deleted file: " + serFile.getName());
-                }
-            } else {
-                try {
-                    Path targetPath = errorDir.resolve(serFile.getName());
-                    Files.move(serFile.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println("❌ Moved failed file to: " + targetPath);
-                } catch (IOException e) {
-                    System.err.println("Could not move failed file: " + serFile.getName());
-                }
-            }
         }
     }
 
