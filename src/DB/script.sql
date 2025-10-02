@@ -197,6 +197,13 @@ CREATE TABLE
     );
 
 CREATE TABLE
+    vpg_deductions_per_employee (
+        deductions_per_employee_employee_id INTEGER NOT NULL,
+        deductions_per_employee_deduction_id INTEGER NOT NULL,
+        deductions_per_employee_version INTEGER DEFAULT 1 NOT NULL
+    );
+
+CREATE TABLE
     vpg_employee_deductions (
         employee_deductions_employee_id INTEGER NOT NULL,
         employee_deductions_deduction_id INTEGER NOT NULL,
@@ -378,6 +385,9 @@ alter table vpg_report_versions add constraint fk_vpg_report_versions_report_log
 
 -- Audit logs relationships
 alter table vpg_audit_logs add constraint fk_vpg_audit_logs_users_21 foreign key (audit_logs_user_id) references vpg_users (user_id);
+
+alter table vpg_deductions_per_employee add constraint fk_vpg_deductions_per_employee_employees_22 foreign key (deductions_per_employee_employee_id) references vpg_employees (employee_id);
+alter table vpg_deductions_per_employee add constraint fk_vpg_deductions_per_employee_deductions_23 foreign key (deductions_per_employee_deduction_id) references vpg_deductions (deductions_id);
 
 -- === END OF RELATIONSHIPS === --
 -- === Indexes === --

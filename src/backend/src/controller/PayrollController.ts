@@ -2,6 +2,13 @@ import { Request, Response } from "express";
 import { PayrollService } from "../service/PayrollService";
 
 export class PayrollController {
+  /**
+   * Create a new payroll in the system
+   * POST /payroll/create
+   * @param req - Express request object containing payroll data
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with created payroll data or error
+   */
   static async createPayroll(req: Request, res: Response) {
     try {
       const payroll = await PayrollService.createPayroll(req.body);
@@ -12,6 +19,13 @@ export class PayrollController {
     }
   }
 
+  /**
+   * Get payroll by ID
+   * GET /payroll/:id
+   * @param req - Express request object containing payroll ID in params
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with payroll data or error
+   */
   static async getPayrollById(req: Request, res: Response) {
     try {
       const payroll = await PayrollService.getPayrollById(
@@ -25,6 +39,13 @@ export class PayrollController {
     }
   }
 
+  /**
+   * Update an existing payroll
+   * PUT /payroll/:id
+   * @param req - Express request object containing payroll ID in params and update data in body
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with updated payroll data or error
+   */
   static async updatePayroll(req: Request, res: Response) {
     try {
       const payroll = await PayrollService.updatePayroll(

@@ -2,6 +2,13 @@ import { Request, Response } from "express";
 import { DeductionsService } from "../service/DeductionsService";
 
 export class DeductionsController {
+  /**
+   * Create a new deduction in the system
+   * POST /deduction/create
+   * @param req - Express request object containing deduction data
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with created deduction data or error
+   */
   static async createDeduction(req: Request, res: Response): Promise<Response> {
     try {
       const deduction = await DeductionsService.createDeduction(req.body);
@@ -12,6 +19,13 @@ export class DeductionsController {
     }
   }
 
+  /**
+   * Get all deductions from the system
+   * GET /deductions
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with array of deductions or error
+   */
   static async getAllDeductions(
     req: Request,
     res: Response
@@ -25,6 +39,13 @@ export class DeductionsController {
     }
   }
 
+  /**
+   * Update an existing deduction
+   * PUT /deductions/:id
+   * @param req - Express request object containing deduction ID in params and update data in body
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with updated deduction data or error
+   */
   static async updateDeduction(req: Request, res: Response): Promise<Response> {
     const deductionId = parseInt(req.params.id, 10);
     const deductionData = req.body;
@@ -44,6 +65,13 @@ export class DeductionsController {
     }
   }
 
+  /**
+   * Delete a deduction by ID
+   * DELETE /deductions/:id
+   * @param req - Express request object containing deduction ID in params
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with success message or error
+   */
   static async deleteDeduction(req: Request, res: Response): Promise<Response> {
     const deductionId = parseInt(req.params.id, 10);
 

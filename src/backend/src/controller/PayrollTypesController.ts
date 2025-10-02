@@ -2,6 +2,13 @@ import { Request, Response } from "express";
 import { PayrollTypeService } from "../service/PayrollTypeService";
 
 export class PayrollTypesController {
+  /**
+   * Create a new payroll type in the system
+   * POST /payroll-type/create
+   * @param req - Express request object containing payroll type data
+   * @param res - Express response object
+   * @returns Promise<void> - HTTP response with created payroll type data or error
+   */
   static async createPayrollType(req: Request, res: Response): Promise<void> {
     try {
       const payrollType = await PayrollTypeService.createPayrollType(req.body);
@@ -12,6 +19,13 @@ export class PayrollTypesController {
     }
   }
 
+  /**
+   * Update an existing payroll type
+   * PUT /payroll-type/:id
+   * @param req - Express request object containing payroll type ID in params and update data in body
+   * @param res - Express response object
+   * @returns Promise<void> - HTTP response with updated payroll type data or error
+   */
   static async updatePayrollType(req: Request, res: Response): Promise<void> {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -35,6 +49,13 @@ export class PayrollTypesController {
     }
   }
 
+  /**
+   * Get payroll type by ID
+   * GET /payroll-type/:id
+   * @param req - Express request object containing payroll type ID in params
+   * @param res - Express response object
+   * @returns Promise<void> - HTTP response with payroll type data or error
+   */
   static async getPayrollType(req: Request, res: Response): Promise<void> {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -55,6 +76,13 @@ export class PayrollTypesController {
     }
   }
 
+  /**
+   * Get all payroll types from the system
+   * GET /payroll-types
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<void> - HTTP response with array of payroll types or error
+   */
   static async getAllPayrollTypes(req: Request, res: Response): Promise<void> {
     try {
       const payrollTypes = await PayrollTypeService.getAllPayrollTypes();

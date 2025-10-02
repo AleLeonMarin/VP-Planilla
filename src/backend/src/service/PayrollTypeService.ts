@@ -4,6 +4,12 @@ import { PayrollType } from "../model/payrollType";
 const prisma = new PrismaClient();
 
 export class PayrollTypeService {
+  /**
+   * Create a new payroll type in the system
+   * @param data - PayrollType data to create (excluding id and version)
+   * @returns Promise<PayrollType> - The created payroll type with assigned ID and version
+   * @throws Error if payroll type creation fails
+   */
   static async createPayrollType(data: PayrollType): Promise<PayrollType> {
     try {
       const createdPayrollType = await prisma.vpg_payroll_types.create({
@@ -28,6 +34,13 @@ export class PayrollTypeService {
     }
   }
 
+  /**
+   * Update an existing payroll type
+   * @param id - The ID of the payroll type to update
+   * @param data - Partial payroll type data to update
+   * @returns Promise<PayrollType | null> - The updated payroll type or null if not found
+   * @throws Error if update operation fails
+   */
   static async updatePayrollType(
     id: number,
     data: Partial<PayrollType>
@@ -49,6 +62,12 @@ export class PayrollTypeService {
     return payrollType;
   }
 
+  /**
+   * Get a payroll type by its ID
+   * @param id - The ID of the payroll type to retrieve
+   * @returns Promise<PayrollType | null> - The payroll type record or null if not found
+   * @throws Error if database query fails
+   */
   static async getPayrollTypeById(id: number): Promise<PayrollType | null> {
     const payrollType = await prisma.vpg_payroll_types.findUnique({
       where: { payroll_types_id: id },
@@ -64,6 +83,11 @@ export class PayrollTypeService {
     };
   }
 
+  /**
+   * Get all payroll types from the system
+   * @returns Promise<PayrollType[]> - Array of all payroll types
+   * @throws Error if database query fails
+   */
   static async getAllPayrollTypes(): Promise<PayrollType[]> {
     const payrollTypes = await prisma.vpg_payroll_types.findMany();
     return payrollTypes.map((pt) => ({

@@ -5,6 +5,12 @@ import { error } from "console";
 const prisma = new PrismaClient();
 
 export class PayrollService {
+  /**
+   * Create a new payroll record in the system
+   * @param data - Payroll data to create
+   * @returns Promise<Payroll> - The created payroll with assigned ID and version
+   * @throws Error if payroll creation fails
+   */
   static async createPayroll(data: Payroll): Promise<Payroll> {
     const createdPayroll = await prisma.vpg_payrolls.create({
       data: {
@@ -28,6 +34,12 @@ export class PayrollService {
     return payroll;
   }
 
+  /**
+   * Get a payroll record by its ID
+   * @param id - The ID of the payroll to retrieve
+   * @returns Promise<Payroll | null> - The payroll record or null if not found
+   * @throws Error if database query fails
+   */
   static async getPayrollById(id: number): Promise<Payroll | null> {
     const payroll = await prisma.vpg_payrolls.findUnique({
       where: { payrolls_id: id },
@@ -44,6 +56,13 @@ export class PayrollService {
     };
   }
 
+  /**
+   * Update an existing payroll record
+   * @param id - The ID of the payroll to update
+   * @param data - Updated payroll data
+   * @returns Promise<Payroll | null> - The updated payroll record or null if not found
+   * @throws Error if payroll is not found or update fails
+   */
   static async updatePayroll(
     id: number,
     data: Payroll

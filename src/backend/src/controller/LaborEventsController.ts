@@ -4,10 +4,12 @@ import { EmployeeLaborEvent } from "../model/employeeLaborEvent";
 
 export class LaborEventsController {
   /**
-   * Create new Labor Event
+   * Create a new labor event in the system
    * POST /labor-events/create
+   * @param req - Express request object containing labor event data
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with created labor event data or error
    */
-
   static async createLaborEvent(
     req: Request,
     res: Response
@@ -26,8 +28,11 @@ export class LaborEventsController {
   }
 
   /**
-   * Get all Labor Events
+   * Get all labor events from the system
    * GET /labor-events
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with array of labor events or error
    */
   static async getAllLaborEvents(
     req: Request,
@@ -43,8 +48,11 @@ export class LaborEventsController {
   }
 
   /**
-   *  Update Labor Event
+   * Update an existing labor event
    * PUT /labor-events/:id
+   * @param req - Express request object containing labor event ID in params and update data in body
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with updated labor event data or error
    */
   static async updateLaborEvent(
     req: Request,
@@ -69,8 +77,11 @@ export class LaborEventsController {
   }
 
   /**
-   * Delete Labor Event
+   * Delete a labor event by ID
    * DELETE /labor-events/:id
+   * @param req - Express request object containing labor event ID in params
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with success status or error
    */
   static async deleteLaborEvent(
     req: Request,
@@ -93,6 +104,9 @@ export class LaborEventsController {
   /**
    * Assign labor events to an employee
    * POST /labor-events/assign
+   * @param req - Express request object containing assignment data (employee_id, labor_event_id, dates, status)
+   * @param res - Express response object
+   * @returns Promise<void> - HTTP response with assignment result or error
    */
   static async assignLaborEventsToEmployee(
     req: Request,

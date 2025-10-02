@@ -1,3 +1,4 @@
+// DONE: Code documentation
 import { PrismaClient } from "@prisma/client";
 import { Deduction } from "../model/deduction";
 
@@ -6,7 +7,7 @@ const prisma = new PrismaClient();
 export class DeductionsService {
   /**
    * Create a new deduction.
-   * @param data The deduction data.
+   * @param data The deduction data. 
    * @returns The created deduction.
    */
   static async createDeduction(data: Deduction): Promise<Deduction> {
@@ -109,6 +110,37 @@ export class DeductionsService {
 
   static async deleteDeduction(id: number): Promise<Deduction | null> {
     const prismaDeduction = await prisma.vpg_deductions.delete({
+      where: { deductions_id: id },
+    });
+
+    if (!prismaDeduction) {
+      return null;
+    }
+
+    return {
+      id: prismaDeduction.deductions_id,
+      name: prismaDeduction.deductions_name,
+      description: prismaDeduction.deductions_description,
+      percentage:
+        prismaDeduction.deductions_percentage !== null
+          ? Number(prismaDeduction.deductions_percentage)
+          : undefined,
+      fixed_amount:
+        prismaDeduction.deductions_fixed_amount !== null
+          ? Number(prismaDeduction.deductions_fixed_amount)
+          : undefined,
+      version: prismaDeduction.deductions_version,
+    };
+  }
+
+  /**
+   * Get a deduction by its ID.
+   * @param id The ID of the deduction.
+   * @returns The deduction record or null if not found.
+   */
+  static
+  async getDeductionById(id: number): Promise<Deduction | null> {
+    const prismaDeduction = await prisma.vpg_deductions.findUnique({
       where: { deductions_id: id },
     });
 
