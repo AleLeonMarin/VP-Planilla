@@ -1,4 +1,4 @@
-import { API_CONFIG } from '@/config';
+import { http } from './http';
 import { LaborEvent, EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 
 export interface LaborEventsResponse {
@@ -8,39 +8,27 @@ export interface LaborEventsResponse {
 
 export class LaborEventsService {
   static async getAllLaborEvents(): Promise<LaborEventsResponse> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events`);
-    if (!response.ok) {
-      throw new Error('Error al cargar eventos');
+    try {
+      return await http.get('/labor-events');
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al cargar eventos');
     }
-    return response.json();
   }
 
   static async createLaborEvent(data: { name: string; description: string }): Promise<LaborEvent> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al crear tipo de evento');
+    try {
+      return await http.post('/labor-events/create', data);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al crear tipo de evento');
     }
-    
-    return response.json();
   }
 
   static async updateLaborEvent(id: number, data: { name?: string; description?: string }): Promise<LaborEvent> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al actualizar el tipo de evento');
+    try {
+      return await http.put(`/labor-events/${id}`, data);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al actualizar el tipo de evento');
     }
-    
-    return response.json();
   }
 
   static async assignLaborEventToEmployee(data: {
@@ -50,18 +38,12 @@ export class LaborEventsService {
     end_date: string | null;
     status: string;
   }): Promise<EmployeeLaborEvent> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al asignar evento');
+    try {
+      return await http.post('/labor-events/assign', data);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al asignar evento';
+      throw new Error(msg);
     }
-    
-    return response.json();
   }
 
   static async updateEmployeeLaborEvent(id: number, data: {
@@ -70,40 +52,37 @@ export class LaborEventsService {
     status?: string;
     employee_id?: number;
   }): Promise<EmployeeLaborEvent> {
-    // Since there's no PUT endpoint for employee labor events in the backend,
-    // we'll simulate an update by returning the data as if it was updated
-    // In a real scenario, this would need backend support
-    console.warn('Employee labor event update not supported by backend API. Changes will not persist.');
-    
-    // Return a mock response to prevent errors in the UI
-    return {
-      id: id,
-      employee_id: data.employee_id || 0,
-      labor_event_id: 0,
-      start_date: data.start_date || new Date().toISOString(),
-      end_date: data.end_date || null,
-      status: data.status as any || 'active',
-      version: 1
-    };
+    // Ideally backend should provide an endpoint; attempt PUT to assign id
+    try {
+      return await http.put(`/labor-events/assign/${id}`, data);
+    } catch (err) {
+      // Fallback: return mock if backend doesn't support it
+      console.warn('Employee labor event update not supported by backend API. Returning mock response.');
+      return {
+        id: id,
+        employee_id: data.employee_id || 0,
+        labor_event_id: 0,
+        start_date: data.start_date || new Date().toISOString(),
+        end_date: data.end_date || null,
+        status: data.status as any || 'active',
+        version: 1
+      } as EmployeeLaborEvent;
+    }
   }
 
   static async deleteEmployeeLaborEvent(id: number): Promise<void> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/assign/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al eliminar asignación');
+    try {
+      await http.delete(`/labor-events/assign/${id}`);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al eliminar asignación');
     }
   }
 
   static async deleteLaborEvent(id: number): Promise<void> {
-    const response = await fetch(`${API_CONFIG.baseUrl}/labor-events/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al eliminar evento');
+    try {
+      await http.delete(`/labor-events/${id}`);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al eliminar evento');
     }
   }
 }

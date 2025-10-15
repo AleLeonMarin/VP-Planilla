@@ -81,8 +81,8 @@ const LaborEventsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#E7DCC1]">
-      <div className="p-6">
+    <div className="min-h-full bg-[#E7DCC1] overflow-y-auto">
+      <div className="p-6 max-w-full">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-[#3B4D36]">Eventos Laborales</h1>
@@ -107,9 +107,9 @@ const LaborEventsPage: React.FC = () => {
           <StatsCards stats={eventsStatsData} />
 
           {/* Calendar and Events List */}
-          <div className="flex gap-6 h-[calc(100vh-400px)] min-h-[600px]">
+          <div className="flex flex-col xl:flex-row gap-6 pb-6">
             {/* Main Calendar Container */}
-            <div className="flex-1 bg-[#F5F1E8] rounded-lg shadow-sm border border-[#E0D6B7]">
+            <div className="flex-1 bg-[#F5F1E8] rounded-lg shadow-sm border border-[#E0D6B7] min-h-[600px]">
               <div className="p-6 h-full">
                 <LaborEventsCalendar
                   onEventClick={handleEventClick}
@@ -128,7 +128,7 @@ const LaborEventsPage: React.FC = () => {
             </div>
 
             {/* Events Sidebar */}
-            <div className="w-128 bg-[#F5F1E8] rounded-lg shadow-sm border border-[#E0D6B7] flex flex-col h-full">
+            <div className="xl:w-96 w-full bg-[#F5F1E8] rounded-lg shadow-sm border border-[#E0D6B7] flex flex-col max-h-[600px]">
               {/* Header del sidebar */}
               <div className="bg-[#D4B896] px-4 py-3 rounded-t-lg border-b border-[#D2B48C] flex-shrink-0">
                 <h3 className="text-sm font-semibold text-[#3B4D36] uppercase tracking-wider">

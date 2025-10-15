@@ -1,23 +1,10 @@
 import { Employee, EmployeeFormData } from '../types/employee';
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
+import { http } from './http';
 
 export const getEmployees = async (): Promise<Employee[]> => {
   try {
-    const response = await fetch(`${API_URL}/employee`);
-    if (!response.ok) {
-      let errMsg = '';
-      try {
-        const json = await response.json();
-        errMsg = json?.error ? JSON.stringify(json) : JSON.stringify(json);
-      } catch (_e) {
-        errMsg = await response.text();
-      }
-      throw new Error(`Failed to fetch employees: ${response.status} ${errMsg}`);
-    }
-    return response.json();
+    return await http.get('/employee');
   } catch (error) {
-    // Network or other error
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch employees');
   }
 };
@@ -42,26 +29,7 @@ export const createEmployee = async (employeeData: EmployeeFormData): Promise<Em
   };
 
   try {
-    const response = await fetch(`${API_URL}/employee/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      let errMsg = '';
-      try {
-        const json = await response.json();
-        errMsg = json?.error ? JSON.stringify(json) : JSON.stringify(json);
-      } catch (_e) {
-        errMsg = await response.text();
-      }
-      throw new Error(`Failed to create employee: ${response.status} ${errMsg}`);
-    }
-
-    return response.json();
+    return await http.post('/employee/create', payload);
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Failed to create employee');
   }
@@ -74,25 +42,7 @@ export const deleteEmployee = async (id: string | number): Promise<void> => {
       exit_date: new Date().toISOString()
     };
 
-    const response = await fetch(`${API_URL}/employee/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      let errMsg = '';
-      try {
-        const json = await response.json();
-        errMsg = json?.error ? JSON.stringify(json) : JSON.stringify(json);
-      } catch (_e) {
-        errMsg = await response.text();
-      }
-      throw new Error(`Failed to delete employee: ${response.status} ${errMsg}`);
-    }
-
+    await http.put(`/employee/${id}`, payload);
     return;
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Failed to delete employee');

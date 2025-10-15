@@ -14,7 +14,15 @@ export default function Sidebar() {
       text: "Empleados"
     },
     { href: "pages/attendance", icon: "/images/layout/attendance.png", text: "Registro de asistencia" },
-    { href: "pages/payroll", icon: "/images/layout/payroll.png", text: "Cálculo de planillas" },
+    {
+      href: "/pages/payroll",
+      icon: "/images/layout/payroll.png",
+      text: "Cálculo de planillas",
+      subItems: [
+        { href: '/pages/payroll/calculate', text: 'Calcular planilla' },
+        { href: '/pages/payroll/list', text: 'Historial de planillas' }
+      ]
+    },
     { href: "pages/reports", icon: "/images/layout/oficial_reports.png", text: "Reportes Oficiales" },
     { href: "pages/users", icon: "/images/layout/users_access.png", text: "Usuarios y Accesos" },
   ];
@@ -36,6 +44,7 @@ export default function Sidebar() {
             href={item.href}
             icon={item.icon}
             text={item.text}
+            subItems={item.subItems}
           />
         ))}
       </nav>       <div className="p-3 mt-auto"> {/* Padding consistente */}
