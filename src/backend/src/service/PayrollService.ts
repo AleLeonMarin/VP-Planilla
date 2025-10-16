@@ -90,4 +90,54 @@ export class PayrollService {
       version: updatedPayroll.payrolls_version,
     };
   }
+
+  /**
+   * Get all employees for a specific payroll with their calculations
+   * @param payrollId - The ID of the payroll
+   * @returns Promise<any[]> - Array of employees with their payroll calculations
+   * @throws Error if database query fails
+   */
+  static async getPayrollEmployees(payrollId: number): Promise<any[]> {
+    try {
+      // Use raw SQL to get employees with full details via JOIN
+      const employees: any[] = await prisma.$queryRaw`
+        SELECT 
+          pe.payroll_employee_id,
+          pe.payroll_employee_payroll_id as payroll_id,
+          pe.payroll_employee_employee_id as employee_id,
+          pe.payroll_employee_gross_salary as gross_salary,
+          pe.payroll_employee_total_deductions as total_deductions,
+          pe.payroll_employee_net_salary as net_salary,
+          pe.payroll_employee_version as version,
+          e.employee_name,
+          e.employee_lastname_1 as employee_lastname1,
+          e.employee_lastname_2 as employee_lastname2,
+          e.employee_id_number as employee_identification,
+          p.position_name
+        FROM vpg_payroll_employee pe
+        INNER JOIN vpg_employees e 
+          ON pe.payroll_employee_employee_id = e.employee_id
+        LEFT JOIN vpg_positions p
+          ON e.employee_position_id = p.position_id
+        WHERE pe.payroll_employee_payroll_id = ${payrollId}
+        ORDER BY e.employee_name, e.employee_lastname_1
+      `;
+      
+      return employees.map((emp: any) => ({
+        id: emp.payroll_employee_id,
+        payroll_id: emp.payroll_id,
+        employee_id: emp.employee_id,
+        employee_name: `${emp.employee_name} ${emp.employee_lastname1} ${emp.employee_lastname2 || ''}`.trim(),
+        employee_identification: emp.employee_identification,
+        position_name: emp.position_name,
+        gross_salary: parseFloat(emp.gross_salary) || 0,
+        total_deductions: parseFloat(emp.total_deductions) || 0,
+        net_salary: parseFloat(emp.net_salary) || 0,
+        version: emp.version,
+      }));
+    } catch (error) {
+      console.error('Error fetching payroll employees:', error);
+      throw new Error('Failed to retrieve payroll employees');
+    }
+  }
 }

@@ -20,8 +20,32 @@ export default function Sidebar() {
       text: "Cálculo de planillas",
       subItems: [
         { href: '/pages/payroll/calculate', text: 'Calcular planilla' },
-        { href: '/pages/payroll/list', text: 'Historial de planillas' }
+        { href: '/pages/payroll/list', text: 'Historial de planillas' },
+        { href: '/pages/payroll-types/list', text: 'Tipos de planilla' }
       ]
+    },
+    {
+      href: "/pages/deductions",
+      icon: "/images/layout/payroll.png",
+      text: "Deducciones",
+      subItems: [
+        { href: '/pages/deductions/list', text: 'Todas las deducciones' },
+        { href: '/pages/employee-deductions/list', text: 'Por empleado' }
+      ]
+    },
+    {
+      href: "/pages/vacations",
+      icon: "/images/layout/attendance.png",
+      text: "Vacaciones",
+      subItems: [
+        { href: '/pages/vacations/list', text: 'Solicitudes' },
+        { href: '/pages/vacations/create', text: 'Nueva solicitud' }
+      ]
+    },
+    {
+      href: "/pages/branches/list",
+      icon: "/images/layout/settings.png",
+      text: "Sucursales"
     },
     { href: "pages/reports", icon: "/images/layout/oficial_reports.png", text: "Reportes Oficiales" },
     { href: "pages/users", icon: "/images/layout/users_access.png", text: "Usuarios y Accesos" },

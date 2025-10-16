@@ -114,24 +114,43 @@ export class NomineeService {
   }
 
   /**
-   * Get employee deductions for a specific employee
+   * Get employee deductions for a specific employee with full deduction details
    * @param employee_id - The ID of the employee
-   * @returns Promise<DeductionsPerEmployee[]> - Array of deductions assigned to the employee
+   * @returns Promise<any[]> - Array of deductions assigned to the employee with details
    */
-  async getEmployeeDeductions(
-    employee_id: number
-  ): Promise<DeductionsPerEmployee[]> {
-    const employeeDeductions =
-      await prisma.vpg_deductions_per_employee.findMany({
-        where: {
-          deductions_per_employee_employee_id: employee_id,
-        },
-      });
-    return employeeDeductions.map((deduction) => ({
-      employee_id: deduction.deductions_per_employee_employee_id,
-      deduction_id: deduction.deductions_per_employee_deduction_id,
-      version: deduction.deductions_per_employee_version,
-    }));
+  async getEmployeeDeductions(employee_id: number): Promise<any[]> {
+    try {
+      // Use raw SQL to get deductions with full details via JOIN
+      const deductions: any[] = await prisma.$queryRaw`
+        SELECT 
+          dpe.deductions_per_employee_employee_id as employee_id,
+          dpe.deductions_per_employee_deduction_id as deduction_id,
+          dpe.deductions_per_employee_version as version,
+          d.deductions_name as deduction_name,
+          d.deductions_description as deduction_description,
+          d.deductions_fixed_amount as fixed_amount,
+          d.deductions_percentage as percentage
+        FROM vpg_deductions_per_employee dpe
+        INNER JOIN vpg_deductions d 
+          ON dpe.deductions_per_employee_deduction_id = d.deductions_id
+        WHERE dpe.deductions_per_employee_employee_id = ${employee_id}
+      `;
+      
+      return deductions.map((d: any) => ({
+        employee_id: d.employee_id,
+        deduction_id: d.deduction_id,
+        version: d.version,
+        deduction_name: d.deduction_name,
+        deduction_description: d.deduction_description,
+        fixed_amount: parseFloat(d.fixed_amount) || 0,
+        percentage: parseFloat(d.percentage) || 0,
+      }));
+    } catch (error) {
+      console.error('Error fetching employee deductions:', error);
+      // If there's an error, return empty array instead of throwing
+      // This allows the UI to show "no deductions" instead of an error
+      return [];
+    }
   }
 
   /**

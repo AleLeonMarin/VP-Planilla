@@ -20,6 +20,14 @@ export const VacationsService = {
     }
   },
 
+  async getById(id: number): Promise<Vacation> {
+    try {
+      return await http.get(`/vacations/${id}`);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error cargando vacación');
+    }
+  },
+
   async create(payload: Partial<Vacation>): Promise<Vacation> {
     try {
       return await http.post('/vacations', payload);

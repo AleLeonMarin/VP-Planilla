@@ -12,6 +12,7 @@ import bonusesRoutes from "./routes/BonusesRoute";
 import nomineeRoutes from "./routes/NomineeRoute";
 import positionRoutes from "./routes/PositionRoute";
 import vacationRoutes from "./routes/VacationRoute";
+import auditLogsRoutes from "./routes/AuditLogsRoute";
 import { apiReference } from "@scalar/express-api-reference";
 import { swaggerSpec } from "./utils/docs";
 
@@ -54,6 +55,7 @@ app.use("/api", bonusesRoutes);
 app.use("/api", nomineeRoutes);
 app.use("/api", positionRoutes);
 app.use("/api", vacationRoutes);
+app.use("/api", auditLogsRoutes);
 
 // Servir la especificación de Swagger en formato JSON
 app.get("/api/docs/swagger.json", (req, res) => {

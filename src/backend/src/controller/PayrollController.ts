@@ -59,4 +59,29 @@ export class PayrollController {
       res.status(500).json({ error: "Failed to update payroll" });
     }
   }
+
+  /**
+   * Get employees for a specific payroll
+   * GET /payroll/:id/employees
+   * @param req - Express request object containing payroll ID in params
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with payroll employees data or error
+   */
+  static async getPayrollEmployees(req: Request, res: Response) {
+    try {
+      const employees = await PayrollService.getPayrollEmployees(
+        Number(req.params.id)
+      );
+      res.json({
+        success: true,
+        data: employees
+      });
+    } catch (error) {
+      console.error("Failed to retrieve payroll employees:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to retrieve payroll employees" 
+      });
+    }
+  }
 }

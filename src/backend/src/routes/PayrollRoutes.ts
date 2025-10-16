@@ -137,4 +137,34 @@ router.get("/payroll/:id", asyncHandler(PayrollController.getPayrollById));
  */
 router.put("/payroll/:id", asyncHandler(PayrollController.updatePayroll));
 
+/**
+ * @route   GET /payroll/:id/employees
+ * @desc    Get employees for a specific payroll
+ * @access  Private
+ */
+/**
+ * @swagger
+ * /api/payroll/{id}/employees:
+ *   get:
+ *     tags:
+ *       - Payroll
+ *     summary: Get payroll employees
+ *     description: Retrieve all employees and their calculations for a specific payroll
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Payroll ID
+ *     responses:
+ *       '200':
+ *         description: Payroll employees retrieved successfully
+ *       '404':
+ *         description: Payroll not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.get("/payroll/:id/employees", asyncHandler(PayrollController.getPayrollEmployees));
+
 export default router;

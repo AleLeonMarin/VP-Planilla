@@ -5,12 +5,13 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import EmployeeStatsCards from '@/components/EmployeeStatsCards';
 import EmployeeTable from '@/components/EmployeeTable';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
+import EditEmployeeModal from '@/components/EditEmployeeModal';
 import EmployeeTabs from '@/components/ui/EmployeeTabs';
 import useEmployeeList from '@/hooks/useEmployeeList';
 
 /**
  * Página principal de lista de empleados
- * Incluye estadísticas, tabla de empleados y modal para agregar nuevos empleados
+ * Incluye estadísticas, tabla de empleados y modales para agregar/editar empleados
  */
 const EmployeeListPage: React.FC = () => {
   const {
@@ -18,11 +19,16 @@ const EmployeeListPage: React.FC = () => {
     searchTerm,
     stats,
     showAddEmployeeModal,
+    showEditEmployeeModal,
+    editingEmployeeData,
+    isLoadingEmployee,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,
+    handleUpdateEmployee,
     openAddEmployeeModal,
-    closeAddEmployeeModal
+    closeAddEmployeeModal,
+    closeEditEmployeeModal
   } = useEmployeeList();
 
   return (
@@ -62,6 +68,15 @@ const EmployeeListPage: React.FC = () => {
         isOpen={showAddEmployeeModal}
         onClose={closeAddEmployeeModal}
         onSubmit={handleAddEmployee}
+      />
+
+      {/* Modal para editar empleado */}
+      <EditEmployeeModal
+        isOpen={showEditEmployeeModal}
+        onClose={closeEditEmployeeModal}
+        onSubmit={handleUpdateEmployee}
+        employeeData={editingEmployeeData}
+        isLoading={isLoadingEmployee}
       />
     </div>
   );
