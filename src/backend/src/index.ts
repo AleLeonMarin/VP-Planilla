@@ -5,6 +5,7 @@ import authRoutes from "./routes/AuthRoute";
 import employeeRoutes from "./routes/EmployeeRoute";
 import laborEventsRoutes from "./routes/LaborEventsRoute";
 import deductionsRoutes from "./routes/DeductionsRoute";
+import employeeDeductionsRoutes from "./routes/EmployeeDeductionsRoute";
 import payrollTypeRoutes from "./routes/PayrollTypeRoute";
 import payrollRoutes from "./routes/PayrollRoutes";
 import clockLogsRoutes from "./routes/ClockLogsRoute";
@@ -13,7 +14,6 @@ import nomineeRoutes from "./routes/NomineeRoute";
 import positionRoutes from "./routes/PositionRoute";
 import vacationRoutes from "./routes/VacationRoute";
 import auditLogsRoutes from "./routes/AuditLogsRoute";
-import { apiReference } from "@scalar/express-api-reference";
 import { swaggerSpec } from "./utils/docs";
 
 dotenv.config();
@@ -48,6 +48,7 @@ app.use("/api", authRoutes);
 app.use("/api", employeeRoutes);
 app.use("/api", laborEventsRoutes);
 app.use("/api", deductionsRoutes);
+app.use("/api", employeeDeductionsRoutes);
 app.use("/api", payrollTypeRoutes);
 app.use("/api", payrollRoutes);
 app.use("/api", clockLogsRoutes);
@@ -63,12 +64,17 @@ app.get("/api/docs/swagger.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
-app.use(
-  "/api/docs",
-  apiReference({
-    url: "/api/docs/swagger.json",
-  })
-);
+// ESM-only package: load dynamically to work under CommonJS runtime
+app.use("/api/docs", async (req, res, next) => {
+  try {
+    const { apiReference } = await import("@scalar/express-api-reference");
+    const mw = apiReference({ url: "/api/docs/swagger.json" });
+    return (mw as unknown as (req: any, res: any, next: any) => void)(req, res, next);
+  } catch (e) {
+    console.error("Failed to load API reference UI:", e);
+    res.status(500).json({ success: false, message: "Docs UI unavailable" });
+  }
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌐 Servidor escuchando en http://0.0.0.0:${PORT}`);

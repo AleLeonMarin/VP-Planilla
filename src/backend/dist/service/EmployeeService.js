@@ -1,26 +1,23 @@
-import {PrismaClient} from '@prisma/client';
-import { Employee } from '../model/employee';
-
-const prisma = new PrismaClient();
-
-
-export class EmployeeService {
-
-    /** 
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EmployeeService = void 0;
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
+class EmployeeService {
+    /**
      * Create a new employee
      * @param data - Employee data to create
      * @returns The created employee
      * @throws Error if the employee creation fails
      */
-    static async createEmployee(data: Employee): Promise<Employee> {
+    static async createEmployee(data) {
         // Ensure required non-nullable fields have sensible defaults to avoid Prisma validation errors
         const middleName = data.middle_name ?? '';
         const socialCode = data.social_code ?? '';
-        const hireDate = data.hire_date ? new Date(data.hire_date as any) : new Date();
+        const hireDate = data.hire_date ? new Date(data.hire_date) : new Date();
         const positionId = data.position_id ?? null;
-
         // Map frontend status strings to single-char DB values (schema uses Char(1))
-        const statusMap: Record<string, string> = {
+        const statusMap = {
             active: 'A',
             vacation: 'V',
             incomplete_assistance: 'I',
@@ -28,10 +25,9 @@ export class EmployeeService {
         };
         const statusChar = (typeof data.status === 'string' && data.status.length === 1)
             ? data.status
-            : statusMap[data.status as string] ?? 'A';
-
+            : statusMap[data.status] ?? 'A';
         // Build create payload. If positionId is provided, connect the relation (do NOT also provide the scalar field).
-        const createPayload: any = {
+        const createPayload = {
             employee_first_name: data.name,
             employee_last_name: data.last_name,
             employee_middle_name: middleName,
@@ -44,20 +40,14 @@ export class EmployeeService {
             employee_status: statusChar,
             employee_version: 1
         };
-
         if (positionId) {
             createPayload.vpg_positions = { connect: { position_id: positionId } };
         }
-
         const prismaEmployee = await prisma.vpg_employees.create({
-
             data: createPayload
-
         });
-
         const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
-
-        const employee: Employee = {
+        const employee = {
             id: prismaEmployee.employee_id,
             name: fullName,
             last_name: prismaEmployee.employee_last_name,
@@ -71,7 +61,6 @@ export class EmployeeService {
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
-
         return employee;
     }
     /**
@@ -79,18 +68,15 @@ export class EmployeeService {
      * @param id - The ID of the employee to retrieve
      * @returns The employee with the specified ID, or null if not found
      */
-    static async getEmployeeById(id: number): Promise<Employee | null> {
+    static async getEmployeeById(id) {
         const prismaEmployee = await prisma.vpg_employees.findUnique({
             where: { employee_id: id }
         });
-        
         if (!prismaEmployee) {
             return null;
         }
-
         const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
-
-        const employee: Employee = {
+        const employee = {
             id: prismaEmployee.employee_id,
             name: fullName,
             last_name: prismaEmployee.employee_last_name,
@@ -104,17 +90,15 @@ export class EmployeeService {
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
-
         return employee;
     }
-
     /**
      * Update an employee by ID
      * @param id - The ID of the employee to update
      * @param data - The updated employee data
      * @returns The updated employee, or null if not found
      */
-    static async updateEmployee(id: number, data: Partial<Employee>): Promise<Employee | null> {
+    static async updateEmployee(id, data) {
         const prismaEmployee = await prisma.vpg_employees.update({
             where: { employee_id: id },
             data: {
@@ -132,14 +116,11 @@ export class EmployeeService {
                 employee_position_id: data.position_id
             }
         });
-
         if (!prismaEmployee) {
             return null;
         }
-
         const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
-
-        const employee: Employee = {
+        const employee = {
             id: prismaEmployee.employee_id,
             name: fullName,
             last_name: prismaEmployee.employee_last_name,
@@ -153,18 +134,15 @@ export class EmployeeService {
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
-
         return employee;
     }
-
     /**
      * Get all employees
      * @returns A list of all employees
      */
-    static async getAllEmployees(): Promise<Employee[]> {
+    static async getAllEmployees() {
         const prismaEmployees = await prisma.vpg_employees.findMany();
-
-        const employees: Employee[] = prismaEmployees.map(prismaEmployee => {
+        const employees = prismaEmployees.map(prismaEmployee => {
             const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
             return {
                 id: prismaEmployee.employee_id,
@@ -181,10 +159,8 @@ export class EmployeeService {
                 position_id: prismaEmployee.employee_position_id
             };
         });
-
         return employees;
     }
-
     /**
      * Get employees that should be considered for payroll within a period
      * Rules (assumptions):
@@ -193,7 +169,7 @@ export class EmployeeService {
      *  - Hired on/before endDate
      *  - Exit date is null OR exit date is on/after startDate
      */
-    static async getActiveEmployeesForPeriod(startDate: Date, endDate: Date): Promise<Employee[]> {
+    static async getActiveEmployeesForPeriod(startDate, endDate) {
         const prismaEmployees = await prisma.vpg_employees.findMany({
             where: {
                 employee_fired: false,
@@ -205,8 +181,7 @@ export class EmployeeService {
                 ]
             }
         });
-
-        const employees: Employee[] = prismaEmployees.map(prismaEmployee => {
+        const employees = prismaEmployees.map(prismaEmployee => {
             const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
             return {
                 id: prismaEmployee.employee_id,
@@ -223,8 +198,7 @@ export class EmployeeService {
                 position_id: prismaEmployee.employee_position_id
             };
         });
-
         return employees;
     }
-
 }
+exports.EmployeeService = EmployeeService;

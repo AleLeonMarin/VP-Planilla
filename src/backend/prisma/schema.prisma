@@ -46,8 +46,8 @@ model vpg_bonuses {
 model vpg_branch_employee {
   employee_branch_branch_id   Int
   employee_branch_employee_id Int
-  vpg_branches                vpg_branches?  @relation(fields: [employee_branch_branch_id], references: [branch_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_branch_employee_branches_03")
-  vpg_employees               vpg_employees? @relation(fields: [employee_branch_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_branch_employee_employees_04")
+  vpg_branches                vpg_branches  @relation(fields: [employee_branch_branch_id], references: [branch_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_branch_employee_branches_03")
+  vpg_employees               vpg_employees @relation(fields: [employee_branch_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_branch_employee_employees_04")
 
   @@id([employee_branch_branch_id, employee_branch_employee_id])
   @@index([employee_branch_branch_id], map: "idx_vpg_branch_employee_branch_id")
@@ -84,8 +84,8 @@ model vpg_deductions {
   deductions_percentage       Decimal?                      @db.Decimal(5, 2)
   deductions_fixed_amount     Decimal?                      @db.Decimal(10, 2)
   deductions_version          Int                           @default(1)
-  vpg_employee_deductions     vpg_employee_deductions[]
   vpg_deductions_per_employee vpg_deductions_per_employee[]
+  vpg_employee_deductions     vpg_employee_deductions[]
 }
 
 model vpg_employee_documents {
@@ -134,13 +134,13 @@ model vpg_employees {
   vpg_bonuses                 vpg_bonuses[]
   vpg_branch_employee         vpg_branch_employee[]
   vpg_clock_logs              vpg_clock_logs[]
+  vpg_deductions_per_employee vpg_deductions_per_employee[]
   vpg_employee_deductions     vpg_employee_deductions[]
   vpg_employee_documents      vpg_employee_documents[]
   vpg_employee_labor_event    vpg_employee_labor_event[]
   vpg_positions               vpg_positions                 @relation(fields: [employee_position_id], references: [position_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_employees_positions_05")
   vpg_payroll_employee        vpg_payroll_employee[]
   vpg_vacations               vpg_vacations[]
-  vpg_deductions_per_employee vpg_deductions_per_employee[]
 
   @@index([employee_position_id], map: "idx_vpg_employees_position_id")
   @@index([employee_email], map: "idx_vpg_employees_email")
@@ -161,8 +161,8 @@ model vpg_enterprise {
 model vpg_enterprise_branch {
   branch_enterprise_enterprise_id Int
   branch_enterprise_branch_id     Int
-  vpg_branches                    vpg_branches?   @relation(fields: [branch_enterprise_branch_id], references: [branch_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_enterprise_branch_branches_02")
-  vpg_enterprise                  vpg_enterprise? @relation(fields: [branch_enterprise_enterprise_id], references: [enterprise_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_enterprise_branch_enterprise_01")
+  vpg_branches                    vpg_branches   @relation(fields: [branch_enterprise_branch_id], references: [branch_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_enterprise_branch_branches_02")
+  vpg_enterprise                  vpg_enterprise @relation(fields: [branch_enterprise_enterprise_id], references: [enterprise_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_enterprise_branch_enterprise_01")
 
   @@id([branch_enterprise_enterprise_id, branch_enterprise_branch_id])
   @@index([branch_enterprise_branch_id], map: "idx_vpg_enterprise_branch_branch_id")
@@ -325,7 +325,7 @@ model vpg_vacations {
   vacations_employee_id Int
   vacations_start_date  DateTime      @db.Date
   vacations_end_date    DateTime      @db.Date
-  vacations_total_days  Int?
+  vacations_total_days  Int?          @default(dbgenerated("((vacations_end_date - vacations_start_date) + 1)"))
   vacations_paid        Boolean?      @default(true)
   vacations_status      String?       @default("Aprobado") @db.VarChar(20)
   vacations_version     Int           @default(1)

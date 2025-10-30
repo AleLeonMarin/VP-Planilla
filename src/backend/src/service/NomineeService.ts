@@ -65,6 +65,11 @@ export interface EmployeePayroll {
   deductionsBreakdown: DeductionBreakdown[];
   inconsistencies: Inconsistency[];
   generalMessages: string[];
+  // Frontend compatibility aliases (optional)
+  id?: number;
+  employee_id?: number;
+  name?: string;
+  employee_name?: string;
 }
 
 /**
@@ -120,31 +125,36 @@ export class NomineeService {
    */
   async getEmployeeDeductions(employee_id: number): Promise<any[]> {
     try {
-      // Use raw SQL to get deductions with full details via JOIN
-      const deductions: any[] = await prisma.$queryRaw`
-        SELECT 
-          dpe.deductions_per_employee_employee_id as employee_id,
-          dpe.deductions_per_employee_deduction_id as deduction_id,
-          dpe.deductions_per_employee_version as version,
-          d.deductions_name as deduction_name,
-          d.deductions_description as deduction_description,
-          d.deductions_fixed_amount as fixed_amount,
-          d.deductions_percentage as percentage
-        FROM vpg_deductions_per_employee dpe
-        INNER JOIN vpg_deductions d 
-          ON dpe.deductions_per_employee_deduction_id = d.deductions_id
-        WHERE dpe.deductions_per_employee_employee_id = ${employee_id}
-      `;
-      
-      return deductions.map((d: any) => ({
-        employee_id: d.employee_id,
-        deduction_id: d.deduction_id,
-        version: d.version,
-        deduction_name: d.deduction_name,
-        deduction_description: d.deduction_description,
-        fixed_amount: parseFloat(d.fixed_amount) || 0,
-        percentage: parseFloat(d.percentage) || 0,
-      }));
+      // Use Prisma client to ensure same schema/connection settings as the rest of the app
+      const assignments = await prisma.vpg_deductions_per_employee.findMany({
+        where: { deductions_per_employee_employee_id: employee_id },
+      });
+
+      if (!assignments || assignments.length === 0) {
+        console.log(`[Payroll] No deductions assigned for employee ${employee_id}`);
+        return [];
+      }
+
+      const deductionIds = assignments.map(a => a.deductions_per_employee_deduction_id);
+      const deductionRows = await prisma.vpg_deductions.findMany({
+        where: { deductions_id: { in: deductionIds } },
+      });
+
+      const mapped = assignments.map(a => {
+        const d = deductionRows.find(dr => dr.deductions_id === a.deductions_per_employee_deduction_id);
+        return {
+          employee_id: a.deductions_per_employee_employee_id,
+          deduction_id: a.deductions_per_employee_deduction_id,
+          version: a.deductions_per_employee_version,
+          deduction_name: d?.deductions_name || '',
+          deduction_description: d?.deductions_description || '',
+          fixed_amount: d?.deductions_fixed_amount != null ? Number(d.deductions_fixed_amount) : 0,
+          percentage: d?.deductions_percentage != null ? Number(d.deductions_percentage) : 0,
+        };
+      });
+
+      console.log(`[Payroll] Employee ${employee_id} deductions loaded:`, mapped);
+      return mapped;
     } catch (error) {
       console.error('Error fetching employee deductions:', error);
       // If there's an error, return empty array instead of throwing
@@ -235,8 +245,19 @@ export class NomineeService {
     };
 
     try {
-      // Get all active employees
-      const employees = await EmployeeService.getAllEmployees();
+      // Try to get employees eligible for payroll in the given period
+      let employees = await EmployeeService.getActiveEmployeesForPeriod(startDate, endDate);
+      
+      // If none found, fallback to all employees to aid troubleshooting and avoid returning an empty result silently
+      if (employees.length === 0) {
+        const allEmployees = await EmployeeService.getAllEmployees();
+        result.summary.messages.push(
+          `No se encontraron empleados activos para el periodo. Total en sistema: ${allEmployees.length}.`+
+          `${allEmployees.length > 0 ? ' Verifique estado (A/V), fechas de contratación/salida y bandera de despedido.' : ''}`
+        );
+        employees = allEmployees;
+      }
+
       result.summary.employeesProcessed = employees.length;
 
       console.log(`Processing payroll for ${employees.length} employees from ${startDate.toISOString()} to ${endDate.toISOString()}`);
@@ -274,7 +295,12 @@ export class NomineeService {
             bonuses: 0,
             deductionsBreakdown: [],
             inconsistencies: [],
-            generalMessages: [`Error al procesar datos del empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`]
+            generalMessages: [`Error al procesar datos del empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`],
+            // Aliases used by existing frontend tables
+            id: Number(employee.id),
+            employee_id: Number(employee.id),
+            name: employee.name,
+            employee_name: employee.name
           });
         }
       }
@@ -317,7 +343,12 @@ export class NomineeService {
       bonuses: 0,
       deductionsBreakdown: [],
       inconsistencies: [],
-      generalMessages: []
+      generalMessages: [],
+      // Aliases used by existing frontend tables
+      id: Number(employee.id),
+      employee_id: Number(employee.id),
+      name: employee.name,
+      employee_name: employee.name
     };
 
     try {
@@ -577,39 +608,53 @@ export class NomineeService {
 
     try {
       const employeeDeductions = await this.getEmployeeDeductions(employeeId);
+      if (!employeeDeductions || employeeDeductions.length === 0) {
+        console.log(`[Payroll] No deductions assigned for employee ${employeeId}`);
+      }
       
       for (const empDeduction of employeeDeductions) {
         try {
-          const deduction = await DeductionsService.getDeductionById(empDeduction.deduction_id);
-          
-          if (!deduction) {
-            breakdown.push({
-              code: `DED_${empDeduction.deduction_id}`,
-              type: 'fixed',
-              amount: 0,
-              message: `Deducción no encontrada (ID: ${empDeduction.deduction_id})`
-            });
-            continue;
+          // Prefer the values already loaded by the JOIN to avoid extra roundtrips
+          let name = empDeduction.deduction_name as string | undefined;
+          let fixed = empDeduction.fixed_amount as number | undefined;
+          let percent = empDeduction.percentage as number | undefined;
+
+          // Fallback: fetch full definition if missing
+          if ((fixed == null || percent == null) && !name) {
+            const deduction = await DeductionsService.getDeductionById(empDeduction.deduction_id);
+            if (!deduction) {
+              breakdown.push({
+                code: `DED_${empDeduction.deduction_id}`,
+                type: 'fixed',
+                amount: 0,
+                message: `Deducción no encontrada (ID: ${empDeduction.deduction_id})`
+              });
+              continue;
+            }
+            name = deduction.name;
+            fixed = deduction.fixed_amount;
+            percent = deduction.percentage;
           }
 
           let amount = 0;
           let type: 'fixed' | 'percent' = 'fixed';
-          
-          if (deduction.fixed_amount) {
-            amount = PayrollUtils.roundToMoney(deduction.fixed_amount);
+
+          if (fixed && fixed > 0) {
+            amount = PayrollUtils.roundToMoney(fixed);
             type = 'fixed';
-          } else if (deduction.percentage) {
-            amount = PayrollUtils.applyPercentageDeduction(grossSalary, deduction.percentage);
+          } else if (percent && percent > 0) {
+            amount = PayrollUtils.applyPercentageDeduction(grossSalary, percent);
             type = 'percent';
           }
-          
+
+          const codeBase = (name || `DED_${empDeduction.deduction_id}`);
           breakdown.push({
-            code: deduction.name.replace(/\s+/g, '_').toUpperCase(),
+            code: codeBase.replace(/\s+/g, '_').toUpperCase(),
             type,
             amount,
-            message: `${deduction.name}: ${type === 'percent' ? `${deduction.percentage}%` : `$${deduction.fixed_amount}`}`
+            message: `${codeBase}: ${type === 'percent' ? `${percent}%` : `₡${fixed ?? 0}`}`
           });
-          
+
           total += amount;
           
         } catch (error) {

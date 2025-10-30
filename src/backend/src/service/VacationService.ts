@@ -36,17 +36,27 @@ export class VacationService {
    * @returns All vacations in the database
    */
   static async getAllVacations(): Promise<Vacation[]> {
-    const prismaVacations = await prisma.vpg_vacations.findMany();
-    return prismaVacations.map((prismaVacation) => ({
-      id: prismaVacation.vacations_id,
-      employee_id: prismaVacation.vacations_employee_id,
-      start_date: prismaVacation.vacations_start_date,
-      end_date: prismaVacation.vacations_end_date,
-      total_days: prismaVacation.vacations_total_days || 0,
-      paid: prismaVacation.vacations_paid || false,
-      status: prismaVacation.vacations_status || "pending",
-      version: prismaVacation.vacations_version,
-    }));
+    try {
+      const prismaVacations = await prisma.vpg_vacations.findMany();
+      return prismaVacations.map((prismaVacation) => ({
+        id: prismaVacation.vacations_id,
+        employee_id: prismaVacation.vacations_employee_id,
+        start_date: prismaVacation.vacations_start_date,
+        end_date: prismaVacation.vacations_end_date,
+        total_days: prismaVacation.vacations_total_days || 0,
+        paid: prismaVacation.vacations_paid || false,
+        status: prismaVacation.vacations_status || "pending",
+        version: prismaVacation.vacations_version,
+      }));
+    } catch (err: any) {
+      // If vacations table does not exist in current schema, treat as no vacations
+      const msg = String(err?.message || '').toLowerCase();
+      if (msg.includes('does not exist') || msg.includes('p2021')) {
+        return [];
+      }
+      // Re-throw any other error
+      throw err;
+    }
   }
 
   /**

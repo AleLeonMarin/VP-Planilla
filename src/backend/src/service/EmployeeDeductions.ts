@@ -32,4 +32,25 @@ export class EmployeeDeductionsService {
     };
     return employeeDeduction;
   }
+
+  /**
+   * Remove a deduction from an employee
+   * @param employeeId - The ID of the employee
+   * @param deductionId - The ID of the deduction to remove
+   * @returns Promise<void>
+   * @throws Error if deletion fails or record not found
+   */
+  static async removeDeductionFromEmployee(
+    employeeId: number,
+    deductionId: number
+  ): Promise<void> {
+    await prisma.vpg_deductions_per_employee.delete({
+      where: {
+        deductions_per_employee_employee_id_deductions_per_employee_deduction_id: {
+          deductions_per_employee_employee_id: employeeId,
+          deductions_per_employee_deduction_id: deductionId,
+        },
+      },
+    });
+  }
 }
