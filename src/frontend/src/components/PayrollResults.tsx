@@ -8,12 +8,22 @@ interface PayrollResultsProps {
 }
 
 export default function PayrollResults({ data, onCreate }: PayrollResultsProps) {
+  // DEBUG: Log what we receive
+  console.log('PayrollResults received data:', data);
+  console.log('data.employees:', data?.employees);
+  console.log('data.employeeResults:', data?.employeeResults);
+  
   if (!data) return null;
 
   // Try to find an array of employee results
   const employees = Array.isArray(data.employeeResults) ? data.employeeResults : Array.isArray(data.employees) ? data.employees : Array.isArray(data) ? data : null;
+  
+  console.log('Extracted employees:', employees);
 
-  const total = (employees && employees.reduce) ? employees.reduce((acc: number, e: any) => acc + (Number(e.net) || 0), 0) : null;
+  const total = (employees && employees.reduce) ? employees.reduce((acc: number, e: any) => {
+    const netSalary = e.net ?? e.netSalary ?? e.net_salary ?? 0;
+    return acc + Number(netSalary);
+  }, 0) : null;
 
   return (
     <div className="mt-6 bg-white rounded shadow p-4">
@@ -42,22 +52,44 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp: any) => (
-                <tr key={emp.employee_id || emp.id || Math.random()} className="border-t">
-                  <td className="px-3 py-2 text-sm">{emp.name || emp.employee_name || emp.employee || `#${emp.employee_id || emp.id}`}</td>
-                  <td className="px-3 py-2 text-sm text-right">{emp.hours ?? emp.total_hours ?? '-'}</td>
-                  <td className="px-3 py-2 text-sm text-right">{typeof emp.gross !== 'undefined' ? Number(emp.gross).toFixed(2) : '-'}</td>
-                  <td className="px-3 py-2 text-sm text-right">{typeof emp.deductions !== 'undefined' ? Number(emp.deductions).toFixed(2) : (emp.total_deductions ? Number(emp.total_deductions).toFixed(2) : '-')}</td>
-                  <td className="px-3 py-2 text-sm text-right">{typeof emp.bonuses !== 'undefined' ? Number(emp.bonuses).toFixed(2) : (emp.total_bonuses ? Number(emp.total_bonuses).toFixed(2) : '-')}</td>
-                  <td className="px-3 py-2 text-sm text-right font-semibold">{typeof emp.net !== 'undefined' ? Number(emp.net).toFixed(2) : '-'}</td>
-                </tr>
-              ))}
+              {employees.map((emp: any) => {
+                // DEBUG: Log each employee object
+                console.log('Employee object:', emp);
+                console.log('emp.name:', emp.name);
+                console.log('emp.employee_name:', emp.employee_name);
+                
+                // Calculate total hours from days array if available
+                const totalHours = emp.days?.reduce((sum: number, day: any) => sum + (day.hoursWorked || 0), 0) || 0;
+                const hours = emp.hours ?? emp.total_hours ?? totalHours;
+                
+                // Get employee name
+                const employeeName = emp.name || emp.employee_name || emp.employeeName || emp.employee || `#${emp.employee_id || emp.id}`;
+                
+                console.log('Final employeeName:', employeeName);
+                
+                // Get salary values
+                const grossSalary = emp.gross ?? emp.grossSalary ?? emp.total_gross ?? 0;
+                const totalDeductions = emp.deductions ?? emp.totalDeductions ?? emp.total_deductions ?? 0;
+                const bonuses = emp.bonuses ?? emp.total_bonuses ?? 0;
+                const netSalary = emp.net ?? emp.netSalary ?? emp.net_salary ?? 0;
+                
+                return (
+                  <tr key={emp.employee_id || emp.id || Math.random()} className="border-t">
+                    <td className="px-3 py-2 text-sm font-medium">{employeeName}</td>
+                    <td className="px-3 py-2 text-sm text-right">{hours > 0 ? hours : '-'}</td>
+                    <td className="px-3 py-2 text-sm text-right">₡{Number(grossSalary).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-sm text-right">₡{Number(totalDeductions).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-sm text-right">₡{Number(bonuses).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-sm text-right font-semibold">₡{Number(netSalary).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
             {total !== null && (
-              <tfoot>
-                <tr className="border-t">
-                  <td colSpan={5} className="px-3 py-2 text-right font-semibold">Total</td>
-                  <td className="px-3 py-2 text-right font-semibold">{Number(total).toFixed(2)}</td>
+              <tfoot className="bg-gray-50">
+                <tr className="border-t-2 border-gray-300">
+                  <td colSpan={5} className="px-3 py-2 text-right font-bold">Total Neto</td>
+                  <td className="px-3 py-2 text-right font-bold text-lg">₡{Number(total).toFixed(2)}</td>
                 </tr>
               </tfoot>
             )}

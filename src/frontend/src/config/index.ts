@@ -9,9 +9,10 @@ export const APP_CONFIG = {
   description: 'Sistema de gestión de planillas y empleados'
 } as const;
 
-// URLs de la API (para cuando se integre el backend)
+// URLs de la API
 export const API_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  timeout: 30000, // 30 segundos
   endpoints: {
     employees: '/employees',
     attendance: '/attendance',

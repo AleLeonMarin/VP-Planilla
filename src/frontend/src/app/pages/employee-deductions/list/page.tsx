@@ -53,6 +53,10 @@ export default function EmployeeDeductionsPage() {
       modal.showSuccess('Éxito', 'Deducción asignada correctamente');
       setShowAssignModal(false);
       setSelectedDeductionId(null);
+      // Refrescar las deducciones del empleado
+      if (selectedEmployeeId) {
+        await fetchEmployeeDeductions(selectedEmployeeId);
+      }
     } catch (error: any) {
       modal.showError('Error', error.message || 'Error al asignar deducción');
     }

@@ -38,10 +38,8 @@ export const useEmployeeDeductions = (employeeId?: number) => {
     try {
       const result = await EmployeeDeductionsService.assignDeductionToEmployee(request);
       
-      // Refresh the list if we're tracking a specific employee
-      if (employeeId === request.employeeId) {
-        await fetchEmployeeDeductions(request.employeeId);
-      }
+      // Always refresh the list after assignment
+      await fetchEmployeeDeductions(request.employeeId);
       
       return result;
     } catch (err: any) {
@@ -51,7 +49,7 @@ export const useEmployeeDeductions = (employeeId?: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [employeeId, fetchEmployeeDeductions]);
+  }, [fetchEmployeeDeductions]);
 
   /**
    * Remove a deduction from an employee
@@ -62,10 +60,8 @@ export const useEmployeeDeductions = (employeeId?: number) => {
     try {
       await EmployeeDeductionsService.removeDeductionFromEmployee(empId, deductionId);
       
-      // Refresh the list if we're tracking this employee
-      if (employeeId === empId) {
-        await fetchEmployeeDeductions(empId);
-      }
+      // Always refresh the list after removal
+      await fetchEmployeeDeductions(empId);
       
       return true;
     } catch (err: any) {
@@ -75,7 +71,7 @@ export const useEmployeeDeductions = (employeeId?: number) => {
     } finally {
       setIsLoading(false);
     }
-  }, [employeeId, fetchEmployeeDeductions]);
+  }, [fetchEmployeeDeductions]);
 
   /**
    * Refetch current employee's deductions
