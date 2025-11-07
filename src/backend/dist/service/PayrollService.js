@@ -34,6 +34,27 @@ class PayrollService {
         return payroll;
     }
     /**
+     * Get all payroll records
+     * @returns Promise<Payroll[]> - Array of all payroll records
+     * @throws Error if database query fails
+     */
+    static async getAllPayrolls() {
+        const payrolls = await prisma.vpg_payrolls.findMany({
+            orderBy: {
+                payrolls_id: 'desc'
+            }
+        });
+        return payrolls.map(payroll => ({
+            id: payroll.payrolls_id,
+            payroll_type: payroll.payrolls_payroll_type_id,
+            period_start: payroll.payrolls_period_start,
+            period_end: payroll.payrolls_period_end,
+            payment_date: payroll.payrolls_payment_date,
+            status: payroll.payrolls_status,
+            version: payroll.payrolls_version,
+        }));
+    }
+    /**
      * Get a payroll record by its ID
      * @param id - The ID of the payroll to retrieve
      * @returns Promise<Payroll | null> - The payroll record or null if not found

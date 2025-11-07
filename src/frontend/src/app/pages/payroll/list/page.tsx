@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   DocumentTextIcon, 
@@ -11,81 +11,71 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
-import { PayrollService } from '@/services/payrollService';
+import { usePayroll } from '@/hooks/usePayroll';
 
 export default function PayrollListPage() {
-  const [payrolls, setPayrolls] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { getAllPayrolls, isLoading, error } = usePayroll();
+  const [payrolls, setPayrolls] = useState<any[]>([]);
 
-  const loadPayrolls = async () => {
-    setLoading(true);
-    setError(null);
+  const loadPayrolls = useCallback(async () => {
     try {
-      const raw = localStorage.getItem('vp_payroll_history') || '[]';
-      const ids: number[] = JSON.parse(raw);
-      if (!Array.isArray(ids) || ids.length === 0) {
+      const data = await getAllPayrolls();
+      console.log('[PayrollList] data received:', data);
+      if (Array.isArray(data)) {
+        setPayrolls(data);
+      } else {
+        console.warn('[PayrollList] Expected array, got:', data);
         setPayrolls([]);
-        return;
       }
-
-      const uniqueIds = Array.from(new Set(ids)).slice(0, 50);
-      const results = await Promise.all(uniqueIds.map(async (id) => {
-        try {
-          const p = await PayrollService.getPayrollById(id);
-          return p || { id, missing: true };
-        } catch (e) {
-          return { id, error: (e as any)?.message || 'Error' };
-        }
-      }));
-
-      setPayrolls(results as any[]);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando historial');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('Error loading payrolls:', e);
     }
-  };
+  }, [getAllPayrolls]);
 
   useEffect(() => {
     loadPayrolls();
-  }, []);
+  }, [loadPayrolls]);
 
-  const getStatusBadge = (status: string | undefined, missing: boolean) => {
-    if (missing) {
+  const getStatusBadge = (status: string | undefined) => {
+    if (status === 'CALCULADO' || status === 'PAGADO' || status === 'completed') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-          <ExclamationCircleIcon className="w-3 h-3" />
-          No encontrado
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <CheckCircleIcon className="w-3 h-3" />
+          {status}
         </span>
       );
     }
 
-    if (status === 'active' || status === 'completed') {
+    if (status === 'PENDIENTE' || status === 'draft') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-          <CheckCircleIcon className="w-3 h-3" />
-          Completada
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+          <ClockIcon className="w-3 h-3" />
+          {status}
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
         <ClockIcon className="w-3 h-3" />
-        {status || 'Pendiente'}
+        {status || 'Sin estado'}
       </span>
     );
   };
 
-  const formatCurrency = (value: any) => {
-    const num = Number(value);
-    if (isNaN(num)) return '-';
-    return new Intl.NumberFormat('es-CR', {
-      style: 'currency',
-      currency: 'CRC',
-      minimumFractionDigits: 2
-    }).format(num);
+  // (formatCurrency not used yet; keep placeholder or remove entirely)
+
+  const formatDate = (date: string | Date | undefined | null) => {
+    if (!date) return '—';
+    try {
+      return new Date(date).toLocaleDateString('es-CR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch {
+      return String(date);
+    }
   };
 
   return (
@@ -102,11 +92,11 @@ export default function PayrollListPage() {
           <div className="flex gap-2">
             <button
               onClick={loadPayrolls}
-              disabled={loading}
+              disabled={isLoading}
               className="flex items-center gap-2 px-4 py-2 bg-[#B8A989] text-[#3B4D36] rounded-lg hover:bg-[#A89979] transition-colors disabled:opacity-50"
             >
-              <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Cargando...' : 'Recargar'}
+              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? 'Cargando...' : 'Recargar'}
             </button>
             <Link
               href="/pages/payroll/calculate"
@@ -126,7 +116,7 @@ export default function PayrollListPage() {
         )}
 
         {/* Loading state */}
-        {loading && (
+        {isLoading && (
           <div className="bg-[#F9F1DC] rounded-xl shadow-sm border border-[#E0D6B7] p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6F7153] mx-auto mb-4"></div>
             <p className="text-[#5D4E37]">Cargando planillas...</p>
@@ -134,9 +124,9 @@ export default function PayrollListPage() {
         )}
 
         {/* Lista de planillas */}
-        {!loading && payrolls && payrolls.length > 0 && (
+        {!isLoading && payrolls.length > 0 && (
           <div className="space-y-3">
-            {payrolls.map((p: any) => (
+            {payrolls.map((p) => (
               <div
                 key={p.id}
                 className="bg-[#F9F1DC] rounded-xl shadow-sm border border-[#E0D6B7] p-5 hover:shadow-md transition-shadow"
@@ -154,7 +144,7 @@ export default function PayrollListPage() {
                         </h3>
                         <p className="text-sm text-[#6B5B3D]">
                           <span className="font-medium">Periodo:</span>{' '}
-                          {p.period_start ?? '—'} a {p.period_end ?? '—'}
+                          {formatDate(p.period_start)} a {formatDate(p.period_end)}
                         </p>
                       </div>
                     </div>
@@ -162,21 +152,21 @@ export default function PayrollListPage() {
                     {/* Detalles */}
                     <div className="grid grid-cols-3 gap-4 mt-3 ml-13">
                       <div>
-                        <p className="text-xs text-[#6B5B3D]">Tipo de Planilla</p>
+                        <p className="text-xs text-[#6B5B3D]">Fecha de pago</p>
                         <p className="text-sm font-medium text-[#3B4D36]">
-                          {p.payroll_type_id ? `Tipo ${p.payroll_type_id}` : 'No especificado'}
+                          {formatDate(p.payment_date)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-[#6B5B3D]">Total</p>
+                        <p className="text-xs text-[#6B5B3D]">Tipo</p>
                         <p className="text-sm font-medium text-[#3B4D36]">
-                          {formatCurrency(p.total ?? p.summary?.total)}
+                          {p.payroll_type ? `Tipo ${p.payroll_type}` : 'No especificado'}
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-[#6B5B3D]">Estado</p>
                         <div className="mt-1">
-                          {getStatusBadge(p.status, p.missing)}
+                          {getStatusBadge(p.status)}
                         </div>
                       </div>
                     </div>
@@ -199,7 +189,7 @@ export default function PayrollListPage() {
         )}
 
         {/* Estado vacío */}
-        {!loading && payrolls && payrolls.length === 0 && (
+        {!isLoading && payrolls.length === 0 && (
           <div className="bg-[#F9F1DC] rounded-xl shadow-sm border border-[#E0D6B7] p-12 text-center">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-[#E7DCC1] rounded-full flex items-center justify-center">

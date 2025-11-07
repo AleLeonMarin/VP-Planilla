@@ -35,6 +35,29 @@ export class PayrollService {
   }
 
   /**
+   * Get all payroll records
+   * @returns Promise<Payroll[]> - Array of all payroll records
+   * @throws Error if database query fails
+   */
+  static async getAllPayrolls(): Promise<Payroll[]> {
+    const payrolls = await prisma.vpg_payrolls.findMany({
+      orderBy: {
+        payrolls_id: 'desc'
+      }
+    });
+    
+    return payrolls.map(payroll => ({
+      id: payroll.payrolls_id,
+      payroll_type: payroll.payrolls_payroll_type_id,
+      period_start: payroll.payrolls_period_start,
+      period_end: payroll.payrolls_period_end,
+      payment_date: payroll.payrolls_payment_date,
+      status: payroll.payrolls_status,
+      version: payroll.payrolls_version,
+    }));
+  }
+
+  /**
    * Get a payroll record by its ID
    * @param id - The ID of the payroll to retrieve
    * @returns Promise<Payroll | null> - The payroll record or null if not found
@@ -99,41 +122,33 @@ export class PayrollService {
    */
   static async getPayrollEmployees(payrollId: number): Promise<any[]> {
     try {
-      // Use raw SQL to get employees with full details via JOIN
-      const employees: any[] = await prisma.$queryRaw`
-        SELECT 
-          pe.payroll_employee_id,
-          pe.payroll_employee_payroll_id as payroll_id,
-          pe.payroll_employee_employee_id as employee_id,
-          pe.payroll_employee_gross_salary as gross_salary,
-          pe.payroll_employee_total_deductions as total_deductions,
-          pe.payroll_employee_net_salary as net_salary,
-          pe.payroll_employee_version as version,
-          e.employee_name,
-          e.employee_lastname_1 as employee_lastname1,
-          e.employee_lastname_2 as employee_lastname2,
-          e.employee_id_number as employee_identification,
-          p.position_name
-        FROM vpg_payroll_employee pe
-        INNER JOIN vpg_employees e 
-          ON pe.payroll_employee_employee_id = e.employee_id
-        LEFT JOIN vpg_positions p
-          ON e.employee_position_id = p.position_id
-        WHERE pe.payroll_employee_payroll_id = ${payrollId}
-        ORDER BY e.employee_name, e.employee_lastname_1
-      `;
-      
-      return employees.map((emp: any) => ({
-        id: emp.payroll_employee_id,
-        payroll_id: emp.payroll_id,
-        employee_id: emp.employee_id,
-        employee_name: `${emp.employee_name} ${emp.employee_lastname1} ${emp.employee_lastname2 || ''}`.trim(),
-        employee_identification: emp.employee_identification,
-        position_name: emp.position_name,
-        gross_salary: parseFloat(emp.gross_salary) || 0,
-        total_deductions: parseFloat(emp.total_deductions) || 0,
-        net_salary: parseFloat(emp.net_salary) || 0,
-        version: emp.version,
+      const rows = await prisma.vpg_payroll_employee.findMany({
+        where: { payroll_employee_payroll_id: payrollId },
+        orderBy: { payroll_employee_id: 'asc' },
+        include: {
+          vpg_employees: {
+            select: {
+              employee_first_name: true,
+              employee_last_name: true,
+              employee_middle_name: true,
+              employee_national_id: true,
+              vpg_positions: { select: { position_name: true } },
+            },
+          },
+        },
+      });
+
+      return rows.map((row) => ({
+        id: row.payroll_employee_id,
+        payroll_id: row.payroll_employee_payroll_id,
+        employee_id: row.payroll_employee_employee_id,
+        employee_name: `${row.vpg_employees.employee_first_name} ${row.vpg_employees.employee_last_name}${row.vpg_employees.employee_middle_name ? ' ' + row.vpg_employees.employee_middle_name : ''}`.trim(),
+        employee_identification: row.vpg_employees.employee_national_id,
+        position_name: row.vpg_employees.vpg_positions?.position_name,
+        gross_salary: Number(row.payroll_employee_gross_salary) || 0,
+        total_deductions: Number(row.payroll_employee_total_deductions) || 0,
+        net_salary: Number(row.payroll_employee_net_salary) || 0,
+        version: row.payroll_employee_version,
       }));
     } catch (error) {
       console.error('Error fetching payroll employees:', error);

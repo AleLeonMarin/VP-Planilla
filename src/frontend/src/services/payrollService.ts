@@ -5,19 +5,46 @@ export interface PayrollPayload {
   payroll_type_id?: number;
   period_start?: string;
   period_end?: string;
+  payment_date?: string;
   status?: string;
 }
 
 export interface Payroll {
   id: number;
-  payroll_type_id: number;
+  payroll_type?: number;
+  payroll_type_id?: number;  // Alias for compatibility
   period_start: string;
   period_end: string;
+  payment_date?: string;
   status: string;
   created_at?: string;
+  version?: number;
+}
+
+export interface PayrollEmployee {
+  id: number;
+  payroll_id: number;
+  employee_id: number;
+  employee_name: string;
+  employee_identification: string;
+  position_name?: string;
+  gross_salary: number;
+  total_deductions: number;
+  net_salary: number;
+  version: number;
 }
 
 export const PayrollService = {
+  async getAllPayrolls(): Promise<Payroll[]> {
+    try {
+      const response = await http.get('/payrolls');
+      // http.get ya desenvuelve { data } y retorna directamente el arreglo
+      return (response as unknown as Payroll[]) || [];
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al obtener planillas');
+    }
+  },
+
   async createPayroll(payload: PayrollPayload): Promise<Payroll> {
     try {
       return await http.post('/payroll/create', payload);
@@ -39,6 +66,16 @@ export const PayrollService = {
       return await http.put(`/payroll/${id}`, payload);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al actualizar planilla');
+    }
+  },
+
+  async getPayrollEmployees(payrollId: number): Promise<PayrollEmployee[]> {
+    try {
+      const response = await http.get(`/payroll/${payrollId}/employees`);
+      // http.get ya retorna el arreglo de empleados
+      return (response as unknown as PayrollEmployee[]) || [];
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al obtener empleados de la planilla');
     }
   },
 };

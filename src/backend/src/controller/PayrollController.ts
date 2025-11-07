@@ -3,6 +3,29 @@ import { PayrollService } from "../service/PayrollService";
 
 export class PayrollController {
   /**
+   * Get all payrolls
+   * GET /payrolls
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with all payrolls or error
+   */
+  static async getAllPayrolls(req: Request, res: Response) {
+    try {
+      const payrolls = await PayrollService.getAllPayrolls();
+      res.json({
+        success: true,
+        data: payrolls
+      });
+    } catch (error) {
+      console.error("Failed to retrieve payrolls:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to retrieve payrolls" 
+      });
+    }
+  }
+
+  /**
    * Create a new payroll in the system
    * POST /payroll/create
    * @param req - Express request object containing payroll data
@@ -11,7 +34,18 @@ export class PayrollController {
    */
   static async createPayroll(req: Request, res: Response) {
     try {
-      const payroll = await PayrollService.createPayroll(req.body);
+      // Map frontend field names to backend model
+      const payrollData = {
+        id: 0, // Will be assigned by database
+        payroll_type: req.body.payroll_type_id || req.body.payroll_type,
+        period_start: new Date(req.body.period_start),
+        period_end: new Date(req.body.period_end),
+        payment_date: req.body.payment_date ? new Date(req.body.payment_date) : new Date(),
+        status: req.body.status || 'PENDIENTE',
+        version: 1
+      };
+      
+      const payroll = await PayrollService.createPayroll(payrollData);
       res.status(201).json(payroll);
     } catch (error) {
       console.error("Failed to create payroll:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { formatCRC } from '@/utils/number';
 
 interface PayrollResultsProps {
   data: any;
@@ -26,16 +27,16 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
   }, 0) : null;
 
   return (
-    <div className="mt-6 bg-white rounded shadow p-4">
+    <div className="p-4 mt-6 bg-white rounded shadow">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Resultados del cálculo</h3>
         {onCreate && (
-          <button onClick={onCreate} className="px-4 py-2 bg-green-600 text-white rounded">Guardar planilla</button>
+          <button onClick={onCreate} className="px-4 py-2 text-white bg-green-600 rounded">Guardar planilla</button>
         )}
       </div>
 
       {!employees && (
-        <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto">{JSON.stringify(data, null, 2)}</pre>
+        <pre className="p-3 overflow-auto text-sm rounded bg-gray-50">{JSON.stringify(data, null, 2)}</pre>
       )}
 
       {employees && (
@@ -77,10 +78,10 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                   <tr key={emp.employee_id || emp.id || Math.random()} className="border-t">
                     <td className="px-3 py-2 text-sm font-medium">{employeeName}</td>
                     <td className="px-3 py-2 text-sm text-right">{hours > 0 ? hours : '-'}</td>
-                    <td className="px-3 py-2 text-sm text-right">₡{Number(grossSalary).toFixed(2)}</td>
-                    <td className="px-3 py-2 text-sm text-right">₡{Number(totalDeductions).toFixed(2)}</td>
-                    <td className="px-3 py-2 text-sm text-right">₡{Number(bonuses).toFixed(2)}</td>
-                    <td className="px-3 py-2 text-sm text-right font-semibold">₡{Number(netSalary).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-sm text-right">{formatCRC(grossSalary)}</td>
+                    <td className="px-3 py-2 text-sm text-right">{formatCRC(totalDeductions)}</td>
+                    <td className="px-3 py-2 text-sm text-right">{formatCRC(bonuses)}</td>
+                    <td className="px-3 py-2 text-sm font-semibold text-right">{formatCRC(netSalary)}</td>
                   </tr>
                 );
               })}
@@ -88,8 +89,8 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
             {total !== null && (
               <tfoot className="bg-gray-50">
                 <tr className="border-t-2 border-gray-300">
-                  <td colSpan={5} className="px-3 py-2 text-right font-bold">Total Neto</td>
-                  <td className="px-3 py-2 text-right font-bold text-lg">₡{Number(total).toFixed(2)}</td>
+                  <td colSpan={5} className="px-3 py-2 font-bold text-right">Total Neto</td>
+                  <td className="px-3 py-2 text-lg font-bold text-right">{formatCRC(total)}</td>
                 </tr>
               </tfoot>
             )}

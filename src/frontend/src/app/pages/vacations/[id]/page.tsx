@@ -52,6 +52,14 @@ export default function VacationDetailPage({ params }: PageProps) {
     });
   };
 
+  const calculateDays = (startDate: string, endDate: string): number => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 1; // Include both start and end dates
+  };
+
   const getStatusBadge = (status?: string, paid?: boolean) => {
     if (status === 'approved' || paid) {
       return (
@@ -165,7 +173,7 @@ export default function VacationDetailPage({ params }: PageProps) {
                   <div>
                     <p className="text-xs text-[#6B5B3D] mb-1">Duración Total</p>
                     <p className="text-2xl font-bold text-[#6F7153]">
-                      {vacation.days} días
+                      {vacation.days || calculateDays(vacation.start_date, vacation.end_date)} días
                     </p>
                   </div>
                   <ClockIcon className="w-12 h-12 text-[#D2B48C]" />

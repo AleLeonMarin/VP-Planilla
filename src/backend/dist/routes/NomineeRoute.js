@@ -102,7 +102,7 @@ router.post("/nominee/calculate", (0, asyncHandler_1.asyncHandler)(NomineeContro
  *     tags:
  *       - Nominee
  *     summary: Calculate complete payroll for period
- *     description: Calculate complete payroll for all employees including hours, deductions, bonuses, and net salary
+ *     description: Calculate complete payroll for all employees including hours, deductions, bonuses, and net salary. Optionally save results to vpg_payroll_employee table.
  *     requestBody:
  *       required: true
  *       content:
@@ -123,6 +123,10 @@ router.post("/nominee/calculate", (0, asyncHandler_1.asyncHandler)(NomineeContro
  *                 format: date
  *                 description: End date of payroll period (YYYY-MM-DD)
  *                 example: "2024-01-31"
+ *               payrollId:
+ *                 type: integer
+ *                 description: Optional payroll ID to save results to vpg_payroll_employee table
+ *                 example: 1
  *     responses:
  *       '200':
  *         description: Payroll calculation completed successfully

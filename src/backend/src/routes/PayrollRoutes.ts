@@ -5,6 +5,27 @@ import { asyncHandler } from "../utils/asyncHandler";
 const router = Router();
 
 /**
+ * @route   GET /payrolls
+ * @desc    Get all payrolls
+ * @access  Private
+ */
+/**
+ * @swagger
+ * /api/payrolls:
+ *   get:
+ *     tags:
+ *       - Payroll
+ *     summary: Get all payrolls
+ *     description: Retrieve all payroll records from the system
+ *     responses:
+ *       '200':
+ *         description: Payrolls retrieved successfully
+ *       '500':
+ *         description: Internal server error
+ */
+router.get("/payrolls", asyncHandler(PayrollController.getAllPayrolls));
+
+/**
  * @route   POST /payroll/create
  * @desc    Create a new payroll
  * @access  Private

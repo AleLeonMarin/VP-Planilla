@@ -3,6 +3,7 @@
 import React, { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePayrollEmployees } from '@/hooks/usePayrollEmployees';
+import { formatCRC } from '@/utils/number';
 import {
   UserGroupIcon,
   CurrencyDollarIcon,
@@ -78,9 +79,7 @@ export default function PayrollEmployeesPage({ params }: PageProps) {
                 </div>
                 <div>
                   <p className="text-sm text-[#6B5B3D]">Salario Bruto Total</p>
-                  <p className="text-2xl font-bold text-[#3B4D36]">
-                    ₡{totalGrossSalary.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
-                  </p>
+                  <p className="text-2xl font-bold text-[#3B4D36]">{formatCRC(totalGrossSalary)}</p>
                 </div>
               </div>
             </div>
@@ -92,9 +91,7 @@ export default function PayrollEmployeesPage({ params }: PageProps) {
                 </div>
                 <div>
                   <p className="text-sm text-[#6B5B3D]">Deducciones Totales</p>
-                  <p className="text-2xl font-bold text-[#3B4D36]">
-                    ₡{totalDeductions.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
-                  </p>
+                  <p className="text-2xl font-bold text-[#3B4D36]">{formatCRC(totalDeductions)}</p>
                 </div>
               </div>
             </div>
@@ -106,9 +103,7 @@ export default function PayrollEmployeesPage({ params }: PageProps) {
                 </div>
                 <div>
                   <p className="text-sm text-[#6B5B3D]">Salario Neto Total</p>
-                  <p className="text-2xl font-bold text-[#3B4D36]">
-                    ₡{totalNetSalary.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
-                  </p>
+                  <p className="text-2xl font-bold text-[#3B4D36]">{formatCRC(totalNetSalary)}</p>
                 </div>
               </div>
             </div>
@@ -174,17 +169,17 @@ export default function PayrollEmployeesPage({ params }: PageProps) {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="font-medium text-green-700">
-                          ₡{employee.gross_salary.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                          {formatCRC(employee.gross_salary)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="font-medium text-red-700">
-                          ₡{employee.total_deductions.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                          {formatCRC(employee.total_deductions)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="font-bold text-[#3B4D36]">
-                          ₡{employee.net_salary.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                          {formatCRC(employee.net_salary)}
                         </span>
                       </td>
                     </tr>

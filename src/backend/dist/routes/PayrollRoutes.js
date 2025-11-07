@@ -5,6 +5,26 @@ const PayrollController_1 = require("../controller/PayrollController");
 const asyncHandler_1 = require("../utils/asyncHandler");
 const router = (0, express_1.Router)();
 /**
+ * @route   GET /payrolls
+ * @desc    Get all payrolls
+ * @access  Private
+ */
+/**
+ * @swagger
+ * /api/payrolls:
+ *   get:
+ *     tags:
+ *       - Payroll
+ *     summary: Get all payrolls
+ *     description: Retrieve all payroll records from the system
+ *     responses:
+ *       '200':
+ *         description: Payrolls retrieved successfully
+ *       '500':
+ *         description: Internal server error
+ */
+router.get("/payrolls", (0, asyncHandler_1.asyncHandler)(PayrollController_1.PayrollController.getAllPayrolls));
+/**
  * @route   POST /payroll/create
  * @desc    Create a new payroll
  * @access  Private

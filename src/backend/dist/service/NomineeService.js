@@ -75,32 +75,30 @@ class NomineeService {
      */
     async getEmployeeDeductions(employee_id) {
         try {
-            // Use raw SQL to get deductions with full details via JOIN
-            const deductions = await prisma.$queryRaw `
-        SELECT 
-          dpe.deductions_per_employee_employee_id as employee_id,
-          dpe.deductions_per_employee_deduction_id as deduction_id,
-          dpe.deductions_per_employee_version as version,
-          d.deductions_name as deduction_name,
-          d.deductions_description as deduction_description,
-          d.deductions_fixed_amount as fixed_amount,
-          d.deductions_percentage as percentage
-        FROM vpg_deductions_per_employee dpe
-        INNER JOIN vpg_deductions d 
-          ON dpe.deductions_per_employee_deduction_id = d.deductions_id
-        WHERE dpe.deductions_per_employee_employee_id = ${employee_id}
-      `;
-            // Map and normalize numeric values; return both definition and assigned info
-            const mapped = deductions.map((d) => ({
-                employee_id: Number(d.employee_id),
-                deduction_id: Number(d.deduction_id),
-                version: Number(d.version) || 1,
-                deduction_name: String(d.deduction_name || ''),
-                deduction_description: String(d.deduction_description || ''),
-                fixed_amount: d.fixed_amount != null ? Number(d.fixed_amount) : 0,
-                percentage: d.percentage != null ? Number(d.percentage) : 0,
-            }));
-            // Debug: log what we found for the employee
+            // Use Prisma client to ensure same schema/connection settings as the rest of the app
+            const assignments = await prisma.vpg_deductions_per_employee.findMany({
+                where: { deductions_per_employee_employee_id: employee_id },
+            });
+            if (!assignments || assignments.length === 0) {
+                console.log(`[Payroll] No deductions assigned for employee ${employee_id}`);
+                return [];
+            }
+            const deductionIds = assignments.map(a => a.deductions_per_employee_deduction_id);
+            const deductionRows = await prisma.vpg_deductions.findMany({
+                where: { deductions_id: { in: deductionIds } },
+            });
+            const mapped = assignments.map(a => {
+                const d = deductionRows.find(dr => dr.deductions_id === a.deductions_per_employee_deduction_id);
+                return {
+                    employee_id: a.deductions_per_employee_employee_id,
+                    deduction_id: a.deductions_per_employee_deduction_id,
+                    version: a.deductions_per_employee_version,
+                    deduction_name: d?.deductions_name || '',
+                    deduction_description: d?.deductions_description || '',
+                    fixed_amount: d?.deductions_fixed_amount != null ? Number(d.deductions_fixed_amount) : 0,
+                    percentage: d?.deductions_percentage != null ? Number(d.deductions_percentage) : 0,
+                };
+            });
             console.log(`[Payroll] Employee ${employee_id} deductions loaded:`, mapped);
             return mapped;
         }
@@ -154,12 +152,68 @@ class NomineeService {
         }
     }
     /**
+     * Save payroll employee calculations to the database
+     * @param payrollId - The ID of the payroll to associate the employee records with
+     * @param employees - Array of employee payroll data to save
+     * @returns Promise<number> - Number of records saved
+     */
+    async savePayrollEmployees(payrollId, employees) {
+        let savedCount = 0;
+        for (const employee of employees) {
+            try {
+                // Check if record already exists for this payroll and employee
+                const existing = await prisma.vpg_payroll_employee.findFirst({
+                    where: {
+                        payroll_employee_payroll_id: payrollId,
+                        payroll_employee_employee_id: Number(employee.employeeId)
+                    }
+                });
+                if (existing) {
+                    // Update existing record
+                    await prisma.vpg_payroll_employee.update({
+                        where: {
+                            payroll_employee_id: existing.payroll_employee_id
+                        },
+                        data: {
+                            payroll_employee_gross_salary: employee.grossSalary,
+                            payroll_employee_total_deductions: employee.totalDeductions,
+                            payroll_employee_net_salary: employee.netSalary,
+                            payroll_employee_version: existing.payroll_employee_version + 1
+                        }
+                    });
+                    console.log(`Updated payroll employee record for employee ${employee.employeeId}`);
+                }
+                else {
+                    // Create new record
+                    await prisma.vpg_payroll_employee.create({
+                        data: {
+                            payroll_employee_payroll_id: payrollId,
+                            payroll_employee_employee_id: Number(employee.employeeId),
+                            payroll_employee_gross_salary: employee.grossSalary,
+                            payroll_employee_total_deductions: employee.totalDeductions,
+                            payroll_employee_net_salary: employee.netSalary,
+                            payroll_employee_version: 1
+                        }
+                    });
+                    console.log(`Created payroll employee record for employee ${employee.employeeId}`);
+                }
+                savedCount++;
+            }
+            catch (error) {
+                console.error(`Error saving payroll employee ${employee.employeeId}:`, error);
+                throw error;
+            }
+        }
+        return savedCount;
+    }
+    /**
      * Calculate complete payroll for all employees in a given period
      * @param startDate - Start date of the payroll period (inclusive)
      * @param endDate - End date of the payroll period (inclusive)
+     * @param payrollId - Optional payroll ID to save results to database
      * @returns Promise<PayrollCalculationResult> - Complete payroll calculation with all employee data
      */
-    async calculatePayrollForPeriod(startDate, endDate) {
+    async calculatePayrollForPeriod(startDate, endDate, payrollId) {
         const result = {
             period: {
                 startDate: startDate.toISOString().split('T')[0],
@@ -218,6 +272,18 @@ class NomineeService {
                 }
             }
             result.summary.messages.push(`Procesamiento completado: ${result.employees.length} empleados procesados, ${result.summary.employeesWithInconsistencies} con inconsistencias`);
+            // Save to database if payrollId is provided
+            if (payrollId && result.employees.length > 0) {
+                try {
+                    const savedCount = await this.savePayrollEmployees(payrollId, result.employees);
+                    result.summary.messages.push(`Registros guardados en base de datos: ${savedCount} de ${result.employees.length}`);
+                    console.log(`Saved ${savedCount} payroll employee records to database for payroll ${payrollId}`);
+                }
+                catch (error) {
+                    console.error('Error saving payroll employees to database:', error);
+                    result.summary.messages.push(`Error al guardar en base de datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+                }
+            }
         }
         catch (error) {
             console.error('Error in payroll calculation:', error);
@@ -257,8 +323,8 @@ class NomineeService {
             if (employee.position_id) {
                 const position = await PositionService_1.PositionService.getPositionById(employee.position_id);
                 if (position) {
-                    // Assuming base_salary is monthly, convert to hourly (assuming 160 hours/month)
-                    employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary / 160);
+                    // Treat base_salary as hourly rate directly
+                    employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary);
                 }
                 else {
                     employeePayroll.generalMessages.push(`Advertencia: No se encontró información del puesto (ID: ${employee.position_id}). Usando salario base de 0.`);

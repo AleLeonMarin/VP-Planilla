@@ -6,11 +6,11 @@ export const useNominee = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const calculatePayrollForPeriod = async (startDate: string, endDate: string) => {
+  const calculatePayrollForPeriod = async (startDate: string, endDate: string, payrollId?: number) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await NomineeService.calculatePayrollForPeriod(startDate, endDate);
+      const res = await NomineeService.calculatePayrollForPeriod(startDate, endDate, payrollId);
       setData(res);
       return res;
     } catch (err: any) {

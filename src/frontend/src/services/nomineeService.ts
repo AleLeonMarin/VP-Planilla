@@ -41,9 +41,13 @@ export const NomineeService = {
     }
   },
 
-  async calculatePayrollForPeriod(startDate: string, endDate: string): Promise<any> {
+  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number): Promise<any> {
     try {
-      return await http.post('/nominee/calculate-payroll', { startDate, endDate });
+      const payload: any = { startDate, endDate };
+      if (payrollId) {
+        payload.payrollId = payrollId;
+      }
+      return await http.post('/nominee/calculate-payroll', payload);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al calcular planilla para el periodo');
     }

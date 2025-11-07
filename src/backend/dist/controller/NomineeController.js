@@ -75,7 +75,7 @@ class NomineeController {
      */
     static async calculatePayrollForPeriod(req, res) {
         try {
-            const { startDate, endDate } = req.body;
+            const { startDate, endDate, payrollId } = req.body;
             if (!startDate || !endDate) {
                 return res.status(400).json({
                     success: false,
@@ -97,11 +97,13 @@ class NomineeController {
                 });
             }
             const nomineeService = new NomineeService_1.NomineeService();
-            const result = await nomineeService.calculatePayrollForPeriod(start, end);
+            const result = await nomineeService.calculatePayrollForPeriod(start, end, payrollId ? Number(payrollId) : undefined);
             return res.status(200).json({
                 success: true,
                 data: result,
-                message: "Cálculo de nómina del periodo completado exitosamente"
+                message: payrollId
+                    ? "Cálculo de nómina del periodo completado y guardado exitosamente"
+                    : "Cálculo de nómina del periodo completado exitosamente"
             });
         }
         catch (error) {
