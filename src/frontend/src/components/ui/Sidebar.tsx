@@ -13,7 +13,7 @@ export default function Sidebar() {
       icon: "/images/layout/employees.png",
       text: "Empleados"
     },
-    { href: "pages/attendance", icon: "/images/layout/attendance.png", text: "Registro de asistencia" },
+    { href: "/pages/attendance", icon: "/images/layout/attendance.png", text: "Registro de asistencia" },
     {
       href: "/pages/payroll",
       icon: "/images/layout/payroll.png",
@@ -47,8 +47,8 @@ export default function Sidebar() {
       icon: "/images/layout/settings.png",
       text: "Sucursales"
     },
-    { href: "pages/reports", icon: "/images/layout/oficial_reports.png", text: "Reportes Oficiales" },
-    { href: "pages/users", icon: "/images/layout/users_access.png", text: "Usuarios y Accesos" },
+    { href: "/pages/reports", icon: "/images/layout/oficial_reports.png", text: "Reportes Oficiales" },
+    { href: "/pages/users", icon: "/images/layout/users_access.png", text: "Usuarios y Accesos" },
   ];
 
   const bottomMenuItems = [
