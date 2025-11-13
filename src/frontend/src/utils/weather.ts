@@ -8,22 +8,31 @@ interface WeatherData {
   city: string;
 }
 
+const FALLBACK_LOCATION = {
+  latitude: Number(process.env.NEXT_PUBLIC_DEFAULT_LATITUDE || 9.9281),
+  longitude: Number(process.env.NEXT_PUBLIC_DEFAULT_LONGITUDE || -84.0907),
+  label: process.env.NEXT_PUBLIC_DEFAULT_CITY || 'San José',
+};
+
 export function useWeather() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
   useEffect(() => {
-    // This effect runs only on the client
     if (typeof window === 'undefined') {
-      setIsLoadingWeather(false); // No weather on server
+      setIsLoadingWeather(false);
       return;
     }
 
-    const fetchWeather = async (latitude: number, longitude: number) => {
-      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY; // Get your API key from environment variables
+    const fetchWeather = async (
+      latitude: number,
+      longitude: number,
+      forcedCityName?: string
+    ) => {
+      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
       if (!API_KEY) {
-        setWeatherError("OpenWeatherMap API Key not configured.");
+        setWeatherError('OpenWeatherMap API Key not configured.');
         setIsLoadingWeather(false);
         return;
       }
@@ -31,7 +40,7 @@ export function useWeather() {
       try {
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=es`
-        ); // units=metric for Celsius, lang=es for Spanish description
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -39,38 +48,55 @@ export function useWeather() {
 
         setWeather({
           description: data.weather[0].description,
-          temperature: Math.round(data.main.temp), // Round to nearest integer
+          temperature: Math.round(data.main.temp),
           icon: data.weather[0].icon,
-          city: data.name,
+          city: data.name || forcedCityName || FALLBACK_LOCATION.label,
         });
         setIsLoadingWeather(false);
+        setWeatherError(null);
       } catch (error) {
-        console.error("Error fetching weather data:", error);
-        setWeatherError("No se pudo cargar el clima.");
+        console.error('Error fetching weather data:', error);
+        setWeatherError('No se pudo cargar el clima.');
         setIsLoadingWeather(false);
       }
+    };
+
+    const fallbackToDefault = (message: string) => {
+      console.warn(`[weather] ${message}, usando ubicación por defecto.`);
+      fetchWeather(
+        FALLBACK_LOCATION.latitude,
+        FALLBACK_LOCATION.longitude,
+        FALLBACK_LOCATION.label
+      );
     };
 
     const getLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            fetchWeather(position.coords.latitude, position.coords.longitude);
-          },
-          (error) => {
-            console.error("Error getting user location:", error);
-            setWeatherError("Permiso de ubicación denegado o no disponible.");
-            setIsLoadingWeather(false);
-          }
+      const isSecure =
+        window.isSecureContext || window.location.hostname === 'localhost';
+
+      if (!navigator.geolocation || !isSecure) {
+        fallbackToDefault(
+          !navigator.geolocation
+            ? 'Geolocalización no soportada por este navegador.'
+            : 'Geolocalización bloqueada en contextos no seguros.'
         );
-      } else {
-        setWeatherError("Geolocalización no soportada por este navegador.");
-        setIsLoadingWeather(false);
+        return;
       }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetchWeather(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          fallbackToDefault(
+            `No se pudo obtener la ubicación del usuario (${error.message}).`
+          );
+        }
+      );
     };
 
-    getLocation(); // Start the process of getting location and then weather
-  }, []); // Empty dependency array means this runs once on mount (client-side)
+    getLocation();
+  }, []);
 
   return { weather, isLoadingWeather, weatherError };
 }

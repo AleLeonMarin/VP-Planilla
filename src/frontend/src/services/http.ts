@@ -89,30 +89,38 @@ async function rawRequest(inputPath: string, options: RequestInit = {}, retry = 
   const token = getStoredAccessToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(url, { ...options, headers });
+  try {
+    const res = await fetch(url, { ...options, headers });
 
-  if (res.status === 401 && retry) {
-    // Try refresh once
-    try {
-      const newToken = await tryRefreshToken();
-      // retry original request with new token
-      const retryHeaders = { ...(options.headers as Record<string, string> || {}), 'Accept': 'application/json', 'Authorization': `Bearer ${newToken}` };
-      const retryRes = await fetch(url, { ...options, headers: retryHeaders });
-      if (retryRes.status === 401) {
-        // Force logout
+    if (res.status === 401 && retry) {
+      // Try refresh once
+      try {
+        const newToken = await tryRefreshToken();
+        // retry original request with new token
+        const retryHeaders = { ...(options.headers as Record<string, string> || {}), 'Accept': 'application/json', 'Authorization': `Bearer ${newToken}` };
+        const retryRes = await fetch(url, { ...options, headers: retryHeaders });
+        if (retryRes.status === 401) {
+          // Force logout
+          clearStoredTokens();
+          if (onAuthFailureCallback) onAuthFailureCallback();
+        }
+        return retryRes;
+      } catch (err) {
+        // Refresh failed -> logout
         clearStoredTokens();
         if (onAuthFailureCallback) onAuthFailureCallback();
+        throw new Error('Authentication required');
       }
-      return retryRes;
-    } catch (err) {
-      // Refresh failed -> logout
-      clearStoredTokens();
-      if (onAuthFailureCallback) onAuthFailureCallback();
-      throw new Error('Authentication required');
     }
-  }
 
-  return res;
+    return res;
+  } catch (error) {
+    const isNetworkError = error instanceof TypeError;
+    if (isNetworkError) {
+      throw new Error('No se pudo conectar con la API. Asegurate de que el backend este en ejecucion y que NEXT_PUBLIC_API_URL apunte correctamente al servidor.');
+    }
+    throw error instanceof Error ? error : new Error('Error desconocido al conectar con la API');
+  }
 }
 
 async function requestJson(path: string, options: RequestInit = {}) {

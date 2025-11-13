@@ -40,5 +40,17 @@ export type { PayrollType, PayrollTypePayload } from './payrollTypesService';
 export { NomineeService } from './nomineeService';
 export type { ClockLog, EmployeeDeduction } from './nomineeService';
 
+// Reports
+export { ReportsService } from './reportsService';
+export type {
+  ReportsDashboardData,
+  ReportablePayrollSummary,
+  ReportTargetSummary,
+  PayrollReportDataset,
+  ReportDispatchSummary,
+  ReportLogEntry,
+  OfficialReportType,
+} from '@/types/reports';
+
 // HTTP
 export { http, setStoredTokens, clearStoredTokens, setOnAuthFailure, API_BASE } from './http';
