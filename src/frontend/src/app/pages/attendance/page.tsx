@@ -97,31 +97,125 @@ const excelDateToJsDate = (value: any): Date | null => {
 };
 
 const buildDateTimeFromParts = (dateValue: any, timeValue: any): Date | null => {
-  const datePart = excelDateToJsDate(dateValue);
-  if (!datePart) return null;
-  if (timeValue == null || timeValue === '') return datePart;
+  console.log('buildDateTimeFromParts - dateValue:', dateValue, 'tipo:', typeof dateValue);
+  console.log('buildDateTimeFromParts - timeValue:', timeValue, 'tipo:', typeof timeValue);
+  
+  let datePart: Date | null = null;
+
+  // Intentar parsear la fecha según su tipo
+  if (typeof dateValue === 'number') {
+    // Número de Excel
+    datePart = excelDateToJsDate(dateValue);
+  } else if (typeof dateValue === 'string') {
+    const dateStr = dateValue.trim();
+    
+    // Formato ISO: 2025-01-06 o 2025/01/06
+    if (dateStr.match(/^\d{4}[-/]\d{2}[-/]\d{2}/)) {
+      // Parsear manualmente para evitar problemas de timezone
+      const parts = dateStr.split(/[-/]/);
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      datePart = new Date(year, month, day, 0, 0, 0, 0);
+      console.log('  -> Parseado como ISO:', datePart, 'válido:', !isNaN(datePart.getTime()));
+    }
+    // Formato dd/mm/yyyy o dd-mm-yyyy
+    else if (dateStr.match(/^\d{1,2}[-/]\d{1,2}[-/]\d{4}/)) {
+      const parts = dateStr.split(/[-/]/);
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Mes en JS es 0-indexed
+      const year = parseInt(parts[2], 10);
+      datePart = new Date(year, month, day, 0, 0, 0, 0);
+      console.log('  -> Parseado como dd/mm/yyyy:', datePart, 'válido:', !isNaN(datePart.getTime()));
+    }
+    // Intentar parseo directo
+    else {
+      datePart = new Date(dateStr);
+      console.log('  -> Parseo directo:', datePart, 'válido:', !isNaN(datePart.getTime()));
+    }
+  } else if (dateValue instanceof Date) {
+    datePart = dateValue;
+  }
+
+  if (!datePart || isNaN(datePart.getTime())) {
+    console.log('  ❌ Fecha inválida - datePart:', datePart);
+    return null;
+  }
+
+  console.log('  ✅ Fecha base válida:', datePart.toString());
+  
+  if (timeValue == null || timeValue === '') {
+    console.log('  ⏰ Sin hora, retornando fecha base');
+    return datePart;
+  }
 
   if (timeValue instanceof Date) {
-    datePart.setHours(timeValue.getHours(), timeValue.getMinutes(), timeValue.getSeconds(), 0);
-    return datePart;
+    try {
+      datePart.setHours(timeValue.getHours(), timeValue.getMinutes(), timeValue.getSeconds(), 0);
+      if (isNaN(datePart.getTime())) {
+        console.log('  ❌ Fecha inválida después de setHours (Date)');
+        return null;
+      }
+      console.log('  ✅ Con hora (Date):', datePart.toString());
+      return datePart;
+    } catch (e) {
+      console.log('  ❌ Error aplicando hora (Date):', e);
+      return datePart;
+    }
   }
 
   if (typeof timeValue === 'number') {
-    const parsed = XLSX.SSF.parse_date_code(timeValue);
-    if (!parsed) return datePart;
-    datePart.setHours(parsed.H, parsed.M, parsed.S || 0, 0);
-    return datePart;
+    try {
+      const parsed = XLSX.SSF.parse_date_code(timeValue);
+      if (!parsed) {
+        console.log('  ⚠️ No se pudo parsear hora como número, retornando fecha base');
+        return datePart;
+      }
+      datePart.setHours(parsed.H, parsed.M, parsed.S || 0, 0);
+      if (isNaN(datePart.getTime())) {
+        console.log('  ❌ Fecha inválida después de setHours (number)');
+        return null;
+      }
+      console.log('  ✅ Con hora (number):', datePart.toString());
+      return datePart;
+    } catch (e) {
+      console.log('  ❌ Error aplicando hora (number):', e);
+      return datePart;
+    }
   }
 
   const timeString = String(timeValue).trim();
-  if (!timeString) return datePart;
-  const [hours, minutes, seconds] = timeString.split(':').map((chunk) => parseInt(chunk, 10));
-  if (!Number.isNaN(hours)) {
-    datePart.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, Number.isNaN(seconds) ? 0 : seconds, 0);
+  if (!timeString) {
+    console.log('  ⚠️ timeString vacío, retornando fecha base');
     return datePart;
   }
-
-  return datePart;
+  
+  try {
+    const timeParts = timeString.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = timeParts[1] ? parseInt(timeParts[1], 10) : 0;
+    const seconds = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+    
+    console.log('  ⏰ Parseando hora string:', { hours, minutes, seconds });
+    
+    if (Number.isNaN(hours) || hours < 0 || hours > 23) {
+      console.log('  ❌ Horas inválidas:', hours);
+      return datePart;
+    }
+    
+    datePart.setHours(hours, Number.isNaN(minutes) ? 0 : minutes, Number.isNaN(seconds) ? 0 : seconds, 0);
+    
+    if (isNaN(datePart.getTime())) {
+      console.log('  ❌ Fecha inválida después de setHours (string)');
+      return null;
+    }
+    
+    console.log('  ✅ Con hora (string):', datePart.toString());
+    return datePart;
+  } catch (e) {
+    console.log('  ❌ Error aplicando hora (string):', e);
+    return datePart;
+  }
 };
 
 const parseDateInput = (value: string, endOfDay = false) => {
@@ -195,131 +289,195 @@ export default function AttendancePage() {
   };
 
   const parseExcelMarks = async (file: File) => {
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    if (!firstSheetName) throw new Error('El archivo no contiene hojas válidas');
+    try {
+      const buffer = await file.arrayBuffer();
+      console.log('1. Buffer creado, tamaño:', buffer.byteLength);
+      
+      const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+      console.log('2. Workbook cargado, hojas:', workbook.SheetNames);
+      
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) throw new Error('El archivo no contiene hojas válidas');
 
-    const worksheet = workbook.Sheets[firstSheetName];
+      const worksheet = workbook.Sheets[firstSheetName];
+      console.log('3. Hoja seleccionada:', firstSheetName);
 
-    const normalizeRows = () => {
-      const directRows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, defval: '', blankrows: false });
-      if (directRows.length > 0) return directRows;
-
-      const csvText = XLSX.utils.sheet_to_csv(worksheet);
-      if (!csvText.trim()) return [];
-
-      return csvText
-        .split(/\r?\n/)
-        .map((line) =>
-          line
-            .split(',')
-            .map((cell) => cell.replace(/^"|"$/g, '').trim())
-        )
-        .filter((row) => row.some((cell) => cell && cell.length > 0));
-    };
-
-    const rows = normalizeRows();
-    if (!rows.length) {
-      return { logs: [], stats: { totalRows: 0, validRows: 0, matchedRows: 0, unmatchedEmployees: 0 } };
-    }
-
-    const headerRowIndex = rows.findIndex(
-      (row) => Array.isArray(row) && row.some((cell) => cell !== null && cell !== undefined && String(cell).trim() !== '')
-    );
-
-    if (headerRowIndex === -1) {
-      throw new Error('No se encontraron encabezados en el archivo');
-    }
-
-    const rawHeaders = rows[headerRowIndex].map((cell) => String(cell || '').trim());
-    const normalizedHeaders = rawHeaders.map((header, idx) => {
-      if (!header) return `col_${idx}`;
-      return header.toLowerCase().replace(/\s+/g, '_');
-    });
-
-    const logs: ClockLog[] = [];
-    const unmatched = new Set<string>();
-    let matchedRows = 0;
-
-    const getValue = (row: any[], needles: string[]) => {
-      for (let colIdx = 0; colIdx < normalizedHeaders.length; colIdx += 1) {
-        const header = normalizedHeaders[colIdx];
-        for (const needle of needles) {
-          if (header.includes(needle)) return row[colIdx];
-        }
-      }
-      return undefined;
-    };
-
-    rows.slice(headerRowIndex + 1).forEach((row, index) => {
-      if (!Array.isArray(row)) return;
-
-      const nameValue = getValue(row, ['employee', 'empleado', 'colaborador', 'nombre', 'name']);
-      const idValue = getValue(row, ['employee_id', 'id', 'codigo', 'identificacion']);
-      const timestampValue = getValue(row, ['timestamp', 'marca', 'datetime', 'fecha_hora']);
-      const dateValue = getValue(row, ['date', 'fecha', 'dia', 'day']);
-      const timeValue = getValue(row, ['time', 'hora', 'hour']);
-      const remarksValue = getValue(row, ['remarks', 'observaciones', 'nota']);
-      const typeValue = getValue(row, ['type', 'tipo', 'log', 'estado', 'marcatipo', 'tipo_marca']);
-
-      let timestamp: Date | null = null;
-      if (timestampValue) {
-        timestamp = excelDateToJsDate(timestampValue);
-      } else if (dateValue) {
-        timestamp = buildDateTimeFromParts(dateValue, timeValue);
-      }
-
-      if (!timestamp || Number.isNaN(timestamp.getTime())) {
-        return;
-      }
-
-      let numericId: number | undefined;
-      if (idValue !== undefined && idValue !== '') {
-        const parsedId = Number(idValue);
-        if (!Number.isNaN(parsedId)) numericId = parsedId;
-      }
-
-      const rawName = typeof nameValue === 'string' ? nameValue.trim() : '';
-      let matchedEmployeeId = numericId;
-      let matchedEmployeeName = rawName;
-
-      if (!matchedEmployeeId && rawName) {
-        const match = findEmployeeByName(rawName);
-        if (match) {
-          matchedEmployeeId = match.employee_id;
-          matchedEmployeeName = `${match.employee_first_name} ${match.employee_middle_name} ${match.employee_last_name}`.replace(/\s+/g, ' ').trim();
-        }
-      }
-
-      if (!matchedEmployeeId) {
-        unmatched.add(rawName || `Fila ${headerRowIndex + index + 2}`);
-      } else {
-        matchedRows += 1;
-      }
-
-      logs.push({
-        id: logs.length + 1,
-        employee_id: matchedEmployeeId ?? null,
-        employee_name: matchedEmployeeName || rawName || `Empleado #${matchedEmployeeId}`,
-        timestamp: timestamp.toISOString(),
-        log_type: typeof typeValue === 'string' && typeValue ? typeValue.toUpperCase() : 'IMPORTED',
-        remarks: typeof remarksValue === 'string' ? remarksValue : undefined,
-        version: 1
+      // Convertir a JSON con todas las opciones para ver qué hay
+      const allData = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1, 
+        defval: '', 
+        blankrows: true,
+        raw: false 
       });
-    });
+      
+      console.log('4. Total filas (incluyendo vacías):', allData.length);
+      console.log('5. Primeras 10 filas:');
+      allData.slice(0, 10).forEach((row, i) => {
+        console.log(`   Fila ${i}:`, row);
+      });
 
-    const totalDataRows = rows.length - (headerRowIndex + 1);
+      // Filtrar filas vacías
+      const rows = allData.filter((row: any) => 
+        Array.isArray(row) && row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
+      );
+      
+      console.log('6. Filas con datos:', rows.length);
+      
+      if (!rows.length) {
+        console.error('❌ No hay filas con datos');
+        return { logs: [], stats: { totalRows: 0, validRows: 0, matchedRows: 0, unmatchedEmployees: 0 } };
+      }
 
-    return {
-      logs,
-      stats: {
-        totalRows: Math.max(totalDataRows, 0),
+      // Buscar encabezados (primera fila que tenga contenido)
+      let headerRowIndex = 0;
+      const rawHeaders = rows[headerRowIndex].map((cell: any) => String(cell || '').trim());
+      
+      console.log('7. Encabezados encontrados en fila 0:', rawHeaders);
+      
+      // Si la primera fila parece ser datos y no encabezados, crear encabezados genéricos
+      const looksLikeHeaders = rawHeaders.some((h: string) => {
+        const lower = h.toLowerCase();
+        return lower.includes('empleado') || lower.includes('fecha') || lower.includes('hora') || 
+               lower.includes('nombre') || lower.includes('date') || lower.includes('time');
+      });
+      
+      if (!looksLikeHeaders) {
+        console.log('⚠️ Primera fila no parece tener encabezados, usando nombres genéricos');
+        // Usar la primera fila como datos, crear encabezados genéricos
+        headerRowIndex = -1;
+      }
+
+      const logs: ClockLog[] = [];
+      const unmatched = new Set<string>();
+      let matchedRows = 0;
+
+      // Procesar filas de datos
+      const startRow = headerRowIndex + 1;
+      const dataRows = rows.slice(startRow);
+      
+      console.log('8. Procesando', dataRows.length, 'filas de datos desde fila', startRow);
+
+      dataRows.forEach((row: any[], rowIndex: number) => {
+        console.log(`\n--- Procesando fila ${rowIndex + startRow} ---`);
+        console.log('Datos:', row);
+
+        // Intentar diferentes posiciones para los datos comunes
+        let employeeName = '';
+        let employeeId: any = null;
+        let dateValue: any = null;
+        let timeValue: any = null;
+        let typeValue: any = null;
+
+        // Estrategia: buscar en todas las columnas
+        row.forEach((cell: any, colIndex: number) => {
+          const cellStr = String(cell || '').trim();
+          if (!cellStr) return;
+
+          console.log(`  Col ${colIndex}: "${cellStr}"`);
+
+          // Detectar fecha (formato dd/mm/yyyy, yyyy-mm-dd, o número de Excel)
+          if (!dateValue && (cellStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/) || 
+              cellStr.match(/^\d{4}-\d{2}-\d{2}/) || 
+              typeof cell === 'number' && cell > 40000)) {
+            dateValue = cell;
+            console.log(`    -> Detectada como FECHA`);
+          }
+          // Detectar hora (formato HH:MM o HH:MM:SS)
+          else if (!timeValue && cellStr.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
+            timeValue = cellStr;
+            console.log(`    -> Detectada como HORA`);
+          }
+          // Detectar ID (número corto)
+          else if (!employeeId && !isNaN(Number(cell)) && Number(cell) < 10000) {
+            employeeId = Number(cell);
+            console.log(`    -> Detectado como ID`);
+          }
+          // Detectar tipo de marca
+          else if (!typeValue && cellStr.match(/entrada|salida|in|out|almuerzo/i)) {
+            typeValue = cellStr;
+            console.log(`    -> Detectado como TIPO`);
+          }
+          // Resto asumirlo como nombre si tiene letras
+          else if (!employeeName && cellStr.match(/[a-zA-Z]{2,}/)) {
+            employeeName = cellStr;
+            console.log(`    -> Detectado como NOMBRE`);
+          }
+        });
+
+        console.log('Valores extraídos:', { employeeName, employeeId, dateValue, timeValue, typeValue });
+
+        // Construir timestamp
+        let timestamp: Date | null = null;
+        if (dateValue) {
+          if (timeValue) {
+            timestamp = buildDateTimeFromParts(dateValue, timeValue);
+          } else {
+            timestamp = excelDateToJsDate(dateValue);
+          }
+        }
+
+        if (!timestamp || isNaN(timestamp.getTime())) {
+          console.log('❌ No se pudo construir timestamp válido');
+          return;
+        }
+
+        console.log('✅ Timestamp:', timestamp.toISOString());
+
+        // Buscar empleado
+        let matchedEmployeeId = employeeId;
+        let matchedEmployeeName = employeeName;
+
+        if (!matchedEmployeeId && employeeName) {
+          const match = findEmployeeByName(employeeName);
+          if (match) {
+            matchedEmployeeId = match.employee_id;
+            matchedEmployeeName = `${match.employee_first_name} ${match.employee_middle_name} ${match.employee_last_name}`.replace(/\s+/g, ' ').trim();
+            console.log('✅ Empleado encontrado por nombre:', matchedEmployeeName);
+          } else {
+            console.log('⚠️ Empleado no encontrado en base de datos');
+          }
+        }
+
+        if (!matchedEmployeeId) {
+          unmatched.add(employeeName || `Fila ${rowIndex + startRow}`);
+        } else {
+          matchedRows += 1;
+        }
+
+        const newLog: ClockLog = {
+          id: logs.length + 1,
+          employee_id: matchedEmployeeId ?? null,
+          employee_name: matchedEmployeeName || employeeName || `Empleado #${matchedEmployeeId}`,
+          timestamp: timestamp.toISOString(),
+          log_type: typeValue?.toUpperCase() || 'IMPORTED',
+          remarks: undefined,
+          version: 1
+        };
+
+        logs.push(newLog);
+        console.log('✅ Log creado:', newLog);
+      });
+
+      const stats = {
+        totalRows: dataRows.length,
         validRows: logs.length,
         matchedRows,
         unmatchedEmployees: unmatched.size
-      }
-    };
+      };
+
+      console.log('\n=== RESUMEN FINAL ===');
+      console.log('Total filas procesadas:', stats.totalRows);
+      console.log('Logs válidos creados:', stats.validRows);
+      console.log('Empleados emparejados:', stats.matchedRows);
+      console.log('Empleados sin emparejar:', stats.unmatchedEmployees);
+      console.log('Primeros 3 logs:', logs.slice(0, 3));
+
+      return { logs, stats };
+      
+    } catch (error) {
+      console.error('❌ ERROR EN parseExcelMarks:', error);
+      throw error;
+    }
   };
 
   const formatEmployeeName = (emp: Pick<Employee, 'employee_first_name' | 'employee_middle_name' | 'employee_last_name'>) =>
@@ -456,9 +614,18 @@ export default function AttendancePage() {
     setIsImporting(true);
 
     try {
+      console.log('=== INICIO IMPORTACIÓN ===');
+      console.log('Archivo:', file.name, 'Tamaño:', file.size, 'bytes');
+      
       const result = await parseExcelMarks(file);
+      
+      console.log('=== RESULTADO IMPORTACIÓN ===');
+      console.log('Logs encontrados:', result.logs.length);
+      console.log('Stats:', result.stats);
+      
       if (!result.logs.length) {
-        modal.showError('Archivo sin marcas', 'No se encontraron registros válidos en el archivo seleccionado');
+        console.error('NO SE ENCONTRARON MARCAS');
+        modal.showError('Archivo sin marcas', 'No se encontraron registros válidos en el archivo seleccionado. Revisa la consola del navegador para más detalles.');
         setUploadedLogs([]);
         setUploadSummary(null);
         return;
@@ -472,9 +639,10 @@ export default function AttendancePage() {
         unmatchedEmployees: result.stats.unmatchedEmployees
       });
 
+      console.log('✅ Archivo importado exitosamente');
       modal.showSuccess('Archivo importado', `Se importaron ${result.stats.validRows} marcas desde ${file.name}`);
     } catch (err: any) {
-      console.error('Excel import error', err);
+      console.error('❌ ERROR EN IMPORTACIÓN:', err);
       modal.showError('Error al importar', err?.message || 'No se pudo procesar el archivo');
     } finally {
       setIsImporting(false);
