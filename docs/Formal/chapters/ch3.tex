@@ -10,132 +10,157 @@ Este análisis evidencia la necesidad de optimizar el flujo de información ya d
 
 \subsection{Gestión de Riesgos}
 
-La gestión de riesgos es un proceso fundamental para identificar, evaluar y controlar los posibles eventos que pueden afectar el éxito del proyecto. A continuación, se presenta la identificación de riesgos, la matriz de probabilidad por impacto para priorizarlos, y el plan de tratamiento de riesgos propuesto para el desarrollo del sistema de gestión de nómina para Café y Vivero Verde Pradera.
+La gestión de riesgos es un proceso esencial dentro del desarrollo del sistema web de gestión de nómina para Café y Vivero Verde Pradera. Su propósito es identificar, analizar y mitigar los eventos que puedan afectar el cumplimiento de los objetivos del proyecto, tanto en el ámbito técnico como en el administrativo.
+Durante la fase actual, se han presentado desafíos reales relacionados con la instalación de la base de datos, la conexión con el reloj marcador y la falta de documentación sobre el cálculo de nómina por parte de la empresa, los cuales se incluyen dentro de los riesgos evaluados.
 
 \subsubsection*{Identificación de Riesgos}
 
-Durante el análisis del proyecto se identificaron los siguientes riesgos relevantes que pueden afectar el proceso de desarrollo e implementación del sistema:
+Durante el análisis y ejecución del proyecto, se identificaron los siguientes riesgos potenciales:
 
 \begin{itemize}
 	\item \textbf{Retrasos en la planificación:} Posibles demoras en la entrega de hitos o tareas clave que afecten el cronograma general del proyecto.
-	\item \textbf{Falta de definición de requerimientos:} Cambios frecuentes o mal planteamiento de los requisitos funcionales y no funcionales, lo que puede generar reprocesos.
-	\item \textbf{Problemas de comunicación:} Falta de coordinación efectiva entre los miembros del equipo o con los responsables del cliente, generando malentendidos.
-	\item \textbf{Capacitación insuficiente del equipo:} Limitaciones técnicas o desconocimiento de herramientas clave por parte del equipo de desarrollo.
-	\item \textbf{Asignación inadecuada de recursos:} Distribución deficiente del tiempo, personal o herramientas, afectando la eficiencia del proyecto.
-	\item \textbf{Riesgos en la gestión del alcance:} Incorporación de funcionalidades no previstas (creep scope) que extienden los tiempos de desarrollo.
-	\item \textbf{Dependencias externas:} Atrasos por parte de proveedores o terceros, como entrega de hardware o acceso a sistemas externos (e.g., reloj marcador).
-	\item \textbf{Problemas en el control de versiones:} Conflictos o pérdida de integridad en el código debido a una gestión inadecuada del repositorio.
-	\item \textbf{Falta de pruebas tempranas:} Postergación de las pruebas que impida detectar errores a tiempo, aumentando el riesgo de fallos críticos.
-	\item \textbf{Limitaciones presupuestarias durante el desarrollo:} Falta de fondos para mantener el equipo, herramientas o servicios necesarios durante la ejecución del proyecto.
+	\item \textbf{Falta de definición de requerimientos:} Cambios frecuentes o ausencia de información precisa sobre los requisitos funcionales y no funcionales, generando reprocesos.
+	\item \textbf{Problemas de comunicación con la empresa:} Dificultades para concretar reuniones o recibir la documentación necesaria para avanzar en los módulos de cálculo de nómina.
+	\item \textbf{Retrasos en la instalación de la base de datos:} Dificultades técnicas o falta de acceso al servidor de la empresa que impiden continuar con las pruebas e integración del sistema.
+	\item \textbf{Errores en la integración del reloj marcador:} Problemas para conectar el sistema con el dispositivo de marcación, afectando el registro automático de asistencias.
+	\item \textbf{Capacitación insuficiente del equipo:} Limitaciones técnicas o desconocimiento de herramientas clave que ralentizan el desarrollo o la configuración del sistema.
+	\item \textbf{Asignación inadecuada de recursos:} Distribución deficiente del tiempo, personal o herramientas, afectando la eficiencia general del proyecto.
+	\item \textbf{Problemas en el control de versiones:} Conflictos o pérdida de integridad del código debido a una gestión inadecuada del repositorio.
+	\item \textbf{Falta de pruebas tempranas:} Postergación de pruebas unitarias o de integración, impidiendo detectar errores críticos de manera oportuna.
+	\item \textbf{Limitaciones presupuestarias durante el desarrollo:} Falta de fondos para cubrir recursos técnicos, licencias o servicios en la nube necesarios para la implementación.
 \end{itemize}
 
-\subsubsection*{Matriz de Probabilidad por Impacto}
+\subsubsection*{Matriz de Probabilidad por Impacto (escala 3x3)}
 
-Para priorizar los riesgos identificados, se evaluó su nivel de riesgo multiplicando dos factores: la probabilidad de ocurrencia y el impacto en el proyecto. Se utilizó una escala del 1 al 5, donde:
+Para esta evaluación se utiliza una escala simplificada de 1 a 3 tanto para la probabilidad como para la gravedad (impacto), donde:
 
 \begin{itemize}
-  \item \textbf{Probabilidad:}
-    \begin{itemize}
-      \item 1 = Muy baja (Improbable)
-      \item 2 = Baja
-      \item 3 = Media
-      \item 4 = Alta
-      \item 5 = Muy alta (Casi segura)
-    \end{itemize}
-  \item \textbf{Impacto:}
-    \begin{itemize}
-      \item 1 = Muy bajo (Impacto insignificante)
-      \item 2 = Bajo
-      \item 3 = Medio
-      \item 4 = Alto
-      \item 5 = Muy alto (Crítico)
-    \end{itemize}
+	\item \textbf{Probabilidad:}
+	      \begin{itemize}
+		      \item 1 = Baja
+		      \item 2 = Media
+		      \item 3 = Alta
+	      \end{itemize}
+	\item \textbf{Gravedad (Impacto):}
+	      \begin{itemize}
+		      \item 1 = Leve
+		      \item 2 = Serio
+		      \item 3 = Muy serio
+	      \end{itemize}
 \end{itemize}
 
-La siguiente tabla presenta la matriz con los riesgos clasificados según esta escala:
+El nivel de riesgo (\textit{N}) se obtiene multiplicando ambos factores. Los valores se clasifican según la siguiente escala:
+
+
+\begin{center}
+	\begin{tikzpicture}
+		% Colores
+		\definecolor{lowrisk}{RGB}{144,238,144}      % Verde
+		\definecolor{medrisk}{RGB}{255,255,153}      % Amarillo
+		\definecolor{elevrisk}{RGB}{255,204,153}     % Naranja suave
+		\definecolor{highrisk}{RGB}{255,0,0}         % Rojo
+
+		% Matriz 3x3 (Probabilidad: columnas 1..3; Gravedad: filas 1..3, de abajo hacia arriba)
+		% Fila Gravedad=3 (arriba): valores 3,6,9  -> Amarillo, Naranja, Rojo
+		\matrix[matrix of nodes,
+			nodes={minimum height=1cm,minimum width=1.2cm,draw,anchor=center},
+			row sep=-\pgflinewidth,column sep=-\pgflinewidth] (m) {
+			\node[fill=medrisk] {3}; & \node[fill=elevrisk] {6}; & \node[fill=highrisk] {9}; \\
+			\node[fill=lowrisk] {2}; & \node[fill=medrisk] {4};  & \node[fill=elevrisk] {6}; \\
+			\node[fill=lowrisk] {1}; & \node[fill=lowrisk] {2};  & \node[fill=medrisk] {3};  \\
+		};
+
+		% Etiquetas de ejes
+		\node[rotate=90] at ([xshift=-1.2cm]m.west) {\textbf{Gravedad}};
+		\node at ([yshift=1.2cm]m.north) {\textbf{Probabilidad}};
+
+	\end{tikzpicture}
+\end{center}
+
+
+\newpage
 
 \begin{table}[h!]
 	\centering
 	\begin{tabular}{|p{6cm}|c|c|c|}
 		\hline
-		\textbf{Riesgo}                & \textbf{Probabilidad} & \textbf{Impacto} & \textbf{Nivel de Riesgo} \\ \hline
-		Fallos de integración tecnológica          & 3 (Media)             & 5 (Muy alto)       & 15                       \\ \hline
-		Fallas de conectividad                     & 2 (Baja)              & 4 (Alto)           & 8                        \\ \hline
-		Errores de implementación                  & 4 (Alta)              & 5 (Muy alto)       & 20                       \\ \hline
-		Incompatibilidad tecnológica               & 3 (Media)             & 3 (Media)          & 9                        \\ \hline
-		Capacitación inadecuada                    & 3 (Media)             & 5 (Muy alto)       & 15                       \\ \hline
-		Resistencia al cambio                      & 4 (Alta)              & 3 (Media)          & 12                       \\ \hline
-		Errores humanos                            & 4 (Alta)              & 3 (Media)          & 12                       \\ \hline
-		Presupuesto insuficiente                   & 3 (Media)             & 5 (Muy alto)       & 15                       \\ \hline
-		Retrasos en pagos a proveedores            & 2 (Baja)              & 3 (Media)          & 6                        \\ \hline
-		Incumplimiento normativo                   & 3 (Media)             & 5 (Muy alto)       & 15                       \\ \hline
-		Riesgos en protección de datos             & 4 (Alta)              & 5 (Muy alto)       & 20                       \\ \hline
-		Desastres naturales                        & 1 (Muy baja)          & 5 (Muy alto)       & 5                        \\ \hline
+		\textbf{Riesgo}                                    & \textbf{Prob. (1–3)} & \textbf{Gravedad (1–3)} & \textbf{Nivel (N)} \\ \hline
+		Retrasos en la planificación                       & 2                    & 2                       & 4 (Medio)          \\ \hline
+		Falta de definición de requerimientos              & 1                    & 3                       & 3 (Bajo)           \\ \hline
+		Problemas de comunicación con la empresa           & 3                    & 2                       & 6 (Crtico)         \\ \hline
+		Retrasos en la instalación de la base de datos     & 3                    & 3                       & 9 (Crítico)        \\ \hline
+		Errores en la integración del reloj marcador       & 3                    & 3                       & 9 (Crítico)        \\ \hline
+		Capacitación insuficiente del equipo               & 2                    & 2                       & 4 (Medio)          \\ \hline
+		Asignación inadecuada de recursos                  & 2                    & 2                       & 4 (Medio)          \\ \hline
+		Problemas en el control de versiones               & 2                    & 1                       & 2 (Bajo)           \\ \hline
+		Falta de pruebas tempranas                         & 3                    & 2                       & 6 (Medio)          \\ \hline
+		Limitaciones presupuestarias durante el desarrollo & 1                    & 1                       & 1 (Bajo)           \\ \hline
 	\end{tabular}
-	\caption{Matriz de probabilidad por impacto}
-	\label{tab:matriz_prob_impacto}
+	\caption{Matriz de probabilidad por impacto (escala 3x3) del proyecto VP-Planilla}
+	\label{tab:matriz_prob_impacto_3x3}
 \end{table}
-\newpage
-
-\subsubsection*{Matriz de Clasificación del Nivel de Riesgo}
-
-Para facilitar la priorización de riesgos, se clasificó el NPR (Número de Prioridad de Riesgo) dentro de tres zonas:
-
-\begin{itemize}
-  \item \textbf{Zona Verde (Bajo riesgo):} NPR de 1 a 25. Requiere seguimiento, pero no acción inmediata.
-  \item \textbf{Zona Naranja (Riesgo moderado):} NPR de 26 a 45. Se recomienda establecer planes de mitigación.
-  \item \textbf{Zona Roja (Alto riesgo):} NPR mayor a 45. Requiere acción inmediata y constante monitoreo.
-\end{itemize}
-
-\begin{center}
-\begin{tikzpicture}
-  \definecolor{lowrisk}{RGB}{144,238,144}      % Verde claro
-  \definecolor{moderaterisk}{RGB}{255,255,153} % Amarillo
-  \definecolor{highrisk}{RGB}{255,102,102}     % Rojo claro
-
-  \matrix[matrix of nodes,nodes={minimum height=1cm,minimum width=1.2cm,draw,anchor=center},row sep=-\pgflinewidth,column sep=-\pgflinewidth] {
-    \node[fill=lowrisk] {1}; & \node[fill=lowrisk] {2}; & \node[fill=lowrisk] {3}; & \node[fill=moderaterisk] {4}; & \node[fill=moderaterisk] {5}; \\
-    \node[fill=lowrisk] {2}; & \node[fill=lowrisk] {4}; & \node[fill=moderaterisk] {6}; & \node[fill=moderaterisk] {8}; & \node[fill=moderaterisk] {10}; \\
-    \node[fill=lowrisk] {3}; & \node[fill=moderaterisk] {6}; & \node[fill=moderaterisk] {9}; & \node[fill=moderaterisk] {12}; & \node[fill=highrisk] {15}; \\
-    \node[fill=moderaterisk] {4}; & \node[fill=moderaterisk] {8}; & \node[fill=moderaterisk] {12}; & \node[fill=highrisk] {16}; & \node[fill=highrisk] {20}; \\
-    \node[fill=moderaterisk] {5}; & \node[fill=moderaterisk] {10}; & \node[fill=highrisk] {15}; & \node[fill=highrisk] {20}; & \node[fill=highrisk] {25}; \\
-  };
-
-  \node[rotate=90] at (-3.5,2.5) {\textbf{Impacto}};
-  \node at (2.5,3.5) {\textbf{Probabilidad}};
-\end{tikzpicture}
-\end{center}
 
 \subsubsection*{Plan de Tratamiento de Riesgos}
 
-Para cada riesgo, se diseñaron acciones para mitigar su probabilidad o impacto, asegurando que el proyecto pueda desarrollarse de forma controlada y segura. A continuación, se presenta el análisis detallado con las acciones propuestas:
+Con base en la matriz de probabilidad e impacto (escala 3×3), se definieron las estrategias preventivas y correctivas necesarias para reducir los efectos de los riesgos identificados en el proyecto VP-Planilla. Los riesgos se agrupan según su nivel de severidad: Crítico, Medio o Bajo.
 
-\begin{table}[h!]
-	\centering
-	\resizebox{\textwidth}{!}{ % Ajusta el tamaño al ancho del texto
-		\begin{tabular}{|c|l|l|p{3cm}|c|c|c|c|p{4cm}|l|c|c|}
-			\hline
-			\textbf{ID} & \textbf{Riesgo}                & \textbf{Categoría} & \textbf{Descripción}                                                                             & \textbf{Prob.} & \textbf{Impacto} & \textbf{Detec.} & \textbf{NPR} & \textbf{Plan de Tratamiento}                                         & \textbf{Responsable}      & \textbf{Estado} & \textbf{Zona} \\ \hline
-			1  & Fallos de integración tecnológica  & Técnico    & Problemas para conectar el reloj marcador con el sistema causando errores en datos de asistencia & 3 & 5 & 3 & 45 & Realizar pruebas de integración tempranas y usar APIs estandarizadas & Equipo de desarrollo      & Pendiente & Naranja \\ \hline
-			2  & Fallas de conectividad             & Técnico    & Caídas en internet que impiden el acceso remoto al sistema                                       & 2 & 4 & 4 & 32 & Implementar conexiones redundantes y sistemas de respaldo            & Equipo de infraestructura & Pendiente & Naranja \\ \hline
-			3  & Errores de implementación          & Técnico    & Bugs o fallos en el software que afectan módulos críticos                                        & 4 & 5 & 2 & 40 & Pruebas continuas, revisión de código y control de calidad           & Equipo de desarrollo      & Pendiente & Naranja \\ \hline
-			4  & Incompatibilidad tecnológica       & Técnico    & Incompatibilidad entre versiones de software o hardware                                          & 3 & 3 & 3 & 27 & Pruebas previas de compatibilidad y evaluación de versiones          & Equipo de desarrollo      & Pendiente & Naranja \\ \hline
-			5  & Capacitación inadecuada            & Operativo  & Falta de entrenamiento adecuado para usuarios finales                                            & 3 & 5 & 4 & 60 & Programar formación y materiales de apoyo                            & Recursos Humanos          & Pendiente & Roja    \\ \hline
-			6  & Resistencia al cambio              & Operativo  & Personal se resiste a adoptar el nuevo sistema                                                   & 4 & 3 & 4 & 48 & Involucrar a usuarios en el proceso y comunicación constante         & Gestión del proyecto      & Pendiente & Roja    \\ \hline
-			7  & Errores humanos                    & Operativo  & Errores en la entrada o manejo de datos por falta de experiencia                                 & 4 & 3 & 3 & 36 & Automatizar procesos y diseñar interfaces intuitivas                 & Equipo de desarrollo      & Pendiente & Naranja \\ \hline
-			8  & Presupuesto insuficiente           & Financiero & Limitaciones económicas que impiden compra de hardware o licencias                               & 3 & 5 & 4 & 60 & Planificar presupuesto con margen y negociar con proveedores         & Gestión financiera        & Pendiente & Roja    \\ \hline
-			9  & Retrasos en pago a proveedores     & Financiero & Problemas en flujo de caja que retrasan entregas                                                 & 2 & 3 & 4 & 24 & Mantener comunicación constante con proveedores                      & Gestión financiera        & Pendiente & Verde   \\ \hline
-			10 & Cumplimiento normativo             & Legal      & No cumplir leyes laborales o de protección de datos                                              & 3 & 5 & 3 & 45 & Revisar normativas y actualizar el sistema conforme a regulaciones   & Equipo legal/QA           & Pendiente & Naranja \\ \hline
-			11 & Protección de datos                & Legal      & Riesgo de fuga o acceso no autorizado a datos personales                                         & 4 & 5 & 2 & 40 & Implementar encriptación, autenticación fuerte y auditorías          & Equipo de seguridad       & Pendiente & Naranja \\ \hline
-			12 & Desastres naturales                & Ambiental  & Eventos naturales que afectan infraestructura y datos                                            & 1 & 5 & 5 & 25 & Plan de recuperación y backups en la nube                            & Equipo infraestructura    & Pendiente & Verde   \\ \hline
-		\end{tabular}
-	}
-	\caption{Matriz de gestión de riesgos del proyecto}
-	\label{tab:gestion_riesgos}
-\end{table}
+\paragraph{Riesgos Críticos}
+\begin{itemize}
+	\item \textbf{Problemas de comunicación con la empresa (N = 6):}
+	      La falta de coordinación y retrasos en las respuestas pueden afectar la validación de requerimientos y las decisiones técnicas.
+	      \textit{Acciones:} establecer un calendario fijo de reuniones semanales, utilizar canales formales de comunicación (correo institucional o grupo de trabajo) y registrar actas con los acuerdos alcanzados.
+
+	\item \textbf{Retrasos en la instalación de la base de datos (N = 9):}
+	      La imposibilidad de instalar la base de datos en el servidor de la empresa ha limitado las pruebas de integración.
+	      \textit{Acciones:} mantener una base temporal en Docker o Neon.tech mientras se gestiona el acceso al servidor de la empresa; documentar el proceso de instalación para replicarlo en producción.
+
+	\item \textbf{Retraso en la integración del reloj marcador (N = 6):}
+	      Los problemas de conexión con el dispositivo dificultan el registro automático de asistencias.
+	      \textit{Acciones:} simular los datos de marcación mientras se obtiene acceso al reloj físico; desarrollar rutinas de importación y exportación mediante archivos CSV o API.
+\end{itemize}
+
+\paragraph{Riesgos Medios}
+\begin{itemize}
+	\item \textbf{Retrasos en la planificación (N = 4):}
+	      Las entregas podrían no cumplirse conforme al cronograma propuesto.
+	      \textit{Acciones:} dividir el trabajo en entregas semanales, asignar responsables y usar herramientas de seguimiento (Trello, GitHub Projects) para monitorear avances.
+
+	\item \textbf{Capacitación insuficiente del equipo (N = 4):}
+	      Algunas limitaciones técnicas pueden retrasar tareas específicas del desarrollo.
+	      \textit{Acciones:} realizar talleres internos sobre Docker, PostgreSQL y control de versiones; generar guías prácticas para el equipo.
+
+	\item \textbf{Asignación inadecuada de recursos (N = 4):}
+	      Una mala distribución del tiempo o tareas puede disminuir la eficiencia general.
+	      \textit{Acciones:} revisar la carga de trabajo, redistribuir responsabilidades y priorizar las tareas más críticas.
+
+	\item \textbf{Falta de pruebas tempranas (N = 6):}
+	      La ausencia de validaciones en etapas iniciales puede generar errores en fases avanzadas.
+	      \textit{Acciones:} planificar pruebas unitarias y de integración semanales; revisar los resultados antes de cada entrega parcial.
+\end{itemize}
+
+\paragraph{Riesgos Bajos}
+\begin{itemize}
+	\item \textbf{Falta de definición de requerimientos (N = 3):}
+	      A pesar de tener bajo riesgo, una definición incompleta puede generar pequeños reprocesos.
+	      \textit{Acciones:} documentar los requerimientos mínimos viables y validarlos formalmente con la empresa antes de avanzar en el desarrollo.
+
+	\item \textbf{Problemas en el control de versiones (N = 2):}
+	      Podrían surgir conflictos en el código por fusiones incorrectas o falta de coordinación.
+	      \textit{Acciones:} definir ramas de trabajo (\textit{main}, \textit{dev}, \textit{feature}), realizar revisiones de código y establecer políticas de commits.
+
+	\item \textbf{Limitaciones presupuestarias durante el desarrollo (N = 1):}
+	      Las limitaciones económicas actuales no representan un riesgo significativo, pero pueden afectar adquisiciones puntuales.
+	      \textit{Acciones:} continuar utilizando herramientas de código abierto (PostgreSQL, GitHub, Docker) y optimizar los recursos disponibles en el entorno de desarrollo.
+\end{itemize}
+
+\paragraph{Síntesis General}
+Los riesgos críticos se concentran en la comunicación con la empresa y en aspectos técnicos como la base de datos y el reloj marcador.
+Los riesgos medios corresponden a la planificación, capacitación y pruebas internas, mientras que los bajos se relacionan con factores administrativos o de soporte.
+El monitoreo constante y la documentación de cada avance permitirán reducir la probabilidad de retrasos y asegurar la estabilidad del sistema VP-Planilla durante su desarrollo.
+
 
 \newpage
-\subsection{Estudio de factibilidad}
+\subsection{Estudio de factibilidad y Gestión de Riesgo}
 
 \subsubsection{Factibilidad Operativa}
 
@@ -158,7 +183,7 @@ Para cada riesgo, se diseñaron acciones para mitigar su probabilidad o impacto,
 
 	\item \textbf{Infraestructura de redes:} La empresa cuenta con conexión a internet estable, lo cual permite que el sistema funcione correctamente en modalidad web. Inicialmente, el sistema será hospedado en un servidor local dentro de las instalaciones de la empresa, aunque se deja abierta la posibilidad de migración futura a un servicio en la nube si las necesidades operativas así lo requieren.
 
-	\item \textbf{Herramientas de desarrollo:} Se utilizarán herramientas como Visual Studio Code, GitHub, PostgreSQL, Next.js, Node.js, Prisma ORM, todas gratuitas y ampliamente documentadas.
+	\item \textbf{Herramientas de desarrollo:} Se utilizarán herramientas como Visual Studio Code, GitHub, PostgreSQL, Next.js, Node.js y Prisma ORM, todas gratuitas y ampliamente documentadas.
 
 	\item \textbf{Plataformas de desarrollo:} El sistema será construido como una aplicación web, compatible con sistemas operativos modernos. El backend correrá en Node.js y el frontend en Next.js con TypeScript.
 \end{itemize}
@@ -167,17 +192,45 @@ Para cada riesgo, se diseñaron acciones para mitigar su probabilidad o impacto,
 
 \subsubsection{Factibilidad Económica}
 
+La factibilidad económica busca determinar la viabilidad del proyecto desde el punto de vista financiero, considerando los costos asociados al desarrollo e implementación del sistema de nómina.
+Dado que se trata de un proyecto académico, la mayor parte de los recursos corresponden al tiempo de trabajo y al uso de software libre, con pocos gastos directos.
+
 \begin{itemize}
-	\item \textbf{Costos de desarrollo:} Al ser un proyecto académico, no se incurrirá en costos por contratación de programadores o diseñadores.
+	\item \textbf{Costos de desarrollo:} El proyecto no implica contratación de personal externo, ya que el desarrollo será realizado por estudiantes de Ingeniería en Sistemas.
+	      Se estima un valor simbólico por la dedicación académica de 160 horas por estudiante, con un costo referencial de ₡3.000,00 por hora, equivalente a ₡480.000,00 por estudiante.
 
-	\item \textbf{Costos de capital humano:} Los estudiantes desarrolladores participan como parte del trabajo final de graduación. Aunque no reciben una remuneración económica directa, se estima que el desarrollo del sistema requiere aproximadamente 160 horas por estudiante. Considerando un valor referencial de ₡3.000 por hora (basado en el salario mínimo para técnicos universitarios en Costa Rica), el costo simbólico asciende a ₡480.000 por estudiante.
+	\item \textbf{Costos de capital humano:} Para un equipo de dos desarrolladores, el costo simbólico total asciende a ₡960.000,00.
 
-	\item \textbf{Cargos administrativos:} Los recursos administrativos necesarios para colaborar con el proyecto (reuniones, validaciones) serán asumidos por la empresa como parte de su operación normal.
+	\item \textbf{Adquisición de hardware:} La empresa adquirirá un \textit{reloj marcador biométrico} nuevo, con un costo de ₡201.705,00 (precio estimado de mercado en Costa Rica).
 
-	\item \textbf{Costos totales del proyecto:} El proyecto no requiere inversión económica significativa, ya que se usará software libre y recursos existentes. Se considera un sistema de bajo costo y alto retorno.
+	\item \textbf{Servidor local:} La empresa cuenta con una computadora que puede funcionar como servidor.
+	      En caso de renovación o sustitución, se estima un costo de ₡480.000,00 para un equipo de gama media-alta con procesador Intel i5/AMD Ryzen 5, 16~GB de RAM y SSD de 512~GB (según precios consultados en ExtremeTech Costa Rica, octubre 2025).
+
+	\item \textbf{Software y herramientas:} No se requieren licencias de pago, ya que se utilizarán soluciones de código abierto como PostgreSQL, Node.js, Next.js, Prisma ORM y GitHub.
+
+	\item \textbf{Cargos administrativos:} El tiempo del personal administrativo destinado a validaciones se considera parte de las operaciones normales de la empresa, por lo tanto, no genera costos adicionales.
 \end{itemize}
 
-\textbf{Conclusión:} El proyecto es completamente viable desde el punto de vista económico. Requiere una inversión mínima y promete beneficios importantes como la reducción de errores y ahorro de tiempo en el cálculo de nómina.
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|p{7cm}|r|}
+		\hline
+		\textbf{Rubro}                                  & \textbf{Costo (₡)}        \\ \hline
+		Valor simbólico del desarrollo (2 estudiantes)  & \col960.000,00            \\ \hline
+		Compra de reloj marcador biométrico             & \col201.705,00            \\ \hline
+		Presupuesto de servidor (en caso de renovación) & \col480.000,00            \\ \hline
+		Software y licencias (código abierto)           & \col0,00                  \\ \hline
+		Cargos administrativos internos                 & \col0,00                  \\ \hline
+		\textbf{Total estimado del proyecto}            & \textbf{\col1.641.705,00} \\ \hline
+	\end{tabular}
+	\caption{Desglose de costos estimados del proyecto VP-Planilla}
+	\label{tab:costos_vp_planilla}
+\end{table}
+
+\textbf{Conclusión:}
+El sistema de gestión de nómina para Café y Vivero Verde Pradera presenta una alta viabilidad económica.
+Su inversión principal corresponde al tiempo de desarrollo de los estudiantes y la compra de un reloj marcador, con la posibilidad de renovación del servidor en el futuro.
+El uso de software libre y recursos existentes permite mantener el costo total en aproximadamente ₡1.641.705,00, lo que convierte al proyecto en una solución accesible, sostenible y de alto impacto para la gestión administrativa de la empresa.
 
 \subsection{Ciclo de vida}
 
@@ -498,28 +551,30 @@ Estas historias se utilizarán como base para guiar el diseño, implementación 
 \newpage
 \subsection{Cronograma de Desarrollo y Pruebas}
 
-\begin{table}[h]
+\begin{table}[h!]
 	\centering
-	\renewcommand{\arraystretch}{1.2}
-	\begin{tabular}{|p{5.5cm}|p{3cm}|p{3cm}|p{3.5cm}|}
+	\renewcommand{\arraystretch}{1.15}
+	\setlength{\tabcolsep}{3pt} % reduce el espaciado horizontal entre columnas
+	\begin{tabular}{|p{4.2cm}|p{2cm}|p{2cm}|p{2.8cm}|p{1.8cm}|}
 		\hline
-		\textbf{Sprint / Actividad}             & \textbf{Fecha de Inicio} & \textbf{Fecha de Finalización} & \textbf{Semestre Académico} \\ \hline
-		Sprint 1: Setup del Proyecto            & 15 mayo 2025             & 31 mayo 2025                   & I Semestre 2025             \\ \hline
-		Sprint 2: Módulo de Login               & 1 junio 2025             & 15 junio 2025                  & I Semestre 2025             \\ \hline
-		Sprint 3: Módulo de Interfaz de Usuario & 16 junio 2025            & 15 julio 2025                  & Intersemestral 2025         \\ \hline
-		Sprint 4: Admin. de Eventos Laborales   & 16 julio 2025            & 15 agosto 2025                 & II Semestre 2025            \\ \hline
-		Sprint 5: Cálculo de Nóminas            & 16 agosto 2025           & 24 de octubre 2025             & II Semestre 2025            \\ \hline
-		Sprint 6: Generación de Reportes        & 25 de octubre 2025       & 30 octubre 2025                & II Semestre 2025            \\ \hline
-		Sprint 7: Módulo de Seguridad           & 31 octubre 2025          & 15 noviembre 2025               & II Semestre 2025            \\ \hline
+		\textbf{Sprint / Actividad}             & \textbf{Inicio}     & \textbf{Fin}        & \textbf{Semestre}    & \textbf{Estado}    \\ \hline
+		Sprint 1: Setup del Proyecto            & 15/05/2025          & 31/05/2025          & I Sem. 2025          & Completado         \\ \hline
+		Sprint 2: Módulo de Login               & 01/06/2025          & 15/06/2025          & I Sem. 2025          & Completado         \\ \hline
+		Sprint 3: Interfaz de Usuario           & 16/06/2025          & 15/07/2025          & Intersem. 2025       & Completado         \\ \hline
+		Sprint 4: Adm. de Eventos               & 16/07/2025          & 15/08/2025          & II Sem. 2025         & Completado         \\ \hline
+		Sprint 5: Cálculo de Nómina             & 16/08/2025          & 24/10/2025          & II Sem. 2025         & Completado         \\ \hline
+		Sprint 6: Reportes                      & 25/10/2025          & 30/10/2025          & II Sem. 2025         & En curso           \\ \hline
+		Sprint 7: Seguridad                     & 31/10/2025          & 15/11/2025          & II Sem. 2025         & Pendiente          \\ \hline
 		\rowcolor{gray!10}
-		\textbf{Pausa por vacaciones}           & 17 noviembre 2025         & 31 enero 2026                  & Vacaciones institucionales  \\ \hline
-		Sprint 8: Pruebas y Entrega             & 1 febrero 2026           & 30 junio 2026                  & I Semestre 2026             \\ \hline
+		\textbf{Receso Académico}               & \textbf{16/12/2025} & \textbf{15/01/2026} & \textbf{Vacaciones}  & ---                \\ \hline
+		Sprint 8: Integración y Estabilización  & 16/01/2026          & 31/03/2026          & I Sem. 2026          & Pendiente          \\ \hline
 		\rowcolor{gray!10}
-		\textbf{Etapa de Pruebas Funcionales}   & 1 febrero 2026           & 30 abril 2026                  & I Semestre 2026             \\ \hline
+		\textbf{Pruebas Funcionales}            & \textbf{01/04/2026} & \textbf{30/04/2026} & \textbf{I Sem. 2026} & \textbf{Pendiente} \\ \hline
 		\rowcolor{gray!10}
-		\textbf{Revisión y Documentación Final} & 1 mayo 2026              & 30 junio 2026                  & I Semestre 2026             \\ \hline
+		\textbf{Revisión y Documentación Final} & \textbf{01/05/2026} & \textbf{31/05/2026} & \textbf{I Sem. 2026} & \textbf{Pendiente} \\ \hline
 	\end{tabular}
-	\caption{Cronograma de Desarrollo y Pruebas del Proyecto por Semestre Académico}
+	\caption{Cronograma de desarrollo y estado por sprint}
+	\label{tab:cronograma_vp}
 \end{table}
 
 

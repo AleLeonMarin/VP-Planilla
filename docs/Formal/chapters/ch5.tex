@@ -36,11 +36,11 @@ Durante el periodo intersemestral se continuó con el desarrollo de las vistas e
 A continuación, se detallan los sprints que se encuentran en curso en esta fase:
 
 \begin{itemize}
-	\item \textbf{Sprint 3 – Interfaces de Usuario (Conexión en curso):}  
+	\item \textbf{Sprint 3 – Interfaces de Usuario (Conexión en curso):}
 	      Se continúa con el desarrollo de las interfaces de usuario, las cuales ahora se están conectando con los servicios del backend. Este proceso permite que los formularios, paneles y vistas generales del sistema pasen de un diseño estático a una funcionalidad dinámica, vinculada directamente a los datos de la base.
 
-	\item \textbf{Sprint 4 – Cálculo de Nómina (En desarrollo):}  
-	      Se ha iniciado el backend del módulo de cálculo de nómina. En este sprint se implementa la lógica necesaria para registrar toda la información que permita calcular la nómina de los empleados, incluyendo sus respectivas deducciones. De forma paralela, se desarrolla un proceso de investigación sobre el cálculo correcto de las deducciones, considerando la parametrización requerida según normativa.  
+	\item \textbf{Sprint 4 – Cálculo de Nómina (En desarrollo):}
+	      Se ha iniciado el backend del módulo de cálculo de nómina. En este sprint se implementa la lógica necesaria para registrar toda la información que permita calcular la nómina de los empleados, incluyendo sus respectivas deducciones. De forma paralela, se desarrolla un proceso de investigación sobre el cálculo correcto de las deducciones, considerando la parametrización requerida según normativa.
 	      Esta investigación podría derivar en cambios a la base de datos, los cuales se plantearán únicamente en caso de ser estrictamente necesarios.
 \end{itemize}
 
@@ -48,12 +48,47 @@ Es importante resaltar que todo el proyecto se encuentra al día, cumpliendo con
 
 \subsubsection{Avance II de Ingeniería en Sistemas II}
 
-A la fecha, se continúa con el desarrollo del \textbf{Sprint 4 – Cálculo de Nómina}, integrando la lógica central del módulo de nómina. No obstante, aún falta revisar y ajustar dicha lógica para adaptarla a las necesidades específicas de la empresa, ya que las reuniones para aclarar ciertos temas han sido complicadas de coordinar. Debido a esta situación y a la complejidad del proceso, se ha decidido extender este sprint al menos por \textbf{cuatro semanas adicionales}, con el fin de darle mayor énfasis a esta parte del sistema, que constituye uno de los puntos más delicados y críticos del proyecto.  
+A la fecha, se continúa con el desarrollo del \textbf{Sprint 4 – Cálculo de Nómina}, integrando la lógica central del módulo de nómina. No obstante, aún falta revisar y ajustar dicha lógica para adaptarla a las necesidades específicas de la empresa, ya que las reuniones para aclarar ciertos temas han sido complicadas de coordinar. Debido a esta situación y a la complejidad del proceso, se ha decidido extender este sprint al menos por \textbf{cuatro semanas adicionales}, con el fin de darle mayor énfasis a esta parte del sistema, que constituye uno de los puntos más delicados y críticos del proyecto.
 
-En paralelo, se sigue con el desarrollo de interfaces gráficas, las cuales están siendo migradas a código por el compañero encargado del frontend del proyecto. También se plantean posibles cambios a la base de datos, que aún están en proceso de validación.  
+En paralelo, se sigue con el desarrollo de interfaces gráficas, las cuales están siendo migradas a código por el compañero encargado del frontend del proyecto. También se plantean posibles cambios a la base de datos, que aún están en proceso de validación.
 
 Adicionalmente, se desarrolla una aplicación en \textbf{Java} destinada a realizar el monitoreo en el servidor de la empresa. Su propósito es obtener las horas registradas por el reloj marcador y subirlas a la base de datos en el formato requerido. Todos los datos del reloj se han obtenido con base en el manual de usuario de la aplicación \textbf{Bit Enterprise 2}, perteneciente al sistema que opera el dispositivo marcador.
 
+\subsubsection{Avance III de Ingeniería en Sistemas II}
+
+Durante este periodo se realizaron las correcciones solicitadas en la documentación del proyecto, con el objetivo de mantener la coherencia y exactitud técnica del informe.
+Actualmente, se continúa con el desarrollo del \textbf{Sprint 5 – Cálculo de Nómina}, módulo que representa uno de los componentes más relevantes del sistema debido a la complejidad de su lógica interna.
+En esta etapa se ha establecido contacto con la empresa para coordinar reuniones que permitan revisar en detalle el proceso de cálculo de nómina, validar las fórmulas aplicadas y asegurar la correcta interpretación de las reglas salariales utilizadas por la organización.
+
+De manera paralela, se plantea el inicio anticipado del \textbf{Sprint 6 – Generación de Reportes}, con el fin de prevenir retrasos en el cronograma general del proyecto y aprovechar el tiempo disponible mientras se realizan las reuniones de validación con la empresa.
+Posteriormente, se continuará con el ajuste final del cálculo de nómina, incorporando las observaciones y requerimientos resultantes de dichas sesiones.
+
+Durante las dos semanas posteriores al segundo avance, se lograron los siguientes avances técnicos y organizativos:
+
+\begin{itemize}
+	\item \textbf{Integración de seguridad por token:} Se completó la implementación del sistema de autenticación basado en tokens, el cual ya existía en el backend, pero fue correctamente enlazado con el frontend, garantizando un flujo de acceso seguro entre ambos entornos.
+	\item \textbf{Gestión y creación de planillas:} Se avanzó en la funcionalidad para generar, visualizar y administrar planillas, mejorando la interacción con los datos de empleados y los cálculos salariales.
+	\item \textbf{Ajustes en las vistas existentes:} Se optimizaron las interfaces desarrolladas en sprints anteriores, corrigiendo detalles de diseño y mejorando la experiencia del usuario.
+	\item \textbf{Incorporación del manejo de vacaciones:} Se añadió al frontend la funcionalidad para gestionar los periodos de vacaciones de los empleados, permitiendo su registro y control dentro de la interfaz principal.
+	\item \textbf{Reestructuración del repositorio:} Se actualizó la rama \texttt{dev} del proyecto al estado más reciente del código, realizando un reseteo general de ramas en el control de versiones para mejorar la organización y mantener un flujo de trabajo más ordenado en GitHub.
+\end{itemize}
+
+\textbf{Conclusión:}
+El equipo de desarrollo mantiene un progreso constante, enfocándose en la estabilidad funcional del sistema y en la validación con la empresa para garantizar que los cálculos de nómina se ajusten a las condiciones reales del proceso administrativo. Asimismo, las mejoras en seguridad, organización del repositorio y estructura de interfaz fortalecen la calidad técnica del proyecto VP-Planilla.
+
+\subsubsection{Avance IV de Ingeniería en Sistemas II}
+
+Durante este periodo se completó la validación integral del \textbf{cálculo de nómina}, confirmando que las fórmulas, criterios salariales, deducciones y reglas aplicadas coinciden con los procedimientos utilizados por la empresa. Esta validación permitió asegurar que el módulo de cálculo funcione de manera precisa y conforme a los requerimientos administrativos de Café y Vivero Verde Pradera.
+
+Uno de los avances más importantes fue la instalación exitosa de la \textbf{base de datos en el entorno local de desarrollo}, la cual fue configurada y expuesta adecuadamente para permitir su integración con el backend y el frontend del sistema. Esto facilita pruebas más realistas, un flujo de datos estable y un entorno alineado con las condiciones del servidor que la empresa utilizará para la implementación final.
+
+Paralelamente, se avanzó en la implementación de los \textbf{reportes y comprobantes generados por el sistema}. En esta etapa se completó el módulo de \textbf{envío de comprobantes de pago}, el cual permite que los trabajadores reciban sus documentos de manera digital y automatizada.
+Los reportes oficiales, como estados de planilla o informes internos, permanecen pendientes debido a que requieren formatos específicos definidos por la empresa, los cuales serán incorporados una vez se reciban los documentos oficiales.
+
+Asimismo, se completaron las tareas necesarias para garantizar el funcionamiento correcto del módulo de nómina, incluyendo ajustes finales de fórmulas, pruebas de consistencia, verificación de flujos y conexión entre módulos relacionados (empleados, eventos laborales y planillas). Estos trabajos dejan el sistema en un estado funcional y estable para continuar con la integración de reportes internos y las fases posteriores del proyecto.
+
+\textbf{Conclusión:}
+El avance correspondiente a este periodo representa un progreso significativo en el desarrollo del sistema VP-Planilla. La validación total del cálculo de nómina, la instalación operativa de la base de datos local y la implementación completa del envío de comprobantes de pago consolidan una base técnica robusta. Con ello, se habilitan las condiciones necesarias para finalizar los reportes oficiales y continuar con las etapas finales del proyecto conforme a los requerimientos reales de la empresa.
 
 
 \section{Gestión de Cambios}
@@ -65,7 +100,7 @@ interfaz, sean evaluadas y autorizadas de manera controlada, asegurando así la 
 y coherencia del proyecto.
 
 Como parte de esta gestión, se ha contemplado la creación de un \textbf{Comité de
-Cambios}, el cual estará encargado de analizar, priorizar y aprobar las solicitudes de
+	Cambios}, el cual estará encargado de analizar, priorizar y aprobar las solicitudes de
 modificación al sistema. Dicho comité está conformado por los estudiantes desarrolladores
 del proyecto y el profesor a cargo del curso en el que se encuentra inscrito el proyecto.
 
