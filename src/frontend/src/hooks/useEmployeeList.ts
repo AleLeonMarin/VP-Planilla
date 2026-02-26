@@ -12,7 +12,8 @@ import {
   getEmployees as apiGetEmployees, 
   createEmployee as apiCreateEmployee,
   getEmployeeById,
-  updateEmployee 
+  updateEmployee,
+  fireEmployee
 } from '@/services/employeeService';
 
 const normalizePart = (value?: string) =>
@@ -93,6 +94,8 @@ const useEmployeeList = () => {
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
   const [editingEmployeeData, setEditingEmployeeData] = useState<any | null>(null);
   const [isLoadingEmployee, setIsLoadingEmployee] = useState(false);
+  const [showDismissModal, setShowDismissModal] = useState(false);
+  const [dismissingEmployee, setDismissingEmployee] = useState<{ id: string; name: string } | null>(null);
   const [stats, setStats] = useState<EmployeeStats>({
     total: 0,
     onVacation: 0,
@@ -128,13 +131,18 @@ const useEmployeeList = () => {
       }
 
       const positionId = String(e.position_id ?? e.employee_position_id ?? '');
+      const isFired = e.fired === true || e.employee_fired === true;
+
+      let resolvedStatus: string = isFired ? EMPLOYEE_STATUS.FIRED : normalizedStatus;
 
       return {
         id: String(e.employee_id ?? e.id),
         name: buildEmployeeName(e),
         position: getPositionName(positionId, positions),
         salary: getPositionSalary(positionId, positions),
-        status: normalizedStatus as any
+        status: resolvedStatus as any,
+        fired: isFired,
+        exit_date: e.employee_exit_date ?? e.exit_date ?? null,
       } as Employee;
     });
   };
@@ -199,10 +207,17 @@ const useEmployeeList = () => {
       } finally {
         setIsLoadingEmployee(false);
       }
+    } else if (action === 'dismiss') {
+      const emp = rawEmployees.find(
+        (e: any) => String(e.employee_id ?? e.id) === employeeId
+      );
+      const empName = emp ? buildEmployeeName(emp) : 'este empleado';
+      setDismissingEmployee({ id: employeeId, name: empName });
+      setShowDismissModal(true);
     } else if (action === 'delete') {
-      // TODO: Implementar eliminación de empleado
+      // Kept for backward compatibility — dismiss replaces this in the UI
       console.log(`Eliminar empleado: ${employeeId}`);
-      alert('La funcionalidad de eliminar empleado no está implementada aún.');
+      alert('Use la opción "Despedir" para desactivar un empleado.');
     } else {
       console.log(`Acción: ${action} para empleado: ${employeeId}`);
     }
@@ -242,6 +257,28 @@ const useEmployeeList = () => {
       alert('No se pudo actualizar el empleado. Revisa la consola para más detalles.');
       throw error;
     }
+  };
+
+  /**
+   * Confirma el despido: llama al servicio y actualiza la lista local
+   */
+  const handleConfirmDismiss = async (exitDate: string) => {
+    if (!dismissingEmployee) return;
+    try {
+      await fireEmployee(dismissingEmployee.id, exitDate);
+      const apiEmployees = await apiGetEmployees();
+      setRawEmployees(apiEmployees as any[]);
+      setShowDismissModal(false);
+      setDismissingEmployee(null);
+    } catch (error) {
+      console.error('Error dismissing employee', error);
+      alert('No se pudo despedir al empleado. Intenta de nuevo.');
+    }
+  };
+
+  const closeDismissModal = () => {
+    setShowDismissModal(false);
+    setDismissingEmployee(null);
   };
 
   /**
@@ -295,10 +332,14 @@ const useEmployeeList = () => {
     showEditEmployeeModal,
     editingEmployeeData,
     isLoadingEmployee,
+    showDismissModal,
+    dismissingEmployee,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,
     handleUpdateEmployee,
+    handleConfirmDismiss,
+    closeDismissModal,
     createPosition,
     updatePosition,
     deletePosition,

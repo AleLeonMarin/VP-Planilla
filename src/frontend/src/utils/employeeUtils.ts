@@ -22,11 +22,12 @@ export const formatSalary = (salary: number): string => {
  * Calcula las estadísticas de una lista de empleados
  */
 export const calculateEmployeeStats = (employees: Employee[]): EmployeeStats => {
+  const active = employees.filter(emp => emp.status !== EMPLOYEE_STATUS.FIRED);
   return {
-    total: employees.length,
-    onVacation: employees.filter(emp => emp.status === EMPLOYEE_STATUS.VACATION).length,
-    incompleteAssistance: employees.filter(emp => emp.status === EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE).length,
-    incapacityMaternity: employees.filter(emp => emp.status === EMPLOYEE_STATUS.INCAPACITY_MATERNITY).length,
+    total: active.length,
+    onVacation: active.filter(emp => emp.status === EMPLOYEE_STATUS.VACATION).length,
+    incompleteAssistance: active.filter(emp => emp.status === EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE).length,
+    incapacityMaternity: active.filter(emp => emp.status === EMPLOYEE_STATUS.INCAPACITY_MATERNITY).length,
   };
 };
 

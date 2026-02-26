@@ -5,7 +5,7 @@ import {
   EllipsisVerticalIcon,
   EyeIcon,
   PencilIcon,
-  TrashIcon
+  NoSymbolIcon
 } from '@heroicons/react/24/outline';
 import { Employee } from '@/types';
 import { formatSalary } from '@/utils/employeeUtils';
@@ -116,21 +116,35 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8DEC4]">
-              {employees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-[#EEE8D4] transition-colors bg-[#F9F3E3]">
-                  <td className="px-6 py-3.5 text-sm font-semibold text-[#3B4D36]">
+              {employees.map((employee) => {
+                const isFired = employee.fired === true || employee.status === 'fired';
+                return (
+                <tr
+                  key={employee.id}
+                  className={`transition-colors ${
+                    isFired
+                      ? 'bg-red-50 opacity-70'
+                      : 'hover:bg-[#EEE8D4] bg-[#F9F3E3]'
+                  }`}
+                >
+                  <td className={`px-6 py-3.5 text-sm font-semibold ${isFired ? 'text-red-400 line-through' : 'text-[#3B4D36]'}`}>
                     {employee.name}
                   </td>
-                  <td className="px-6 py-3.5 text-sm text-[#6B5B3D]">
+                  <td className={`px-6 py-3.5 text-sm ${isFired ? 'text-red-300' : 'text-[#6B5B3D]'}`}>
                     {employee.position}
                   </td>
-                  <td className="px-6 py-3.5 text-sm text-[#3B4D36] font-medium">
+                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-[#3B4D36]'}`}>
                     {formatSalary(employee.salary)}
                   </td>
                   <td className="px-6 py-3.5">
                     <span className={getStatusBadge(employee.status).className}>
                       {getStatusBadge(employee.status).text}
                     </span>
+                    {isFired && employee.exit_date && (
+                      <p className="mt-1 text-xs text-red-400">
+                        Salida: {new Date(employee.exit_date).toLocaleDateString('es-CR')}
+                      </p>
+                    )}
                   </td>
                   <td className="px-6 py-3.5 text-sm text-gray-600">
                     <div className="relative">
@@ -142,7 +156,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         <EllipsisVerticalIcon className="w-4 h-4" />
                       </button>
                       {selectedEmployee === employee.id && (
-                        <div className="absolute right-0 z-10 w-48 mt-2 bg-[#F9F1DC] border rounded-md shadow-lg">
+                        <div className="absolute right-0 z-10 w-52 mt-2 bg-[#F9F1DC] border border-[#D2B48C] rounded-lg shadow-xl">
                           <div className="py-1">
                             <button
                               onClick={() => handleViewProfile(employee)}
@@ -151,28 +165,35 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                               <EyeIcon className="w-4 h-4" />
                               Ver Perfil
                             </button>
-                            <button
-                              onClick={() => handleEmployeeAction('edit', employee.id)}
-                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                              Editar Información
-                            </button>
-                            <div className="border-t border-[#E7DCC1] mx-2 my-1"></div>
-                            <button
-                              onClick={() => handleEmployeeAction('delete', employee.id)}
-                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-[#E7DCC1] transition-colors"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              Eliminar
-                            </button>
+                            {!isFired && (
+                              <button
+                                onClick={() => handleEmployeeAction('edit', employee.id)}
+                                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                                Editar Información
+                              </button>
+                            )}
+                            {!isFired && (
+                              <>
+                                <div className="border-t border-[#E7DCC1] mx-2 my-1" />
+                                <button
+                                  onClick={() => handleEmployeeAction('dismiss', employee.id)}
+                                  className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <NoSymbolIcon className="w-4 h-4" />
+                                  Despedir empleado
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

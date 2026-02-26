@@ -6,6 +6,7 @@ import EmployeeStatsCards from '@/components/EmployeeStatsCards';
 import EmployeeTable from '@/components/EmployeeTable';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
 import EditEmployeeModal from '@/components/EditEmployeeModal';
+import DismissEmployeeModal from '@/components/DismissEmployeeModal';
 import EmployeeTabs from '@/components/ui/EmployeeTabs';
 import PositionsModal from '@/components/PositionsModal';
 import useEmployeeList from '@/hooks/useEmployeeList';
@@ -26,10 +27,14 @@ const EmployeeListPage: React.FC = () => {
     showEditEmployeeModal,
     editingEmployeeData,
     isLoadingEmployee,
+    showDismissModal,
+    dismissingEmployee,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,
     handleUpdateEmployee,
+    handleConfirmDismiss,
+    closeDismissModal,
     createPosition,
     updatePosition,
     deletePosition,
@@ -118,6 +123,14 @@ const EmployeeListPage: React.FC = () => {
         onUpdate={updatePosition}
         onDelete={deletePosition}
         onRefresh={refreshPositions}
+      />
+
+      {/* Modal de despido */}
+      <DismissEmployeeModal
+        isOpen={showDismissModal}
+        employeeName={dismissingEmployee?.name ?? ''}
+        onConfirm={handleConfirmDismiss}
+        onClose={closeDismissModal}
       />
     </div>
   );
