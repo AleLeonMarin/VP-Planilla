@@ -30,7 +30,7 @@ export const STATUS_BADGE_CONFIG = {
     className: 'px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full'
   },
   [EMPLOYEE_STATUS.FIRED]: {
-    text: 'Despedido',
+    text: 'Despedido(a)',
     className: 'px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full'
   },
 } as const;
