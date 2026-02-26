@@ -41,42 +41,52 @@ const EmployeeListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#E7DCC1]">
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-[#3B4D36]">Empleados</h1>
-          <div className="flex items-center gap-2">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
+
+        {/* ── Page header ── */}
+        <div className="flex justify-between items-end mb-5">
+          <div>
+            <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-widest mb-1">
+              Recursos Humanos
+            </p>
+            <h1 className="text-3xl font-bold text-[#3B4D36] leading-none">Empleados</h1>
+          </div>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowPositionsModal(true)}
-              className="px-4 py-2 border border-[#3B4D36] text-[#3B4D36] rounded-lg hover:bg-[#E7DCC1] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 border border-[#6F7153] text-[#3B4D36] text-sm font-medium rounded-lg hover:bg-[#D5CDB3] transition-colors"
             >
+              <svg className="w-4 h-4 text-[#6F7153]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
               Gestionar posiciones
             </button>
             <button
               onClick={openAddEmployeeModal}
-              className="flex items-center gap-2 px-4 py-2 bg-[#6F7153] text-white rounded-lg hover:bg-[#5D614A] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#6F7153] text-white text-sm font-semibold rounded-lg hover:bg-[#5D614A] transition-colors shadow-sm"
             >
-              <PlusIcon className="w-5 h-5" />
-              Añadir Nuevo Empleado
+              <PlusIcon className="w-4 h-4" />
+              Añadir Empleado
             </button>
           </div>
         </div>
 
-        {/* Employee Tabs - positioned same as in events */}
-        <EmployeeTabs />
-        
-        <div className="space-y-6 mt-6">
-          {/* Stats Cards */}
-          <EmployeeStatsCards stats={stats} />
+        <div className="border-b border-[#C8BA9A] mb-5" />
 
-          {/* Employee Table - sin contenedor blanco, integrado al fondo */}
-          <EmployeeTable 
-            employees={employees}
-            searchTerm={searchTerm}
-            onSearchChange={handleSearchChange}
-            onEmployeeAction={handleEmployeeAction}
-          />
-        </div>
+        {/* Employee Tabs */}
+        <EmployeeTabs />
+
+        {/* Stats Cards */}
+        <EmployeeStatsCards stats={stats} />
+
+        {/* Employee Table */}
+        <EmployeeTable
+          employees={employees}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          onEmployeeAction={handleEmployeeAction}
+        />
+
       </div>
 
       {/* Modal para agregar empleado */}

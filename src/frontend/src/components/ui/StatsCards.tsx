@@ -17,18 +17,16 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
-        <div 
+        <div
           key={`${stat.title}-${index}`}
-          className="bg-[#E7DCC1] rounded-lg p-6 border border-[#D2B48C]"
+          className="bg-[#F2E8CF] rounded-xl p-5 border border-[#D2B48C] shadow-sm border-l-4 border-l-[#6F7153]"
         >
-          <div className="text-left">
-            <h3 className="text-xs font-medium text-[#8B7355] uppercase tracking-wider mb-2">
-              {stat.title}
-            </h3>
-            <p className="text-4xl font-bold text-[#3B4D36]">
-              {stat.value}
-            </p>
-          </div>
+          <h3 className="text-xs font-bold text-[#8B7355] uppercase tracking-widest mb-3">
+            {stat.title}
+          </h3>
+          <p className="text-4xl font-extrabold text-[#3B4D36] leading-none">
+            {stat.value}
+          </p>
         </div>
       ))}
     </div>

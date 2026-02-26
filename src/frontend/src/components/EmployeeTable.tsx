@@ -59,80 +59,80 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         employeeData={getEmployeeProfileData(selectedEmployeeData) as any}
       />
 
-      <div className="bg-[#F9F1DC] rounded-lg">
+      <div className="bg-[#F2E8CF] rounded-xl border border-[#D2B48C] shadow-sm overflow-hidden">
         {/* Encabezado con búsqueda y filtros */}
-        <div className="p-3 bg-[#D5CDB3] rounded-t-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-medium text-[#5D4E37]">
-              Total de empleados: {employees.length} Empleados
+        <div className="px-5 py-4 bg-[#E7DCC1] border-b border-[#D2B48C] flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-bold text-[#5D4E37] uppercase tracking-widest">
+              Directorio
             </h2>
-            <div className="flex gap-2">
-              {/* Campo de búsqueda */}
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute w-4 h-4 text-[#3B4D36] transform -translate-y-1/2 left-3 top-1/2" />
-                <input
-                  type="text"
-                  placeholder="Buscar empleado"
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="py-2 pl-10 pr-4 border border-[#D2B48C] rounded-lg focus:outline-none bg-[#B5AF9A] text-[#3B4D36] placeholder-[#6B5B3D]"
-                />
-              </div>
-              {/* Botón de filtro */}
-              <button
-                onClick={() => setFilterOpen(!filterOpen)}
-                className="flex items-center gap-2 px-4 py-2 border border-[#D2B48C] rounded-lg hover:bg-[#B5AF9A] bg-[#B5AF9A] text-[#3B4D36] transition-colors"
-              >
-                <FunnelIcon className="w-4 h-4" />
-                Filtro
-              </button>
+            <p className="text-sm text-[#6B5B3D] mt-0.5">
+              {employees.length} {employees.length === 1 ? 'empleado registrado' : 'empleados registrados'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Campo de búsqueda */}
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute w-4 h-4 text-[#8B7355] transform -translate-y-1/2 left-3 top-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar empleado..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="py-2 pl-9 pr-4 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white text-[#3B4D36] text-sm placeholder-[#C5BFAA] w-52"
+              />
             </div>
+            {/* Botón de filtro */}
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 px-3 py-2 border border-[#D2B48C] rounded-lg hover:bg-[#D5CDB3] bg-white text-[#5D4E37] text-sm transition-colors"
+            >
+              <FunnelIcon className="w-4 h-4" />
+              Filtro
+            </button>
           </div>
         </div>
 
-        {/* Separador visual */}
-        <div className='border-b border-[#D2B48C] flex w-full h-1'></div>
-
         {/* Tabla de empleados */}
-        <div className="overflow-x-auto overflow-y-auto rounded-b-lg max-h-130">
+        <div className="overflow-x-auto overflow-y-auto max-h-130">
           <table className="w-full">
-            <thead>
+            <thead className="sticky top-0 bg-[#E7DCC1] z-10">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Posición
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Salario
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#D2B48C]">
+            <tbody className="divide-y divide-[#E8DEC4]">
               {employees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-[#EEEEDC] transition-colors">
-                  <td className="px-6 py-4 text-sm text-[#5D4E37]">
+                <tr key={employee.id} className="hover:bg-[#EEE8D4] transition-colors bg-[#F9F3E3]">
+                  <td className="px-6 py-3.5 text-sm font-semibold text-[#3B4D36]">
                     {employee.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#6B5B3D]">
+                  <td className="px-6 py-3.5 text-sm text-[#6B5B3D]">
                     {employee.position}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#5D4E37] font-medium">
+                  <td className="px-6 py-3.5 text-sm text-[#3B4D36] font-medium">
                     {formatSalary(employee.salary)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-3.5">
                     <span className={getStatusBadge(employee.status).className}>
                       {getStatusBadge(employee.status).text}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-3.5 text-sm text-gray-600">
                     <div className="relative">
                       <button
                         onClick={() => setSelectedEmployee(selectedEmployee === employee.id ? null : employee.id)}

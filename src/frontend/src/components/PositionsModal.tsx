@@ -146,11 +146,22 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-full max-w-4xl pointer-events-auto">
-        <div className="bg-[#F9F1DC] rounded-xl shadow-2xl border border-[#E0D6B7] overflow-hidden">
-          <div className="bg-[#6F7153] px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">Gestionar posiciones</h2>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-5xl pointer-events-auto">
+        <div
+          className="bg-[#F9F1DC] rounded-xl shadow-2xl border border-[#D2B48C] overflow-hidden flex flex-col"
+          style={{ maxHeight: '85vh' }}
+        >
+          {/* ── Header ── */}
+          <div className="bg-[#6F7153] px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-white">Gestionar Posiciones</h2>
+              {!isLoading && sortedPositions.length > 0 && (
+                <span className="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium">
+                  {sortedPositions.length} registradas
+                </span>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="text-white hover:text-gray-200 transition-colors p-1 hover:bg-white/10 rounded-full"
@@ -162,118 +173,178 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
             </button>
           </div>
 
-          <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-            {feedback && (
-              <div className={
-                feedback.type === 'error'
-                  ? 'rounded-lg border border-red-300 bg-red-100 text-red-700 px-4 py-2'
-                  : 'rounded-lg border border-green-300 bg-green-100 text-green-700 px-4 py-2'
-              }>
-                {feedback.message}
-              </div>
-            )}
+          {/* ── Two-column body ── */}
+          <div className="flex flex-1 overflow-hidden">
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[#5D4E37] mb-1">Nombre *</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D2B48C] rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white text-[#3B4D36]"
-                />
-              </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[#5D4E37] mb-1">Descripcion *</label>
-                <input
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#D2B48C] rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white text-[#3B4D36]"
-                />
-              </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[#5D4E37] mb-1">Salario base *</label>
-                <input
-                  value={baseSalary}
-                  onChange={(e) => setBaseSalary(e.target.value)}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-[#D2B48C] rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white text-[#3B4D36]"
-                />
-              </div>
-
-              <div className="md:col-span-3 flex flex-wrap items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="px-4 py-2 bg-[#6F7153] text-white rounded-lg hover:bg-[#5D614A] transition-colors disabled:opacity-60"
-                >
-                  {editing ? 'Guardar cambios' : 'Crear posicion'}
-                </button>
+            {/* ── LEFT PANEL: Form ── */}
+            <div className="w-2/5 flex-shrink-0 border-r border-[#D2B48C] flex flex-col bg-[#F2E8CF]">
+              {/* Panel title */}
+              <div className="px-6 pt-5 pb-4 border-b border-[#D2B48C]">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${editing ? 'bg-amber-500' : 'bg-[#6F7153]'}`} />
+                  <h3 className="text-xs font-bold text-[#3B4D36] uppercase tracking-widest">
+                    {editing ? 'Editando posición' : 'Nueva posición'}
+                  </h3>
+                </div>
                 {editing && (
+                  <p className="mt-1.5 text-xs text-[#6B5B3D] pl-5 italic">{editing.name}</p>
+                )}
+              </div>
+
+              {/* Feedback */}
+              {feedback && (
+                <div className={`mx-6 mt-4 rounded-lg border px-4 py-2.5 text-sm ${
+                  feedback.type === 'error'
+                    ? 'border-red-300 bg-red-50 text-red-700'
+                    : 'border-green-300 bg-green-50 text-green-700'
+                }`}>
+                  {feedback.message}
+                </div>
+              )}
+
+              {/* Form fields */}
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-6 py-5 gap-4 overflow-y-auto">
+                <div>
+                  <label className="block text-xs font-semibold text-[#5D4E37] uppercase tracking-wider mb-1.5">
+                    Nombre <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ej: Analista de Sistemas"
+                    className="w-full px-3 py-2.5 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white text-[#3B4D36] text-sm placeholder-[#C5BFAA]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#5D4E37] uppercase tracking-wider mb-1.5">
+                    Descripción <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Ej: Desarrollo y mantenimiento de sistemas"
+                    className="w-full px-3 py-2.5 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white text-[#3B4D36] text-sm placeholder-[#C5BFAA]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#5D4E37] uppercase tracking-wider mb-1.5">
+                    Salario Base <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B7355] text-sm font-medium select-none">₡</span>
+                    <input
+                      value={baseSalary}
+                      onChange={(e) => setBaseSalary(e.target.value)}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-3 py-2.5 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white text-[#3B4D36] text-sm placeholder-[#C5BFAA]"
+                    />
+                  </div>
+                </div>
+
+                {/* Action buttons pinned to bottom */}
+                <div className="mt-auto pt-4 border-t border-[#D2B48C] flex flex-col gap-2">
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full px-4 py-2.5 bg-[#6F7153] text-white text-sm font-semibold rounded-lg hover:bg-[#5D614A] transition-colors disabled:opacity-60"
+                  >
+                    {busy ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear posición'}
+                  </button>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={clearForm}
+                      className="w-full px-4 py-2 border border-[#3B4D36] text-[#3B4D36] text-sm rounded-lg hover:bg-[#E7DCC1] transition-colors"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={clearForm}
-                    className="px-4 py-2 border border-[#3B4D36] text-[#3B4D36] rounded-lg hover:bg-[#E7DCC1] transition-colors"
+                    onClick={onRefresh}
+                    disabled={busy}
+                    className="w-full px-4 py-2 border border-[#D2B48C] text-[#8B7355] text-sm rounded-lg hover:bg-[#E7DCC1] transition-colors disabled:opacity-60"
                   >
-                    Cancelar edicion
+                    Recargar lista
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onRefresh}
-                  className="px-4 py-2 border border-[#3B4D36] text-[#3B4D36] rounded-lg hover:bg-[#E7DCC1] transition-colors"
-                >
-                  Recargar lista
-                </button>
-              </div>
-            </form>
+                </div>
+              </form>
+            </div>
 
-            <div className="border-t border-[#E0D6B7] pt-4">
-              <h3 className="text-base font-medium text-[#3B4D36] mb-3">Posiciones registradas</h3>
-              <div className="overflow-x-auto rounded-lg border border-[#E0D6B7]">
+            {/* ── RIGHT PANEL: Positions table ── */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Panel title */}
+              <div className="px-6 py-4 border-b border-[#D2B48C] flex items-center justify-between flex-shrink-0 bg-[#F9F1DC]">
+                <h3 className="text-xs font-bold text-[#3B4D36] uppercase tracking-widest">
+                  Posiciones registradas
+                </h3>
+                {isLoading && (
+                  <span className="text-xs text-[#8B7355] italic">Cargando...</span>
+                )}
+              </div>
+
+              {/* Scrollable table */}
+              <div className="flex-1 overflow-y-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-[#E7DCC1] text-[#5D4E37]">
+                  <thead className="sticky top-0 z-10 bg-[#E7DCC1]">
                     <tr>
-                      <th className="px-4 py-2 text-left">Nombre</th>
-                      <th className="px-4 py-2 text-left">Descripcion</th>
-                      <th className="px-4 py-2 text-left">Salario base</th>
-                      <th className="px-4 py-2 text-right">Acciones</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">Nombre</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">Descripción</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">Salario base</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-[#5D4E37] uppercase tracking-wider">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E0D6B7]">
+                  <tbody className="divide-y divide-[#E8DEC4]">
                     {isLoading && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-4 text-center text-[#6B5B3D]">
+                        <td colSpan={4} className="px-4 py-10 text-center text-[#8B7355] text-sm">
                           Cargando posiciones...
                         </td>
                       </tr>
                     )}
                     {!isLoading && sortedPositions.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-4 text-center text-[#6B5B3D]">
-                          No hay posiciones registradas.
+                        <td colSpan={4} className="px-4 py-10 text-center">
+                          <div className="flex flex-col items-center gap-2 text-[#8B7355]">
+                            <svg className="w-10 h-10 text-[#D2B48C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-sm font-medium">No hay posiciones registradas</span>
+                            <span className="text-xs text-[#B5AF9A]">Use el formulario para agregar una nueva posición</span>
+                          </div>
                         </td>
                       </tr>
                     )}
                     {!isLoading && sortedPositions.map((position) => (
-                      <tr key={position.id} className="bg-[#FDFCF9]">
-                        <td className="px-4 py-2 text-[#3B4D36] font-medium">{position.name}</td>
-                        <td className="px-4 py-2 text-[#6B5B3D]">{position.description}</td>
-                        <td className="px-4 py-2 text-[#3B4D36]">{formatSalary(position.base_salary ?? null)}</td>
-                        <td className="px-4 py-2 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                      <tr
+                        key={position.id}
+                        className={`transition-colors ${
+                          editing?.id === position.id
+                            ? 'bg-amber-50 border-l-2 border-amber-400'
+                            : 'bg-[#FDFCF9] hover:bg-[#F5EDD5]'
+                        }`}
+                      >
+                        <td className="px-4 py-3 text-[#3B4D36] font-semibold text-sm">{position.name}</td>
+                        <td className="px-4 py-3 text-[#6B5B3D] text-xs max-w-[180px] truncate">{position.description}</td>
+                        <td className="px-4 py-3 text-[#3B4D36] font-medium text-sm">{formatSalary(position.base_salary ?? null)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
                               onClick={() => startEdit(position)}
-                              className="px-3 py-1 text-sm bg-[#B5AF9A] text-[#3B4D36] rounded-md hover:bg-[#A7A18D]"
+                              className="px-3 py-1 text-xs bg-[#D5CDB3] text-[#3B4D36] rounded-md hover:bg-[#C5BFAA] font-medium transition-colors"
                             >
                               Editar
                             </button>
                             <button
                               type="button"
                               onClick={() => setPendingDelete(position)}
-                              className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+                              className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 font-medium transition-colors"
                             >
                               Eliminar
                             </button>
@@ -285,24 +356,25 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
                 </table>
               </div>
 
+              {/* Delete confirmation — pinned to bottom of right panel */}
               {pendingDelete && (
-                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 flex flex-col gap-3">
-                  <div className="text-sm text-red-700">
-                    Confirmas eliminar la posicion "{pendingDelete.name}"?
-                  </div>
+                <div className="flex-shrink-0 border-t-2 border-red-200 bg-red-50 px-6 py-4">
+                  <p className="text-sm text-red-800 font-semibold mb-3">
+                    ¿Eliminar la posición &ldquo;{pendingDelete.name}&rdquo;?
+                  </p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={confirmDelete}
                       disabled={busy}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+                      className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60"
                     >
-                      Si, eliminar
+                      {busy ? 'Eliminando...' : 'Sí, eliminar'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPendingDelete(null)}
-                      className="px-4 py-2 border border-[#3B4D36] text-[#3B4D36] rounded-lg hover:bg-[#E7DCC1]"
+                      className="px-4 py-2 border border-[#D2B48C] text-[#5D4E37] text-sm rounded-lg hover:bg-[#E7DCC1] transition-colors"
                     >
                       Cancelar
                     </button>
@@ -310,6 +382,7 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
                 </div>
               )}
             </div>
+
           </div>
         </div>
       </div>
