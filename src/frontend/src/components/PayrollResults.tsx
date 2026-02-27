@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { formatCRC } from '@/utils/number';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { 
   DocumentCheckIcon, 
   UserGroupIcon, 
@@ -14,33 +14,41 @@ import {
 } from '@heroicons/react/24/outline';
 
 interface PayrollResultsProps {
-  data: any;
+  data: unknown;
   onCreate?: () => void;
 }
 
 export default function PayrollResults({ data, onCreate }: PayrollResultsProps) {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
+  // Cast data to a workable type
+  const payrollData = data as Record<string, unknown>;
+
   // DEBUG: Log what we receive
-  console.log('PayrollResults received data:', data);
-  console.log('data.employees:', data?.employees);
-  console.log('data.employeeResults:', data?.employeeResults);
+  console.log('PayrollResults received data:', payrollData);
+  console.log('data.employees:', payrollData?.employees);
+  console.log('data.employeeResults:', payrollData?.employeeResults);
   
-  if (!data) return null;
+  if (!payrollData) return null;
 
   // Try to find an array of employee results
-  const employees = Array.isArray(data.employeeResults) ? data.employeeResults : Array.isArray(data.employees) ? data.employees : Array.isArray(data) ? data : null;
+  const employees = Array.isArray(payrollData.employeeResults) ? payrollData.employeeResults : Array.isArray(payrollData.employees) ? payrollData.employees : Array.isArray(payrollData) ? (payrollData as unknown[]) : null;
   
   console.log('Extracted employees:', employees);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!employees || employees.length === 0) return;
 
     // Obtener información del periodo
-    const periodStart = data.period?.startDate || data.periodStart || '';
-    const periodEnd = data.period?.endDate || data.periodEnd || '';
+    const period = payrollData.period as Record<string, unknown> | undefined;
+    const periodStart = period?.startDate || payrollData.periodStart || '';
+    const periodEnd = period?.endDate || payrollData.periodEnd || '';
+
+    // Crear el libro de Excel
+    const workbook = new ExcelJS.Workbook();
 
     // Hoja 1: Resumen General
+    const ws1 = workbook.addWorksheet('Resumen General');
     const summaryData = [
       ['PLANILLA DE SALARIOS'],
       ['Periodo:', `${periodStart} a ${periodEnd}`],
@@ -53,21 +61,25 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       ['Total deducciones:', formatCRC(totalDeductions)],
       ['Total salario neto:', formatCRC(total || 0)],
     ];
+    ws1.addRows(summaryData);
+    ws1.columns = [{ width: 25 }, { width: 30 }];
 
-    // Hoja 2: Detalle Completo por Empleado (como la tabla del sistema)
-    const detailRows: any[] = [];
+    // Hoja 2: Detalle Completo por Empleado
+    const ws2 = workbook.addWorksheet('Detalle Completo');
+    const detailRows: unknown[][] = [];
 
-    employees.forEach((e: any, empIdx: number) => {
+    employees.forEach((e: unknown, empIdx: number) => {
       console.log('Employee data for Excel:', e);
-      const employeeName = e.name || e.employee_name || e.employeeName || 'N/A';
-      const identification = e.identification || e.employee_identification || e.national_id || e.employee_national_id || e.nationalId || e.cedula || 'N/A';
-      const position = e.position || e.position_name || e.positionName || e.positionId || e.position_id || 'N/A';
-      const baseHourly = e.baseHourlySalary || e.base_hourly_salary || 0;
-      const gross = e.gross || e.grossSalary || e.total_gross || 0;
-      const bonuses = e.bonuses || 0;
-      const deductions = e.deductions || e.totalDeductions || e.total_deductions || 0;
-      const net = e.net || e.netSalary || e.net_salary || 0;
-      const employeeId = e.id || e.employee_id || e.employeeId || '';
+      const emp = e as Record<string, unknown>;
+      const employeeName = emp.name || emp.employee_name || emp.employeeName || 'N/A';
+      const identification = emp.identification || emp.employee_identification || emp.national_id || emp.employee_national_id || emp.nationalId || emp.cedula || 'N/A';
+      const position = emp.position || emp.position_name || emp.positionName || emp.positionId || emp.position_id || 'N/A';
+      const baseHourly = Number(emp.baseHourlySalary || emp.base_hourly_salary || 0);
+      const gross = Number(emp.gross || emp.grossSalary || emp.total_gross || 0);
+      const bonuses = Number(emp.bonuses || 0);
+      const deductions = Number(emp.deductions || emp.totalDeductions || emp.total_deductions || 0);
+      const net = Number(emp.net || emp.netSalary || emp.net_salary || 0);
+      const employeeId = emp.id || emp.employee_id || emp.employeeId || '';
 
       // Encabezado del empleado
       if (empIdx > 0) detailRows.push([]); // Línea en blanco entre empleados
@@ -78,52 +90,52 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       detailRows.push([]);
 
       // Detalle diario de horas trabajadas
-      const days = e.days || [];
+      const days = (emp.days || []) as Array<Record<string, unknown>>;
       if (days.length > 0) {
         detailRows.push(['DETALLE DIARIO DE HORAS', '', '', '', '', '', '', '']);
         detailRows.push(['Fecha', 'Horas Trabajadas', 'Es Vacación', 'Mensajes', '', '', '', '']);
         
-        days.forEach((day: any) => {
+        days.forEach((day: Record<string, unknown>) => {
           const date = day.date || '';
           const hours = day.hoursWorked || 0;
           const isVacation = day.isVacation ? 'Sí' : 'No';
-          const messages = day.messages?.join('; ') || '';
+          const messages = Array.isArray(day.messages) ? day.messages.join('; ') : '';
           
           detailRows.push([
             date,
-            hours.toFixed(2),
+            (hours as number).toFixed(2),
             isVacation,
             messages,
             '', '', '', ''
           ]);
         });
         
-        const totalHoursEmployee = days.reduce((sum: number, day: any) => sum + (day.hoursWorked || 0), 0);
+        const totalHoursEmployee = days.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0);
         detailRows.push(['TOTAL HORAS:', totalHoursEmployee.toFixed(2), '', '', '', '', '', '']);
         detailRows.push([]);
       }
 
       // Deducciones aplicadas
-      const deductionsBreakdown = e.deductionsBreakdown || e.deductions_breakdown || [];
+      const deductionsBreakdown = (emp.deductionsBreakdown || emp.deductions_breakdown || []) as Array<Record<string, unknown>>;
       if (deductionsBreakdown.length > 0) {
         detailRows.push(['DEDUCCIONES APLICADAS', '', '', '', '', '', '', '']);
         detailRows.push(['Deducción', 'Tipo', 'Porcentaje/Monto', 'Monto Deducido', '', '', '', '']);
         
-        deductionsBreakdown.forEach((ded: any) => {
+        deductionsBreakdown.forEach((ded: Record<string, unknown>) => {
           let deductionName = '';
           let percentageInfo = '';
           
           if (ded.message) {
-            const parts = ded.message.split(':');
+            const parts = String(ded.message).split(':');
             deductionName = parts[0].trim();
             if (parts[1]) {
               percentageInfo = parts[1].trim();
             }
           } else {
-            deductionName = ded.code?.replace(/_/g, ' ') || 'Deducción';
+            deductionName = String(ded.code || '').replace(/_/g, ' ') || 'Deducción';
           }
 
-          const deductionAmount = ded.amount || 0;
+          const deductionAmount = Number(ded.amount || 0);
           const deductionType = ded.type === 'percent' ? 'Porcentaje' : 'Monto fijo';
 
           detailRows.push([
@@ -145,12 +157,12 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       }
 
       // Inconsistencias
-      const inconsistencies = e.inconsistencies || [];
+      const inconsistencies = (emp.inconsistencies || []) as Array<Record<string, unknown>>;
       if (inconsistencies.length > 0) {
         detailRows.push(['INCONSISTENCIAS', '', '', '', '', '', '', '']);
         detailRows.push(['Fecha', 'Mensaje', '', '', '', '', '', '']);
         
-        inconsistencies.forEach((inc: any) => {
+        inconsistencies.forEach((inc: Record<string, unknown>) => {
           const date = inc.date || '';
           const message = inc.message || '';
           detailRows.push([date, message, '', '', '', '', '', '']);
@@ -159,7 +171,7 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       }
 
       // Mensajes generales
-      const generalMessages = e.generalMessages || [];
+      const generalMessages = (emp.generalMessages || []) as string[];
       if (generalMessages.length > 0) {
         detailRows.push(['MENSAJES GENERALES', '', '', '', '', '', '', '']);
         generalMessages.forEach((msg: string) => {
@@ -176,7 +188,20 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       detailRows.push(['SALARIO NETO:', `₡${net.toFixed(2)}`, '', '', '', '', '', '']);
     });
 
+    ws2.addRows(detailRows);
+    ws2.columns = [
+      { width: 25 }, 
+      { width: 20 }, 
+      { width: 20 }, 
+      { width: 40 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 }
+    ];
+
     // Hoja 3: Resumen de Empleados (tabla compacta)
+    const ws3 = workbook.addWorksheet('Tabla Resumen');
     const employeeHeaders = [
       'ID',
       'Nombre',
@@ -190,17 +215,19 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       'Salario Neto'
     ];
 
-    const employeeRows = employees.map((e: any) => {
-      const employeeName = e.name || e.employee_name || e.employeeName || 'N/A';
-      const identification = e.identification || e.employee_identification || e.national_id || e.employee_national_id || e.nationalId || e.cedula || 'N/A';
-      const position = e.position || e.position_name || e.positionName || e.positionId || e.position_id || 'N/A';
-      const hoursFromDays = e.days?.reduce((sum: number, day: any) => sum + (day.hoursWorked || 0), 0) || 0;
-      const baseHourly = e.baseHourlySalary || e.base_hourly_salary || 0;
-      const gross = e.gross || e.grossSalary || e.total_gross || 0;
-      const bonuses = e.bonuses || 0;
-      const deductions = e.deductions || e.totalDeductions || e.total_deductions || 0;
-      const net = e.net || e.netSalary || e.net_salary || 0;
-      const employeeId = e.id || e.employee_id || e.employeeId || '';
+    const employeeRows = employees.map((e: unknown) => {
+      const emp = e as Record<string, unknown>;
+      const employeeName = emp.name || emp.employee_name || emp.employeeName || 'N/A';
+      const identification = emp.identification || emp.employee_identification || emp.national_id || emp.employee_national_id || emp.nationalId || emp.cedula || 'N/A';
+      const position = emp.position || emp.position_name || emp.positionName || emp.positionId || emp.position_id || 'N/A';
+      const daysArray = (emp.days || []) as Array<Record<string, unknown>>;
+      const hoursFromDays = daysArray.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0) || 0;
+      const baseHourly = Number(emp.baseHourlySalary || emp.base_hourly_salary || 0);
+      const gross = Number(emp.gross || emp.grossSalary || emp.total_gross || 0);
+      const bonuses = Number(emp.bonuses || 0);
+      const deductions = Number(emp.deductions || emp.totalDeductions || emp.total_deductions || 0);
+      const net = Number(emp.net || emp.netSalary || emp.net_salary || 0);
+      const employeeId = emp.id || emp.employee_id || emp.employeeId || '';
 
       return [
         employeeId,
@@ -216,50 +243,33 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       ];
     });
 
-    const employeeSummaryData = [employeeHeaders, ...employeeRows];
-
-    // Crear el libro de Excel
-    const wb = XLSX.utils.book_new();
-
-    // Agregar hojas
-    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-    const ws2 = XLSX.utils.aoa_to_sheet(detailRows);
-    const ws3 = XLSX.utils.aoa_to_sheet(employeeSummaryData);
-
-    // Ajustar anchos de columna
-    ws1['!cols'] = [{ wch: 25 }, { wch: 30 }];
-    ws2['!cols'] = [
-      { wch: 25 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
-      { wch: 40 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 }
+    ws3.addRow(employeeHeaders);
+    ws3.addRows(employeeRows);
+    ws3.columns = [
+      { width: 10 }, // ID
+      { width: 30 }, // Nombre
+      { width: 15 }, // Cédula
+      { width: 20 }, // Puesto
+      { width: 15 }, // Horas
+      { width: 15 }, // Salario/Hora
+      { width: 15 }, // Bruto
+      { width: 12 }, // Bonos
+      { width: 15 }, // Deducciones
+      { width: 15 }  // Neto
     ];
-    ws3['!cols'] = [
-      { wch: 10 }, // ID
-      { wch: 30 }, // Nombre
-      { wch: 15 }, // Cédula
-      { wch: 20 }, // Puesto
-      { wch: 15 }, // Horas
-      { wch: 15 }, // Salario/Hora
-      { wch: 15 }, // Bruto
-      { wch: 12 }, // Bonos
-      { wch: 15 }, // Deducciones
-      { wch: 15 }  // Neto
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen General');
-    XLSX.utils.book_append_sheet(wb, ws2, 'Detalle Completo');
-    XLSX.utils.book_append_sheet(wb, ws3, 'Tabla Resumen');
 
     // Generar nombre de archivo
     const fileName = `Planilla_${periodStart}_${periodEnd}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
     // Descargar archivo
-    XLSX.writeFile(wb, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const toggleRow = (employeeId: number) => {
@@ -272,26 +282,31 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
     setExpandedRows(newExpanded);
   };
 
-  const total = (employees && employees.reduce) ? employees.reduce((acc: number, e: any) => {
-    const netSalary = e.net ?? e.netSalary ?? e.net_salary ?? 0;
+  const total = (employees && employees.reduce) ? employees.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const netSalary = emp.net ?? emp.netSalary ?? emp.net_salary ?? 0;
     return acc + Number(netSalary);
   }, 0) : null;
 
   // Calcular totales para las tarjetas
-  const totalGross = employees?.reduce((acc: number, e: any) => {
-    const gross = e.gross ?? e.grossSalary ?? e.total_gross ?? 0;
+  const totalGross = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const gross = emp.gross ?? emp.grossSalary ?? emp.total_gross ?? 0;
     return acc + Number(gross);
   }, 0) || 0;
 
-  const totalDeductions = employees?.reduce((acc: number, e: any) => {
-    const deductions = e.deductions ?? e.totalDeductions ?? e.total_deductions ?? 0;
+  const totalDeductions = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const deductions = emp.deductions ?? emp.totalDeductions ?? emp.total_deductions ?? 0;
     return acc + Number(deductions);
   }, 0) || 0;
 
-  const totalHours = employees?.reduce((acc: number, e: any) => {
+  const totalHours = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
     // Calculate total hours from days array if available
-    const hoursFromDays = e.days?.reduce((sum: number, day: any) => sum + (day.hoursWorked || 0), 0) || 0;
-    const hours = e.hours ?? e.total_hours ?? hoursFromDays;
+    const daysArray = (emp.days || []) as Array<Record<string, unknown>>;
+    const hoursFromDays = daysArray.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0) || 0;
+    const hours = emp.hours ?? emp.total_hours ?? hoursFromDays;
     return acc + Number(hours);
   }, 0) || 0;
 
@@ -328,7 +343,7 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       {!employees && (
         <div className="p-4 bg-[#E7DCC1] rounded-lg border border-[#D2B48C]">
           <pre className="overflow-auto text-xs text-[#5D4E37] whitespace-pre-wrap">
-            {JSON.stringify(data, null, 2)}
+            {JSON.stringify(payrollData, null, 2)}
           </pre>
         </div>
       )}
@@ -397,33 +412,35 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-[#E0D6B7]">
-                  {employees.map((emp: any, idx: number) => {
+                  {employees.map((e: unknown, idx: number) => {
+                    const emp = e as Record<string, unknown>;
                     // DEBUG: Log each employee object
                     console.log('Employee object for display:', emp);
                     console.log('All emp keys:', Object.keys(emp));
                     
                     // Calculate total hours from days array if available
-                    const totalHours = emp.days?.reduce((sum: number, day: any) => sum + (day.hoursWorked || 0), 0) || 0;
-                    const hours = emp.hours ?? emp.total_hours ?? totalHours;
+                    const daysArray = (emp.days || []) as Array<Record<string, unknown>>;
+                    const totalHours = daysArray.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0) || 0;
+                    const hours = Number(emp.hours ?? emp.total_hours ?? totalHours);
                     
                     // Get employee details
-                    const employeeName = emp.name || emp.employee_name || emp.employeeName || emp.employee || `#${emp.employee_id || emp.id}`;
-                    const employeeId = emp.employee_id || emp.employeeId || emp.id || idx;
-                    const identification = emp.identification || emp.employee_identification || emp.national_id || emp.employee_national_id || emp.nationalId || emp.cedula || '';
-                    const position = emp.position || emp.position_name || emp.positionName || emp.positionId || emp.position_id || '';
+                    const employeeName = String(emp.name || emp.employee_name || emp.employeeName || emp.employee || `#${emp.employee_id || emp.id}`);
+                    const employeeId = Number(emp.employee_id || emp.employeeId || emp.id || idx);
+                    const identification = String(emp.identification || emp.employee_identification || emp.national_id || emp.employee_national_id || emp.nationalId || emp.cedula || '');
+                    const position = String(emp.position || emp.position_name || emp.positionName || emp.positionId || emp.position_id || '');
                     
                     console.log('Extracted values - name:', employeeName, 'id:', employeeId, 'identification:', identification, 'position:', position);
                     
                     // Get salary values
-                    const grossSalary = emp.gross ?? emp.grossSalary ?? emp.total_gross ?? 0;
-                    const totalDeductions = emp.deductions ?? emp.totalDeductions ?? emp.total_deductions ?? 0;
-                    const bonuses = emp.bonuses ?? emp.total_bonuses ?? 0;
-                    const netSalary = emp.net ?? emp.netSalary ?? emp.net_salary ?? 0;
+                    const grossSalary = Number(emp.gross ?? emp.grossSalary ?? emp.total_gross ?? 0);
+                    const totalDeductions = Number(emp.deductions ?? emp.totalDeductions ?? emp.total_deductions ?? 0);
+                    const bonuses = Number(emp.bonuses ?? emp.total_bonuses ?? 0);
+                    const netSalary = Number(emp.net ?? emp.netSalary ?? emp.net_salary ?? 0);
                     
                     const isExpanded = expandedRows.has(employeeId);
                     
                     // Obtener el desglose de deducciones
-                    const deductionsBreakdown = emp.deductionsBreakdown || emp.deductions_breakdown || [];
+                    const deductionsBreakdown = (emp.deductionsBreakdown || emp.deductions_breakdown || []) as Array<Record<string, unknown>>;
                     
                     return (
                       <React.Fragment key={employeeId}>
@@ -499,18 +516,19 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                       </h4>
                                     </div>
                                     <div className="divide-y divide-[#E0D6B7]">
-                                      {deductionsBreakdown.map((deduction: any, dedIdx: number) => {
+                                      {deductionsBreakdown.map((deduction: unknown, dedIdx: number) => {
+                                        const ded = deduction as Record<string, unknown>;
                                         // El backend envía: { code, type, amount, message }
                                         // message tiene el formato: "Nombre: porcentaje%" o "Nombre: ₡monto"
                                         
-                                        const deductionAmount = deduction.amount || 0;
+                                        const deductionAmount = Number(ded.amount || 0);
                                         
                                         // Extraer el nombre del message (antes de los dos puntos)
                                         let deductionName = '';
                                         let percentageInfo = '';
                                         
-                                        if (deduction.message) {
-                                          const parts = deduction.message.split(':');
+                                        if (ded.message) {
+                                          const parts = String(ded.message).split(':');
                                           deductionName = parts[0].trim();
                                           
                                           // Si hay información adicional (porcentaje o monto), extraerla
@@ -523,7 +541,7 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                           }
                                         } else {
                                           // Fallback si no hay message
-                                          deductionName = deduction.code?.replace(/_/g, ' ') || `Deducción ${dedIdx + 1}`;
+                                          deductionName = String(ded.code || '').replace(/_/g, ' ') || `Deducción ${dedIdx + 1}`;
                                         }
                                         
                                         return (
