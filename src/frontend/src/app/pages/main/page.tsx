@@ -1,38 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLaborEvents } from '@/hooks/useLaborEvents';
-import useEmployeeList from '@/hooks/useEmployeeList';
-import { formatSalary, getStatusBadgeConfig } from '@/utils/employeeUtils';
-
-// --- Type Definitions ---
-interface Employee {
-  name: string;
-  position: string;
-  salary: string; // Using string to keep the '€' symbol and comma formatting
-  status: "Al día" | "Asistencia incompleta" | "Vacaciones";
-}
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLaborEvents } from "@/hooks/useLaborEvents";
+import useEmployeeList from "@/hooks/useEmployeeList";
+import { formatSalary, getStatusBadgeConfig } from "@/utils/employeeUtils";
 
 interface CalendarEvent {
-  date: number; // Day of the month
-  type: "highlighted" | "today"; // Added 'today' type if needed for future
-  title: string; // Event title for tooltip
-  description?: string; // Optional event description
+  date: number;
+  type: "highlighted" | "today";
+  title: string;
+  description?: string;
 }
 
-// --- Dummy Data ---
-
-
-const calendarEvents: CalendarEvent[] = [
-  // Events from the screenshot. Note that the highlighted days are 13, 17, 19, 26.
-  // The colors imply different types of events or statuses.
-  { date: 13, type: "highlighted", title: "Quincena de Pago", description: "Primera quincena del mes" }, // Grayish
-  { date: 17, type: "highlighted", title: "Reunión de Equipo", description: "Reunión mensual de coordinación" }, // Grayish
-  { date: 19, type: "highlighted", title: "Día de Pago", description: "Pago de salarios mensuales" }, // Yellowish
-  { date: 26, type: "highlighted", title: "Cierre de Planilla", description: "Fecha límite para registro de horas" }, // Grayish
+const fallbackCalendarEvents: CalendarEvent[] = [
+  { date: 13, type: "highlighted", title: "Quincena de Pago", description: "Primera quincena del mes" },
+  { date: 17, type: "highlighted", title: "Reunión de Equipo", description: "Coordinación mensual" },
+  { date: 19, type: "highlighted", title: "Día de Pago", description: "Depósito de salarios" },
+  { date: 26, type: "highlighted", title: "Cierre de Planilla", description: "Fecha límite de horas" }
 ];
 
-// Array of month names in Spanish (0-indexed)
 const monthNames = [
   "Enero",
   "Febrero",
@@ -45,16 +32,14 @@ const monthNames = [
   "Septiembre",
   "Octubre",
   "Noviembre",
-  "Diciembre",
+  "Diciembre"
 ];
 
-// --- Helper for Calendar Days ---
 const getDaysInMonth = (year: number, month: number) => {
   return new Date(year, month + 1, 0).getDate();
 };
 
 const getFirstDayOfMonth = (year: number, month: number) => {
-  // getDay() returns 0 for Sunday, 1 for Monday... 6 for Saturday
   return new Date(year, month, 1).getDay();
 };
 
@@ -67,115 +52,101 @@ const renderCalendarDays = (
   onClickDay?: (date: Date, dayEvents: CalendarEvent[]) => void
 ) => {
   const daysInMonth = getDaysInMonth(year, month);
-  const firstDayIndex = getFirstDayOfMonth(year, month); // Day of week (0=Sun, 6=Sat) for the 1st of the month
-  const calendarDays: (number | null)[] = Array(firstDayIndex).fill(null); // Fill leading empty days
+  const firstDayIndex = getFirstDayOfMonth(year, month);
+  const calendarDays: (number | null)[] = Array(firstDayIndex).fill(null);
 
   for (let i = 1; i <= daysInMonth; i++) {
     calendarDays.push(i);
   }
 
-  // Fill trailing days from the next month to complete the 6x7 grid
   const totalCells = 6 * 7;
-  const remainingCells = totalCells - calendarDays.length;
-  for (let i = 1; i <= remainingCells; i++) {
-    calendarDays.push(i);
+  while (calendarDays.length < totalCells) {
+    calendarDays.push(null);
   }
 
   return calendarDays.map((day, index) => {
-    const isCurrentMonthDay =
-      index >= firstDayIndex && index < daysInMonth + firstDayIndex;
-    const event = isCurrentMonthDay
-      ? events.find((e) => e.date === day)
-      : undefined;    let highlightBgClass = "";
+    const isCurrentMonthDay = index >= firstDayIndex && index < daysInMonth + firstDayIndex;
+    const event = isCurrentMonthDay ? events.find((e) => e.date === day) : undefined;
+
+    let highlightBgClass = "";
     if (event) {
-      // Apply distinct colors for highlighted dates based on the screenshot
-      if (event.date === 19) {
-        // The yellowish highlight
-        highlightBgClass = "bg-[#F0EAD6]"; // Specific yellowish-beige color
-      } else {
-        // The grayish highlights
-        highlightBgClass = "bg-[#E5E1D8]"; // Specific grayish color
-      }
+      highlightBgClass = event.date === 19 ? "bg-[#F6EFD6]" : "bg-[#ECE7DC]";
     }
 
     const dayClasses = `
-            text-center rounded text-xs font-medium
-            ${highlightBgClass}
-            ${
-              !isCurrentMonthDay ? "text-[#B8B3A6]" : "text-[#4A5D3A]"
-            } /* Muted gray for non-current month days */
-            ${
-              index % 7 === 0 || index % 7 === 6
-                ? "bg-[#F8F6F1] bg-opacity-50"
-                : ""
-            } /* Subtle background for Sunday/Saturday columns */
-            flex items-center justify-center h-8 w-8 mx-auto /* Compact size for each day cell */
-            hover:bg-[#E7DCC1] transition-colors cursor-pointer
-        `;    return (
-      <div 
-        key={index} 
+      text-sm font-semibold rounded-xl h-11 flex items-center justify-center border border-transparent
+      ${highlightBgClass}
+      ${isCurrentMonthDay ? "text-[#3B4D36] bg-white" : "text-[#B8B3A6] bg-transparent"}
+      hover:border-[#C8BA9A] transition-colors cursor-pointer
+    `;
+
+    return (
+      <div
+        key={`${day}-${index}`}
         className={dayClasses.trim()}
         onMouseEnter={event && isCurrentMonthDay ? (e) => onMouseEnter(e, event) : undefined}
         onMouseLeave={event && isCurrentMonthDay ? onMouseLeave : undefined}
-        onClick={isCurrentMonthDay ? () => {
-          // build date and pass all events for this day
-          if (typeof day === 'number') {
-            const dt = new Date(year, month, day);
-            const dayEvents = events.filter(ev => ev.date === day);
-            if (typeof (onClickDay as any) === 'function') (onClickDay as any)(dt, dayEvents as CalendarEvent[]);
-          }
-        } : undefined}
+        onClick={
+          isCurrentMonthDay && typeof day === "number"
+            ? () => {
+                const dt = new Date(year, month, day);
+                const dayEvents = events.filter((ev) => ev.date === day);
+                onClickDay?.(dt, dayEvents);
+              }
+            : undefined
+        }
       >
-        {day}
+        {day ?? ""}
       </div>
     );
   });
 };
 
-// --- React Components ---
-
 const Home: React.FC = () => {
-  // State + data hooks
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => {
-    // default to first day of current month
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string; visible: boolean }>({ x: 0, y: 0, content: '', visible: false });
-
-  // Live data hooks
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string; visible: boolean }>({
+    x: 0,
+    y: 0,
+    content: "",
+    visible: false
+  });
   const { events, isLoading: eventsLoading, refreshEvents } = useLaborEvents();
-  const { employees, refreshEmployees } = useEmployeeList();
-
-  // Visible range (used to build monthly list)
+  const { employees, refreshEmployees, stats } = useEmployeeList();
   const [visibleRangeStart, setVisibleRangeStart] = useState<Date | null>(null);
   const [visibleRangeEnd, setVisibleRangeEnd] = useState<Date | null>(null);
-
-  // Modal for day that has multiple events
   const [dayModal, setDayModal] = useState<{ date: Date; events: any[] } | null>(null);
 
-  // Polling to keep data synchronized (30s)
   useEffect(() => {
-    const t = setInterval(() => {
+    const interval = setInterval(() => {
       refreshEvents().catch(() => {});
       refreshEmployees && refreshEmployees().catch(() => {});
     }, 30000);
-    return () => clearInterval(t);
+    return () => clearInterval(interval);
   }, [refreshEvents, refreshEmployees]);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
+  const today = new Date();
+  const formattedToday = today.toLocaleDateString("es-CR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
 
+  const safeEvents = events ?? [];
+  const employeeList = employees ?? [];
+  const activeEventsCount = safeEvents.filter((event) => event.status === "active").length;
   const goToPrevMonth = () => {
-    setCurrentDate((prevDate) => {
-      return new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1);
-    });
+    setCurrentDate((prevDate) => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
+
   const goToNextMonth = () => {
-    setCurrentDate((prevDate) => {
-      return new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1);
-    });
+    setCurrentDate((prevDate) => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
   const handleMouseEnter = (event: React.MouseEvent, eventData: CalendarEvent) => {
@@ -183,144 +154,347 @@ const Home: React.FC = () => {
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top - 10,
-      content: `${eventData.title}${eventData.description ? `: ${eventData.description}` : ''}`,
+      content: `${eventData.title}${eventData.description ? `: ${eventData.description}` : ""}`,
       visible: true
     });
   };
 
   const handleMouseLeave = () => {
-    setTooltip(prev => ({ ...prev, visible: false }));
+    setTooltip((prev) => ({ ...prev, visible: false }));
   };
 
-  // Update visible range when currentDate changes
   useEffect(() => {
     const start = new Date(currentYear, currentMonth, 1);
     const end = new Date(currentYear, currentMonth, getDaysInMonth(currentYear, currentMonth));
-    end.setHours(23,59,59,999);
+    end.setHours(23, 59, 59, 999);
     setVisibleRangeStart(start);
     setVisibleRangeEnd(end);
   }, [currentMonth, currentYear]);
 
-  const monthlyEvents = (visibleRangeStart && visibleRangeEnd && events)
-    ? (events || []).filter(ev => {
-      try {
-    const s = ev.start_date ? new Date(ev.start_date) : null;
-    const e = ev.end_date ? new Date(ev.end_date) : s;
-    if (!s || !e) return false;
-    return !(e.getTime() < visibleRangeStart.getTime() || s.getTime() > visibleRangeEnd.getTime());
-      } catch (err) { return false; }
-    }).sort((a:any,b:any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
-    : [];
-  return (
-    <div className="h-full bg-[#E7DCC1] overflow-auto">
-      <div className="flex flex-col min-h-full gap-4 p-4 font-sans">
-        {/* Top Section: Events and Pending Tasks */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          {/* Events of the Month */}
-          <div className="lg:col-span-3 bg-[#F5F1E8] rounded-lg shadow-sm p-4 border border-[#E0D6B7]">
-            <h3 className="text-sm font-semibold text-[#4A5D3A] mb-3 text-center uppercase tracking-wider">
-              EVENTOS DEL MES
-            </h3>
+  const monthlyEvents =
+    visibleRangeStart && visibleRangeEnd
+      ? safeEvents
+          .filter((ev) => {
+            try {
+              const s = ev.start_date ? new Date(ev.start_date) : null;
+              const e = ev.end_date ? new Date(ev.end_date) : s;
+              if (!s || !e) return false;
+              return !(e.getTime() < visibleRangeStart.getTime() || s.getTime() > visibleRangeEnd.getTime());
+            } catch (error) {
+              return false;
+            }
+          })
+          .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+      : [];
 
-            <div className="border border-[#D4C89A] rounded-md p-3 bg-white">
-              {/* Month Navigation */}
-              <div className="flex items-center justify-between text-sm text-[#6B7556] pb-2 border-b border-[#E5E1D8] mb-3">
+  const currentMonthEvents =
+    safeEvents.length > 0
+      ? safeEvents
+          .filter((ev) => {
+            try {
+              const s = ev.start_date ? new Date(ev.start_date) : null;
+              return s && s.getMonth() === currentMonth && s.getFullYear() === currentYear;
+            } catch (error) {
+              return false;
+            }
+          })
+          .map((ev) => ({
+            date: new Date(ev.start_date).getDate(),
+            type: "highlighted" as const,
+            title: ev.labor_event_name || "Evento",
+            description: ev.labor_event_description
+          }))
+      : [];
+
+  const calendarHighlights = currentMonthEvents.length > 0 ? currentMonthEvents : fallbackCalendarEvents;
+
+  const attentionEmployees = employeeList
+    .filter((emp) => String(emp.status ?? "").toLowerCase().includes("incompleta"))
+    .slice(0, 3);
+
+  const quickActions = [
+    {
+      label: "Generar reportes",
+      description: "Descarga métricas y resúmenes.",
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      ),
+      action: () => router.push("/pages/reports")
+    },
+    {
+      label: "Calcular planilla",
+      description: "Inicia el cálculo de la quincena.",
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+        />
+      ),
+      action: () => router.push("/pages/payroll")
+    },
+    {
+      label: "Registro de asistencia",
+      description: "Completa y valida asistencias.",
+      icon: (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+        />
+      ),
+      action: () => router.push("/pages/attendance")
+    }
+  ];
+
+  const actionItems = [
+    {
+      title: "Asistencias por revisar",
+      value: stats?.incompleteAssistance ?? 0,
+      description: "Registros con inconsistencias en la marcación.",
+      actionLabel: "Abrir registro",
+      onClick: () => router.push("/pages/attendance")
+    },
+    {
+      title: "Vacaciones activas",
+      value: stats?.onVacation ?? 0,
+      description: "Colaboradores fuera de oficina.",
+      actionLabel: "Ver vacaciones",
+      onClick: () => router.push("/pages/vacations")
+    },
+    {
+      title: "Eventos activos",
+      value: activeEventsCount,
+      description: "Actividades laborales en curso.",
+      actionLabel: "Gestionar eventos",
+      onClick: () => router.push("/pages/employee/events")
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#E7DCC1]">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
+          <div>
+            <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-widest mb-1">Panel General</p>
+            <h1 className="text-3xl font-bold text-[#3B4D36] leading-none">Dashboard</h1>
+          </div>
+          <div className="flex flex-col md:items-end text-sm text-[#6B7556]">
+            <span className="uppercase tracking-[0.2em] text-xs text-[#A18B69]">Hoy</span>
+            <span className="font-medium text-[#3B4D36]">{formattedToday}</span>
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+          <section className="bg-[#F5F1E8] rounded-2xl shadow-sm border border-[#E0D6B7]">
+            <div className="flex flex-col gap-2 px-6 pt-6 pb-4 md:flex-row md:items-center md:justify-between border-b border-[#E5E1D8]">
+              <div>
+                <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-[0.3em]">Eventos del mes</p>
+                <h2 className="text-2xl font-semibold text-[#3B4D36]">
+                  {monthNames[currentMonth]} {currentYear}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  className="cursor-pointer select-none text-lg hover:text-[#4A5D3A] transition-colors p-1 rounded hover:bg-[#F8F6F1]"
+                  type="button"
+                  className="w-9 h-9 rounded-full border border-[#C8BA9A] text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
                   onClick={goToPrevMonth}
+                  aria-label="Mes anterior"
                 >
                   ←
                 </button>
-                <span className="text-[#4A5D3A] text-base font-medium">
-                  {monthNames[currentMonth]} {currentYear}
-                </span>
                 <button
-                  className="cursor-pointer select-none text-lg hover:text-[#4A5D3A] transition-colors p-1 rounded hover:bg-[#F8F6F1]"
+                  type="button"
+                  className="w-9 h-9 rounded-full border border-[#C8BA9A] text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
                   onClick={goToNextMonth}
+                  aria-label="Mes siguiente"
                 >
                   →
                 </button>
               </div>
-
-              {/* Week Days */}
-              <div className="grid grid-cols-7 text-center text-[#6B7556] font-medium text-xs mb-2 pb-1 border-b border-[#F0EDE5]">
-                <span>Domingo</span>
-                <span>Lunes</span>
-                <span>Martes</span>
-                <span>Miércoles</span>
-                <span>Jueves</span>
-                <span>Viernes</span>
-                <span>Sábado</span>
-              </div>              {/* Calendar Days */}
-              <div className="grid grid-cols-7 gap-px">
+            </div>
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-7 text-center text-[#6B7556] font-semibold text-xs mb-3 uppercase tracking-wide">
+                <span>Dom</span>
+                <span>Lun</span>
+                <span>Mar</span>
+                <span>Mié</span>
+                <span>Jue</span>
+                <span>Vie</span>
+                <span>Sáb</span>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
                 {renderCalendarDays(
                   currentYear,
                   currentMonth,
-                  // Build a lightweight CalendarEvent[] from real events in this month
-                  (events || []).filter(ev => {
-                    try {
-                      const s = ev.start_date ? new Date(ev.start_date) : null;
-                      if (!s) return false;
-                      return s.getMonth() === currentMonth && s.getFullYear() === currentYear;
-                    } catch (e) { return false; }
-                  }).map(ev => ({ date: new Date(ev.start_date).getDate(), type: 'highlighted' as any, title: ev.labor_event_name || 'Evento', description: ev.labor_event_description })),
-                  (e, evData) => handleMouseEnter(e, evData as CalendarEvent),
+                  calendarHighlights,
+                  (e, evData) => handleMouseEnter(e, evData),
                   handleMouseLeave,
-                  (dateClicked: Date, dayEvents: CalendarEvent[]) => {
-                    // Map lightweight CalendarEvent[] back to full event objects where possible
-                    const fullEvents = (events || []).filter(ev => {
+                  (dateClicked: Date) => {
+                    const fullEvents = safeEvents.filter((ev) => {
                       try {
                         const s = ev.start_date ? new Date(ev.start_date) : null;
-                        return s && s.getDate() === dateClicked.getDate() && s.getMonth() === dateClicked.getMonth() && s.getFullYear() === dateClicked.getFullYear();
-                      } catch (e) { return false; }
+                        return (
+                          s &&
+                          s.getDate() === dateClicked.getDate() &&
+                          s.getMonth() === dateClicked.getMonth() &&
+                          s.getFullYear() === dateClicked.getFullYear()
+                        );
+                      } catch (error) {
+                        return false;
+                      }
                     });
                     setDayModal({ date: dateClicked, events: fullEvents });
                   }
                 )}
               </div>
+              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+                <div className="rounded-xl border border-[#E0D6B7] bg-white py-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#A18B69]">Activos</p>
+                  <p className="text-2xl font-semibold text-[#3B4D36]">{activeEventsCount}</p>
+                </div>
+                <div className="rounded-xl border border-[#E0D6B7] bg-white py-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#A18B69]">Programados</p>
+                  <p className="text-2xl font-semibold text-[#3B4D36]">{monthlyEvents.length}</p>
+                </div>
+                <div className="rounded-xl border border-[#E0D6B7] bg-white py-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#A18B69]">Alertas</p>
+                  <p className="text-2xl font-semibold text-[#3B4D36]">{attentionEmployees.length}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Pending Tasks */}
-          <div className="bg-[#F5F1E8] rounded-lg shadow-sm p-4 border border-[#E0D6B7]">
-            <h3 className="text-sm font-semibold text-[#4A5D3A] mb-3 uppercase tracking-wider">
-              TAREAS PENDIENTES
-            </h3>
-            <div className="h-32 bg-[#FDFCF9] border border-dashed border-[#D4C89A] rounded-md flex items-center justify-center text-[#8B8B8B] text-xs">
-              No hay tareas pendientes.
+          <aside className="flex flex-col gap-6">
+            <div className="bg-[#F5F1E8] rounded-2xl shadow-sm border border-[#E0D6B7] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-[0.3em]">Eventos destacados</p>
+                  <h3 className="text-lg font-semibold text-[#3B4D36]">Este mes</h3>
+                </div>
+                <span className="text-xs text-[#6B7556]">{monthlyEvents.length} eventos</span>
+              </div>
+              <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                {eventsLoading ? (
+                  <div className="text-center text-sm text-[#6B7556] py-6">Cargando eventos...</div>
+                ) : monthlyEvents.length === 0 ? (
+                  <div className="text-center text-sm text-[#8B8B8B] py-6">
+                    No hay eventos registrados en este rango.
+                  </div>
+                ) : (
+                  monthlyEvents.slice(0, 6).map((event) => {
+                    const employee = employeeList.find((e) => String(e.id) === String(event.employee_id));
+                    const start = event.start_date ? new Date(event.start_date) : null;
+                    const end = event.end_date ? new Date(event.end_date) : null;
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() => setDayModal({ date: start ?? new Date(), events: [event] })}
+                        className="w-full text-left rounded-xl border border-[#E0D6B7] bg-white px-4 py-3 hover:border-[#C7BB96] transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-[#3B4D36] truncate">
+                            {event.labor_event_name || `Evento #${event.id}`}
+                          </p>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              event.status === "active"
+                                ? "bg-green-100 text-green-700"
+                                : event.status === "completed"
+                                ? "bg-blue-100 text-blue-700"
+                                : event.status === "cancelled"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {event.status || "Pendiente"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#6B7556] mt-1 truncate">{employee?.name ?? "Sin asignar"}</p>
+                        {start && (
+                          <p className="text-xs text-[#8B8B8B] mt-1">
+                            {start.toLocaleDateString("es-CR", { day: "2-digit", month: "short" })}
+                            {end && end.getTime() !== start.getTime()
+                              ? ` · Termina ${end.toLocaleDateString("es-CR", { day: "2-digit", month: "short" })}`
+                              : ""}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
+
+            <div className="bg-[#F5F1E8] rounded-2xl shadow-sm border border-[#E0D6B7] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-[0.3em]">Centro de tareas</p>
+                  <h3 className="text-lg font-semibold text-[#3B4D36]">Atiende pendientes</h3>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {actionItems.map((item) => (
+                  <div key={item.title} className="rounded-xl border border-[#E0D6B7] bg-white p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-[#3B4D36]">{item.title}</p>
+                        <p className="text-xs text-[#6B7556]">{item.description}</p>
+                      </div>
+                      <span className="text-2xl font-semibold text-[#3B4D36]">{item.value}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={item.onClick}
+                      className="mt-3 text-xs font-semibold text-[#6F7153] hover:text-[#3B4D36] transition-colors"
+                    >
+                      {item.actionLabel} →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
 
-        
-
-        {/* Employee Information */}
-        <div className="bg-[#F5F1E8] rounded-lg shadow-sm p-4 border border-[#E0D6B7]">
-          <h3 className="text-sm font-semibold text-[#4A5D3A] mb-3 uppercase tracking-wider">
-            INFORMACIÓN DE EMPLEADOS | {employees.length} Empleados
-          </h3>
-
-          <div className="overflow-x-auto rounded-md border border-[#D4C89A] bg-white">
-            <table className="w-full table-fixed min-w-[800px]">
+        <section className="mt-6 bg-[#F5F1E8] rounded-2xl shadow-sm border border-[#E0D6B7] p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-[0.3em]">Información de empleados</p>
+              <h3 className="text-xl font-semibold text-[#3B4D36]">
+                {employeeList.length} colaboradores activos
+              </h3>
+            </div>
+            <span className="text-xs text-[#6B7556]">Vista rápida de los últimos movimientos</span>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-[#E0D6B7] bg-white">
+            <table className="w-full text-sm min-w-[640px]">
               <thead>
-                <tr className="bg-[#F8F6F1] text-[#6B7556] text-xs font-medium border-b border-[#E5E1D8]">
-                  <th className="w-1/4 px-3 py-2 text-left">Nombre</th>
-                  <th className="w-1/4 px-3 py-2 text-left">Posición</th>
-                  <th className="w-1/4 px-3 py-2 text-left">Salario</th>
-                  <th className="w-1/4 px-3 py-2 text-center">Estado</th>
+                <tr className="bg-[#F8F6F1] text-[#6B7556] text-xs uppercase tracking-wider">
+                  <th className="py-3 px-4 text-left">Nombre</th>
+                  <th className="py-3 px-4 text-left">Posición</th>
+                  <th className="py-3 px-4 text-left">Salario</th>
+                  <th className="py-3 px-4 text-center">Estado</th>
                 </tr>
               </thead>
               <tbody>
-                {employees.slice(0, 4).map((employee, index) => {
-                  const badge = getStatusBadgeConfig(String(employee.status ?? ''));
-                  // employee.salary in hook is numeric (getPositionSalary) — use formatSalary util
-                  const salaryDisplay = typeof employee.salary === 'number' ? formatSalary(employee.salary as number) : String(employee.salary ?? '');
+                {employeeList.slice(0, 6).map((employee) => {
+                  const badge = getStatusBadgeConfig(String(employee.status ?? ""));
+                  const salaryDisplay =
+                    typeof employee.salary === "number" ? formatSalary(employee.salary as number) : String(employee.salary ?? "");
                   return (
-                    <tr key={index} className="hover:bg-[#FDFCF9] transition-colors duration-150">
-                      <td className="py-2 px-3 text-[#4A5D3A] text-xs border-b border-[#F0EDE5]">{employee.name}</td>
-                      <td className="py-2 px-3 text-[#6B7556] text-xs border-b border-[#F0EDE5]">{employee.position}</td>
-                      <td className="py-2 px-3 text-[#4A5D3A] text-xs border-b border-[#F0EDE5] font-medium">{salaryDisplay}</td>
-                      <td className="py-2 px-3 text-xs text-center border-b border-[#F0EDE5]">
+                    <tr key={employee.id} className="border-t border-[#F0EDE5] hover:bg-[#FDFCF9] transition-colors">
+                      <td className="px-4 py-3 text-[#3B4D36] font-medium">{employee.name}</td>
+                      <td className="px-4 py-3 text-[#6B7556]">{employee.position || "Sin asignar"}</td>
+                      <td className="px-4 py-3 text-[#3B4D36] font-semibold">{salaryDisplay}</td>
+                      <td className="px-4 py-3 text-center">
                         <span className={badge.className}>{badge.text}</span>
                       </td>
                     </tr>
@@ -329,78 +503,76 @@ const Home: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="bg-[#F5F1E8] rounded-lg shadow-sm p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-[#E0D6B7] group">
-            <div className="w-10 h-10 bg-[#E7DCC1] rounded-lg flex items-center justify-center mb-2 group-hover:bg-[#D4C89A] transition-colors">
-              <svg className="w-5 h-5 text-[#4A5D3A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <span className="text-xs font-medium text-[#4A5D3A] text-center">
-              Generar<br />Reporte
-            </span>
-          </div>
-          <div className="bg-[#F5F1E8] rounded-lg shadow-sm p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-[#E0D6B7] group">
-            <div className="w-10 h-10 bg-[#E7DCC1] rounded-lg flex items-center justify-center mb-2 group-hover:bg-[#D4C89A] transition-colors">
-              <svg className="w-5 h-5 text-[#4A5D3A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <span className="text-xs font-medium text-[#4A5D3A] text-center">
-              Calcular<br />planilla de<br />quincena
-            </span>
-          </div>
-          <div className="bg-[#F5F1E8] rounded-lg shadow-sm p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border border-[#E0D6B7] group">
-            <div className="w-10 h-10 bg-[#E7DCC1] rounded-lg flex items-center justify-center mb-2 group-hover:bg-[#D4C89A] transition-colors">
-              <svg className="w-5 h-5 text-[#4A5D3A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-            <span className="text-xs font-medium text-[#4A5D3A] text-center">
-              Completar<br />registro de<br />asistencia
-            </span>          </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.action}
+              className="bg-[#F5F1E8] rounded-2xl shadow-sm border border-[#E0D6B7] p-5 text-left hover:-translate-y-0.5 hover:shadow-md transition-all"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-[#E7DCC1] flex items-center justify-center mb-3 text-[#4A5D3A]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {action.icon}
+                </svg>
+              </div>
+              <p className="text-base font-semibold text-[#3B4D36]">{action.label}</p>
+              <p className="text-sm text-[#6B7556]">{action.description}</p>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Tooltip */}
-      {/* Day Modal - shows events for a clicked date */}
       {dayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg w-[90%] max-w-2xl p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-semibold text-[#3B4D36]">Eventos para {dayModal.date.toLocaleDateString()}</h4>
-              <button onClick={() => setDayModal(null)} className="text-sm text-[#6B7556]">Cerrar</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#A18B69]">Eventos</p>
+                <h4 className="text-xl font-semibold text-[#3B4D36]">
+                  {dayModal.date.toLocaleDateString("es-CR", { day: "2-digit", month: "long", year: "numeric" })}
+                </h4>
+              </div>
+              <button onClick={() => setDayModal(null)} className="text-sm text-[#6B7556] hover:text-[#3B4D36]">
+                Cerrar
+              </button>
             </div>
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
               {dayModal.events.length === 0 ? (
                 <div className="text-sm text-[#8B8B8B]">No hay eventos para este día.</div>
-              ) : dayModal.events.map((ev:any) => (
-                <div key={ev.id} className="border border-[#E5E1D8] rounded-md p-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-sm font-medium text-[#3B4D36]">{ev.labor_event_name || 'Evento'}</div>
-                      <div className="text-xs text-[#6B7556]">{employees.find((em:any)=>String(em.id)===String(ev.employee_id))?.name || 'Sin asignar'}</div>
+              ) : (
+                dayModal.events.map((ev: any) => (
+                  <div key={ev.id} className="border border-[#E5E1D8] rounded-xl p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-base font-semibold text-[#3B4D36]">{ev.labor_event_name || "Evento"}</div>
+                        <div className="text-xs text-[#6B7556]">
+                          {employeeList.find((em: any) => String(em.id) === String(ev.employee_id))?.name || "Sin asignar"}
+                        </div>
+                      </div>
+                      <div className="text-xs px-2 py-0.5 rounded-full bg-[#F8F6F1] text-[#6B7556] uppercase tracking-wide">
+                        {ev.status}
+                      </div>
                     </div>
-                    <div className="text-xs text-[#8B8B8B]">{ev.status}</div>
+                    {ev.labor_event_description && (
+                      <p className="text-sm text-[#6B7556] mt-3">{ev.labor_event_description}</p>
+                    )}
                   </div>
-                  {ev.labor_event_description && (
-                    <p className="text-xs text-[#6B7556] mt-2">{ev.labor_event_description}</p>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
       )}
+
       {tooltip.visible && (
         <div
           className="fixed z-50 bg-[#4A5D3A] text-white text-xs rounded-md px-3 py-2 shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full"
           style={{
             left: tooltip.x,
-            top: tooltip.y,
+            top: tooltip.y
           }}
         >
           {tooltip.content}
@@ -412,6 +584,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-
-
