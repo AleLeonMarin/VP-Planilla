@@ -89,6 +89,7 @@ const useEmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFiredEmployees, setShowFiredEmployees] = useState(false);
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [showEditEmployeeModal, setShowEditEmployeeModal] = useState(false);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
@@ -173,11 +174,17 @@ const useEmployeeList = () => {
     updateStats(mapped);
   }, [rawEmployees, positions]);
 
-  // Filtrar empleados basado en el término de búsqueda
+  // Filtrar empleados basado en el término de búsqueda y estado de despedidos
   useEffect(() => {
-    const filtered = filterEmployees(employees, searchTerm);
+    let filtered = filterEmployees(employees, searchTerm);
+    
+    // Filtrar empleados despedidos si está desactivado
+    if (!showFiredEmployees) {
+      filtered = filtered.filter(emp => !emp.fired && emp.status !== 'fired');
+    }
+    
     setFilteredEmployees(filtered);
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, showFiredEmployees]);
 
   /**
    * Actualiza las estadísticas de empleados
@@ -334,6 +341,8 @@ const useEmployeeList = () => {
     isLoadingEmployee,
     showDismissModal,
     dismissingEmployee,
+    showFiredEmployees,
+    setShowFiredEmployees,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,

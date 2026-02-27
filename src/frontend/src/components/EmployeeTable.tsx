@@ -17,6 +17,8 @@ interface EmployeeTableProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onEmployeeAction: (action: string, employeeId: string) => void;
+  showFiredEmployees: boolean;
+  onToggleFiredEmployees: (show: boolean) => void;
 }
 
 /**
@@ -26,7 +28,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees, 
   searchTerm, 
   onSearchChange, 
-  onEmployeeAction 
+  onEmployeeAction,
+  showFiredEmployees,
+  onToggleFiredEmployees
 }) => {
   const {
     filterOpen,
@@ -92,6 +96,25 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Panel de filtros */}
+        {filterOpen && (
+          <div className="px-5 py-4 bg-[#F5EDD5] border-b border-[#D2B48C]">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-[#5D4E37]">
+                Estado de empleado:
+              </label>
+              <select
+                value={showFiredEmployees ? "all" : "active"}
+                onChange={(e) => onToggleFiredEmployees(e.target.value === "all")}
+                className="px-3 py-2 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white text-[#3B4D36] text-sm"
+              >
+                <option value="active">Solo activos</option>
+                <option value="all">Todos (incluir despedidos)</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Tabla de empleados */}
         <div className="overflow-x-auto overflow-y-auto max-h-130">

@@ -29,6 +29,8 @@ const EmployeeListPage: React.FC = () => {
     isLoadingEmployee,
     showDismissModal,
     dismissingEmployee,
+    showFiredEmployees,
+    setShowFiredEmployees,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,
@@ -90,6 +92,8 @@ const EmployeeListPage: React.FC = () => {
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
           onEmployeeAction={handleEmployeeAction}
+          showFiredEmployees={showFiredEmployees}
+          onToggleFiredEmployees={setShowFiredEmployees}
         />
 
       </div>
