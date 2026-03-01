@@ -40,4 +40,23 @@ export class ClockLogsService {
         }));
 
     }
+
+    async bulkCreate(logs: Array<{
+        employee_id: number;
+        timestamp: Date;
+        log_type: string;
+        remarks?: string | null;
+    }>): Promise<{ created: number }> {
+        const result = await prisma.vpg_clock_logs.createMany({
+            data: logs.map(l => ({
+                clock_logs_employee_id: l.employee_id,
+                clock_logs_timestamp: l.timestamp,
+                clock_logs_log_type: l.log_type,
+                clock_logs_remarks: l.remarks ?? null,
+                clock_logs_version: 1
+            })),
+            skipDuplicates: true
+        });
+        return { created: result.count };
+    }
 }

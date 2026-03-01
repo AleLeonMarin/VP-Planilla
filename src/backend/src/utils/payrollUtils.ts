@@ -289,10 +289,10 @@ export function getSundaysInPeriod(startDate: Date, endDate: Date): Date[] {
 }
 
 /**
- * Count Mon–Sat working days in the full period (used as the denominator
- * for the proportional weekly-rest formula).
+ * Count Mon–Sat working days in the full period.
+ * Used both for weekly-rest denominator and scheduled hours.
  */
-function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number {
+export function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number {
   let count = 0;
   const current = new Date(startDate);
   while (current <= endDate) {
@@ -300,6 +300,13 @@ function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number {
     current.setDate(current.getDate() + 1);
   }
   return count;
+}
+
+/**
+ * Scheduled (required) hours for a period: Mon–Sat days × 8.
+ */
+export function calculateScheduledHours(startDate: Date, endDate: Date): number {
+  return countWorkingDaysInPeriod(startDate, endDate) * REGULAR_HOURS_PER_DAY;
 }
 
 /**

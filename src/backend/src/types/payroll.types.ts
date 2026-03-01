@@ -36,6 +36,7 @@ export interface EmployeePayroll {
   days: DayWork[];
 
   // Hour breakdown
+  scheduledHours: number;   // Mon–Sat days in period × 8  (required hours)
   regularHours: number;
   overtimeHours: number;
   weeklyRestHours: number;  // proportional rest hours (e.g. 14.77 for 96-reg-hr period)

@@ -420,8 +420,12 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                     
                     // Calculate total hours from days array if available
                     const daysArray = (emp.days || []) as Array<Record<string, unknown>>;
-                    const totalHours = daysArray.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0) || 0;
-                    const hours = Number(emp.hours ?? emp.total_hours ?? totalHours);
+                    const totalHoursFromDays = daysArray.reduce((sum: number, day: Record<string, unknown>) => sum + ((day.hoursWorked as number) || 0), 0) || 0;
+                    const hours = Number(emp.hours ?? emp.total_hours ?? totalHoursFromDays);
+                    const regularHours  = Number(emp.regularHours   ?? emp.regular_hours   ?? 0);
+                    const overtimeHours = Number(emp.overtimeHours  ?? emp.overtime_hours  ?? 0);
+                    const scheduledHours = Number(emp.scheduledHours ?? emp.scheduled_hours ?? 0);
+                    const missingHours  = scheduledHours > 0 ? Math.max(0, scheduledHours - regularHours) : 0;
                     
                     // Get employee details
                     const employeeName = String(emp.name || emp.employee_name || emp.employeeName || emp.employee || `#${emp.employee_id || emp.id}`);
@@ -467,7 +471,21 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                             </div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-right">
-                            <span className="text-sm text-[#5D4E37]">{hours > 0 ? hours : '-'}</span>
+                            {hours > 0 ? (
+                              <div className="text-right">
+                                <span className="text-sm text-[#5D4E37]">
+                                  {regularHours > 0 ? regularHours : hours}
+                                </span>
+                                {overtimeHours > 0 && (
+                                  <span className="block text-xs text-orange-600 font-medium">+{overtimeHours}h ext</span>
+                                )}
+                                {missingHours > 0 && (
+                                  <span className="block text-xs text-red-500">{missingHours}h falt</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-[#5D4E37]">-</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-right">
                             <span className="text-sm font-medium text-[#3B4D36]">{formatCRC(grossSalary)}</span>
@@ -488,6 +506,33 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                           <tr className="bg-[#FEFBF5] border-t border-[#E0D6B7]">
                             <td colSpan={6} className="px-4 py-0">
                               <div className="py-4 pl-12 pr-4">
+                                {/* Resumen de Horas */}
+                                {scheduledHours > 0 && (
+                                  <div className="bg-white rounded-lg border border-[#E0D6B7] shadow-sm overflow-hidden mb-4">
+                                    <div className="bg-gradient-to-r from-[#E7DCC1] to-[#D4C9A0] px-4 py-2 border-b border-[#D2B48C]">
+                                      <h4 className="text-xs font-bold text-[#3B4D36] uppercase tracking-wide">Resumen de Horas</h4>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#E0D6B7]">
+                                      <div className="px-4 py-3">
+                                        <p className="text-xs text-[#6B5B3D] mb-1">Programadas</p>
+                                        <p className="text-lg font-bold text-[#3B4D36]">{scheduledHours}h</p>
+                                      </div>
+                                      <div className="px-4 py-3">
+                                        <p className="text-xs text-[#6B5B3D] mb-1">Cumplidas</p>
+                                        <p className="text-lg font-bold text-[#3B4D36]">{regularHours}h</p>
+                                      </div>
+                                      <div className="px-4 py-3">
+                                        <p className="text-xs text-[#6B5B3D] mb-1">Faltantes</p>
+                                        <p className={`text-lg font-bold ${missingHours > 0 ? 'text-red-600' : 'text-[#3B4D36]'}`}>{missingHours}h</p>
+                                      </div>
+                                      <div className="px-4 py-3">
+                                        <p className="text-xs text-[#6B5B3D] mb-1">Extras (×1.5)</p>
+                                        <p className={`text-lg font-bold ${overtimeHours > 0 ? 'text-orange-600' : 'text-[#3B4D36]'}`}>{overtimeHours}h</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                                   <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
                                     <div className="flex items-center justify-between mb-2">

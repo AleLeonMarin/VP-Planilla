@@ -87,8 +87,14 @@ export class NomineeController {
         });
       }
 
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      // Parse as local midnight to avoid UTC offset shifting the date (e.g. UTC-6 turning Feb 1 → Jan 31)
+      const parseLocalDate = (s: string) => {
+        const [y, m, d] = String(s).split('-').map(Number);
+        return new Date(y, m - 1, d, 0, 0, 0, 0);
+      };
+
+      const start = parseLocalDate(startDate);
+      const end   = parseLocalDate(endDate);
 
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
         return res.status(400).json({

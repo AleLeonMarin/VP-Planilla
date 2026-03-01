@@ -44,5 +44,6 @@ const controller = new ClockLogsController();
  *         description: Internal server error
  */
 router.get("/clock-logs", asyncHandler((req, res) => controller.getClockLogs(req, res)));
+router.post("/clock-logs/bulk", asyncHandler((req, res) => controller.bulkCreate(req, res)));
 
 export default router;

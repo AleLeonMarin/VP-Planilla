@@ -282,13 +282,21 @@ export default function AttendancePage() {
     }
   };
 
-  const findEmployeeByName = (rawName?: string) => {
+  const findEmployeeByName = (rawName?: string): Record<string, any> | null => {
     if (!rawName) return null;
     const normalized = normalizeName(rawName);
     if (!normalized) return null;
+    const list = employees as unknown as Array<Record<string, any>>;
     return (
-      employees.find((emp) => normalizeName(`${emp.employee_first_name} ${emp.employee_middle_name} ${emp.employee_last_name}`) === normalized) ||
-      employees.find((emp) => normalizeName(`${emp.employee_first_name} ${emp.employee_last_name}`) === normalized)
+      // Exact full-name match (e.g. "Test B Dos" → "test b dos")
+      list.find((emp) => normalizeName(String(emp.name || '')) === normalized) ||
+      // First word + last_name (handles omitted middle name: "Test Dos" → "Test B Dos")
+      list.find((emp) => {
+        const firstName = String(emp.name || '').split(/\s+/)[0] || '';
+        const lastName  = String(emp.last_name || '');
+        return firstName && lastName && normalizeName(`${firstName} ${lastName}`) === normalized;
+      }) ||
+      null
     );
   };
 
@@ -438,14 +446,14 @@ export default function AttendancePage() {
         console.log('✅ Timestamp:', timestamp.toISOString());
 
         // Buscar empleado
-        let matchedEmployeeId = employeeId;
+        let matchedEmployeeId: number | null = employeeId;
         let matchedEmployeeName = employeeName;
 
         if (!matchedEmployeeId && employeeName) {
           const match = findEmployeeByName(employeeName);
           if (match) {
-            matchedEmployeeId = match.employee_id;
-            matchedEmployeeName = `${match.employee_first_name} ${match.employee_middle_name} ${match.employee_last_name}`.replace(/\s+/g, ' ').trim();
+            matchedEmployeeId = (Number(match.id || match.employee_id) || null) as number | null;
+            matchedEmployeeName = String(match.name || employeeName || '');
             console.log('✅ Empleado encontrado por nombre:', matchedEmployeeName);
           } else {
             console.log('⚠️ Empleado no encontrado en base de datos');
@@ -463,7 +471,7 @@ export default function AttendancePage() {
           employee_id: matchedEmployeeId ?? null,
           employee_name: matchedEmployeeName || employeeName || `Empleado #${matchedEmployeeId}`,
           timestamp: timestamp.toISOString(),
-          log_type: typeValue?.toUpperCase() || 'IMPORTED',
+          log_type: String(typeValue || 'IMPORTED').toUpperCase(),
           remarks: undefined,
           version: 1
         };
@@ -516,8 +524,8 @@ export default function AttendancePage() {
       const byName = findEmployeeByName(log.employee_name);
       if (byName) {
         return {
-          id: byName.employee_id,
-          name: formatEmployeeName(byName)
+          id: byName.id ?? byName.employee_id,
+          name: String(byName.name || log.employee_name || '')
         };
       }
     }
@@ -653,11 +661,18 @@ export default function AttendancePage() {
         unmatchedEmployees: result.stats.unmatchedEmployees
       });
 
-      console.log('✅ Archivo importado exitosamente');
-      modal.showSuccess('Archivo importado', `Se importaron ${result.stats.validRows} marcas desde ${file.name}`);
+      // Guardar marcas en la base de datos para que la planilla pueda usarlas
+      try {
+        const saveResult = await ClockLogsService.bulkSave(result.logs);
+        console.log('✅ Marcas guardadas en BD:', saveResult.created);
+        modal.showSuccess('Archivo importado', `Se importaron ${result.stats.validRows} marcas desde ${file.name}. ${saveResult.created} guardadas en base de datos.`);
+      } catch (saveErr: any) {
+        console.error('⚠️ Marcas cargadas en vista pero no guardadas en BD:', saveErr);
+        modal.showSuccess('Archivo importado (solo vista)', `Se cargaron ${result.stats.validRows} marcas para visualización, pero no se pudieron guardar en BD: ${saveErr?.message || 'error desconocido'}`);
+      }
     } catch (err: unknown) {
       console.error('❌ ERROR EN IMPORTACIÓN:', err);
-      modal.showError('Error al importar', err?.message || 'No se pudo procesar el archivo');
+      modal.showError('Error al importar', (err instanceof Error ? err.message : null) || 'No se pudo procesar el archivo');
     } finally {
       setIsImporting(false);
       event.target.value = '';

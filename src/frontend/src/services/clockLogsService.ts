@@ -14,7 +14,7 @@ export const ClockLogsService = {
     if (!startDate || !endDate) return [];
 
     const params = new URLSearchParams({
-      startDate,
+      initDate: startDate,
       endDate
     });
 
@@ -25,9 +25,20 @@ export const ClockLogsService = {
       if (response?.data && Array.isArray(response.data)) return response.data as ClockLog[];
       return [];
     } catch (error: any) {
-      // Until the backend endpoint exists we swallow the error so the UI can work with Excel imports.
       console.warn('[ClockLogsService] No se pudieron obtener marcas del backend:', error?.message || error);
       return [];
+    }
+  },
+
+  async bulkSave(logs: ClockLog[]): Promise<{ created: number; skipped?: string[] }> {
+    if (!logs.length) return { created: 0 };
+
+    try {
+      const response = await http.post('/clock-logs/bulk', { logs });
+      return response ?? { created: 0 };
+    } catch (error: any) {
+      console.error('[ClockLogsService] Error al guardar marcas en BD:', error?.message || error);
+      throw error;
     }
   }
 };

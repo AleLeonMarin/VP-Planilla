@@ -338,6 +338,7 @@ export class NomineeService {
             inconsistencies: [],
             generalMessages: [`Error al procesar datos del empleado: ${error instanceof Error ? error.message : 'Error desconocido'}`],
             // Hour breakdown defaults
+            scheduledHours: PayrollUtils.calculateScheduledHours(startDate, endDate),
             regularHours: 0,
             overtimeHours: 0,
             weeklyRestHours: 0,
@@ -403,6 +404,7 @@ export class NomineeService {
       baseHourlySalary: 0,
       days: [],
       // Hour breakdown (populated after processDailyWork)
+      scheduledHours: 0,
       regularHours: 0,
       overtimeHours: 0,
       weeklyRestHours: 0,
@@ -493,6 +495,9 @@ export class NomineeService {
       
       employeePayroll.days = dailyWork.days;
       employeePayroll.inconsistencies = dailyWork.inconsistencies;
+
+      // Scheduled (required) hours for the period
+      employeePayroll.scheduledHours  = PayrollUtils.calculateScheduledHours(startDate, endDate);
 
       // Split hours into regular vs overtime (per-day basis)
       employeePayroll.regularHours    = PayrollUtils.calculateRegularHours(dailyWork.days);
