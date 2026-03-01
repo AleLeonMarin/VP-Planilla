@@ -121,3 +121,22 @@ export const deleteEmployee = async (id: string | number): Promise<void> => {
     throw new Error(error instanceof Error ? error.message : 'Failed to delete employee');
   }
 };
+
+/**
+ * Marca un empleado como despedido (soft-dismiss):
+ * fired = true, exit_date = fecha indicada (default hoy)
+ */
+export const fireEmployee = async (
+  id: string | number,
+  exitDate?: string
+): Promise<void> => {
+  try {
+    const payload = {
+      fired: true,
+      exit_date: exitDate ? new Date(exitDate).toISOString() : new Date().toISOString(),
+    };
+    await http.put(`/employee/${id}`, payload);
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Failed to dismiss employee');
+  }
+};

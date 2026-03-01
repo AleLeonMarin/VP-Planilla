@@ -5,7 +5,7 @@ import {
   EllipsisVerticalIcon,
   EyeIcon,
   PencilIcon,
-  TrashIcon
+  NoSymbolIcon
 } from '@heroicons/react/24/outline';
 import { Employee } from '@/types';
 import { formatSalary } from '@/utils/employeeUtils';
@@ -17,6 +17,8 @@ interface EmployeeTableProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onEmployeeAction: (action: string, employeeId: string) => void;
+  showFiredEmployees: boolean;
+  onToggleFiredEmployees: (show: boolean) => void;
 }
 
 /**
@@ -26,7 +28,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees, 
   searchTerm, 
   onSearchChange, 
-  onEmployeeAction 
+  onEmployeeAction,
+  showFiredEmployees,
+  onToggleFiredEmployees
 }) => {
   const {
     filterOpen,
@@ -59,80 +63,119 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         employeeData={getEmployeeProfileData(selectedEmployeeData) as any}
       />
 
-      <div className="bg-[#F9F1DC] rounded-lg">
+      <div className="bg-[#F2E8CF] rounded-xl border border-[#D2B48C] shadow-sm overflow-hidden">
         {/* Encabezado con búsqueda y filtros */}
-        <div className="p-3 bg-[#D5CDB3] rounded-t-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-medium text-[#5D4E37]">
-              Total de empleados: {employees.length} Empleados
+        <div className="px-5 py-4 bg-[#E7DCC1] border-b border-[#D2B48C] flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-bold text-[#5D4E37] uppercase tracking-widest">
+              Directorio
             </h2>
-            <div className="flex gap-2">
-              {/* Campo de búsqueda */}
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute w-4 h-4 text-[#3B4D36] transform -translate-y-1/2 left-3 top-1/2" />
-                <input
-                  type="text"
-                  placeholder="Buscar empleado"
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="py-2 pl-10 pr-4 border border-[#D2B48C] rounded-lg focus:outline-none bg-[#B5AF9A] text-[#3B4D36] placeholder-[#6B5B3D]"
-                />
-              </div>
-              {/* Botón de filtro */}
-              <button
-                onClick={() => setFilterOpen(!filterOpen)}
-                className="flex items-center gap-2 px-4 py-2 border border-[#D2B48C] rounded-lg hover:bg-[#B5AF9A] bg-[#B5AF9A] text-[#3B4D36] transition-colors"
-              >
-                <FunnelIcon className="w-4 h-4" />
-                Filtro
-              </button>
+            <p className="text-sm text-[#6B5B3D] mt-0.5">
+              {employees.length} {employees.length === 1 ? 'empleado registrado' : 'empleados registrados'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Campo de búsqueda */}
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute w-4 h-4 text-[#8B7355] transform -translate-y-1/2 left-3 top-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar empleado..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="py-2 pl-9 pr-4 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white text-[#3B4D36] text-sm placeholder-[#C5BFAA] w-52"
+              />
             </div>
+            {/* Botón de filtro */}
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 px-3 py-2 border border-[#D2B48C] rounded-lg hover:bg-[#D5CDB3] bg-white text-[#5D4E37] text-sm transition-colors"
+            >
+              <FunnelIcon className="w-4 h-4" />
+              Filtro
+            </button>
           </div>
         </div>
 
-        {/* Separador visual */}
-        <div className='border-b border-[#D2B48C] flex w-full h-1'></div>
+        {/* Panel de filtros */}
+        {filterOpen && (
+          <div className="px-5 py-4 bg-[#F5EDD5] border-b border-[#D2B48C]">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-[#5D4E37]">
+                Estado de empleado:
+              </label>
+              <select
+                value={showFiredEmployees ? "all" : "active"}
+                onChange={(e) => onToggleFiredEmployees(e.target.value === "all")}
+                className="px-3 py-2 border border-[#D2B48C] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white text-[#3B4D36] text-sm"
+              >
+                <option value="active">Solo activos</option>
+                <option value="all">Todos (incluir despedidos)</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Tabla de empleados */}
-        <div className="overflow-x-auto overflow-y-auto rounded-b-lg max-h-130">
+        <div className="overflow-x-auto overflow-y-auto max-h-130">
           <table className="w-full">
-            <thead>
+            <thead className="sticky top-0 bg-[#E7DCC1] z-10">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Posición
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
-                  Salario
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
+                  Salario <span className="text-[10px] font-normal text-[#8B7355] normal-case">x Hora</span>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
+                  Hora Extra <span className="text-[10px] font-normal text-[#8B7355] normal-case">(x1.5)</span>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-[#5D4E37]">
+                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#D2B48C]">
-              {employees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-[#EEEEDC] transition-colors">
-                  <td className="px-6 py-4 text-sm text-[#5D4E37]">
+            <tbody className="divide-y divide-[#E8DEC4]">
+              {employees.map((employee) => {
+                const isFired = employee.fired === true || employee.status === 'fired';
+                return (
+                <tr
+                  key={employee.id}
+                  className={`transition-colors ${
+                    isFired
+                      ? 'bg-red-50 opacity-70'
+                      : 'hover:bg-[#EEE8D4] bg-[#F9F3E3]'
+                  }`}
+                >
+                  <td className={`px-6 py-3.5 text-sm font-semibold ${isFired ? 'text-red-400 line-through' : 'text-[#3B4D36]'}`}>
                     {employee.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#6B5B3D]">
+                  <td className={`px-6 py-3.5 text-sm ${isFired ? 'text-red-300' : 'text-[#6B5B3D]'}`}>
                     {employee.position}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#5D4E37] font-medium">
+                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-[#3B4D36]'}`}>
                     {formatSalary(employee.salary)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-[#3B4D36]'}`}>
+                    {formatSalary(employee.salary * 1.5)}
+                  </td>
+                  <td className="px-6 py-3.5">
                     <span className={getStatusBadge(employee.status).className}>
                       {getStatusBadge(employee.status).text}
                     </span>
+                    {isFired && employee.exit_date && (
+                      <p className="mt-1 text-xs text-red-400">
+                        Salida: {new Date(employee.exit_date).toLocaleDateString('es-CR')}
+                      </p>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-3.5 text-sm text-gray-600">
                     <div className="relative">
                       <button
                         onClick={() => setSelectedEmployee(selectedEmployee === employee.id ? null : employee.id)}
@@ -142,7 +185,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         <EllipsisVerticalIcon className="w-4 h-4" />
                       </button>
                       {selectedEmployee === employee.id && (
-                        <div className="absolute right-0 z-10 w-48 mt-2 bg-[#F9F1DC] border rounded-md shadow-lg">
+                        <div className="absolute right-0 z-10 w-52 mt-2 bg-[#F9F1DC] border border-[#D2B48C] rounded-lg shadow-xl">
                           <div className="py-1">
                             <button
                               onClick={() => handleViewProfile(employee)}
@@ -151,28 +194,35 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                               <EyeIcon className="w-4 h-4" />
                               Ver Perfil
                             </button>
-                            <button
-                              onClick={() => handleEmployeeAction('edit', employee.id)}
-                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                              Editar Información
-                            </button>
-                            <div className="border-t border-[#E7DCC1] mx-2 my-1"></div>
-                            <button
-                              onClick={() => handleEmployeeAction('delete', employee.id)}
-                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-[#E7DCC1] transition-colors"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              Eliminar
-                            </button>
+                            {!isFired && (
+                              <button
+                                onClick={() => handleEmployeeAction('edit', employee.id)}
+                                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] hover:bg-[#E7DCC1] transition-colors"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                                Editar Información
+                              </button>
+                            )}
+                            {!isFired && (
+                              <>
+                                <div className="border-t border-[#E7DCC1] mx-2 my-1" />
+                                <button
+                                  onClick={() => handleEmployeeAction('dismiss', employee.id)}
+                                  className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <NoSymbolIcon className="w-4 h-4" />
+                                  Despedir empleado
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

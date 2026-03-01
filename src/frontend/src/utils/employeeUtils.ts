@@ -3,39 +3,53 @@
  */
 
 import { Employee, EmployeeStats } from '@/types';
-import { EMPLOYEE_STATUS, POSITIONS, DEFAULT_SALARY, STATUS_BADGE_CONFIG } from '@/constants';
+import { EMPLOYEE_STATUS, STATUS_BADGE_CONFIG } from '@/constants';
+
+type PositionLike = {
+  id: number | string;
+  name?: string | null;
+  base_salary?: number | null;
+};
 
 /**
  * Formatea un salario para mostrarlo al usuario
+ * El salario se muestra como precio por hora
  */
 export const formatSalary = (salary: number): string => {
-  return `₡${salary.toLocaleString()}`;
+  return `₡${salary.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 /**
  * Calcula las estadísticas de una lista de empleados
  */
 export const calculateEmployeeStats = (employees: Employee[]): EmployeeStats => {
+  const active = employees.filter(emp => emp.status !== EMPLOYEE_STATUS.FIRED);
   return {
-    total: employees.length,
-    onVacation: employees.filter(emp => emp.status === EMPLOYEE_STATUS.VACATION).length,
-    incompleteAssistance: employees.filter(emp => emp.status === EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE).length,
-    incapacityMaternity: employees.filter(emp => emp.status === EMPLOYEE_STATUS.INCAPACITY_MATERNITY).length,
+    total: active.length,
+    onVacation: active.filter(emp => emp.status === EMPLOYEE_STATUS.VACATION).length,
+    incompleteAssistance: active.filter(emp => emp.status === EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE).length,
+    incapacityMaternity: active.filter(emp => emp.status === EMPLOYEE_STATUS.INCAPACITY_MATERNITY).length,
   };
 };
 
 /**
  * Obtiene el nombre de una posición por su ID
  */
-export const getPositionName = (positionId: string): string => {
-  return POSITIONS[positionId as keyof typeof POSITIONS]?.name || 'Posición no especificada';
+export const getPositionName = (positionId: string, positions?: PositionLike[] | null): string => {
+  if (!positions || !positionId) return 'Posición no especificada';
+  const match = positions.find((p) => String(p.id) === String(positionId));
+  return (match?.name || '').trim() || 'Posición no especificada';
 };
 
 /**
  * Obtiene el salario de una posición por su ID
  */
-export const getPositionSalary = (positionId: string): number => {
-  return POSITIONS[positionId as keyof typeof POSITIONS]?.salary || DEFAULT_SALARY;
+export const getPositionSalary = (positionId: string, positions?: PositionLike[] | null): number => {
+  if (!positions || !positionId) return 0;
+  const match = positions.find((p) => String(p.id) === String(positionId));
+  const rawSalary = match?.base_salary;
+  if (rawSalary === null || rawSalary === undefined) return 0;
+  return typeof rawSalary === 'number' ? rawSalary : Number(rawSalary) || 0;
 };
 
 /**

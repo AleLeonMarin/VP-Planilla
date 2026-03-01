@@ -7,11 +7,13 @@ import {
   getPositionSalary
 } from '@/utils/employeeUtils'
 import { EMPLOYEE_STATUS } from '@/constants';
+import { usePositions } from '@/hooks/usePositions';
 import { 
   getEmployees as apiGetEmployees, 
   createEmployee as apiCreateEmployee,
   getEmployeeById,
-  updateEmployee 
+  updateEmployee,
+  fireEmployee
 } from '@/services/employeeService';
 
 const normalizePart = (value?: string) =>
@@ -73,14 +75,28 @@ const normalizeEmployeeForEdit = (raw: any) => {
  * Hook para manejar la lógica de la lista de empleados
  */
 const useEmployeeList = () => {
+  const {
+    data: positions,
+    isLoading: positionsLoading,
+    error: positionsError,
+    refetch: refreshPositions,
+    create: createPosition,
+    update: updatePosition,
+    remove: deletePosition
+  } = usePositions();
+
+  const [rawEmployees, setRawEmployees] = useState<any[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFiredEmployees, setShowFiredEmployees] = useState(false);
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [showEditEmployeeModal, setShowEditEmployeeModal] = useState(false);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
   const [editingEmployeeData, setEditingEmployeeData] = useState<any | null>(null);
   const [isLoadingEmployee, setIsLoadingEmployee] = useState(false);
+  const [showDismissModal, setShowDismissModal] = useState(false);
+  const [dismissingEmployee, setDismissingEmployee] = useState<{ id: string; name: string } | null>(null);
   const [stats, setStats] = useState<EmployeeStats>({
     total: 0,
     onVacation: 0,
@@ -88,56 +104,60 @@ const useEmployeeList = () => {
     incapacityMaternity: 0
   });
 
+  const mapApiEmployees = (apiEmployees: any[]): Employee[] => {
+    return (apiEmployees as any[]).map((e: any) => {
+      const rawStatus = String(e.status ?? e.employee_status ?? 'active');
+      let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
+      // Map common single-letter or legacy codes to normalized constants
+      if (
+        rawStatus === 'A' ||
+        rawStatus.toLowerCase() === 'active' ||
+        rawStatus === 'Al día'
+      ) {
+        normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
+      } else if (
+        rawStatus === 'V' ||
+        rawStatus.toLowerCase() === 'vacation' ||
+        rawStatus === 'Vacaciones'
+      ) {
+        normalizedStatus = EMPLOYEE_STATUS.VACATION;
+      } else if (
+        rawStatus === 'I' ||
+        rawStatus.toLowerCase() === 'incomplete' ||
+        rawStatus === 'Asistencia incompleta'
+      ) {
+        normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
+      } else if (rawStatus.toLowerCase().includes('incap')) {
+        normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
+      }
+
+      const positionId = String(e.position_id ?? e.employee_position_id ?? '');
+      const isFired = e.fired === true || e.employee_fired === true;
+
+      let resolvedStatus: string = isFired ? EMPLOYEE_STATUS.FIRED : normalizedStatus;
+
+      return {
+        id: String(e.employee_id ?? e.id),
+        name: buildEmployeeName(e),
+        position: getPositionName(positionId, positions),
+        salary: getPositionSalary(positionId, positions),
+        status: resolvedStatus as any,
+        fired: isFired,
+        exit_date: e.employee_exit_date ?? e.exit_date ?? null,
+      } as Employee;
+    });
+  };
+
   // Cargar empleados desde el backend
   useEffect(() => {
     const loadEmployees = async () => {
       try {
         const apiEmployees = await apiGetEmployees();
-        // Mapear modelo del backend al frontend Employee
-        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => {
-          const rawStatus = String(e.status ?? e.employee_status ?? 'active');
-          let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
-          // Map common single-letter or legacy codes to normalized constants
-          if (
-            rawStatus === 'A' ||
-            rawStatus.toLowerCase() === 'active' ||
-            rawStatus === 'Al día'
-          ) {
-            normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
-          } else if (
-            rawStatus === 'V' ||
-            rawStatus.toLowerCase() === 'vacation' ||
-            rawStatus === 'Vacaciones'
-          ) {
-            normalizedStatus = EMPLOYEE_STATUS.VACATION;
-          } else if (
-            rawStatus === 'I' ||
-            rawStatus.toLowerCase() === 'incomplete' ||
-            rawStatus === 'Asistencia incompleta'
-          ) {
-            normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
-          } else if (rawStatus.toLowerCase().includes('incap')) {
-            normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
-          }
-
-          return {
-            id: String(e.employee_id ?? e.id),
-            name: buildEmployeeName(e),
-            position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
-            salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
-            status: normalizedStatus as any
-          } as Employee;
-        });
-
-        setEmployees(mapped);
-        setFilteredEmployees(mapped);
-        updateStats(mapped);
+        setRawEmployees(apiEmployees as any[]);
       } catch (error) {
         console.error('Error loading employees from API', error);
         // Si falla, dejar la lista vacía (o podríamos mantener datos locales)
-        setEmployees([]);
-        setFilteredEmployees([]);
-        updateStats([]);
+        setRawEmployees([]);
       }
     };
 
@@ -147,11 +167,24 @@ const useEmployeeList = () => {
   // (we'll create a named function below to call from outside via returned object)
   }, []);
 
-  // Filtrar empleados basado en el término de búsqueda
   useEffect(() => {
-    const filtered = filterEmployees(employees, searchTerm);
+    const mapped = mapApiEmployees(rawEmployees);
+    setEmployees(mapped);
+    setFilteredEmployees(mapped);
+    updateStats(mapped);
+  }, [rawEmployees, positions]);
+
+  // Filtrar empleados basado en el término de búsqueda y estado de despedidos
+  useEffect(() => {
+    let filtered = filterEmployees(employees, searchTerm);
+    
+    // Filtrar empleados despedidos si está desactivado
+    if (!showFiredEmployees) {
+      filtered = filtered.filter(emp => !emp.fired && emp.status !== 'fired');
+    }
+    
     setFilteredEmployees(filtered);
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, showFiredEmployees]);
 
   /**
    * Actualiza las estadísticas de empleados
@@ -181,10 +214,17 @@ const useEmployeeList = () => {
       } finally {
         setIsLoadingEmployee(false);
       }
+    } else if (action === 'dismiss') {
+      const emp = rawEmployees.find(
+        (e: any) => String(e.employee_id ?? e.id) === employeeId
+      );
+      const empName = emp ? buildEmployeeName(emp) : 'este empleado';
+      setDismissingEmployee({ id: employeeId, name: empName });
+      setShowDismissModal(true);
     } else if (action === 'delete') {
-      // TODO: Implementar eliminación de empleado
+      // Kept for backward compatibility — dismiss replaces this in the UI
       console.log(`Eliminar empleado: ${employeeId}`);
-      alert('La funcionalidad de eliminar empleado no está implementada aún.');
+      alert('Use la opción "Despedir" para desactivar un empleado.');
     } else {
       console.log(`Acción: ${action} para empleado: ${employeeId}`);
     }
@@ -216,44 +256,7 @@ const useEmployeeList = () => {
       
       // Recargar lista de empleados
       const apiEmployees = await apiGetEmployees();
-      const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => {
-        const rawStatus = String(e.status ?? e.employee_status ?? 'active');
-        let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
-
-        if (
-          rawStatus === 'A' ||
-          rawStatus.toLowerCase() === 'active' ||
-          rawStatus === 'Al día'
-        ) {
-          normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
-        } else if (
-          rawStatus === 'V' ||
-          rawStatus.toLowerCase() === 'vacation' ||
-          rawStatus === 'Vacaciones'
-        ) {
-          normalizedStatus = EMPLOYEE_STATUS.VACATION;
-        } else if (
-          rawStatus === 'I' ||
-          rawStatus.toLowerCase() === 'incomplete' ||
-          rawStatus === 'Asistencia incompleta'
-        ) {
-          normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
-        } else if (rawStatus.toLowerCase().includes('incap')) {
-          normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
-        }
-
-        return {
-          id: String(e.employee_id ?? e.id),
-          name: buildEmployeeName(e),
-          position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
-          salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
-          status: normalizedStatus as any
-        } as Employee;
-      });
-
-      setEmployees(mapped);
-      setFilteredEmployees(mapped);
-      updateStats(mapped);
+      setRawEmployees(apiEmployees as any[]);
       
       alert('Empleado actualizado correctamente');
     } catch (error) {
@@ -261,6 +264,28 @@ const useEmployeeList = () => {
       alert('No se pudo actualizar el empleado. Revisa la consola para más detalles.');
       throw error;
     }
+  };
+
+  /**
+   * Confirma el despido: llama al servicio y actualiza la lista local
+   */
+  const handleConfirmDismiss = async (exitDate: string) => {
+    if (!dismissingEmployee) return;
+    try {
+      await fireEmployee(dismissingEmployee.id, exitDate);
+      const apiEmployees = await apiGetEmployees();
+      setRawEmployees(apiEmployees as any[]);
+      setShowDismissModal(false);
+      setDismissingEmployee(null);
+    } catch (error) {
+      console.error('Error dismissing employee', error);
+      alert('No se pudo despedir al empleado. Intenta de nuevo.');
+    }
+  };
+
+  const closeDismissModal = () => {
+    setShowDismissModal(false);
+    setDismissingEmployee(null);
   };
 
   /**
@@ -277,49 +302,7 @@ const useEmployeeList = () => {
     try {
       const created = await apiCreateEmployee(employeeData);
       const createdObj = created as any;
-
-      const rawStatus = String(createdObj.status ?? createdObj.employee_status ?? 'active');
-      let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
-
-      if (
-        rawStatus === 'A' ||
-        rawStatus.toLowerCase() === 'active' ||
-        rawStatus === 'Al día'
-      ) {
-        normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
-      } else if (
-        rawStatus === 'V' ||
-        rawStatus.toLowerCase() === 'vacation' ||
-        rawStatus === 'Vacaciones'
-      ) {
-        normalizedStatus = EMPLOYEE_STATUS.VACATION;
-      } else if (
-        rawStatus === 'I' ||
-        rawStatus.toLowerCase() === 'incomplete' ||
-        rawStatus === 'Asistencia incompleta'
-      ) {
-        normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
-      } else if (rawStatus.toLowerCase().includes('incap')) {
-        normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
-      }
-
-      const newEmployee: Employee = {
-        id: String(createdObj.employee_id ?? createdObj.id),
-        name: buildEmployeeName({
-          employee_first_name: employeeData.employee_first_name,
-          employee_middle_name: employeeData.employee_middle_name,
-          employee_last_name: employeeData.employee_last_name,
-          name: createdObj.name
-        }),
-        position: getPositionName(String(createdObj.position_id ?? createdObj.employee_position_id ?? '')),
-        salary: getPositionSalary(String(createdObj.position_id ?? createdObj.employee_position_id ?? '')),
-        status: normalizedStatus as any
-      };
-
-      const updatedEmployees = [...employees, newEmployee];
-      setEmployees(updatedEmployees);
-      setFilteredEmployees(updatedEmployees);
-      updateStats(updatedEmployees);
+      setRawEmployees((prev) => [...prev, createdObj]);
     } catch (error) {
       console.error('Error creating employee', error);
       alert('No se pudo guardar el empleado. Revisa la consola para más detalles.');
@@ -349,14 +332,27 @@ const useEmployeeList = () => {
     employees: filteredEmployees,
     searchTerm,
     stats,
+    positions,
+    positionsLoading,
+    positionsError,
     showAddEmployeeModal,
     showEditEmployeeModal,
     editingEmployeeData,
     isLoadingEmployee,
+    showDismissModal,
+    dismissingEmployee,
+    showFiredEmployees,
+    setShowFiredEmployees,
     handleEmployeeAction,
     handleSearchChange,
     handleAddEmployee,
     handleUpdateEmployee,
+    handleConfirmDismiss,
+    closeDismissModal,
+    createPosition,
+    updatePosition,
+    deletePosition,
+    refreshPositions,
     openAddEmployeeModal,
     closeAddEmployeeModal,
     closeEditEmployeeModal
@@ -365,26 +361,7 @@ const useEmployeeList = () => {
     refreshEmployees: async () => {
       try {
         const apiEmployees = await apiGetEmployees();
-        const mapped: Employee[] = (apiEmployees as any[]).map((e: any) => {
-          const rawStatus = String(e.status ?? e.employee_status ?? 'active');
-          let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
-          if (rawStatus === 'A' || rawStatus.toLowerCase() === 'active' || rawStatus === 'Al día') normalizedStatus = EMPLOYEE_STATUS.ACTIVE;
-          else if (rawStatus === 'V' || rawStatus.toLowerCase() === 'vacation' || rawStatus === 'Vacaciones') normalizedStatus = EMPLOYEE_STATUS.VACATION;
-          else if (rawStatus === 'I' || rawStatus.toLowerCase() === 'incomplete' || rawStatus === 'Asistencia incompleta') normalizedStatus = EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE;
-          else if (rawStatus.toLowerCase().includes('incap')) normalizedStatus = EMPLOYEE_STATUS.INCAPACITY_MATERNITY;
-
-          return {
-            id: String(e.employee_id ?? e.id),
-            name: [e.name, e.middle_name, e.last_name].filter(Boolean).join(' '),
-            position: getPositionName(String(e.position_id ?? e.employee_position_id ?? '')),
-            salary: getPositionSalary(String(e.position_id ?? e.employee_position_id ?? '')),
-            status: normalizedStatus as any
-          } as Employee;
-        });
-
-        setEmployees(mapped);
-        setFilteredEmployees(mapped);
-        updateStats(mapped);
+        setRawEmployees(apiEmployees as any[]);
       } catch (error) {
         console.error('Error refreshing employees', error);
       }

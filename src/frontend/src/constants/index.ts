@@ -8,38 +8,32 @@ export const EMPLOYEE_STATUS = {
   VACATION: 'vacation' as const,
   INCOMPLETE_ASSISTANCE: 'incomplete_assistance' as const,
   INCAPACITY_MATERNITY: 'incapacity_maternity' as const,
+  FIRED: 'fired' as const,
 } as const;
 
 // Configuración de badges de estado
 export const STATUS_BADGE_CONFIG = {
   [EMPLOYEE_STATUS.ACTIVE]: {
     text: 'Al día',
-    className: 'px-2 py-1 text-xs text-green-800 bg-green-100 rounded-full'
+    className: 'px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full'
   },
   [EMPLOYEE_STATUS.VACATION]: {
     text: 'Vacaciones',
-    className: 'px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full'
+    className: 'px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full'
   },
   [EMPLOYEE_STATUS.INCOMPLETE_ASSISTANCE]: {
     text: 'Asistencia incompleta',
-    className: 'px-2 py-1 text-xs text-yellow-800 bg-yellow-100 rounded-full'
+    className: 'px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full'
   },
   [EMPLOYEE_STATUS.INCAPACITY_MATERNITY]: {
     text: 'Incapacidad/maternidad',
-    className: 'px-2 py-1 text-xs text-purple-800 bg-purple-100 rounded-full'
-  }
+    className: 'px-2 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full'
+  },
+  [EMPLOYEE_STATUS.FIRED]: {
+    text: 'Despedido(a)',
+    className: 'px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full'
+  },
 } as const;
-
-// Posiciones disponibles
-export const POSITIONS = {
-  '1': { name: 'Salonero', salary: 320000 },
-  '2': { name: 'Cocinero(a)', salary: 320000 },
-  '3': { name: 'Ayudante de cocina', salary: 320000 },
-  '4': { name: 'Barista', salary: 320000 },
-} as const;
-
-// Salario por defecto
-export const DEFAULT_SALARY = 320000;
 
 // Mensajes de la aplicación
 export const MESSAGES = {

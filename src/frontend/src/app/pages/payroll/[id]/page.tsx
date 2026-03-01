@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { PayrollService, Payroll, PayrollEmployee } from '@/services/payrollService';
 import { formatCRC } from '@/utils/number';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { useModal } from '@/hooks/useModal';
 
 export default function PayrollDetailPage() {
@@ -93,9 +93,13 @@ export default function PayrollDetailPage() {
     setExpandedRows(newExpanded);
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!payroll || employees.length === 0) return;
 
+    const workbook = new ExcelJS.Workbook();
+
+    // Hoja 1: Resumen
+    const ws1 = workbook.addWorksheet('Resumen');
     const summaryData = [
       ['PLANILLA DE SALARIOS'],
       ['Planilla #:', payroll.id],
@@ -109,7 +113,11 @@ export default function PayrollDetailPage() {
       ['Total deducciones:', formatCRC(totals.totalDeductions)],
       ['Total salario neto:', formatCRC(totals.netSalary)],
     ];
+    ws1.addRows(summaryData);
+    ws1.columns = [{ width: 25 }, { width: 30 }];
 
+    // Hoja 2: Empleados
+    const ws2 = workbook.addWorksheet('Empleados');
     const employeeHeaders = [
       'ID',
       'Nombre',
@@ -120,7 +128,7 @@ export default function PayrollDetailPage() {
       'Salario Neto'
     ];
 
-    const employeeRows = employees.map((e: any) => [
+    const employeeRows = employees.map((e) => [
       e.id,
       e.employee_name,
       e.employee_identification,
@@ -130,28 +138,28 @@ export default function PayrollDetailPage() {
       e.net_salary.toFixed(2)
     ]);
 
-    const employeeData = [employeeHeaders, ...employeeRows];
-
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-    const ws2 = XLSX.utils.aoa_to_sheet(employeeData);
-
-    ws1['!cols'] = [{ wch: 25 }, { wch: 30 }];
-    ws2['!cols'] = [
-      { wch: 10 },
-      { wch: 30 },
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 }
+    ws2.addRow(employeeHeaders);
+    ws2.addRows(employeeRows);
+    ws2.columns = [
+      { width: 10 },
+      { width: 30 },
+      { width: 15 },
+      { width: 20 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 }
     ];
 
-    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
-    XLSX.utils.book_append_sheet(wb, ws2, 'Empleados');
-
+    // Generar archivo y descargar
     const fileName = `Planilla_${payroll.id}_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const formatCurrency = (value: number) => formatCRC(value);

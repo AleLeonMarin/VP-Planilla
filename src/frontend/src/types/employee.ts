@@ -8,13 +8,16 @@ export interface Employee {
   position: string;
   salary: number;
   status: EmployeeStatus;
+  fired?: boolean;
+  exit_date?: string | null;
 }
 
 export type EmployeeStatus = 
   | 'active'
   | 'vacation'
   | 'incomplete_assistance'
-  | 'incapacity_maternity';
+  | 'incapacity_maternity'
+  | 'fired';
 
 export interface EmployeeFormData {
   employee_first_name: string;

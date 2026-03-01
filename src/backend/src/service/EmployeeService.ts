@@ -120,9 +120,9 @@ export class EmployeeService {
             data: {
                 employee_first_name: data.name,
                 employee_last_name: data.last_name,
-                employee_middle_name: data.middle_name,
-                employee_national_id: data.national_id,
-                employee_social_code: data.social_code,
+                employee_middle_name: data.middle_name || '',
+                employee_national_id: data.national_id || '',
+                employee_social_code: data.social_code || '',
                 employee_email: data.email,
                 employee_hire_date: data.hire_date,
                 employee_exit_date: data.exit_date || null,

@@ -4,7 +4,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useModal } from '@/hooks/useModal';
 import { ClockLogsService, ClockLog } from '@/services/clockLogsService';
 import { getEmployees } from '@/services/employeeService';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import {
   ClockIcon,
   CalendarIcon,
@@ -74,7 +74,7 @@ const normalizeName = (value?: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const excelDateToJsDate = (value: any): Date | null => {
+const excelDateToJsDate = (value: unknown): Date | null => {
   if (value == null || value === '') return null;
 
   if (value instanceof Date) {
@@ -82,9 +82,12 @@ const excelDateToJsDate = (value: any): Date | null => {
   }
 
   if (typeof value === 'number') {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    if (!parsed) return null;
-    return new Date(parsed.y, parsed.m - 1, parsed.d, parsed.H, parsed.M, parsed.S);
+    // Excel stores dates as number of days since 1900-01-01 (with 1900-01-01 = 1)
+    const excelEpoch = new Date(1900, 0, 1);
+    const daysOffset = value - 1; // Excel counts from 1, not 0
+    const msPerDay = 86400000;
+    const date = new Date(excelEpoch.getTime() + daysOffset * msPerDay);
+    return date;
   }
 
   const asString = String(value).trim();
@@ -96,7 +99,7 @@ const excelDateToJsDate = (value: any): Date | null => {
   return null;
 };
 
-const buildDateTimeFromParts = (dateValue: any, timeValue: any): Date | null => {
+const buildDateTimeFromParts = (dateValue: unknown, timeValue: unknown): Date | null => {
   console.log('buildDateTimeFromParts - dateValue:', dateValue, 'tipo:', typeof dateValue);
   console.log('buildDateTimeFromParts - timeValue:', timeValue, 'tipo:', typeof timeValue);
   
@@ -166,12 +169,13 @@ const buildDateTimeFromParts = (dateValue: any, timeValue: any): Date | null => 
 
   if (typeof timeValue === 'number') {
     try {
-      const parsed = XLSX.SSF.parse_date_code(timeValue);
-      if (!parsed) {
-        console.log('  ⚠️ No se pudo parsear hora como número, retornando fecha base');
-        return datePart;
-      }
-      datePart.setHours(parsed.H, parsed.M, parsed.S || 0, 0);
+      // Excel time is fraction of a day (0.5 = 12:00)
+      const totalSeconds = Math.round(timeValue * 86400);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      datePart.setHours(hours, minutes, seconds, 0);
       if (isNaN(datePart.getTime())) {
         console.log('  ❌ Fecha inválida después de setHours (number)');
         return null;
@@ -272,7 +276,7 @@ export default function AttendancePage() {
   const loadEmployees = async () => {
     try {
       const emps = await getEmployees();
-      setEmployees(emps as any);
+      setEmployees(emps as unknown as Employee[]);
     } catch (error) {
       console.error('Error loading employees:', error);
     }
@@ -293,21 +297,31 @@ export default function AttendancePage() {
       const buffer = await file.arrayBuffer();
       console.log('1. Buffer creado, tamaño:', buffer.byteLength);
       
-      const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
-      console.log('2. Workbook cargado, hojas:', workbook.SheetNames);
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer);
+      console.log('2. Workbook cargado, hojas:', workbook.worksheets.map(ws => ws.name));
       
-      const firstSheetName = workbook.SheetNames[0];
-      if (!firstSheetName) throw new Error('El archivo no contiene hojas válidas');
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet) throw new Error('El archivo no contiene hojas válidas');
+      
+      console.log('3. Hoja seleccionada:', worksheet.name);
 
-      const worksheet = workbook.Sheets[firstSheetName];
-      console.log('3. Hoja seleccionada:', firstSheetName);
-
-      // Convertir a JSON con todas las opciones para ver qué hay
-      const allData = XLSX.utils.sheet_to_json(worksheet, { 
-        header: 1, 
-        defval: '', 
-        blankrows: true,
-        raw: false 
+      // Convertir worksheet a array de arrays
+      const allData: unknown[][] = [];
+      worksheet.eachRow({ includeEmpty: true }, (row) => {
+        const rowData: unknown[] = [];
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          // ExcelJS maneja automáticamente las fechas
+          let value = cell.value;
+          
+          // Si es una fórmula, obtener el resultado
+          if (cell.formula) {
+            value = cell.result || cell.value;
+          }
+          
+          rowData.push(value);
+        });
+        allData.push(rowData);
       });
       
       console.log('4. Total filas (incluyendo vacías):', allData.length);
@@ -317,7 +331,7 @@ export default function AttendancePage() {
       });
 
       // Filtrar filas vacías
-      const rows = allData.filter((row: any) => 
+      const rows = allData.filter((row: unknown[]) => 
         Array.isArray(row) && row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
       );
       
@@ -330,7 +344,7 @@ export default function AttendancePage() {
 
       // Buscar encabezados (primera fila que tenga contenido)
       let headerRowIndex = 0;
-      const rawHeaders = rows[headerRowIndex].map((cell: any) => String(cell || '').trim());
+      const rawHeaders = (rows[headerRowIndex] as unknown[]).map((cell: unknown) => String(cell || '').trim());
       
       console.log('7. Encabezados encontrados en fila 0:', rawHeaders);
       
@@ -357,19 +371,19 @@ export default function AttendancePage() {
       
       console.log('8. Procesando', dataRows.length, 'filas de datos desde fila', startRow);
 
-      dataRows.forEach((row: any[], rowIndex: number) => {
+      dataRows.forEach((row: unknown[], rowIndex: number) => {
         console.log(`\n--- Procesando fila ${rowIndex + startRow} ---`);
         console.log('Datos:', row);
 
         // Intentar diferentes posiciones para los datos comunes
         let employeeName = '';
-        let employeeId: any = null;
-        let dateValue: any = null;
-        let timeValue: any = null;
-        let typeValue: any = null;
+        let employeeId: number | null = null;
+        let dateValue: unknown = null;
+        let timeValue: unknown = null;
+        let typeValue: string | null = null;
 
         // Estrategia: buscar en todas las columnas
-        row.forEach((cell: any, colIndex: number) => {
+        row.forEach((cell: unknown, colIndex: number) => {
           const cellStr = String(cell || '').trim();
           if (!cellStr) return;
 
@@ -641,7 +655,7 @@ export default function AttendancePage() {
 
       console.log('✅ Archivo importado exitosamente');
       modal.showSuccess('Archivo importado', `Se importaron ${result.stats.validRows} marcas desde ${file.name}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ ERROR EN IMPORTACIÓN:', err);
       modal.showError('Error al importar', err?.message || 'No se pudo procesar el archivo');
     } finally {
@@ -692,8 +706,8 @@ export default function AttendancePage() {
           ? `Se encontraron ${processed.length} registros en el archivo importado`
           : `Se encontraron ${processed.length} registros desde la API`
       );
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al obtener registros');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al obtener registros');
     } finally {
       setIsLoading(false);
     }
