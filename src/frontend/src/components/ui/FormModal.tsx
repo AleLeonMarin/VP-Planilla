@@ -1,37 +1,39 @@
 "use client";
 
 import React from 'react';
-import { useForm, SubmitHandler, UseFormReturn } from 'react-hook-form';
+import { useForm, SubmitHandler, UseFormReturn, Resolver, FieldValues, DefaultValues } from 'react-hook-form';
 
-interface FormModalProps<T> {
+interface FormModalProps<T extends FieldValues> {
   title?: string;
   open: boolean;
   initialValues?: Partial<T>;
   onClose: () => void;
   onSubmit: (values: Partial<T>) => Promise<void> | void;
-  children: React.ReactNode | ((methods: UseFormReturn<any>) => React.ReactNode);
-  resolver?: any; // optional resolver (e.g., zodResolver)
+  children: React.ReactNode | ((methods: UseFormReturn<Partial<T>>) => React.ReactNode);
+  resolver?: Resolver<Partial<T>>;
 }
 
-export default function FormModal<T>({ title, open, initialValues, onClose, onSubmit, children, resolver }: FormModalProps<T>) {
-  const methods = useForm<any>({ defaultValues: initialValues || {}, resolver });
+export default function FormModal<T extends FieldValues>({ title, open, initialValues, onClose, onSubmit, children, resolver }: FormModalProps<T>) {
+  const methods = useForm<Partial<T>>({
+    defaultValues: (initialValues ?? {}) as DefaultValues<Partial<T>>,
+    resolver
+  });
   const { handleSubmit, reset } = methods;
 
   React.useEffect(() => {
-    reset(initialValues || {});
+    reset((initialValues ?? {}) as DefaultValues<Partial<T>>);
   }, [initialValues, reset]);
 
   if (!open) return null;
 
-  const submit: SubmitHandler<any> = async (data) => {
+  const submit: SubmitHandler<Partial<T>> = async (data) => {
     await onSubmit(data);
     onClose();
   };
 
   const renderChildren = () => {
     if (typeof children === 'function') {
-      // @ts-ignore
-      return (children as (m: UseFormReturn<any>) => React.ReactNode)(methods);
+      return children(methods);
     }
     return children;
   };

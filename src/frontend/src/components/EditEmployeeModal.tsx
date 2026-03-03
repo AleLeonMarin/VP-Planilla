@@ -4,14 +4,31 @@ import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { employeeSchema, EmployeeSchemaType } from '@/schemas/employee';
+import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { Position } from '@/services/positionsService';
+
+interface RawEmployeeData {
+  employee_first_name?: string;
+  name?: string;
+  employee_middle_name?: string;
+  middle_name?: string;
+  employee_last_name?: string;
+  last_name?: string;
+  national_id?: string;
+  social_code?: string;
+  email?: string;
+  phone?: string;
+  position_id?: string | number;
+  hire_date?: string;
+  gender?: string;
+  required_hours_biweekly?: string;
+}
 
 interface EditEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (employeeData: any) => Promise<void> | void;
-  employeeData?: any;
+  onSubmit: (employeeData: EmployeeSchemaType) => Promise<void> | void;
+  employeeData?: RawEmployeeData;
   isLoading?: boolean;
   positions?: Position[] | null;
   positionsLoading?: boolean;
@@ -33,7 +50,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     salary: typeof position.base_salary === 'number' ? position.base_salary : Number(position.base_salary) || 0
   }));
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<any>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
     resolver: zodResolver(employeeSchema),
   });
 
@@ -72,9 +89,8 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     exit: { scale: 0.9, opacity: 0, y: 30, transition: { duration: 0.2 } }
   };
 
-  const onFormSubmit = async (data: any) => {
-    const validated = data as EmployeeSchemaType;
-    await onSubmit(validated);
+  const onFormSubmit = async (data: EmployeeSchemaType) => {
+    await onSubmit(data);
     onClose();
   };
 

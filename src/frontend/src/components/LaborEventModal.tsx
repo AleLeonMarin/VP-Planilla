@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion, AnimatePresence, useDragControls, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { LaborEventFormData, EmployeeLaborEvent } from '@/types/laborEvent';
 import { Employee } from '@/types/employee';
 
@@ -50,7 +50,6 @@ const LaborEventModal: React.FC<Props> = ({
     handleSubmit,
     watch,
     reset,
-    setValue,
     formState: { errors, isSubmitting }
   } = useForm<FormData>({
     resolver: zodResolver(laborEventSchema),
@@ -104,8 +103,8 @@ const LaborEventModal: React.FC<Props> = ({
       const endIsoLocal = event.end_date ? toLocalInput(new Date(event.end_date)) : '';
       
       reset({
-        name: (event as any).labor_event_name || '',
-        description: (event as any).labor_event_description || '',
+        name: event.labor_event_name || '',
+        description: event.labor_event_description || '',
         employee_id: event.employee_id || 0,
         start_date: startIsoLocal,
         end_date: endIsoLocal,
@@ -164,7 +163,7 @@ const LaborEventModal: React.FC<Props> = ({
         end_date: watchedValues.end_date || undefined,
       });
     }
-  }, [watchedValues.name, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen]);
+  }, [watchedValues.name, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen, onPreviewChange]);
 
   const onFormSubmit = async (data: FormData) => {
     try {
@@ -179,8 +178,7 @@ const LaborEventModal: React.FC<Props> = ({
 
       // If editing an existing event, include the event ID and labor_event_id
       if (event) {
-        (payload as any).id = event.id;
-        (payload as any).labor_event_id = event.labor_event_id;
+        Object.assign(payload, { id: event.id, labor_event_id: event.labor_event_id });
       }
 
       await onSubmit(payload);
@@ -282,7 +280,7 @@ const LaborEventModal: React.FC<Props> = ({
               style={{
                 perspective: '1000px',
                 transformStyle: 'preserve-3d'
-              }}
+              } as React.CSSProperties}
             >
                 <motion.div 
                   className="bg-white rounded-xl shadow-2xl border border-[#E0D6B7] overflow-hidden"

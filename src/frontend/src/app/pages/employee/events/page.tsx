@@ -16,7 +16,7 @@ const LaborEventsPage: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [previewEvent, setPreviewEvent] = useState<Partial<EmployeeLaborEvent> | null>(null);
   const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
-  const { events, isLoading, createEvent, updateEvent, deleteEvent, assignEventToEmployee, refreshEvents, deleteAssignment } = useLaborEvents();
+  const { events, isLoading, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
   const { showError, showSuccess } = useModal();
 
@@ -75,7 +75,7 @@ const LaborEventsPage: React.FC = () => {
       }
       setShowEventModal(false);
       setModalInitialDates(null);
-    } catch (error) {
+    } catch {
       showError('Error', 'No se pudo guardar el evento. Por favor intente nuevamente.');
     }
   };
@@ -163,10 +163,10 @@ const LaborEventsPage: React.FC = () => {
                         if (!evStart || !visibleRange) return false;
                         // event intersects visible range
                         return !(evEnd! < visibleRange.start || evStart > visibleRange.end);
-                      } catch (e) { return false; }
+                      } catch { return false; }
                     }).slice(0, 10).map((event) => {
                       const employee = employees.find(e => String(e.id) === String(event.employee_id));
-                      const eventName = (event as any).labor_event_name || `Evento #${event.labor_event_id}`;
+                      const eventName = event.labor_event_name || `Evento #${event.labor_event_id}`;
                       const startDate = new Date(event.start_date);
                       const endDate = event.end_date ? new Date(event.end_date) : null;
                       
@@ -219,9 +219,9 @@ const LaborEventsPage: React.FC = () => {
                           </div>
                           
                           {/* Descripción si existe */}
-                          {(event as any).labor_event_description && (
+                          {event.labor_event_description && (
                             <p className="text-xs text-[#8B8B8B] mt-1 line-clamp-2">
-                              {(event as any).labor_event_description}
+                              {event.labor_event_description}
                             </p>
                           )}
                         </div>

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import FormModal from '@/components/ui/ConfirmDialog';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useVacations } from '@/hooks/useVacations';
 import { Vacation } from '@/services/vacationsService';
@@ -34,8 +33,8 @@ export default function VacationsListPage() {
       await remove(toDelete.id);
       modal.showSuccess('Eliminado', 'Vacación eliminada correctamente');
       refetch();
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al eliminar');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);

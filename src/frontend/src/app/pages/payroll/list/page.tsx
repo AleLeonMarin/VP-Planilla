@@ -2,26 +2,25 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { 
-  DocumentTextIcon, 
-  PlusCircleIcon, 
+import {
+  DocumentTextIcon,
+  PlusCircleIcon,
   EyeIcon,
   ArrowPathIcon,
   ClockIcon,
   CheckCircleIcon,
   CalendarIcon,
   CurrencyDollarIcon,
-  UserGroupIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { usePayroll } from '@/hooks/usePayroll';
-import { PayrollService } from '@/services/payrollService';
+import { PayrollService, Payroll } from '@/services/payrollService';
 import { useModal } from '@/hooks/useModal';
 
 export default function PayrollListPage() {
   const { getAllPayrolls, isLoading, error } = usePayroll();
   const modal = useModal();
-  const [payrolls, setPayrolls] = useState<any[]>([]);
+  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const loadPayrolls = useCallback(async () => {

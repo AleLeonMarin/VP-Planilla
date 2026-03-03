@@ -142,8 +142,8 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
       }
       clearForm();
       if (onRefresh) await onRefresh();
-    } catch (error: any) {
-      setFeedback({ type: 'error', message: error?.message || 'No se pudo guardar la posicion.' });
+    } catch (error: unknown) {
+      setFeedback({ type: 'error', message: error instanceof Error ? error.message : 'No se pudo guardar la posicion.' });
     } finally {
       setBusy(false);
     }
@@ -156,8 +156,8 @@ const PositionsModal: React.FC<PositionsModalProps> = ({
       await onDelete(pendingDelete.id);
       setFeedback({ type: 'success', message: 'Posicion eliminada correctamente.' });
       if (onRefresh) await onRefresh();
-    } catch (error: any) {
-      setFeedback({ type: 'error', message: error?.message || 'No se pudo eliminar la posicion.' });
+    } catch (error: unknown) {
+      setFeedback({ type: 'error', message: error instanceof Error ? error.message : 'No se pudo eliminar la posicion.' });
     } finally {
       setPendingDelete(null);
       setBusy(false);

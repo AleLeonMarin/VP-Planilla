@@ -24,7 +24,7 @@ const useAddEmployeeModal = () => {
    * Maneja los cambios en los inputs del formulario
    */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+    const { name, value } = e.target as HTMLInputElement;
 
     let newValue = value;
 

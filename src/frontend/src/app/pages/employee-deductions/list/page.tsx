@@ -6,6 +6,8 @@ import useEmployeeList from '@/hooks/useEmployeeList';
 import { useDeductions } from '@/hooks/useDeductions';
 import { useModal } from '@/hooks/useModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { Employee } from '@/types/employee';
+import { EmployeeDeductionWithDetails } from '@/types/employeeDeductions';
 import {
   UserGroupIcon,
   PlusCircleIcon,
@@ -40,7 +42,7 @@ export default function EmployeeDeductionsPage() {
     }
   }, [selectedEmployeeId, fetchEmployeeDeductions]);
 
-  const selectedEmployee = employees?.find((e: any) => e.id === selectedEmployeeId);
+  const selectedEmployee = employees?.find((e: Employee) => Number(e.id) === selectedEmployeeId);
 
   const handleAssignDeduction = async () => {
     if (!selectedEmployeeId || !selectedDeductionId) {
@@ -57,8 +59,8 @@ export default function EmployeeDeductionsPage() {
       if (selectedEmployeeId) {
         await fetchEmployeeDeductions(selectedEmployeeId);
       }
-    } catch (error: any) {
-      modal.showError('Error', error.message || 'Error al asignar deducción');
+    } catch (error: unknown) {
+      modal.showError('Error', error instanceof Error ? error.message : 'Error al asignar deducción');
     }
   };
 
@@ -73,21 +75,21 @@ export default function EmployeeDeductionsPage() {
     try {
       await removeDeduction(selectedEmployeeId, deductionToDelete);
       modal.showSuccess('Éxito', 'Deducción eliminada correctamente');
-    } catch (error: any) {
-      modal.showError('Error', error.message || 'Error al eliminar deducción');
+    } catch (error: unknown) {
+      modal.showError('Error', error instanceof Error ? error.message : 'Error al eliminar deducción');
     } finally {
       setShowConfirmDelete(false);
       setDeductionToDelete(null);
     }
   };
 
-  const filteredEmployees = employees?.filter((emp: any) => 
+  const filteredEmployees = employees?.filter((emp: Employee) =>
     emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const availableDeductions = allDeductions?.filter(
-    deduction => !employeeDeductions.some((ed: any) => ed.deduction_id === deduction.id)
+    deduction => !employeeDeductions.some((ed: EmployeeDeductionWithDetails) => ed.deduction_id === deduction.id)
   );
 
   return (
@@ -120,12 +122,12 @@ export default function EmployeeDeductionsPage() {
             </div>
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredEmployees?.map((employee: any) => (
+              {filteredEmployees?.map((employee: Employee) => (
                 <button
                   key={employee.id}
-                  onClick={() => setSelectedEmployeeId(employee.id)}
+                  onClick={() => setSelectedEmployeeId(Number(employee.id))}
                   className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    selectedEmployeeId === employee.id
+                    selectedEmployeeId === Number(employee.id)
                       ? 'bg-[#6F7153] text-white'
                       : 'bg-white hover:bg-[#E7DCC1] text-[#3B4D36]'
                   }`}
@@ -178,7 +180,7 @@ export default function EmployeeDeductionsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {employeeDeductions.map((deduction: any, index: number) => (
+                {employeeDeductions.map((deduction: EmployeeDeductionWithDetails, index: number) => (
                   <div
                     key={`emp-${selectedEmployeeId}-ded-${deduction.deduction_id}-${index}`}
                     className="flex items-center justify-between p-4 bg-white rounded-lg border border-[#E0D6B7] hover:shadow-md transition-shadow"

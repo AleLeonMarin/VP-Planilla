@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { UseFormReturn } from 'react-hook-form';
 import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { usePayrollTypes } from '@/hooks/usePayrollTypes';
@@ -55,7 +56,7 @@ export default function PayrollTypesPage() {
   /**
    * Maneja el envío del formulario (crear o actualizar)
    */
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Partial<PayrollType>) => {
     try {
       if (editing) {
         await update(editing.id, values);
@@ -66,8 +67,8 @@ export default function PayrollTypesPage() {
       }
       refetch();
       setFormOpen(false);
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al guardar');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -80,8 +81,8 @@ export default function PayrollTypesPage() {
       await remove(toDelete.id);
       modal.showSuccess('Eliminado', 'Tipo de planilla eliminado correctamente');
       refetch();
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al eliminar. Esta funcionalidad aún no está disponible.');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar. Esta funcionalidad aún no está disponible.');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
@@ -242,7 +243,7 @@ export default function PayrollTypesPage() {
         initialValues={editing || undefined} 
         onSubmit={handleSubmit}
       >
-        {(methods: any) => (
+        {(methods: UseFormReturn<Partial<PayrollType>>) => (
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-[#3B4D36]">

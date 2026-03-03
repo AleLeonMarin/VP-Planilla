@@ -14,15 +14,14 @@ interface DatePickerProps {
   isStartDate?: boolean; // Indica si es el selector de fecha de inicio
 }
 
-export default function DatePicker({ 
-  value, 
-  onChange, 
-  placeholder = "dd/mm/yy", 
-  disabled, 
+export default function DatePicker({
+  value,
+  onChange,
+  placeholder = "dd/mm/yy",
+  disabled,
   className,
   rangeStart,
   rangeEnd,
-  isStartDate = false
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());

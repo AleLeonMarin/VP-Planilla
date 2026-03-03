@@ -90,8 +90,8 @@ export default function CreateVacationPage() {
       setTimeout(() => {
         router.push('/pages/vacations/list');
       }, 1500);
-    } catch (error: any) {
-      modal.showError('Error', error?.message || 'Error al crear la solicitud');
+    } catch (error: unknown) {
+      modal.showError('Error', error instanceof Error ? error.message : 'Error al crear la solicitud');
     } finally {
       setSubmitting(false);
     }

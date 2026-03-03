@@ -22,8 +22,8 @@ export const useAuditLogs = () => {
       setData(response.data || []);
       setTotal(response.total || 0);
       return response;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al cargar logs de auditoría';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar logs de auditoría';
       setError(errorMessage);
       throw err;
     } finally {

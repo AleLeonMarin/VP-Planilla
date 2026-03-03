@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useEmployeeEdit } from '@/hooks/useEmployeeEdit';
-import { employeeSchema } from '@/schemas/employee';
+import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { usePositions } from '@/hooks/usePositions';
 
 interface EditEmployeePageProps {
@@ -33,7 +33,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
     salary: typeof position.base_salary === 'number' ? position.base_salary : Number(position.base_salary) || 0
   }));
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm<any>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
     resolver: zodResolver(employeeSchema),
   });
 
@@ -56,7 +56,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
     }
   }, [employee, reset]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: EmployeeSchemaType) => {
     setUpdateSuccess(false);
     setUpdateError(null);
 
@@ -64,14 +64,14 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
       // Mapear los datos del formulario al formato del backend
       const updates = {
         name: data.employee_first_name,
-        middle_name: data.employee_middle_name || null,
+        middle_name: data.employee_middle_name || undefined,
         last_name: data.employee_last_name,
         national_id: data.employee_national_id || null,
         social_code: data.employee_social_code || null,
         email: data.employee_email,
         phone: data.employee_phone || null,
         position_id: data.employee_position_id ? parseInt(data.employee_position_id) : null,
-        hire_date: data.employee_hire_date || null,
+        hire_date: data.employee_hire_date || undefined,
         gender: data.employee_gender || null,
         schedule: data.employee_schedule || null,
       };
@@ -83,8 +83,8 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
       setTimeout(() => {
         router.push('/pages/employee/list');
       }, 2000);
-    } catch (err: any) {
-      setUpdateError(err?.message || 'Error al actualizar empleado');
+    } catch (err: unknown) {
+      setUpdateError(err instanceof Error ? err.message : 'Error al actualizar empleado');
       console.error('Error updating employee:', err);
     }
   };

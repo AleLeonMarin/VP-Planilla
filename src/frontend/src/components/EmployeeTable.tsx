@@ -142,8 +142,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
       <EmployeeProfileModal 
         isOpen={showProfileModal} 
         onClose={closeProfileModal}
-        // getEmployeeProfileData returns a shape compatible at runtime; cast to any to avoid type mismatch
-        employeeData={getEmployeeProfileData(selectedEmployeeData) as any}
+        employeeData={getEmployeeProfileData(selectedEmployeeData) as Parameters<typeof EmployeeProfileModal>[0]['employeeData']}
       />
 
       <div className="bg-[#F2E8CF] rounded-xl border border-[#D2B48C] shadow-sm overflow-hidden">

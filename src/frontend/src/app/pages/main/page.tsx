@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useLaborEvents } from "@/hooks/useLaborEvents";
 import useEmployeeList from "@/hooks/useEmployeeList";
 import { formatSalary, getStatusBadgeConfig } from "@/utils/employeeUtils";
+import { EmployeeLaborEvent } from "@/types/laborEvent";
+import { Employee } from "@/types/employee";
 
 interface CalendarEvent {
   date: number;
@@ -118,12 +120,12 @@ const Home: React.FC = () => {
   const { employees, refreshEmployees, stats } = useEmployeeList();
   const [visibleRangeStart, setVisibleRangeStart] = useState<Date | null>(null);
   const [visibleRangeEnd, setVisibleRangeEnd] = useState<Date | null>(null);
-  const [dayModal, setDayModal] = useState<{ date: Date; events: any[] } | null>(null);
+  const [dayModal, setDayModal] = useState<{ date: Date; events: EmployeeLaborEvent[] } | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       refreshEvents().catch(() => {});
-      refreshEmployees && refreshEmployees().catch(() => {});
+      if (refreshEmployees) { refreshEmployees().catch(() => {}); }
     }, 30000);
     return () => clearInterval(interval);
   }, [refreshEvents, refreshEmployees]);
@@ -180,11 +182,11 @@ const Home: React.FC = () => {
               const e = ev.end_date ? new Date(ev.end_date) : s;
               if (!s || !e) return false;
               return !(e.getTime() < visibleRangeStart.getTime() || s.getTime() > visibleRangeEnd.getTime());
-            } catch (error) {
+            } catch {
               return false;
             }
           })
-          .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+          .sort((a: EmployeeLaborEvent, b: EmployeeLaborEvent) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
       : [];
 
   const currentMonthEvents =
@@ -194,7 +196,7 @@ const Home: React.FC = () => {
             try {
               const s = ev.start_date ? new Date(ev.start_date) : null;
               return s && s.getMonth() === currentMonth && s.getFullYear() === currentYear;
-            } catch (error) {
+            } catch {
               return false;
             }
           })
@@ -347,7 +349,7 @@ const Home: React.FC = () => {
                           s.getMonth() === dateClicked.getMonth() &&
                           s.getFullYear() === dateClicked.getFullYear()
                         );
-                      } catch (error) {
+                      } catch {
                         return false;
                       }
                     });
@@ -543,13 +545,13 @@ const Home: React.FC = () => {
               {dayModal.events.length === 0 ? (
                 <div className="text-sm text-[#8B8B8B]">No hay eventos para este día.</div>
               ) : (
-                dayModal.events.map((ev: any) => (
+                dayModal.events.map((ev: EmployeeLaborEvent) => (
                   <div key={ev.id} className="border border-[#E5E1D8] rounded-xl p-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="text-base font-semibold text-[#3B4D36]">{ev.labor_event_name || "Evento"}</div>
                         <div className="text-xs text-[#6B7556]">
-                          {employeeList.find((em: any) => String(em.id) === String(ev.employee_id))?.name || "Sin asignar"}
+                          {employeeList.find((em: Employee) => String(em.id) === String(ev.employee_id))?.name || "Sin asignar"}
                         </div>
                       </div>
                       <div className="text-xs px-2 py-0.5 rounded-full bg-[#F8F6F1] text-[#6B7556] uppercase tracking-wide">

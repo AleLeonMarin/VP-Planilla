@@ -15,8 +15,14 @@ interface Props {
   onSaved?: (payrollId: number) => void;
 }
 
+type PayrollFormValues = {
+  payroll_type_id: number;
+  payment_date: string;
+  status: string;
+};
+
 export default function PayrollCreateModal({ open, onClose, periodStart, periodEnd, onSaved }: Props) {
-  const { createPayroll } = usePayroll() as any;
+  const { createPayroll } = usePayroll();
   const { calculatePayrollForPeriod } = useNominee();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +30,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
 
   const today = new Date().toISOString().split('T')[0];
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset } = useForm({
     defaultValues: {
       payroll_type_id: 1,
       payment_date: today,
@@ -45,7 +51,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
     });
   }, [open, reset, today]);
 
-  const handleSave = async (values: any) => {
+  const handleSave = async (values: PayrollFormValues) => {
     setSaving(true);
     setError(null);
     try {
@@ -72,13 +78,13 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
         const arr = raw ? JSON.parse(raw) : [];
         arr.unshift(created.id);
         localStorage.setItem(key, JSON.stringify(arr.slice(0, 50)));
-      } catch (_e) {}
+      } catch {}
 
       if (onSaved) onSaved(created.id);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving payroll:', err);
-      setError(err?.message || 'Error al guardar la planilla');
+      setError(err instanceof Error ? err.message : 'Error al guardar la planilla');
     } finally {
       setSaving(false);
     }

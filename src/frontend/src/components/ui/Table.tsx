@@ -10,7 +10,7 @@ type Column<T> = {
 
 interface TableProps<T> {
   columns: Column<T>[];
-  data: T[] | any | null;
+  data: T[] | { data: T[] } | T | null;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
 }
@@ -19,10 +19,10 @@ export default function Table<T extends { id?: number | string }>({ columns, dat
   // Normalize data to an array to avoid runtime errors when API returns object or single item
   const rows: T[] = Array.isArray(data)
     ? data
-    : data && Array.isArray((data as any).data)
-      ? (data as any).data
+    : data && Array.isArray((data as { data: T[] }).data)
+      ? (data as { data: T[] }).data
       : data
-        ? [data]
+        ? [data as T]
         : [];
 
   return (
@@ -38,10 +38,10 @@ export default function Table<T extends { id?: number | string }>({ columns, dat
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={String((row as any).id || Math.random())} className="border-t">
+            <tr key={String(row.id ?? Math.random())} className="border-t">
               {columns.map((col) => (
                 <td key={String(col.key)} className="px-4 py-2 text-sm text-gray-800">
-                  {col.render ? col.render(row) : (row as any)[col.key as string]}
+                  {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key as string] ?? '')}
                 </td>
               ))}
               <td className="px-4 py-2 text-sm text-right">

@@ -107,22 +107,6 @@ export default function PayrollCalculatePage() {
     return new Date(fullYear, monthNumber - 1, dayNumber);
   };
 
-  // Función para convertir YYYY-MM-DD a dd/mm/yy
-  const formatToDisplay = (isoDate: string): string => {
-    if (!isoDate) return '';
-    const [year, month, day] = isoDate.split('-');
-    const shortYear = year.slice(-2);
-    return `${day}/${month}/${shortYear}`;
-  };
-
-  // Función para formatear fecha a YYYY-MM-DD (para backend)
-  const formatDate = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
   // Efecto para ajustar fechas cuando cambia el tipo de planilla
   useEffect(() => {
     if (payrollTypeId) {
@@ -249,8 +233,8 @@ export default function PayrollCalculatePage() {
       await calculatePayrollForPeriod(backendStartDate, backendEndDate);
       
       modal.showSuccess('Cálculo completado', 'Se generó el resultado del cálculo');
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al calcular nómina');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al calcular nómina');
     }
   };
 

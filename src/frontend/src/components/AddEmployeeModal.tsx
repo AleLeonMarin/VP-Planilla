@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { employeeSchema, EmployeeSchemaType } from '@/schemas/employee';
+import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { Position } from '@/services/positionsService';
 
 interface AddEmployeeModalProps {
@@ -29,7 +29,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     salary: typeof position.base_salary === 'number' ? position.base_salary : Number(position.base_salary) || 0
   }));
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<any>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       employee_first_name: '',
@@ -63,9 +63,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     exit: { scale: 0.9, opacity: 0, y: 30, transition: { duration: 0.2 } }
   };
 
-  const onFormSubmit = async (data: any) => {
-    const validated = data as EmployeeSchemaType;
-    await onSubmit(validated);
+  const onFormSubmit = async (data: EmployeeSchemaType) => {
+    await onSubmit(data);
     onClose();
   };
 

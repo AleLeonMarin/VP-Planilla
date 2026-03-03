@@ -5,11 +5,14 @@
 export interface Employee {
   id: string;
   name: string;
+  email?: string;
   position: string;
   salary: number;
   status: EmployeeStatus;
   fired?: boolean;
   exit_date?: string | null;
+  last_name?: string;
+  middle_name?: string;
 }
 
 export type EmployeeStatus = 

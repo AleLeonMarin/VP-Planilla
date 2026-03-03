@@ -13,6 +13,8 @@ export const employeeSchema = z.object({
   employee_hire_date: z.string().optional().transform((v) => v ?? ''),
   employee_gender: z.string().optional().transform((v) => v ?? ''),
   employee_required_hours_biweekly: z.string().optional().transform((v) => v ?? ''),
+  employee_schedule: z.string().optional().transform((v) => v ?? ''),
 });
 
 export type EmployeeSchemaType = z.infer<typeof employeeSchema>;
+export type EmployeeSchemaInputType = z.input<typeof employeeSchema>;

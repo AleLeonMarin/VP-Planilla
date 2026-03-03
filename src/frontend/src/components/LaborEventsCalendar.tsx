@@ -7,7 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, EventClickArg, DateSelectArg, EventDropArg } from '@fullcalendar/core';
 import { EventResizeDoneArg } from '@fullcalendar/interaction';
-import { EmployeeLaborEvent } from '@/types/laborEvent';
+import { EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 import { Employee } from '@/types/employee';
 import { useModal } from '@/hooks/useModal';
 import '@/styles/calendar.css';
@@ -27,7 +27,7 @@ interface Props {
   refreshEvents: () => Promise<void>;
   deleteAssignment: (id: number) => Promise<void>;
   preview?: Partial<EmployeeLaborEvent> | null;
-  updateEvent?: (id: number, data: Partial<EmployeeLaborEvent>) => Promise<EmployeeLaborEvent>;
+  updateEvent?: (id: number, data: Partial<LaborEventFormData>) => Promise<{ success: boolean }>;
   onPreviewChange?: (preview: Partial<EmployeeLaborEvent> | null) => void;
 }
 
@@ -200,7 +200,7 @@ const LaborEventsCalendar: React.FC<Props> = ({
 
   const handleEventResize = async (resizeInfo: EventResizeDoneArg) => {
     const eventId = Number(resizeInfo.event.id);
-    const payload: Partial<EmployeeLaborEvent> = {
+    const payload: Partial<LaborEventFormData> = {
       start_date: resizeInfo.event.start ? resizeInfo.event.start.toISOString() : undefined,
       end_date: resizeInfo.event.end ? resizeInfo.event.end.toISOString() : undefined,
     };
@@ -218,7 +218,7 @@ const LaborEventsCalendar: React.FC<Props> = ({
 
   const handleEventDrop = async (dropInfo: EventDropArg) => {
     const eventId = Number(dropInfo.event.id);
-    const payload: Partial<EmployeeLaborEvent> = {
+    const payload: Partial<LaborEventFormData> = {
       start_date: dropInfo.event.start ? dropInfo.event.start.toISOString() : undefined,
       end_date: dropInfo.event.end ? dropInfo.event.end.toISOString() : undefined,
     };

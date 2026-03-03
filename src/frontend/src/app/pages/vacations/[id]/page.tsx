@@ -31,8 +31,8 @@ export default function VacationDetailPage({ params }: PageProps) {
         setLoading(true);
         const data = await VacationsService.getById(parseInt(id));
         setVacation(data);
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar vacación');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al cargar vacación');
       } finally {
         setLoading(false);
       }

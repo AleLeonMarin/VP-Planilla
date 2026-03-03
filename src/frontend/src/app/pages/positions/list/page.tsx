@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { UseFormReturn } from 'react-hook-form';
 import Table from '@/components/ui/Table';
 import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -9,7 +10,7 @@ import { Position } from '@/services/positionsService';
 import { useModal } from '@/hooks/useModal';
 
 export default function PositionsPage() {
-  const { data, isLoading, error, refetch, create, update, remove } = usePositions();
+  const { data, refetch, create, update, remove } = usePositions();
   const modal = useModal();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -23,16 +24,17 @@ export default function PositionsPage() {
   const openEdit = (p: Position) => { setEditing(p); setFormOpen(true); };
   const openDelete = (p: Position) => { setToDelete(p); setConfirmOpen(true); };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Partial<Position>) => {
     try {
       if (editing) {
         try {
           await update(editing.id, values);
           modal.showSuccess('Actualizado', 'Posición actualizada correctamente');
-        } catch (err: any) {
+        } catch (err: unknown) {
           // Detect conflict
-          if (err?.status === 409) {
-            setConflictMessage(err.message || 'Conflicto al actualizar. Otro usuario modificó el registro.');
+          const apiErr = err as { status?: number; message?: string };
+          if (apiErr?.status === 409) {
+            setConflictMessage(apiErr.message || 'Conflicto al actualizar. Otro usuario modificó el registro.');
             setConflictOpen(true);
             return;
           }
@@ -44,8 +46,8 @@ export default function PositionsPage() {
       }
       refetch();
       setFormOpen(false);
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al guardar');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -55,8 +57,8 @@ export default function PositionsPage() {
       await remove(toDelete.id);
       modal.showSuccess('Eliminado', 'Posición eliminada correctamente');
       refetch();
-    } catch (err: any) {
-      modal.showError('Error', err?.message || 'Error al eliminar');
+    } catch (err: unknown) {
+      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
@@ -95,7 +97,7 @@ export default function PositionsPage() {
       <Table columns={columns} data={data || []} onEdit={openEdit} onDelete={openDelete} />
 
       <FormModal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Editar Posición' : 'Nueva Posición'} initialValues={editing || undefined} onSubmit={handleSubmit}>
-        {(methods: any) => (
+        {(methods: UseFormReturn<Partial<Position>>) => (
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Nombre</label>

@@ -218,9 +218,9 @@ export default function ReportsPage() {
       );
       await refreshDataset(selectedPayrollId);
       await loadDashboard();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      const message = error?.message || 'No se pudo enviar los reportes';
+      const message = error instanceof Error ? error.message : 'No se pudo enviar los reportes';
       modal.showError('Error en envío', message);
     } finally {
       setSending(false);
@@ -258,9 +258,9 @@ export default function ReportsPage() {
           ? 'Se descargó el comprobante del empleado seleccionado.'
           : 'Se descargó un único PDF con todos los comprobantes seleccionados.'
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      const message = error?.message || 'No se pudo generar el PDF de comprobantes';
+      const message = error instanceof Error ? error.message : 'No se pudo generar el PDF de comprobantes';
       modal.showError('Error en descarga', message);
     } finally {
       setDownloadingPdf(false);
