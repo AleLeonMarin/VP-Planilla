@@ -115,6 +115,22 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
         detailRows.push([]);
       }
 
+      // Resumen de horas (regulares, extras, descanso)
+      const regularHours = Number(emp.regularHours || emp.regular_hours || 0);
+      const overtimeHours = Number(emp.overtimeHours || emp.overtime_hours || 0);
+      const weeklyRestHours2 = Number(emp.weeklyRestHours || emp.weekly_rest_hours || 0);
+      const scheduledHours = Number(emp.scheduledHours || emp.scheduled_hours || 0);
+
+      if (scheduledHours > 0 || regularHours > 0 || overtimeHours > 0 || weeklyRestHours2 > 0) {
+        detailRows.push(['RESUMEN DE HORAS', '', '', '', '', '', '', '']);
+        detailRows.push(['Tipo', 'Cantidad', '', '', '', '', '', '']);
+        detailRows.push(['Horas Programadas', scheduledHours.toFixed(2), '', '', '', '', '', '']);
+        detailRows.push(['Horas Cumplidas', regularHours.toFixed(2), '', '', '', '', '', '']);
+        detailRows.push(['Horas Extras', overtimeHours.toFixed(2), '', '', '', '', '', '']);
+        detailRows.push(['Horas de Descanso', weeklyRestHours2.toFixed(2), '', '', '', '', '', '']);
+        detailRows.push([]);
+      }
+
       // Deducciones aplicadas
       const deductionsBreakdown = (emp.deductionsBreakdown || emp.deductions_breakdown || []) as Array<Record<string, unknown>>;
       if (deductionsBreakdown.length > 0) {
@@ -181,8 +197,15 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       }
 
       // Resumen financiero del empleado
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const weeklyRestHours = Number(emp.weeklyRestHours || emp.weekly_rest_hours || 0);
+      const weeklyRestPay = Number(emp.weeklyRestPay || emp.weekly_rest_pay || 0);
+      const overtimePay = Number(emp.overtimePay || emp.overtime_pay || 0);
+      
       detailRows.push(['RESUMEN FINANCIERO', '', '', '', '', '', '', '']);
       detailRows.push(['Salario Base:', `₡${gross.toFixed(2)}`, '', '', '', '', '', '']);
+      detailRows.push(['Pago por Descanso:', `₡${weeklyRestPay.toFixed(2)}`, '', '', '', '', '', '']);
+      detailRows.push(['Pago por Horas Extras:', `₡${overtimePay.toFixed(2)}`, '', '', '', '', '', '']);
       detailRows.push(['Bonos:', `₡${bonuses.toFixed(2)}`, '', '', '', '', '', '']);
       detailRows.push(['Total Deducciones:', `₡${deductions.toFixed(2)}`, '', '', '', '', '', '']);
       detailRows.push(['SALARIO NETO:', `₡${net.toFixed(2)}`, '', '', '', '', '', '']);
@@ -310,6 +333,36 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
     return acc + Number(hours);
   }, 0) || 0;
 
+  const totalOvertimeHours = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const overtimeHours = emp.overtimeHours ?? emp.overtime_hours ?? 0;
+    return acc + Number(overtimeHours);
+  }, 0) || 0;
+
+  const totalWeeklyRestHours = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const weeklyRestHours = emp.weeklyRestHours ?? emp.weekly_rest_hours ?? 0;
+    return acc + Number(weeklyRestHours);
+  }, 0) || 0;
+
+  const totalOvertimePay = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const overtimePay = emp.overtimePay ?? emp.overtime_pay ?? 0;
+    return acc + Number(overtimePay);
+  }, 0) || 0;
+
+  const totalWeeklyRestPay = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const weeklyRestPay = emp.weeklyRestPay ?? emp.weekly_rest_pay ?? 0;
+    return acc + Number(weeklyRestPay);
+  }, 0) || 0;
+
+  const totalBonuses = employees?.reduce((acc: number, e: unknown) => {
+    const emp = e as Record<string, unknown>;
+    const bonuses = emp.bonuses ?? emp.total_bonuses ?? 0;
+    return acc + Number(bonuses);
+  }, 0) || 0;
+
   return (
     <div className="bg-[#F9F1DC] rounded-xl shadow-sm border border-[#E0D6B7] p-6">
       {/* Header */}
@@ -351,7 +404,8 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
       {employees && (
         <>
           {/* Tarjetas de resumen */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Fila 1: Datos generales */}
             <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
               <div className="flex items-center gap-2 mb-2">
                 <UserGroupIcon className="w-5 h-5 text-[#6F7153]" />
@@ -363,25 +417,77 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
             <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
               <div className="flex items-center gap-2 mb-2">
                 <ClockIcon className="w-5 h-5 text-[#8B7355]" />
-                <p className="text-xs font-medium text-[#6B5B3D]">Horas Totales</p>
+                <p className="text-xs font-medium text-[#6B5B3D]">Horas Trabajadas</p>
               </div>
-              <p className="text-2xl font-bold text-[#3B4D36]">{totalHours.toFixed(0)}</p>
+              <p className="text-2xl font-bold text-[#3B4D36]">{totalHours.toFixed(0)}h</p>
             </div>
 
             <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
               <div className="flex items-center gap-2 mb-2">
-                <CurrencyDollarIcon className="w-5 h-5 text-[#A0826D]" />
-                <p className="text-xs font-medium text-[#6B5B3D]">Total Bruto</p>
+                <ClockIcon className="w-5 h-5 text-orange-600" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Horas Extras</p>
               </div>
-              <p className="text-xl font-bold text-[#3B4D36]">{formatCRC(totalGross)}</p>
+              <p className="text-2xl font-bold text-orange-600">{totalOvertimeHours.toFixed(1)}h</p>
             </div>
 
-            <div className="bg-[#6F7153] rounded-lg p-4 border border-[#5D614A] shadow-sm">
+            <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
               <div className="flex items-center gap-2 mb-2">
-                <CurrencyDollarIcon className="w-5 h-5 text-white" />
-                <p className="text-xs font-medium text-[#E7DCC1]">Total Neto</p>
+                <ClockIcon className="w-5 h-5 text-blue-600" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Horas Descanso</p>
               </div>
-              <p className="text-xl font-bold text-white">{formatCRC(total || 0)}</p>
+              <p className="text-2xl font-bold text-blue-600">{totalWeeklyRestHours.toFixed(1)}h</p>
+            </div>
+
+            {/* Fila 2: Datos monetarios */}
+            <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <CurrencyDollarIcon className="w-5 h-5 text-[#A0826D]" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Salario Bruto</p>
+              </div>
+              <p className="text-lg font-bold text-[#3B4D36]">{formatCRC(totalGross)}</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <CurrencyDollarIcon className="w-5 h-5 text-orange-600" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Pago Horas Extras</p>
+              </div>
+              <p className="text-lg font-bold text-orange-600">{formatCRC(totalOvertimePay)}</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Pago Descanso</p>
+              </div>
+              <p className="text-lg font-bold text-blue-600">{formatCRC(totalWeeklyRestPay)}</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
+                <p className="text-xs font-medium text-[#6B5B3D]">Bonificaciones</p>
+              </div>
+              <p className="text-lg font-bold text-green-600">{formatCRC(totalBonuses)}</p>
+            </div>
+
+            {/* Fila 3: Deducciones y total */}
+            <div className="bg-red-50 rounded-lg p-4 border border-red-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <CurrencyDollarIcon className="w-5 h-5 text-red-600" />
+                <p className="text-xs font-medium text-red-700">Total Deducciones</p>
+              </div>
+              <p className="text-lg font-bold text-red-600">{formatCRC(totalDeductions)}</p>
+            </div>
+
+            <div className="bg-[#6F7153] rounded-lg p-4 border border-[#5D614A] shadow-sm lg:col-span-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CurrencyDollarIcon className="w-6 h-6 text-white" />
+                  <p className="text-sm font-medium text-[#E7DCC1]">TOTAL NETO A PAGAR</p>
+                </div>
+                <p className="text-3xl font-bold text-white">{formatCRC(total || 0)}</p>
+              </div>
             </div>
           </div>
 
@@ -396,6 +502,15 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-[#3B4D36] uppercase tracking-wider">
                       Horas
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-[#3B4D36] uppercase tracking-wider">
+                      Descanso (h)
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-[#3B4D36] uppercase tracking-wider">
+                      $ Descanso
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-[#3B4D36] uppercase tracking-wider">
+                      $ Extras
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-[#3B4D36] uppercase tracking-wider">
                       Bruto
@@ -426,6 +541,9 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                     const overtimeHours = Number(emp.overtimeHours  ?? emp.overtime_hours  ?? 0);
                     const scheduledHours = Number(emp.scheduledHours ?? emp.scheduled_hours ?? 0);
                     const missingHours  = scheduledHours > 0 ? Math.max(0, scheduledHours - regularHours) : 0;
+                    const weeklyRestHours = Number(emp.weeklyRestHours ?? emp.weekly_rest_hours ?? 0);
+                    const weeklyRestPay = Number(emp.weeklyRestPay ?? emp.weekly_rest_pay ?? 0);
+                    const overtimePay = Number(emp.overtimePay ?? emp.overtime_pay ?? 0);
                     
                     // Get employee details
                     const employeeName = String(emp.name || emp.employee_name || emp.employeeName || emp.employee || `#${emp.employee_id || emp.id}`);
@@ -470,14 +588,14 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
                             {hours > 0 ? (
                               <div className="text-right">
                                 <span className="text-sm text-[#5D4E37]">
                                   {regularHours > 0 ? regularHours : hours}
                                 </span>
                                 {overtimeHours > 0 && (
-                                  <span className="block text-xs text-orange-600 font-medium">+{overtimeHours}h ext</span>
+                                  <span className="block text-xs font-medium text-orange-600">+{overtimeHours}h ext</span>
                                 )}
                                 {missingHours > 0 && (
                                   <span className="block text-xs text-red-500">{missingHours}h falt</span>
@@ -487,16 +605,25 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                               <span className="text-sm text-[#5D4E37]">-</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <span className="text-sm text-[#5D4E37]">{weeklyRestHours > 0 ? weeklyRestHours.toFixed(2) : '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <span className="text-sm text-[#5D4E37]">{weeklyRestPay > 0 ? formatCRC(weeklyRestPay) : '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <span className={`text-sm font-medium ${overtimePay > 0 ? 'text-orange-600' : 'text-[#5D4E37]'}`}>{overtimePay > 0 ? formatCRC(overtimePay) : '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
                             <span className="text-sm font-medium text-[#3B4D36]">{formatCRC(grossSalary)}</span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
                             <span className="text-sm text-red-600">{formatCRC(totalDeductions)}</span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
                             <span className="text-sm text-green-600">{formatCRC(bonuses)}</span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
                             <span className="text-sm font-bold text-[#3B4D36]">{formatCRC(netSalary)}</span>
                           </td>
                         </tr>
@@ -504,15 +631,15 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                         {/* Fila expandida con desglose de deducciones */}
                         {isExpanded && (
                           <tr className="bg-[#FEFBF5] border-t border-[#E0D6B7]">
-                            <td colSpan={6} className="px-4 py-0">
+                            <td colSpan={9} className="px-4 py-0">
                               <div className="py-4 pl-12 pr-4">
                                 {/* Resumen de Horas */}
                                 {scheduledHours > 0 && (
                                   <div className="bg-white rounded-lg border border-[#E0D6B7] shadow-sm overflow-hidden mb-4">
-                                    <div className="bg-gradient-to-r from-[#E7DCC1] to-[#D4C9A0] px-4 py-2 border-b border-[#D2B48C]">
+                                    <div className="bg-linear-to-r from-[#E7DCC1] to-[#D4C9A0] px-4 py-2 border-b border-[#D2B48C]">
                                       <h4 className="text-xs font-bold text-[#3B4D36] uppercase tracking-wide">Resumen de Horas</h4>
                                     </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#E0D6B7]">
+                                    <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-[#E0D6B7]">
                                       <div className="px-4 py-3">
                                         <p className="text-xs text-[#6B5B3D] mb-1">Programadas</p>
                                         <p className="text-lg font-bold text-[#3B4D36]">{scheduledHours}h</p>
@@ -529,11 +656,36 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                         <p className="text-xs text-[#6B5B3D] mb-1">Extras (×1.5)</p>
                                         <p className={`text-lg font-bold ${overtimeHours > 0 ? 'text-orange-600' : 'text-[#3B4D36]'}`}>{overtimeHours}h</p>
                                       </div>
+                                      <div className="px-4 py-3">
+                                        <p className="text-xs text-[#6B5B3D] mb-1">Descanso</p>
+                                        <p className="text-lg font-bold text-[#3B4D36]">{weeklyRestHours > 0 ? weeklyRestHours.toFixed(2) : '-'}h</p>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                {/* Resumen de Dinero por Horas */}
+                                <div className="bg-white rounded-lg border border-[#E0D6B7] shadow-sm overflow-hidden mb-4">
+                                  <div className="bg-linear-to-r from-[#E7DCC1] to-[#D4C9A0] px-4 py-2 border-b border-[#D2B48C]">
+                                    <h4 className="text-xs font-bold text-[#3B4D36] uppercase tracking-wide">Desglose de Pagos por Horas</h4>
+                                  </div>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-[#E0D6B7]">
+                                    <div className="px-4 py-3">
+                                      <p className="text-xs text-[#6B5B3D] mb-1">$ Descanso</p>
+                                      <p className="text-lg font-bold text-[#3B4D36]">{weeklyRestPay > 0 ? formatCRC(weeklyRestPay) : '₡0.00'}</p>
+                                    </div>
+                                    <div className="px-4 py-3">
+                                      <p className="text-xs text-[#6B5B3D] mb-1">$ Extras</p>
+                                      <p className={`text-lg font-bold ${overtimePay > 0 ? 'text-orange-600' : 'text-[#3B4D36]'}`}>{overtimePay > 0 ? formatCRC(overtimePay) : '₡0.00'}</p>
+                                    </div>
+                                    <div className="px-4 py-3">
+                                      <p className="text-xs text-[#6B5B3D] mb-1">Total Horas</p>
+                                      <p className="text-lg font-bold text-[#3B4D36]">{formatCRC(weeklyRestPay + overtimePay)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3 mb-4 md:grid-cols-2">
                                   <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
                                     <div className="flex items-center justify-between mb-2">
                                       <span className="text-xs font-semibold text-[#6B5B3D] uppercase tracking-wide">Salario Base</span>
@@ -552,8 +704,8 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                 {/* Deducciones */}
                                 {deductionsBreakdown && deductionsBreakdown.length > 0 && (
                                   <div className="bg-white rounded-lg border border-[#E0D6B7] shadow-sm overflow-hidden">
-                                    <div className="bg-gradient-to-r from-red-50 to-red-100 px-4 py-3 border-b border-red-200">
-                                      <h4 className="text-sm font-bold text-red-800 flex items-center gap-2">
+                                    <div className="px-4 py-3 border-b border-red-200 bg-linear-to-r from-red-50 to-red-100">
+                                      <h4 className="flex items-center gap-2 text-sm font-bold text-red-800">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                                         </svg>
@@ -592,7 +744,7 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                         return (
                                           <div key={dedIdx} className="flex items-center justify-between px-4 py-3 hover:bg-[#F9F1DC] transition-colors">
                                             <div className="flex items-center gap-3">
-                                              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                                               <div>
                                                 <p className="text-sm font-medium text-[#3B4D36]">{deductionName}</p>
                                                 {percentageInfo && (
@@ -607,8 +759,8 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                         );
                                       })}
                                     </div>
-                                    <div className="bg-red-50 px-4 py-3 border-t-2 border-red-300">
-                                      <div className="flex justify-between items-center">
+                                    <div className="px-4 py-3 border-t-2 border-red-300 bg-red-50">
+                                      <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-red-900">TOTAL DEDUCCIONES</span>
                                         <span className="text-lg font-bold text-red-700">
                                           - {formatCRC(totalDeductions)}
@@ -620,10 +772,10 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
 
                                 {/* Bonificaciones si existen */}
                                 {bonuses > 0 && (
-                                  <div className="mt-3 bg-white rounded-lg border border-green-200 shadow-sm overflow-hidden">
-                                    <div className="bg-gradient-to-r from-green-50 to-green-100 px-4 py-3">
-                                      <div className="flex justify-between items-center">
-                                        <h4 className="text-sm font-bold text-green-800 flex items-center gap-2">
+                                  <div className="mt-3 overflow-hidden bg-white border border-green-200 rounded-lg shadow-sm">
+                                    <div className="px-4 py-3 bg-linear-to-r from-green-50 to-green-100">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="flex items-center gap-2 text-sm font-bold text-green-800">
                                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                           </svg>
@@ -638,8 +790,8 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                                 )}
 
                                 {(!deductionsBreakdown || deductionsBreakdown.length === 0) && totalDeductions === 0 && (
-                                  <div className="bg-green-50 rounded-lg p-4 border border-green-200 text-center">
-                                    <p className="text-sm text-green-700 font-medium">✓ No se aplicaron deducciones a este empleado</p>
+                                  <div className="p-4 text-center border border-green-200 rounded-lg bg-green-50">
+                                    <p className="text-sm font-medium text-green-700">✓ No se aplicaron deducciones a este empleado</p>
                                   </div>
                                 )}
                               </div>
@@ -653,7 +805,7 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
                 {total !== null && (
                   <tfoot className="bg-[#E7DCC1] border-t-2 border-[#D2B48C]">
                     <tr>
-                      <td colSpan={5} className="px-4 py-4 text-right">
+                      <td colSpan={8} className="px-4 py-4 text-right">
                         <span className="text-base font-bold text-[#3B4D36]">Total Neto</span>
                       </td>
                       <td className="px-4 py-4 text-right">

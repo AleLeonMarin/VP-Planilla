@@ -16,6 +16,10 @@ export const createEmployee = async (employeeData: EmployeeFormData): Promise<Em
   const positionId = employeeData.employee_position_id ? parseInt(employeeData.employee_position_id, 10) : undefined;
   const hireDate = employeeData.employee_hire_date ? new Date(employeeData.employee_hire_date) : undefined;
 
+  const requiredHours = employeeData.employee_required_hours_biweekly 
+    ? parseFloat(employeeData.employee_required_hours_biweekly) 
+    : null;
+
   const payload: any = {
     name: employeeData.employee_first_name,
     last_name: employeeData.employee_last_name,
@@ -25,6 +29,7 @@ export const createEmployee = async (employeeData: EmployeeFormData): Promise<Em
     email: employeeData.employee_email,
     hire_date: hireDate ? hireDate.toISOString() : null,
     position_id: typeof positionId === 'number' && !Number.isNaN(positionId) ? positionId : null,
+    required_hours_biweekly: requiredHours && !Number.isNaN(requiredHours) ? requiredHours : null,
     status: 'active'
   };
 
@@ -52,6 +57,7 @@ export interface EmployeeUpdateData {
   email?: string;
   hire_date?: string;
   position_id?: number | null;
+  required_hours_biweekly?: number | null;
   status?: string;
   fired?: boolean;
   exit_date?: string;
@@ -95,6 +101,11 @@ export const updateEmployee = async (id: string | number, employeeData: Partial<
   if (employeeData.employee_position_id !== undefined) {
     const positionId = parseInt(employeeData.employee_position_id, 10);
     payload.position_id = !Number.isNaN(positionId) ? positionId : null;
+  }
+
+  if (employeeData.employee_required_hours_biweekly !== undefined) {
+    const requiredHours = parseFloat(employeeData.employee_required_hours_biweekly);
+    payload.required_hours_biweekly = requiredHours && !Number.isNaN(requiredHours) ? requiredHours : null;
   }
   
   if (employeeData.status !== undefined) {

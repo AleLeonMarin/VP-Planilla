@@ -198,9 +198,25 @@ export default function PayrollDetailPage() {
     (acc, emp) => ({
       grossSalary: acc.grossSalary + emp.gross_salary,
       totalDeductions: acc.totalDeductions + emp.total_deductions,
-      netSalary: acc.netSalary + emp.net_salary
+      netSalary: acc.netSalary + emp.net_salary,
+      totalHours: acc.totalHours + (emp.total_hours || 0),
+      totalOvertimeHours: acc.totalOvertimeHours + (emp.overtime_hours || 0),
+      totalWeeklyRestHours: acc.totalWeeklyRestHours + (emp.weekly_rest_hours || 0),
+      totalOvertimePay: acc.totalOvertimePay + (emp.overtime_pay || 0),
+      totalWeeklyRestPay: acc.totalWeeklyRestPay + (emp.weekly_rest_pay || 0),
+      totalBonuses: acc.totalBonuses + (emp.bonuses || 0),
     }),
-    { grossSalary: 0, totalDeductions: 0, netSalary: 0 }
+    { 
+      grossSalary: 0, 
+      totalDeductions: 0, 
+      netSalary: 0,
+      totalHours: 0,
+      totalOvertimeHours: 0,
+      totalWeeklyRestHours: 0,
+      totalOvertimePay: 0,
+      totalWeeklyRestPay: 0,
+      totalBonuses: 0,
+    }
   );
 
   if (isLoading) {
@@ -236,7 +252,7 @@ export default function PayrollDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] via-[#F9F1DC] to-[#E7DCC1]">
+    <div className="min-h-screen bg-linear-to-br from-[#E7DCC1] via-[#F9F1DC] to-[#E7DCC1]">
       <div className="p-6">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
@@ -249,7 +265,7 @@ export default function PayrollDetailPage() {
               Volver al listado
             </Link>
             
-            <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] rounded-2xl shadow-lg p-8">
+            <div className="bg-linear-to-r from-[#6F7153] to-[#3B4D36] rounded-2xl shadow-lg p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -335,27 +351,100 @@ export default function PayrollDetailPage() {
           </div>
 
           {/* Resumen total */}
-          <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] rounded-2xl shadow-lg p-6 mb-6">
-            <h2 className="mb-4 text-xl font-bold text-white">Resumen Total</h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-[#E7DCC1] text-sm mb-1 font-medium">Salario Bruto Total</p>
-                <p className="text-3xl font-bold text-white">{formatCurrency(totals.grossSalary)}</p>
+          {/* Resumen total */}
+          <div className="bg-[#F9F1DC] rounded-2xl shadow-md border border-[#E0D6B7] p-6 mb-6">
+            <h2 className="mb-6 text-xl font-bold text-[#3B4D36]">Resumen Total de la Planilla</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* Fila 1: Datos generales */}
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <UserGroupIcon className="w-5 h-5 text-[#6F7153]" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Empleados</p>
+                </div>
+                <p className="text-2xl font-bold text-[#3B4D36]">{employees.length}</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-[#E7DCC1] text-sm mb-1 font-medium">Deducciones Totales</p>
-                <p className="text-3xl font-bold text-red-300">- {formatCurrency(totals.totalDeductions)}</p>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <ClockIcon className="w-5 h-5 text-[#8B7355]" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Horas Trabajadas</p>
+                </div>
+                <p className="text-2xl font-bold text-[#3B4D36]">{totals.totalHours.toFixed(0)}h</p>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-                <p className="text-[#E7DCC1] text-sm mb-1 font-medium">Salario Neto Total</p>
-                <p className="text-3xl font-bold text-green-300">{formatCurrency(totals.netSalary)}</p>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <ClockIcon className="w-5 h-5 text-orange-600" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Horas Extras</p>
+                </div>
+                <p className="text-2xl font-bold text-orange-600">{totals.totalOvertimeHours.toFixed(1)}h</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <ClockIcon className="w-5 h-5 text-blue-600" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Horas Descanso</p>
+                </div>
+                <p className="text-2xl font-bold text-blue-600">{totals.totalWeeklyRestHours.toFixed(1)}h</p>
+              </div>
+
+              {/* Fila 2: Datos monetarios */}
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <CurrencyDollarIcon className="w-5 h-5 text-[#A0826D]" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Salario Bruto</p>
+                </div>
+                <p className="text-lg font-bold text-[#3B4D36]">{formatCRC(totals.grossSalary)}</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <CurrencyDollarIcon className="w-5 h-5 text-orange-600" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Pago Horas Extras</p>
+                </div>
+                <p className="text-lg font-bold text-orange-600">{formatCRC(totals.totalOvertimePay)}</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Pago Descanso</p>
+                </div>
+                <p className="text-lg font-bold text-blue-600">{formatCRC(totals.totalWeeklyRestPay)}</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-[#E0D6B7] shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
+                  <p className="text-xs font-medium text-[#6B5B3D]">Bonificaciones</p>
+                </div>
+                <p className="text-lg font-bold text-green-600">{formatCRC(totals.totalBonuses)}</p>
+              </div>
+
+              {/* Fila 3: Deducciones y total */}
+              <div className="bg-red-50 rounded-lg p-4 border border-red-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <CurrencyDollarIcon className="w-5 h-5 text-red-600" />
+                  <p className="text-xs font-medium text-red-700">Total Deducciones</p>
+                </div>
+                <p className="text-lg font-bold text-red-600">{formatCRC(totals.totalDeductions)}</p>
+              </div>
+
+              <div className="bg-[#6F7153] rounded-lg p-4 border border-[#5D614A] shadow-sm lg:col-span-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CurrencyDollarIcon className="w-6 h-6 text-white" />
+                    <p className="text-sm font-medium text-[#E7DCC1]">TOTAL NETO A PAGAR</p>
+                  </div>
+                  <p className="text-3xl font-bold text-white">{formatCRC(totals.netSalary)}</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Desglose por empleado */}
           <div className="bg-[#F9F1DC] rounded-2xl shadow-md border border-[#E0D6B7]">
-            <div className="px-6 py-5 border-b border-[#E0D6B7] bg-gradient-to-r from-[#E7DCC1] to-[#F9F1DC]">
+            <div className="px-6 py-5 border-b border-[#E0D6B7] bg-linear-to-r from-[#E7DCC1] to-[#F9F1DC]">
               <h2 className="text-xl font-bold text-[#3B4D36]">Desglose por Empleado</h2>
               <p className="text-sm text-[#6B5B3D] mt-1">Haz clic en un empleado para ver el detalle de sus deducciones</p>
             </div>
@@ -394,9 +483,9 @@ export default function PayrollDetailPage() {
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 {isExpanded ? (
-                                  <ChevronDownIcon className="w-5 h-5 text-[#6F7153] flex-shrink-0" />
+                                  <ChevronDownIcon className="w-5 h-5 text-[#6F7153] shrink-0" />
                                 ) : (
-                                  <ChevronRightIcon className="w-5 h-5 text-[#6F7153] flex-shrink-0" />
+                                  <ChevronRightIcon className="w-5 h-5 text-[#6F7153] shrink-0" />
                                 )}
                                 <div>
                                   <div className="text-sm font-semibold text-[#3B4D36]">{emp.employee_name}</div>
@@ -430,38 +519,101 @@ export default function PayrollDetailPage() {
                           {isExpanded && (
                             <tr className="bg-[#FEFBF5] border-t border-[#E0D6B7]">
                               <td colSpan={4} className="px-6 py-0">
-                                <div className="py-6 pl-14 pr-4">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-white rounded-xl p-5 border border-[#E0D6B7] shadow-sm">
-                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-2">
-                                        Salario Base
+                                <div className="py-6 pl-14 pr-4 space-y-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Horas Trabajadas
                                       </p>
                                       <p className="text-2xl font-bold text-[#3B4D36]">
+                                        {(emp.total_hours || 0).toFixed(0)}h
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Horas Extras
+                                      </p>
+                                      <p className="text-2xl font-bold text-orange-600">
+                                        {(emp.overtime_hours || 0).toFixed(2)}h
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Horas Descanso
+                                      </p>
+                                      <p className="text-2xl font-bold text-blue-600">
+                                        {(emp.weekly_rest_hours || 0).toFixed(2)}h
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Salario Bruto
+                                      </p>
+                                      <p className="text-xl font-bold text-[#3B4D36]">
                                         {formatCurrency(emp.gross_salary)}
                                       </p>
                                     </div>
 
-                                    <div className="bg-white rounded-xl p-5 border border-[#E0D6B7] shadow-sm">
-                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-2">
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Pago Horas Extras
+                                      </p>
+                                      <p className="text-xl font-bold text-orange-600">
+                                        {formatCurrency(emp.overtime_pay || 0)}
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Pago Descanso
+                                      </p>
+                                      <p className="text-xl font-bold text-blue-600">
+                                        {formatCurrency(emp.weekly_rest_pay || 0)}
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl p-4 border border-[#E0D6B7] shadow-sm">
+                                      <p className="text-xs font-bold text-[#6B5B3D] uppercase tracking-wide mb-1">
+                                        Bonificaciones
+                                      </p>
+                                      <p className="text-xl font-bold text-green-600">
+                                        {formatCurrency(emp.bonuses || 0)}
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-red-50 rounded-xl p-4 border border-red-200 shadow-sm">
+                                      <p className="text-xs font-bold text-red-700 uppercase tracking-wide mb-1">
+                                        Deducciones
+                                      </p>
+                                      <p className="text-xl font-bold text-red-600">
+                                        {formatCurrency(emp.total_deductions)}
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-[#6F7153] rounded-xl p-4 border border-[#5D614A] shadow-sm">
+                                      <p className="text-xs font-bold text-[#E7DCC1] uppercase tracking-wide mb-1">
                                         Salario Neto
                                       </p>
-                                      <p className="text-2xl font-bold text-green-700">
+                                      <p className="text-xl font-bold text-white">
                                         {formatCurrency(emp.net_salary)}
                                       </p>
                                     </div>
                                   </div>
 
-                                  {/* Información adicional */}
                                   <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
                                     <div className="flex gap-3">
-                                      <span className="text-2xl">ℹ️</span>
+                                      <span className="text-2xl">i</span>
                                       <div>
                                         <p className="text-sm font-semibold text-blue-800 mb-1">
-                                          Información del Cálculo
+                                          Informacion del Calculo
                                         </p>
                                         <p className="text-sm text-blue-700">
-                                          El detalle completo de deducciones se calcula durante el proceso de generación de planilla. 
-                                          Los montos mostrados corresponden al cálculo final guardado en la base de datos.
+                                          Este desglose corresponde al resultado final guardado para este empleado en la planilla.
                                         </p>
                                       </div>
                                     </div>

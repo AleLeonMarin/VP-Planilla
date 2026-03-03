@@ -262,6 +262,17 @@ export function calculateOvertimeHours(days: DayWork[]): number {
   );
 }
 
+/**
+ * Calculate overtime hours based on biweekly requirements.
+ * Compares total hours worked vs total hours required for the period.
+ * @param totalWorkedHours - Total hours worked in the period
+ * @param requiredHours - Total hours required (e.g., from employee_required_hours_biweekly)
+ * @returns Overtime hours (worked - required), or 0 if worked <= required
+ */
+export function calculateOvertimeHoursBiweekly(totalWorkedHours: number, requiredHours: number): number {
+  return roundToMoney(Math.max(0, totalWorkedHours - requiredHours));
+}
+
 // ── Weekly rest (descanso semanal) ────────────────────────────────────────────
 
 /**
@@ -311,20 +322,17 @@ export function calculateScheduledHours(startDate: Date, endDate: Date): number 
 
 /**
  * Proportional weekly rest hours earned.
- * Formula: regularHours × (sundaysInPeriod / workingDaysInPeriod)
- * Matches CR payroll practice: employees earn rest pay proportional
- * to the fraction of the period they worked.
- * Example — Nov 1-15 (13 working days, 2 Sundays): 96h × 2/13 = 14.77h
+ * Formula utilizada por la empresa: horas_trabajadas × 8 / 104 × 2
+ * Esta fórmula es estándar para todos los empleados
+ * Ejemplo: 104 horas trabajadas → 104 × 8 / 104 × 2 = 16 horas de descanso
  */
 export function calculateWeeklyRestHours(
   regularHours: number,
   startDate: Date,
   endDate: Date
 ): number {
-  const numSundays     = getSundaysInPeriod(startDate, endDate).length;
-  const numWorkingDays = countWorkingDaysInPeriod(startDate, endDate);
-  if (numWorkingDays === 0) return 0;
-  return roundToMoney(regularHours * numSundays / numWorkingDays);
+  // Fórmula exacta de la empresa: horas_trabajadas × 8 / 104 × 2
+  return roundToMoney((regularHours * 8 / 104) * 2);
 }
 
 // ── Salary component helpers ──────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ClockLogsService } from "../service/ClockLogsService";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { EmployeeDeductions } from "../model/employeeDeductions";
 import { DeductionsPerEmployee } from "../model/deductionsPerEmployee";
 import { DeductionsService } from "./DeductionsService";
@@ -30,8 +30,6 @@ export type {
   PayrollSummary,
   PayrollCalculationResult,
 };
-
-const prisma = new PrismaClient();
 
 export class NomineeService {
   /**
@@ -201,6 +199,12 @@ export class NomineeService {
               payroll_employee_id: existing.payroll_employee_id
             },
             data: {
+              payroll_employee_total_hours: employee.regularHours + employee.overtimeHours,
+              payroll_employee_overtime_hours: employee.overtimeHours,
+              payroll_employee_overtime_pay: employee.overtimePay,
+              payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
+              payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
+              payroll_employee_bonuses: employee.bonuses,
               payroll_employee_gross_salary: employee.grossSalary,
               payroll_employee_total_deductions: employee.totalDeductions,
               payroll_employee_net_salary: employee.netSalary,
@@ -214,6 +218,12 @@ export class NomineeService {
             data: {
               payroll_employee_payroll_id: payrollId,
               payroll_employee_employee_id: Number(employee.employeeId),
+              payroll_employee_total_hours: employee.regularHours + employee.overtimeHours,
+              payroll_employee_overtime_hours: employee.overtimeHours,
+              payroll_employee_overtime_pay: employee.overtimePay,
+              payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
+              payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
+              payroll_employee_bonuses: employee.bonuses,
               payroll_employee_gross_salary: employee.grossSalary,
               payroll_employee_total_deductions: employee.totalDeductions,
               payroll_employee_net_salary: employee.netSalary,
@@ -343,6 +353,7 @@ export class NomineeService {
             overtimeHours: 0,
             weeklyRestHours: 0,
             weeklyRestPay: 0,
+            overtimePay: 0,
             // Frontend compatibility aliases
             id: Number(employee.id),
             employee_id: Number(employee.id),
@@ -409,6 +420,7 @@ export class NomineeService {
       overtimeHours: 0,
       weeklyRestHours: 0,
       weeklyRestPay: 0,
+      overtimePay: 0,
       grossSalary: 0,
       totalDeductions: 0,
       netSalary: 0,
@@ -497,33 +509,52 @@ export class NomineeService {
       employeePayroll.inconsistencies = dailyWork.inconsistencies;
 
       // Scheduled (required) hours for the period
-      employeePayroll.scheduledHours  = PayrollUtils.calculateScheduledHours(startDate, endDate);
+      // Use employee's configured hours if available, otherwise calculate from period
+      if (employee.required_hours_biweekly && employee.required_hours_biweekly > 0) {
+        employeePayroll.scheduledHours = employee.required_hours_biweekly;
+      } else {
+        employeePayroll.scheduledHours = PayrollUtils.calculateScheduledHours(startDate, endDate);
+      }
 
-      // Split hours into regular vs overtime (per-day basis)
-      employeePayroll.regularHours    = PayrollUtils.calculateRegularHours(dailyWork.days);
-      employeePayroll.overtimeHours   = PayrollUtils.calculateOvertimeHours(dailyWork.days);
+      // Calculate regular hours (all hours worked, will be split below)
+      const totalHoursWorked = dailyWork.days.reduce((sum, day) => sum + day.hoursWorked, 0);
+
+      // Split hours into regular vs overtime based on biweekly requirement
+      if (employee.required_hours_biweekly && employee.required_hours_biweekly > 0) {
+        // Use biweekly requirement for overtime calculation
+        employeePayroll.regularHours    = Math.min(totalHoursWorked, employee.required_hours_biweekly);
+        employeePayroll.overtimeHours   = PayrollUtils.calculateOvertimeHoursBiweekly(
+          totalHoursWorked,
+          employee.required_hours_biweekly
+        );
+      } else {
+        // Fallback to per-day calculation if no biweekly requirement set
+        employeePayroll.regularHours    = PayrollUtils.calculateRegularHours(dailyWork.days);
+        employeePayroll.overtimeHours   = PayrollUtils.calculateOvertimeHours(dailyWork.days);
+      }
       employeePayroll.weeklyRestHours = PayrollUtils.calculateWeeklyRestHours(
         employeePayroll.regularHours,
         startDate,
         endDate
       );
-      employeePayroll.weeklyRestPay   = PayrollUtils.calculateWeeklyRestPay(
-        dailyWork.days,
-        employeePayroll.baseHourlySalary,
-        startDate,
-        endDate
+      // Calculate pay directly from already-computed hours to ensure consistency
+      employeePayroll.weeklyRestPay   = PayrollUtils.roundToMoney(
+        employeePayroll.weeklyRestHours * employeePayroll.baseHourlySalary
+      );
+      employeePayroll.overtimePay     = PayrollUtils.roundToMoney(
+        employeePayroll.overtimeHours * employeePayroll.baseHourlySalary * 1.5
       );
 
       // Get bonuses for the period
       employeePayroll.bonuses = await this.calculateBonuses(employee.id, startDate, endDate);
 
       // Gross salary = regular pay + overtime pay (×1.5) + weekly rest pay + bonuses
-      employeePayroll.grossSalary = PayrollUtils.calculateGrossSalary(
-        dailyWork.days,
-        employeePayroll.baseHourlySalary,
-        employeePayroll.bonuses,
-        startDate,
-        endDate
+      // Use already-computed values for consistency
+      employeePayroll.grossSalary = PayrollUtils.roundToMoney(
+        (employeePayroll.regularHours * employeePayroll.baseHourlySalary) +
+        employeePayroll.overtimePay +
+        employeePayroll.weeklyRestPay +
+        employeePayroll.bonuses
       );
       
       // Calculate deductions

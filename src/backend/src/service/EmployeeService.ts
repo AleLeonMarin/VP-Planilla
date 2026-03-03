@@ -42,6 +42,7 @@ export class EmployeeService {
             employee_exit_date: null,
             employee_fired: false,
             employee_status: statusChar,
+            employee_required_hours_biweekly: data.required_hours_biweekly || null,
             employee_version: 1
         };
 
@@ -68,6 +69,7 @@ export class EmployeeService {
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
             status: prismaEmployee.employee_status,
+            required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
@@ -101,6 +103,7 @@ export class EmployeeService {
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
             status: prismaEmployee.employee_status,
+            required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
@@ -128,6 +131,7 @@ export class EmployeeService {
                 employee_exit_date: data.exit_date || null,
                 employee_fired: data.fired || false,
                 employee_status: data.status,
+                employee_required_hours_biweekly: data.required_hours_biweekly || null,
                 employee_version: (data.version || 1) + 1, // Increment version
                 employee_position_id: data.position_id
             }
@@ -150,6 +154,7 @@ export class EmployeeService {
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
             status: prismaEmployee.employee_status,
+            required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
         };
@@ -177,6 +182,7 @@ export class EmployeeService {
                 hire_date: prismaEmployee.employee_hire_date,
                 fired: prismaEmployee.employee_fired,
                 status: prismaEmployee.employee_status,
+                required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
                 position_id: prismaEmployee.employee_position_id
             };
@@ -219,6 +225,7 @@ export class EmployeeService {
                 hire_date: prismaEmployee.employee_hire_date,
                 fired: prismaEmployee.employee_fired,
                 status: prismaEmployee.employee_status,
+                required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
                 position_id: prismaEmployee.employee_position_id
             };

@@ -12,7 +12,7 @@ export const employeeSchema = z.object({
   employee_position_id: z.string().min(1, 'Seleccionar una posición'),
   employee_hire_date: z.string().optional().transform((v) => v ?? ''),
   employee_gender: z.string().optional().transform((v) => v ?? ''),
-  employee_schedule: z.string().optional().transform((v) => v ?? ''),
+  employee_required_hours_biweekly: z.string().optional().transform((v) => v ?? ''),
 });
 
 export type EmployeeSchemaType = z.infer<typeof employeeSchema>;

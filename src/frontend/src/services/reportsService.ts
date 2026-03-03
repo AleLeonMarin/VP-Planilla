@@ -31,4 +31,39 @@ export const ReportsService = {
       body
     )) as ReportDispatchSummary;
   },
+
+  async downloadPaymentReceiptsPdf(payload: {
+    payrollId: number;
+    employeeIds?: number[];
+  }): Promise<{ blob: Blob; fileName: string }> {
+    const { payrollId, employeeIds } = payload;
+    const response = await http.raw(`/reports/payroll/${payrollId}/payment-receipts/pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employeeIds }),
+    });
+
+    if (!response.ok) {
+      let message = `No se pudo generar el PDF (HTTP ${response.status})`;
+      try {
+        const errorBody = await response.json();
+        message = errorBody?.message || errorBody?.error || message;
+      } catch {
+        // Keep fallback message
+      }
+      throw new Error(message);
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const fileNameMatch = disposition.match(/filename=([^;]+)/i);
+    const fallbackName = employeeIds && employeeIds.length === 1
+      ? `comprobante_pago_${payrollId}_${employeeIds[0]}.pdf`
+      : `comprobantes_planilla_${payrollId}.pdf`;
+
+    return {
+      blob,
+      fileName: fileNameMatch ? fileNameMatch[1].trim().replace(/^"|"$/g, '') : fallbackName,
+    };
+  },
 };

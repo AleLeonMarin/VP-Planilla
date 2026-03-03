@@ -23,5 +23,9 @@ router.post(
   "/reports/payroll/:id/send",
   asyncHandler(ReportsController.sendReports)
 );
+router.post(
+  "/reports/payroll/:id/payment-receipts/pdf",
+  asyncHandler(ReportsController.downloadPaymentReceiptsPdf)
+);
 
 export default router;

@@ -25,7 +25,10 @@ export class NomineeController {
    */
   static async getEmployeeDeductions(req: Request, res: Response): Promise<Response> {
     try {
-      const employeeId = parseInt(req.params.employeeId, 10);
+      const employeeIdParam = Array.isArray(req.params.employeeId) 
+        ? req.params.employeeId[0] 
+        : req.params.employeeId;
+      const employeeId = parseInt(employeeIdParam, 10);
       
       if (isNaN(employeeId)) {
         return res.status(400).json({ 

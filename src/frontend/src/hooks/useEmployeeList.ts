@@ -249,7 +249,7 @@ const useEmployeeList = () => {
         employee_position_id: employeeData.employee_position_id || '',
         employee_hire_date: employeeData.employee_hire_date || '',
         employee_gender: employeeData.employee_gender || '',
-        employee_schedule: employeeData.employee_schedule || '',
+        employee_required_hours_biweekly: employeeData.employee_required_hours_biweekly || '',
       };
 
       await updateEmployee(editingEmployeeId, updates);

@@ -35,26 +35,56 @@ export class PayrollService {
   }
 
   /**
-   * Get all payroll records
-   * @returns Promise<Payroll[]> - Array of all payroll records
+   * Get all payroll records with aggregated employee data
+   * @returns Promise<Payroll[]> - Array of all payroll records with statistics
    * @throws Error if database query fails
    */
-  static async getAllPayrolls(): Promise<Payroll[]> {
+  static async getAllPayrolls(): Promise<any[]> {
     const payrolls = await prisma.vpg_payrolls.findMany({
+      include: {
+        vpg_payroll_employee: true
+      },
       orderBy: {
         payrolls_id: 'desc'
       }
     });
     
-    return payrolls.map(payroll => ({
-      id: payroll.payrolls_id,
-      payroll_type: payroll.payrolls_payroll_type_id,
-      period_start: payroll.payrolls_period_start,
-      period_end: payroll.payrolls_period_end,
-      payment_date: payroll.payrolls_payment_date,
-      status: payroll.payrolls_status,
-      version: payroll.payrolls_version,
-    }));
+    return payrolls.map(payroll => {
+      const employees = payroll.vpg_payroll_employee || [];
+      
+      // Calculate aggregated statistics
+      const totalEmployees = employees.length;
+      const totalGross = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_gross_salary || 0), 0);
+      const totalDeductions = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_total_deductions || 0), 0);
+      const totalNet = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_net_salary || 0), 0);
+      const totalBonuses = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_bonuses || 0), 0);
+      const totalHours = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_total_hours || 0), 0);
+      const totalOvertimeHours = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_overtime_hours || 0), 0);
+      const totalWeeklyRestHours = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_weekly_rest_hours || 0), 0);
+      const totalOvertimePay = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_overtime_pay || 0), 0);
+      const totalWeeklyRestPay = employees.reduce((sum, emp) => sum + Number(emp.payroll_employee_weekly_rest_pay || 0), 0);
+      
+      return {
+        id: payroll.payrolls_id,
+        payroll_type: payroll.payrolls_payroll_type_id,
+        period_start: payroll.payrolls_period_start,
+        period_end: payroll.payrolls_period_end,
+        payment_date: payroll.payrolls_payment_date,
+        status: payroll.payrolls_status,
+        version: payroll.payrolls_version,
+        // Aggregated statistics
+        total_employees: totalEmployees,
+        total_gross: totalGross,
+        total_deductions: totalDeductions,
+        total_net: totalNet,
+        total_bonuses: totalBonuses,
+        total_hours: totalHours,
+        total_overtime_hours: totalOvertimeHours,
+        total_weekly_rest_hours: totalWeeklyRestHours,
+        total_overtime_pay: totalOvertimePay,
+        total_weekly_rest_pay: totalWeeklyRestPay,
+      };
+    });
   }
 
   /**
@@ -145,6 +175,12 @@ export class PayrollService {
         employee_name: `${row.vpg_employees.employee_first_name} ${row.vpg_employees.employee_last_name}${row.vpg_employees.employee_middle_name ? ' ' + row.vpg_employees.employee_middle_name : ''}`.trim(),
         employee_identification: row.vpg_employees.employee_national_id,
         position_name: row.vpg_employees.vpg_positions?.position_name,
+        total_hours: Number(row.payroll_employee_total_hours) || 0,
+        overtime_hours: Number(row.payroll_employee_overtime_hours) || 0,
+        overtime_pay: Number(row.payroll_employee_overtime_pay) || 0,
+        weekly_rest_hours: Number(row.payroll_employee_weekly_rest_hours) || 0,
+        weekly_rest_pay: Number(row.payroll_employee_weekly_rest_pay) || 0,
+        bonuses: Number(row.payroll_employee_bonuses) || 0,
         gross_salary: Number(row.payroll_employee_gross_salary) || 0,
         total_deductions: Number(row.payroll_employee_total_deductions) || 0,
         net_salary: Number(row.payroll_employee_net_salary) || 0,

@@ -28,6 +28,12 @@ export interface PayrollEmployee {
   employee_name: string;
   employee_identification: string;
   position_name?: string;
+  total_hours?: number;
+  overtime_hours?: number;
+  weekly_rest_hours?: number;
+  overtime_pay?: number;
+  weekly_rest_pay?: number;
+  bonuses?: number;
   gross_salary: number;
   total_deductions: number;
   net_salary: number;

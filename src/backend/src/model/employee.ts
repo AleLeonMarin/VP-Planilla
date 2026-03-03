@@ -11,5 +11,6 @@ export interface Employee {
   exit_date?: Date;
   fired: boolean;
   status: string; // e.g., 'active', 'inactive'
+  required_hours_biweekly?: number; // Horas requeridas por quincena
   version: number;
 }

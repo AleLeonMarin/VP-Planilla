@@ -3,6 +3,7 @@ import {
   OfficialReportType,
   ReportsService,
 } from "../service/ReportsService";
+import { PaymentReceiptService } from "../service/PaymentReceiptService";
 
 export class ReportsController {
   static async getDashboard(_req: Request, res: Response) {
@@ -106,6 +107,47 @@ export class ReportsController {
         error instanceof Error
           ? error.message
           : "No se pudo enviar los reportes";
+      res.status(500).json({ success: false, message });
+    }
+  }
+
+  static async downloadPaymentReceiptsPdf(req: Request, res: Response) {
+    const payrollId = Number(req.params.id);
+    if (Number.isNaN(payrollId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID de planilla inválido" });
+    }
+
+    const body = req.body || {};
+    const employeeIds = Array.isArray(body.employeeIds)
+      ? body.employeeIds
+          .map((value: unknown) => Number(value))
+          .filter((value: number) => Number.isInteger(value) && value > 0)
+      : undefined;
+
+    try {
+      const { pdf, employeeIds: resolvedEmployeeIds } =
+        await PaymentReceiptService.generateConsolidatedReceiptsPDF(
+          payrollId,
+          employeeIds && employeeIds.length > 0 ? employeeIds : undefined
+        );
+
+      const fileName =
+        resolvedEmployeeIds.length === 1
+          ? `comprobante_pago_${payrollId}_${resolvedEmployeeIds[0]}.pdf`
+          : `comprobantes_planilla_${payrollId}.pdf`;
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+      res.setHeader("Content-Length", pdf.length);
+      res.send(pdf);
+    } catch (error) {
+      console.error("Failed to generate payment receipts PDF:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo generar el PDF de comprobantes";
       res.status(500).json({ success: false, message });
     }
   }

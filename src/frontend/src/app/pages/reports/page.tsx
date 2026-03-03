@@ -23,6 +23,7 @@ import {
   BuildingOffice2Icon,
   ArrowPathIcon,
   ClockIcon,
+  ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
 const REPORT_LABELS: Record<OfficialReportType, string> = {
@@ -88,6 +89,7 @@ export default function ReportsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingDataset, setLoadingDataset] = useState(false);
   const [sending, setSending] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [dispatchSummary, setDispatchSummary] = useState<ReportDispatchSummary | null>(null);
 
   const loadDashboard = async () => {
@@ -222,6 +224,46 @@ export default function ReportsPage() {
       modal.showError('Error en envío', message);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDownloadReceiptsPdf = async () => {
+    if (!selectedPayrollId || !dataset) {
+      modal.showWarning('Selecciona una planilla', 'Debes elegir una planilla para descargar los comprobantes.');
+      return;
+    }
+
+    if (selectedEmployees.length === 0) {
+      modal.showWarning('Sin empleados', 'Selecciona al menos un empleado para generar el comprobante.');
+      return;
+    }
+
+    setDownloadingPdf(true);
+    try {
+      const { blob, fileName } = await ReportsService.downloadPaymentReceiptsPdf({
+        payrollId: selectedPayrollId,
+        employeeIds: selectedEmployees,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      modal.showSuccess(
+        'PDF generado',
+        selectedEmployees.length === 1
+          ? 'Se descargó el comprobante del empleado seleccionado.'
+          : 'Se descargó un único PDF con todos los comprobantes seleccionados.'
+      );
+    } catch (error: any) {
+      console.error(error);
+      const message = error?.message || 'No se pudo generar el PDF de comprobantes';
+      modal.showError('Error en descarga', message);
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -456,10 +498,32 @@ export default function ReportsPage() {
                   />
                 </div>
                 <button
-                  disabled={sending || selectedEmployees.length === 0}
+                  disabled={downloadingPdf || sending || selectedEmployees.length === 0}
+                  onClick={handleDownloadReceiptsPdf}
+                  className={`mb-2 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
+                    downloadingPdf || sending || selectedEmployees.length === 0
+                      ? 'bg-gray-400'
+                      : 'bg-[#6F7153] hover:bg-[#5D614A]'
+                  }`}
+                >
+                  {downloadingPdf ? (
+                    <>
+                      <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                      Generando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownTrayIcon className="h-5 w-5" />
+                      {selectedEmployees.length === 1 ? 'Descargar comprobante PDF' : 'Descargar comprobantes PDF'}
+                    </>
+                  )}
+                </button>
+
+                <button
+                  disabled={sending || downloadingPdf || selectedEmployees.length === 0}
                   onClick={handleSendReports}
                   className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
-                    sending || selectedEmployees.length === 0
+                    sending || downloadingPdf || selectedEmployees.length === 0
                       ? 'bg-gray-400'
                       : 'bg-[#3B4D36] hover:bg-[#2f3b2a]'
                   }`}
@@ -472,7 +536,7 @@ export default function ReportsPage() {
                   ) : (
                     <>
                       <DocumentArrowUpIcon className="h-5 w-5" />
-                      Enviar comprobantes
+                      Enviar comprobantes por correo
                     </>
                   )}
                 </button>

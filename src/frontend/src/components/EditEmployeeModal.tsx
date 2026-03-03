@@ -51,7 +51,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         employee_position_id: String(employeeData.position_id || ''),
         employee_hire_date: employeeData.hire_date ? new Date(employeeData.hire_date).toISOString().split('T')[0] : '',
         employee_gender: employeeData.gender || '',
-        employee_schedule: employeeData.schedule || 'Horario Diurno',
+        employee_required_hours_biweekly: employeeData.required_hours_biweekly || '',
       });
     }
   }, [isOpen, employeeData, reset]);
@@ -242,13 +242,17 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-[#5D4E37] mb-1">Horario</label>
-                          <select {...register('employee_schedule')} className="w-full px-3 py-2 border border-[#D2B48C] rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white text-[#3B4D36]">
-                            <option value="Horario Diurno">Horario Diurno</option>
-                            <option value="Horario Nocturno">Horario Nocturno</option>
-                            <option value="Horario Mixto">Horario Mixto</option>
-                            <option value="Medio Tiempo">Medio Tiempo</option>
-                          </select>
+                          <label className="block text-sm font-medium text-[#5D4E37] mb-1">Horas requeridas por quincena</label>
+                          <input 
+                            {...register('employee_required_hours_biweekly')} 
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="999.99"
+                            placeholder="104.00" 
+                            className="w-full px-3 py-2 border border-[#D2B48C] rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white text-[#3B4D36]" 
+                          />
+                          <p className="mt-1 text-xs text-[#8B7355]">Ejemplo: 104h medio tiempo, 208h tiempo completo</p>
                         </div>
 
                         <div>

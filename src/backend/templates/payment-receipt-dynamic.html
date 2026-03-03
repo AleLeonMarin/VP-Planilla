@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Comprobante de Pago - Verde Gestión</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
       --verde-oscuro:  #3a4d2c;
@@ -25,7 +24,7 @@
     @page { size: A4 landscape; margin: 4mm; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
       background: #ddd8c4;
       display: flex;
       justify-content: center;
@@ -66,7 +65,7 @@
     .logo-circle svg { fill: white; width: 28px; height: 28px; }
 
     .header-empresa h1 {
-      font-family: 'DM Serif Display', serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 18px;
       color: var(--blanco);
       letter-spacing: 0.3px;
@@ -81,7 +80,7 @@
       text-align: right;
     }
     .header-titulo h2 {
-      font-family: 'DM Serif Display', serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 20px;
       color: var(--blanco);
       letter-spacing: 0.5px;
@@ -127,7 +126,7 @@
       color: rgba(255,255,255,0.65);
     }
     .banda-item .b-val {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Courier New', monospace;
       font-size: 11.5px;
       font-weight: 500;
       color: var(--blanco);
@@ -175,7 +174,7 @@
     }
 
     .empleado-nombre {
-      font-family: 'DM Serif Display', serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 15px !important;
       color: var(--verde-oscuro) !important;
       margin-bottom: 10px !important;
@@ -236,7 +235,7 @@
     }
     .bloque-header .bh-total {
       margin-left: auto;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Courier New', monospace;
       font-size: 12px;
       font-weight: 500;
     }
@@ -266,7 +265,7 @@
     td.detalle  { color: var(--texto-suave); font-size: 10px; }
     td.monto {
       text-align: right;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Courier New', monospace;
       font-size: 11px;
       font-weight: 500;
       white-space: nowrap;
@@ -296,7 +295,7 @@
       margin-bottom: 3px;
     }
     .neto-sub .ns-val {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Courier New', monospace;
       font-size: 13px;
       font-weight: 500;
     }
@@ -324,7 +323,7 @@
       margin-bottom: 2px;
     }
     .neto-principal .np-monto {
-      font-family: 'DM Serif Display', serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 24px;
       color: var(--blanco);
       letter-spacing: -0.5px;
@@ -419,8 +418,11 @@
   <!-- HEADER -->
   <div class="header">
     <div class="logo-circle">
-      <!-- Reemplaza con <img src="/images/Logo.png"> si tienes el logo -->
-      <img src="{{logo_src}}" alt="Logo Verde Gestión" width="180" height="180">
+      {{#if logo_src}}
+      <img src="{{logo_src}}" alt="Logo Verde Gestión" width="68" height="68">
+      {{else}}
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+      {{/if}}
     </div>
     <div class="header-empresa">
       <h1>{{nombre_empresa}}</h1>

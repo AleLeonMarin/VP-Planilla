@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model vpg_audit_logs {
@@ -83,7 +84,7 @@ model vpg_deductions {
   deductions_percentage       Decimal?                      @db.Decimal(5, 2)
   deductions_fixed_amount     Decimal?                      @db.Decimal(10, 2)
   deductions_version          Int                           @default(1)
-  vpg_deductions_per_employee vpg_deductions_per_employee[] @ignore
+  vpg_deductions_per_employee vpg_deductions_per_employee[]
   vpg_employee_deductions     vpg_employee_deductions[]
 }
 
@@ -117,23 +118,24 @@ model vpg_employee_labor_event {
 }
 
 model vpg_employees {
-  employee_id                 Int                           @id @default(autoincrement())
-  employee_first_name         String                        @db.VarChar(50)
-  employee_last_name          String                        @db.VarChar(50)
-  employee_middle_name        String                        @db.VarChar(50)
-  employee_national_id        String                        @db.VarChar(30)
-  employee_social_code        String                        @db.VarChar(100)
-  employee_email              String                        @db.VarChar(100)
-  employee_position_id        Int
-  employee_hire_date          DateTime                      @db.Date
-  employee_exit_date          DateTime?                     @db.Date
-  employee_fired              Boolean                       @default(false)
-  employee_status             String                        @db.Char(1)
-  employee_version            Int                           @default(1)
+  employee_id                      Int                           @id @default(autoincrement())
+  employee_first_name              String                        @db.VarChar(50)
+  employee_last_name               String                        @db.VarChar(50)
+  employee_middle_name             String                        @db.VarChar(50)
+  employee_national_id             String                        @db.VarChar(30)
+  employee_social_code             String                        @db.VarChar(100)
+  employee_email                   String                        @db.VarChar(100)
+  employee_position_id             Int
+  employee_hire_date               DateTime                      @db.Date
+  employee_exit_date               DateTime?                     @db.Date
+  employee_fired                   Boolean                       @default(false)
+  employee_status                  String                        @db.Char(1)
+  employee_required_hours_biweekly Decimal?                      @db.Decimal(5, 2)
+  employee_version                 Int                           @default(1)
   vpg_bonuses                 vpg_bonuses[]
   vpg_branch_employee         vpg_branch_employee[]         @ignore
   vpg_clock_logs              vpg_clock_logs[]
-  vpg_deductions_per_employee vpg_deductions_per_employee[] @ignore
+  vpg_deductions_per_employee vpg_deductions_per_employee[]
   vpg_employee_deductions     vpg_employee_deductions[]
   vpg_employee_documents      vpg_employee_documents[]
   vpg_employee_labor_event    vpg_employee_labor_event[]
@@ -192,6 +194,12 @@ model vpg_payroll_employee {
   payroll_employee_id               Int           @id @default(autoincrement())
   payroll_employee_payroll_id       Int
   payroll_employee_employee_id      Int
+  payroll_employee_total_hours      Decimal?      @db.Decimal(10, 2)
+  payroll_employee_overtime_hours   Decimal?      @db.Decimal(10, 2)
+  payroll_employee_overtime_pay     Decimal?      @db.Decimal(10, 2)
+  payroll_employee_weekly_rest_hours Decimal?     @db.Decimal(10, 2)
+  payroll_employee_weekly_rest_pay  Decimal?      @db.Decimal(10, 2)
+  payroll_employee_bonuses          Decimal?      @db.Decimal(10, 2)
   payroll_employee_gross_salary     Decimal       @db.Decimal(10, 2)
   payroll_employee_total_deductions Decimal       @db.Decimal(10, 2)
   payroll_employee_net_salary       Decimal       @db.Decimal(10, 2)
@@ -344,5 +352,5 @@ model vpg_deductions_per_employee {
   vpg_deductions                       vpg_deductions @relation(fields: [deductions_per_employee_deduction_id], references: [deductions_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_deductions_per_employee_deductions_23")
   vpg_employees                        vpg_employees  @relation(fields: [deductions_per_employee_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_deductions_per_employee_employees_22")
 
-  @@ignore
+  @@id([deductions_per_employee_employee_id, deductions_per_employee_deduction_id])
 }

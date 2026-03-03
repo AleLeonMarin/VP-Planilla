@@ -30,7 +30,7 @@ export interface EmployeeFormData {
   employee_position_id: string;
   employee_hire_date: string;
   employee_gender: string;
-  employee_schedule: string;
+  employee_required_hours_biweekly: string;
 }
 
 export interface EmployeeStats {

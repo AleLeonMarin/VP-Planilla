@@ -22,6 +22,7 @@ export class EmployeeController {
       email: rawData.employee_email || rawData.email,
       position_id: rawData.employee_position_id || rawData.position_id,
       hire_date: rawData.employee_hire_date || rawData.hire_date,
+      required_hours_biweekly: rawData.employee_required_hours_biweekly || rawData.required_hours_biweekly || null,
       status: rawData.employee_status || rawData.status || 'active'
     };
 
@@ -87,6 +88,7 @@ export class EmployeeController {
       hire_date: rawData.employee_hire_date || rawData.hire_date,
       exit_date: rawData.employee_exit_date || rawData.exit_date,
       fired: rawData.employee_fired ?? rawData.fired ?? false,
+      required_hours_biweekly: rawData.employee_required_hours_biweekly || rawData.required_hours_biweekly || null,
       status: rawData.employee_status || rawData.status,
       version: rawData.employee_version || rawData.version
     };
