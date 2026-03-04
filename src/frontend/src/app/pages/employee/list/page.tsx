@@ -112,7 +112,7 @@ const EmployeeListPage: React.FC = () => {
         isOpen={showEditEmployeeModal}
         onClose={closeEditEmployeeModal}
         onSubmit={handleUpdateEmployee}
-        employeeData={editingEmployeeData}
+        employeeData={editingEmployeeData ?? undefined}
         isLoading={isLoadingEmployee}
         positions={positions}
         positionsLoading={positionsLoading}

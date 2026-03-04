@@ -17,7 +17,7 @@ const useAddEmployeeModal = () => {
     employee_position_id: '',
     employee_hire_date: '',
     employee_gender: 'Masculino',
-    employee_schedule: 'Horario Diurno'
+    employee_required_hours_biweekly: ''
   });
 
   /**
@@ -61,7 +61,7 @@ const useAddEmployeeModal = () => {
       employee_position_id: '',
       employee_hire_date: '',
       employee_gender: 'Masculino',
-      employee_schedule: 'Horario Diurno'
+      employee_required_hours_biweekly: ''
     });
   };
 

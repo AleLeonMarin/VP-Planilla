@@ -18,7 +18,7 @@ interface RawEmployeeData {
   social_code?: string;
   email?: string;
   phone?: string;
-  position_id?: string | number;
+  position_id?: string | number | null;
   hire_date?: string;
   gender?: string;
   required_hours_biweekly?: string;
