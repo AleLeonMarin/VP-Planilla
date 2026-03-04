@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-interface User {
+export interface User {
   id: number;
   username: string;
   first_name: string;

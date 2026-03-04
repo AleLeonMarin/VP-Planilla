@@ -33,7 +33,7 @@ export const NomineeService = {
     }
   },
 
-  async calculateNominee(): Promise<any> {
+  async calculateNominee(): Promise<unknown> {
     try {
       return await http.post('/nominee/calculate');
     } catch (err) {
@@ -41,9 +41,9 @@ export const NomineeService = {
     }
   },
 
-  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number): Promise<any> {
+  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number): Promise<unknown> {
     try {
-      const payload: any = { startDate, endDate };
+      const payload: { startDate: string; endDate: string; payrollId?: number } = { startDate, endDate };
       if (payrollId) {
         payload.payrollId = payrollId;
       }

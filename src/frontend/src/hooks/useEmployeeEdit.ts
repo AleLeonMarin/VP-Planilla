@@ -6,7 +6,7 @@ import { getEmployeeById, updateEmployee, EmployeeUpdateData } from '@/services/
  * Proporciona funciones para cargar y actualizar datos de un empleado específico
  */
 export const useEmployeeEdit = (employeeId: string) => {
-  const [employee, setEmployee] = useState<any | null>(null);
+  const [employee, setEmployee] = useState<Awaited<ReturnType<typeof getEmployeeById>> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +21,8 @@ export const useEmployeeEdit = (employeeId: string) => {
     try {
       const data = await getEmployeeById(employeeId);
       setEmployee(data);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando empleado');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando empleado');
       console.error('Error fetching employee:', e);
     } finally {
       setIsLoading(false);
@@ -48,8 +48,8 @@ export const useEmployeeEdit = (employeeId: string) => {
       const updated = await updateEmployee(employeeId, updates);
       setEmployee(updated);
       return updated;
-    } catch (e: any) {
-      setError(e?.message || 'Error actualizando empleado');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error actualizando empleado');
       throw e;
     } finally {
       setIsLoading(false);

@@ -7,7 +7,6 @@ export const API_BASE = rawBase.toLowerCase().endsWith('/api') ? rawBase : `${ra
 
 // Debug log to help identify wrong base URLs during development
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line no-console
   console.log('[http] API_BASE =', API_BASE);
 }
 
@@ -53,12 +52,12 @@ async function tryRefreshToken(): Promise<string> {
 
   // Use AuthService.refreshToken to call /api/refresh
   const resp = await AuthService.refreshToken(refresh);
-  // Expecting { token: string } (backend may return more)
-  const newToken = (resp as any)?.token;
+  const refreshResp = resp as { token: string; refresh_token?: string };
+  const newToken = refreshResp.token;
   if (!newToken) throw new Error('Refresh failed');
 
   // Optionally update refresh token if backend returned one
-  const newRefresh = (resp as any)?.refresh_token || refresh;
+  const newRefresh = refreshResp.refresh_token || refresh;
   setStoredTokens(newToken, newRefresh);
   return newToken;
 }
@@ -68,11 +67,11 @@ async function parseErrorResponse(res: Response) {
     const data = await res.json();
     const msg = data?.message || data?.error || JSON.stringify(data);
     return msg;
-  } catch (_e) {
+  } catch {
     try {
       const text = await res.text();
       return text;
-    } catch (_e2) {
+    } catch {
       return `HTTP ${res.status}`;
     }
   }
@@ -105,7 +104,7 @@ async function rawRequest(inputPath: string, options: RequestInit = {}, retry = 
           if (onAuthFailureCallback) onAuthFailureCallback();
         }
         return retryRes;
-      } catch (err) {
+      } catch {
         // Refresh failed -> logout
         clearStoredTokens();
         if (onAuthFailureCallback) onAuthFailureCallback();
@@ -140,16 +139,16 @@ async function requestJson(path: string, options: RequestInit = {}) {
       return parsed.data;
     }
     return parsed;
-  } catch (e) {
+  } catch {
     return text;
   }
 }
 
 export const http = {
   get: (path: string) => requestJson(path, { method: 'GET' }),
-  post: (path: string, body?: any) => requestJson(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
-  put: (path: string, body?: any) => requestJson(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
-  delete: (path: string, body?: any) => requestJson(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
+  post: (path: string, body?: unknown) => requestJson(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
+  put: (path: string, body?: unknown) => requestJson(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
+  delete: (path: string, body?: unknown) => requestJson(path, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: body !== undefined ? JSON.stringify(body) : undefined }),
   raw: rawRequest,
   setTokens: setStoredTokens,
   clearTokens: clearStoredTokens,

@@ -20,8 +20,8 @@ export const useBranches = () => {
       const branches = await BranchService.getAllBranches();
       setData(branches);
       return branches;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al cargar sucursales';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar sucursales';
       setError(errorMessage);
       console.error('Error fetching branches:', err);
     } finally {
@@ -39,8 +39,8 @@ export const useBranches = () => {
       const newBranch = await BranchService.createBranch(branchData);
       setData(prev => [...prev, newBranch]);
       return newBranch;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al crear sucursal';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear sucursal';
       setError(errorMessage);
       throw err;
     } finally {
@@ -58,8 +58,8 @@ export const useBranches = () => {
       const updatedBranch = await BranchService.updateBranch(id, branchData);
       setData(prev => prev.map(b => b.id === id ? updatedBranch : b));
       return updatedBranch;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al actualizar sucursal';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar sucursal';
       setError(errorMessage);
       throw err;
     } finally {
@@ -77,8 +77,8 @@ export const useBranches = () => {
       await BranchService.deleteBranch(id);
       setData(prev => prev.filter(b => b.id !== id));
       return true;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al eliminar sucursal';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar sucursal';
       setError(errorMessage);
       throw err;
     } finally {

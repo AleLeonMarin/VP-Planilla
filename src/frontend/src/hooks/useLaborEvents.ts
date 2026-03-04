@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 import { LaborEventsService } from '@/services/laborEventsService';
 
+type ApiLaborEvent = EmployeeLaborEvent & {
+  employee_labor_event_employee_id?: number;
+  employee_labor_event_labor_event_id?: number;
+  employee_labor_event_start_date?: string;
+  employee_labor_event_end_date?: string | null;
+  employee_labor_event_status?: string;
+  employee_labor_event_version?: number;
+};
+
 export const useLaborEvents = () => {
   const [events, setEvents] = useState<EmployeeLaborEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,14 +25,14 @@ export const useLaborEvents = () => {
       const data = await LaborEventsService.getAllLaborEvents();
       const employeeEvents = data.employeeEvents || [];
       
-      const mapped = employeeEvents.map(ev => ({
+      const mapped = (employeeEvents as ApiLaborEvent[]).map(ev => ({
         id: ev.id,
-        employee_id: (ev as any).employee_labor_event_employee_id || ev.employee_id,
-        labor_event_id: ev.labor_event_id || (ev as any).employee_labor_event_labor_event_id,
-        start_date: ev.start_date || (ev as any).employee_labor_event_start_date,
-        end_date: ev.end_date || (ev as any).employee_labor_event_end_date,
-        status: ev.status || (ev as any).employee_labor_event_status,
-        version: ev.version || (ev as any).employee_labor_event_version,
+        employee_id: ev.employee_labor_event_employee_id || ev.employee_id,
+        labor_event_id: ev.labor_event_id || ev.employee_labor_event_labor_event_id,
+        start_date: ev.start_date || ev.employee_labor_event_start_date,
+        end_date: ev.end_date || ev.employee_labor_event_end_date,
+        status: ev.status || ev.employee_labor_event_status,
+        version: ev.version || ev.employee_labor_event_version,
         labor_event_name: ev.labor_event_name,
         labor_event_description: ev.labor_event_description,
       } as EmployeeLaborEvent));
@@ -38,8 +47,8 @@ export const useLaborEvents = () => {
 
   const createEvent = async (eventData: LaborEventFormData): Promise<EmployeeLaborEvent> => {
     try {
-      let laborEventId: number | undefined = (eventData as any).labor_event_id;
-      let created: any = undefined;
+      let laborEventId: number | undefined = (eventData as LaborEventFormData & { labor_event_id?: number }).labor_event_id;
+      let created: { id?: number; name?: string } | undefined = undefined;
 
       if (!laborEventId && (eventData.name || eventData.description)) {
         created = await LaborEventsService.createLaborEvent({
@@ -86,7 +95,7 @@ export const useLaborEvents = () => {
 
       // Update labor event type (name/description) using existing backend endpoint
       if (eventData.name !== undefined || eventData.description !== undefined) {
-        const eventTypePayload: any = {};
+        const eventTypePayload: { name?: string; description?: string } = {};
         if (eventData.name !== undefined) eventTypePayload.name = eventData.name;
         if (eventData.description !== undefined) eventTypePayload.description = eventData.description;
         
@@ -125,11 +134,11 @@ export const useLaborEvents = () => {
 
               // Update the enriched fields if name/description changed
               if (eventData.name !== undefined) {
-                (updatedEvent as any).labor_event_name = eventData.name;
+                updatedEvent.labor_event_name = eventData.name;
               }
               
               if (eventData.description !== undefined) {
-                (updatedEvent as any).labor_event_description = eventData.description;
+                updatedEvent.labor_event_description = eventData.description;
               }
               
               return updatedEvent;

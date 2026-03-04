@@ -1,4 +1,3 @@
-import { API_CONFIG } from '@/config';
 import { http } from './http';
 
 export interface PayrollPayload {

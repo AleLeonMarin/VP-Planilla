@@ -16,6 +16,26 @@ import {
   fireEmployee
 } from '@/services/employeeService';
 
+interface RawEmployee {
+  id?: string | number;
+  employee_id?: string | number;
+  name?: string;
+  employee_first_name?: string;
+  first_name?: string;
+  employee_middle_name?: string;
+  middle_name?: string;
+  employee_last_name?: string;
+  last_name?: string;
+  status?: string;
+  employee_status?: string;
+  position_id?: string | number | null;
+  employee_position_id?: string | number | null;
+  fired?: boolean;
+  employee_fired?: boolean;
+  employee_exit_date?: string | null;
+  exit_date?: string | null;
+}
+
 const normalizePart = (value?: string) =>
   typeof value === 'string' ? value.trim() : '';
 
@@ -36,7 +56,7 @@ const inferFirstName = (fullName?: string, middleName?: string, lastName?: strin
   return workingName.trim();
 };
 
-const buildEmployeeName = (raw: any): string => {
+const buildEmployeeName = (raw: RawEmployee): string => {
   const normalize = (value?: string) =>
     typeof value === 'string' ? value.trim() : '';
 
@@ -56,7 +76,7 @@ const buildEmployeeName = (raw: any): string => {
   return [middleName, lastName].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 };
 
-const normalizeEmployeeForEdit = (raw: any) => {
+const normalizeEmployeeForEdit = (raw: RawEmployee) => {
   const middleName = normalizePart(raw.employee_middle_name ?? raw.middle_name);
   const lastName = normalizePart(raw.employee_last_name ?? raw.last_name);
   const existingFirstName = normalizePart(raw.employee_first_name ?? raw.first_name);
@@ -85,7 +105,7 @@ const useEmployeeList = () => {
     remove: deletePosition
   } = usePositions();
 
-  const [rawEmployees, setRawEmployees] = useState<any[]>([]);
+  const [rawEmployees, setRawEmployees] = useState<RawEmployee[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,7 +113,7 @@ const useEmployeeList = () => {
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [showEditEmployeeModal, setShowEditEmployeeModal] = useState(false);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
-  const [editingEmployeeData, setEditingEmployeeData] = useState<any | null>(null);
+  const [editingEmployeeData, setEditingEmployeeData] = useState<RawEmployee | null>(null);
   const [isLoadingEmployee, setIsLoadingEmployee] = useState(false);
   const [showDismissModal, setShowDismissModal] = useState(false);
   const [dismissingEmployee, setDismissingEmployee] = useState<{ id: string; name: string } | null>(null);
@@ -104,8 +124,8 @@ const useEmployeeList = () => {
     incapacityMaternity: 0
   });
 
-  const mapApiEmployees = (apiEmployees: any[]): Employee[] => {
-    return (apiEmployees as any[]).map((e: any) => {
+  const mapApiEmployees = (apiEmployees: RawEmployee[]): Employee[] => {
+    return apiEmployees.map((e) => {
       const rawStatus = String(e.status ?? e.employee_status ?? 'active');
       let normalizedStatus: string = EMPLOYEE_STATUS.ACTIVE;
       // Map common single-letter or legacy codes to normalized constants
@@ -134,14 +154,14 @@ const useEmployeeList = () => {
       const positionId = String(e.position_id ?? e.employee_position_id ?? '');
       const isFired = e.fired === true || e.employee_fired === true;
 
-      let resolvedStatus: string = isFired ? EMPLOYEE_STATUS.FIRED : normalizedStatus;
+      const resolvedStatus: string = isFired ? EMPLOYEE_STATUS.FIRED : normalizedStatus;
 
       return {
         id: String(e.employee_id ?? e.id),
         name: buildEmployeeName(e),
         position: getPositionName(positionId, positions),
         salary: getPositionSalary(positionId, positions),
-        status: resolvedStatus as any,
+        status: resolvedStatus as Employee['status'],
         fired: isFired,
         exit_date: e.employee_exit_date ?? e.exit_date ?? null,
       } as Employee;
@@ -153,7 +173,7 @@ const useEmployeeList = () => {
     const loadEmployees = async () => {
       try {
         const apiEmployees = await apiGetEmployees();
-        setRawEmployees(apiEmployees as any[]);
+        setRawEmployees(apiEmployees as RawEmployee[]);
       } catch (error) {
         console.error('Error loading employees from API', error);
         // Si falla, dejar la lista vacía (o podríamos mantener datos locales)
@@ -172,6 +192,7 @@ const useEmployeeList = () => {
     setEmployees(mapped);
     setFilteredEmployees(mapped);
     updateStats(mapped);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawEmployees, positions]);
 
   // Filtrar empleados basado en el término de búsqueda y estado de despedidos
@@ -216,7 +237,7 @@ const useEmployeeList = () => {
       }
     } else if (action === 'dismiss') {
       const emp = rawEmployees.find(
-        (e: any) => String(e.employee_id ?? e.id) === employeeId
+        (e) => String(e.employee_id ?? e.id) === employeeId
       );
       const empName = emp ? buildEmployeeName(emp) : 'este empleado';
       setDismissingEmployee({ id: employeeId, name: empName });
@@ -233,7 +254,7 @@ const useEmployeeList = () => {
   /**
    * Maneja la actualización de un empleado
    */
-  const handleUpdateEmployee = async (employeeData: any) => {
+  const handleUpdateEmployee = async (employeeData: Partial<EmployeeFormData>) => {
     if (!editingEmployeeId) return;
 
     try {
@@ -256,7 +277,7 @@ const useEmployeeList = () => {
       
       // Recargar lista de empleados
       const apiEmployees = await apiGetEmployees();
-      setRawEmployees(apiEmployees as any[]);
+      setRawEmployees(apiEmployees as RawEmployee[]);
       
       alert('Empleado actualizado correctamente');
     } catch (error) {
@@ -274,7 +295,7 @@ const useEmployeeList = () => {
     try {
       await fireEmployee(dismissingEmployee.id, exitDate);
       const apiEmployees = await apiGetEmployees();
-      setRawEmployees(apiEmployees as any[]);
+      setRawEmployees(apiEmployees as RawEmployee[]);
       setShowDismissModal(false);
       setDismissingEmployee(null);
     } catch (error) {
@@ -301,7 +322,7 @@ const useEmployeeList = () => {
   const handleAddEmployee = async (employeeData: EmployeeFormData) => {
     try {
       const created = await apiCreateEmployee(employeeData);
-      const createdObj = created as any;
+      const createdObj = created as RawEmployee;
       setRawEmployees((prev) => [...prev, createdObj]);
     } catch (error) {
       console.error('Error creating employee', error);
@@ -361,7 +382,7 @@ const useEmployeeList = () => {
     refreshEmployees: async () => {
       try {
         const apiEmployees = await apiGetEmployees();
-        setRawEmployees(apiEmployees as any[]);
+        setRawEmployees(apiEmployees as RawEmployee[]);
       } catch (error) {
         console.error('Error refreshing employees', error);
       }

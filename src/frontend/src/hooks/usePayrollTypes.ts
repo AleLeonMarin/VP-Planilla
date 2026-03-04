@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { PayrollTypesService, PayrollType } from '@/services/payrollTypesService';
+import { PayrollTypesService, PayrollType, PayrollTypePayload } from '@/services/payrollTypesService';
 
 /**
  * Hook personalizado para manejar operaciones CRUD de tipos de planilla
@@ -19,8 +19,8 @@ export const usePayrollTypes = () => {
     try {
       const res = await PayrollTypesService.getAllPayrollTypes();
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando tipos de planilla');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando tipos de planilla');
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +36,7 @@ export const usePayrollTypes = () => {
    * @param payload - Datos del tipo de planilla a crear
    * @returns El tipo de planilla creado
    */
-  const create = async (payload: any) => {
+  const create = async (payload: PayrollTypePayload) => {
     setIsLoading(true);
     try {
       const created = await PayrollTypesService.createPayrollType(payload);
@@ -53,7 +53,7 @@ export const usePayrollTypes = () => {
    * @param payload - Datos a actualizar
    * @returns El tipo de planilla actualizado
    */
-  const update = async (id: number, payload: any) => {
+  const update = async (id: number, payload: Partial<PayrollType>) => {
     setIsLoading(true);
     try {
       const updated = await PayrollTypesService.updatePayrollType(id, payload);
@@ -68,7 +68,7 @@ export const usePayrollTypes = () => {
    * Elimina un tipo de planilla
    * @param id - ID del tipo de planilla a eliminar
    */
-  const remove = async (id: number) => {
+  const remove = async () => {
     setIsLoading(true);
     try {
       // Nota: El servicio no tiene método delete implementado aún

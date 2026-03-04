@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
 import { EmployeeDeductionsService } from '@/services/employeeDeductionsService';
-import { EmployeeDeduction, AssignDeductionRequest } from '@/types/employeeDeductions';
+import { EmployeeDeductionWithDetails, AssignDeductionRequest } from '@/types/employeeDeductions';
 
 /**
  * Hook for managing employee deductions
  */
 export const useEmployeeDeductions = (employeeId?: number) => {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<EmployeeDeductionWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,8 +20,8 @@ export const useEmployeeDeductions = (employeeId?: number) => {
       const deductions = await EmployeeDeductionsService.getEmployeeDeductions(empId);
       setData(deductions);
       return deductions;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al cargar deducciones';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar deducciones';
       setError(errorMessage);
       throw err;
     } finally {
@@ -42,8 +42,8 @@ export const useEmployeeDeductions = (employeeId?: number) => {
       await fetchEmployeeDeductions(request.employeeId);
       
       return result;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al asignar deducción';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al asignar deducción';
       setError(errorMessage);
       throw err;
     } finally {
@@ -64,8 +64,8 @@ export const useEmployeeDeductions = (employeeId?: number) => {
       await fetchEmployeeDeductions(empId);
       
       return true;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al eliminar deducción';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar deducción';
       setError(errorMessage);
       throw err;
     } finally {

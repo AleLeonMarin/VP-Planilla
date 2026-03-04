@@ -20,8 +20,8 @@ export const usePayrollEmployees = (payrollId?: number) => {
       const employees = await PayrollEmployeesService.getPayrollEmployees(id);
       setData(employees);
       return employees;
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Error al cargar empleados de la planilla';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar empleados de la planilla';
       setError(errorMessage);
       throw err;
     } finally {

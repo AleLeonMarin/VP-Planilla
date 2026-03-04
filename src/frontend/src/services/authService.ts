@@ -2,10 +2,19 @@ import { API_CONFIG } from '@/config';
 
 const BASE = `${API_CONFIG.baseUrl.replace(/\/$/, '')}/api`;
 
+interface AuthUser {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  middle_name: string;
+  role: string;
+}
+
 export interface LoginResponse {
   token?: string;
   refresh_token?: string;
-  user?: any;
+  user?: AuthUser;
 }
 
 export const AuthService = {
@@ -22,7 +31,7 @@ export const AuthService = {
     return res.json();
   },
 
-  async me(token: string): Promise<any> {
+  async me(token: string): Promise<AuthUser> {
     const res = await fetch(`${BASE}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });

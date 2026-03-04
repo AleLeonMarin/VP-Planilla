@@ -12,8 +12,8 @@ export const useDeductions = () => {
     try {
       const res = await DeductionsService.getAllDeductions();
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando deducciones');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando deducciones');
     } finally {
       setIsLoading(false);
     }

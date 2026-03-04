@@ -12,8 +12,8 @@ export const useBonuses = () => {
     try {
       const res = await BonusesService.getAllBonuses();
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando bonificaciones');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando bonificaciones');
     } finally {
       setIsLoading(false);
     }

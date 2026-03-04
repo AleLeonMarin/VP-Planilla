@@ -48,10 +48,10 @@ export const PositionsService = {
         try {
           const data = await res.json();
           msg = data?.message || JSON.stringify(data);
-        } catch (_e) {
+        } catch {
           msg = await res.text().catch(() => 'Conflict');
         }
-        const err: any = new Error(msg);
+        const err = new Error(msg) as Error & { status: number };
         err.status = 409;
         throw err;
       }
@@ -61,14 +61,15 @@ export const PositionsService = {
         try {
           const data = await res.json();
           msg = data?.message || JSON.stringify(data);
-        } catch (_e) {
+        } catch {
           msg = await res.text().catch(() => msg);
         }
         throw new Error(msg);
       }
 
       const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      if (!text) throw new Error('Empty response from server');
+      return JSON.parse(text) as Position;
     } catch (err) {
       if (err instanceof Error) throw err;
       throw new Error('Error al actualizar posición');

@@ -1,6 +1,7 @@
-import { 
-  EmployeeDeduction, 
-  AssignDeductionRequest 
+import {
+  EmployeeDeduction,
+  EmployeeDeductionWithDetails,
+  AssignDeductionRequest
 } from '@/types/employeeDeductions';
 import { http } from './http';
 
@@ -11,7 +12,7 @@ export const EmployeeDeductionsService = {
   /**
    * Get all deductions assigned to a specific employee
    */
-  async getEmployeeDeductions(employeeId: number): Promise<any[]> {
+  async getEmployeeDeductions(employeeId: number): Promise<EmployeeDeductionWithDetails[]> {
     try {
       const data = await http.get(`/nominee/employee-deductions/${employeeId}`);
       if (!data) return [];

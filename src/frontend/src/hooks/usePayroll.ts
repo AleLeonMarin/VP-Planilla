@@ -13,23 +13,23 @@ export const usePayroll = () => {
       const res = await PayrollService.getAllPayrolls();
       setData(res);
       return res;
-    } catch (err: any) {
-      setError(err?.message || 'Error getting payrolls');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error getting payrolls');
       throw err;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const createPayroll = useCallback(async (payload: any) => {
+  const createPayroll = useCallback(async (payload: Partial<Payroll>) => {
     setIsLoading(true);
     setError(null);
     try {
       const res = await PayrollService.createPayroll(payload);
       setData(res);
       return res;
-    } catch (err: any) {
-      setError(err?.message || 'Error creating payroll');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creating payroll');
       throw err;
     } finally {
       setIsLoading(false);
@@ -43,8 +43,8 @@ export const usePayroll = () => {
       const res = await PayrollService.getPayrollById(id);
       setData(res);
       return res;
-    } catch (err: any) {
-      setError(err?.message || 'Error getting payroll');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error getting payroll');
       throw err;
     } finally {
       setIsLoading(false);

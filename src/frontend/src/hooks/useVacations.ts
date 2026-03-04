@@ -12,8 +12,8 @@ export const useVacations = () => {
     try {
       const res = await VacationsService.getAll();
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando vacaciones');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando vacaciones');
     } finally {
       setIsLoading(false);
     }

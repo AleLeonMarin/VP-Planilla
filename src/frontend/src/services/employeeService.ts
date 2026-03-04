@@ -20,7 +20,7 @@ export const createEmployee = async (employeeData: EmployeeFormData): Promise<Em
     ? parseFloat(employeeData.employee_required_hours_biweekly) 
     : null;
 
-  const payload: any = {
+  const payload = {
     name: employeeData.employee_first_name,
     last_name: employeeData.employee_last_name,
     middle_name: employeeData.employee_middle_name,

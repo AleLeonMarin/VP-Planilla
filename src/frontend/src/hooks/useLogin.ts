@@ -21,15 +21,6 @@ interface AuthenticatedUser {
   role: string;
 }
 
-interface LoginResponse {
-  success?: boolean;
-  user?: AuthenticatedUser;
-  token?: string;
-  refresh_token?: string;
-  message?: string;
-  type?: string;
-}
-
 export const useLogin = (modalActions?: { showError: (title: string, message: string, onConfirm?: () => void) => void; showSuccess: (title: string, message: string, onConfirm?: () => void) => void }) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -54,44 +45,6 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
       return false;
     }
     return true;
-  };
-
-  const handleApiError = (data: LoginResponse | null, response?: Response): void => {
-    let errorTitle = "No pudimos conectarte";
-    let errorMessage = "Verifica tus datos e intenta nuevamente.";
-
-    if (data?.type === "user_not_found") {
-      errorTitle = "Usuario no encontrado";
-      errorMessage =
-        "El usuario que ingresaste no existe en nuestro sistema. ¿Estás seguro de que escribiste bien tu nombre de usuario?";
-    } else if (data?.type === "invalid_password") {
-      errorTitle = "Contraseña incorrecta";
-      errorMessage =
-        "La contraseña que ingresaste no es correcta. Por favor verifica e intenta nuevamente.";
-    } else if (data?.type === "invalid_credentials") {
-      errorTitle = "Datos incorrectos";
-      errorMessage =
-        "El usuario o la contraseña que ingresaste no son correctos. Por favor revisa tus datos.";
-    } else if (data?.type === "validation_error") {
-      errorTitle = "Datos incompletos";
-      errorMessage =
-        data.message ||
-        "Por favor completa todos los campos requeridos.";
-    } else if (response && response.status === 401) {
-      errorTitle = "Acceso denegado";
-      errorMessage =
-        "Los datos que ingresaste no coinciden con nuestros registros. ¿Necesitas ayuda para recuperar tu acceso?";
-    } else if (response && response.status >= 500) {
-      errorTitle = "Problema del servidor";
-      errorMessage =
-        "Tenemos un problema técnico en este momento. Por favor intenta nuevamente en unos minutos.";
-    } else {
-      errorMessage =
-        data?.message ||
-        "Ha ocurrido un problema inesperado. Por favor intenta nuevamente.";
-    }
-
-    showError(errorTitle, errorMessage);
   };
 
   const handleNetworkError = (error: unknown): void => {
@@ -141,13 +94,13 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
         try {
           handleSuccessfulLogin(JSON.parse(stored));
           return;
-        } catch (_e) {}
+        } catch {}
       }
 
       // fallback: show success without user
       showSuccess('Inicio exitoso', 'Has iniciado sesión correctamente', () => router.push('/pages/main'));
-    } catch (error: any) {
-      if (error && error.message) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message) {
         showError('Error de autenticación', error.message);
       } else {
         handleNetworkError(error);

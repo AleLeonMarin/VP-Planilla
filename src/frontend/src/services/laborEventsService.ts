@@ -1,5 +1,5 @@
 import { http } from './http';
-import { LaborEvent, EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
+import { LaborEvent, EmployeeLaborEvent } from '@/types/laborEvent';
 
 export interface LaborEventsResponse {
   laborEvents: LaborEvent[];
@@ -55,7 +55,7 @@ export class LaborEventsService {
     // Ideally backend should provide an endpoint; attempt PUT to assign id
     try {
       return await http.put(`/labor-events/assign/${id}`, data);
-    } catch (err) {
+    } catch {
       // Fallback: return mock if backend doesn't support it
       console.warn('Employee labor event update not supported by backend API. Returning mock response.');
       return {
@@ -64,7 +64,7 @@ export class LaborEventsService {
         labor_event_id: 0,
         start_date: data.start_date || new Date().toISOString(),
         end_date: data.end_date || null,
-        status: data.status as any || 'active',
+        status: (data.status || 'active') as EmployeeLaborEvent['status'],
         version: 1
       } as EmployeeLaborEvent;
     }

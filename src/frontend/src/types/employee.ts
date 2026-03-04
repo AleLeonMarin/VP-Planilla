@@ -13,6 +13,13 @@ export interface Employee {
   exit_date?: string | null;
   last_name?: string;
   middle_name?: string;
+  national_id?: string | null;
+  social_code?: string | null;
+  phone?: string | null;
+  position_id?: string | number | null;
+  hire_date?: string | null;
+  gender?: string | null;
+  schedule?: string | null;
 }
 
 export type EmployeeStatus = 

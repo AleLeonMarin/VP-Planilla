@@ -62,7 +62,7 @@ export default function PayrollTypesPage() {
         await update(editing.id, values);
         modal.showSuccess('Actualizado', 'Tipo de planilla actualizado correctamente');
       } else {
-        await create(values);
+        await create({ name: values.name!, description: values.description! });
         modal.showSuccess('Creado', 'Tipo de planilla creado correctamente');
       }
       refetch();
@@ -78,7 +78,7 @@ export default function PayrollTypesPage() {
   const handleConfirmDelete = async () => {
     if (!toDelete) return;
     try {
-      await remove(toDelete.id);
+      await remove();
       modal.showSuccess('Eliminado', 'Tipo de planilla eliminado correctamente');
       refetch();
     } catch (err: unknown) {

@@ -4,10 +4,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/services/authService';
 import { http } from '@/services/http';
-import { useUser } from '@/hooks/user';
+import { useUser, User } from '@/hooks/user';
+
+interface AuthLoginResponse {
+  token?: string;
+  refresh_token?: string | null;
+  user?: User;
+}
 
 interface AuthContextValue {
-  user: any | null;
+  user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
@@ -36,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const parsed = JSON.parse(storedUser);
           setUser(parsed);
-        } catch (_e) {
+        } catch {
           // ignore
         }
       }
@@ -45,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       http.setOnAuthFailure(() => {
         // clear local state and redirect to auth
         http.clearTokens();
-        setUser(null as any);
+        setUser(null);
         localStorage.removeItem('user');
         router.push('/auth');
       });
@@ -58,24 +64,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     setLoading(true);
     try {
-      const resp = await AuthService.login(username, password);
-      const token = (resp as any)?.token;
-      const refresh = (resp as any)?.refresh_token || null;
-      const userData = (resp as any)?.user || null;
+      const resp = await AuthService.login(username, password) as AuthLoginResponse;
+      const token = resp?.token;
+      const refresh = resp?.refresh_token ?? null;
+      const userData = resp?.user ?? null;
       if (!token) throw new Error('No token received');
 
       http.setTokens(token, refresh);
       if (userData) {
         try {
           localStorage.setItem('user', JSON.stringify(userData));
-        } catch (_e) {}
+        } catch {}
         setUser(userData);
       }
 
       // ensure onAuthFailure is set
       http.setOnAuthFailure(() => {
         http.clearTokens();
-        setUser(null as any);
+        setUser(null);
         localStorage.removeItem('user');
         router.push('/auth');
       });
@@ -91,13 +97,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           await AuthService.logout(token);
-        } catch (_e) {
+        } catch {
           // ignore logout errors
         }
       }
     } finally {
       http.clearTokens();
-      setUser(null as any);
+      setUser(null);
       localStorage.removeItem('user');
       router.push('/auth');
     }

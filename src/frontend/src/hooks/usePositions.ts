@@ -12,8 +12,8 @@ export const usePositions = () => {
     try {
       const res = await PositionsService.getAllPositions();
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || 'Error cargando posiciones');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error cargando posiciones');
     } finally {
       setIsLoading(false);
     }
