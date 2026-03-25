@@ -25,10 +25,10 @@ Llevar VP-Planilla de "funcional pero frágil" a estable, seguro y completo. El 
   1. `grep -r "new PrismaClient()" src/backend/src/service/` retorna 0 resultados
   2. `npx tsc --noEmit` pasa en `src/backend/` sin errores
   3. El singleton `import { prisma } from '../lib/prisma'` está presente en todos los archivos de service
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
 - [ ] 01-01-PLAN.md — Migrate AuthService, UserService, EmployeeService, PayrollService, PayrollTypeService
-- [ ] 01-02-PLAN.md — Migrate AuditLogsService, BonusesService, ClockLogsService, DeductionsService, EmployeeDeductions
+- [x] 01-02-PLAN.md — Migrate AuditLogsService, BonusesService, ClockLogsService, DeductionsService, EmployeeDeductions
 - [ ] 01-03-PLAN.md — Migrate LaborEventsService, PaymentReceiptService, PositionService, ReportsService, VacationService + full-phase verification
 
 ### Phase 2: Seguridad de Autenticación
@@ -115,7 +115,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Singleton Prisma | 0/3 | Planned | - |
+| 1. Singleton Prisma | 1/3 | In Progress|  |
 | 2. Seguridad de Autenticación | 0/TBD | Not started | - |
 | 3. Validación de Inputs y CORS | 0/TBD | Not started | - |
 | 4. Performance del Cálculo de Planilla | 0/TBD | Not started | - |
