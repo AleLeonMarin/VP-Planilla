@@ -19,3 +19,13 @@
 *.vscode/*
 *.json
 /docs/Formal/out/
+
+!.claude/**/*.json
+!.claude/
+!.planning/**/*.json
+!.planning/
+
+!.claude/**/*.json
+!.claude/*.json
+!.planning/**/*.json
+!.planning/*.json
