@@ -6,7 +6,7 @@ Llevar VP-Planilla de "funcional pero frágil" a estable, seguro y completo. El 
 
 ## Phases
 
-- [ ] **Phase 1: Singleton Prisma** - Eliminar las 16 instancias separadas de PrismaClient
+- [x] **Phase 1: Singleton Prisma** - Eliminar las 16 instancias separadas de PrismaClient (completed 2026-03-25)
 - [ ] **Phase 2: Seguridad de Autenticación** - Cerrar huecos críticos de auth en rutas, JWT y login
 - [ ] **Phase 3: Validación de Inputs y CORS** - Validación Zod en controllers, CORS restringido
 - [ ] **Phase 4: Performance del Cálculo de Planilla** - O(1) queries en calculatePayrollForPeriod
@@ -25,11 +25,11 @@ Llevar VP-Planilla de "funcional pero frágil" a estable, seguro y completo. El 
   1. `grep -r "new PrismaClient()" src/backend/src/service/` retorna 0 resultados
   2. `npx tsc --noEmit` pasa en `src/backend/` sin errores
   3. El singleton `import { prisma } from '../lib/prisma'` está presente en todos los archivos de service
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 01-01-PLAN.md — Migrate AuthService, UserService, EmployeeService, PayrollService, PayrollTypeService
 - [x] 01-02-PLAN.md — Migrate AuditLogsService, BonusesService, ClockLogsService, DeductionsService, EmployeeDeductions
-- [ ] 01-03-PLAN.md — Migrate LaborEventsService, PaymentReceiptService, PositionService, ReportsService, VacationService + full-phase verification
+- [x] 01-03-PLAN.md — Migrate LaborEventsService, PaymentReceiptService, PositionService, ReportsService, VacationService + full-phase verification
 
 ### Phase 2: Seguridad de Autenticación
 **Goal**: Cerrar los huecos críticos de auth — 13 rutas desprotegidas, JWT hardcodeado, credenciales en query params, throw undefined en PayrollService, archivos temporales en repo
@@ -115,7 +115,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Singleton Prisma | 2/3 | In Progress|  |
+| 1. Singleton Prisma | 3/3 | Complete   | 2026-03-25 |
 | 2. Seguridad de Autenticación | 0/TBD | Not started | - |
 | 3. Validación de Inputs y CORS | 0/TBD | Not started | - |
 | 4. Performance del Cálculo de Planilla | 0/TBD | Not started | - |
