@@ -20,12 +20,17 @@
 *.json
 /docs/Formal/out/
 
-!.claude/**/*.json
-!.claude/
-!.planning/**/*.json
-!.planning/
+# Ignorar .json globalmente
+*.json
 
+# Mantener .claude completo (excepto local settings)
+!.claude/
+!.claude/**
 !.claude/**/*.json
-!.claude/*.json
+.claude/settings.local.json
+.claude/worktrees/
+
+# Mantener .planning completo
+!.planning/
+!.planning/**
 !.planning/**/*.json
-!.planning/*.json
