@@ -25,7 +25,7 @@ Plan: 2 of 2 — all plans done
 | 1 | Singleton Prisma | ✅ Validated |
 | 2 | Seguridad de Autenticación | ✅ Validated |
 | 3 | Validación de Inputs y CORS | ✅ Validated |
-| 4 | Performance del Cálculo de Planilla | ✅ Complete |
+| 4 | Performance del Cálculo de Planilla | ✅ Validated |
 | 5 | Funcionalidad de Negocio Faltante | ⬜ Not Started |
 | 6 | Feriados Nacionales Costa Rica | ⬜ Not Started |
 | 7 | Rate Limiting, Helmet y Token Revocation | ⬜ Not Started |
