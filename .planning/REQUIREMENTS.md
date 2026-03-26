@@ -47,10 +47,10 @@ Llevar VP-Planilla de "funcional pero frágil" a "estable, seguro y completo". E
 
 | # | Requirement | Priority | Notes |
 |---|-------------|----------|-------|
-| 3.1 | CORS configurado con `origin: process.env.ALLOWED_ORIGINS?.split(',')` | Must | `src/backend/src/index.ts` |
-| 3.2 | Schemas Zod definidos para los 5 endpoints CRUD más críticos (Employee, Payroll, ClockLog, Deduction, User) | Must | Nuevos archivos en `src/backend/src/schemas/` |
-| 3.3 | `req.body` inválido retorna 400 con mensaje descriptivo | Must | Verificable con curl |
-| 3.4 | `npx tsc --noEmit` pasa después del cambio | Must | |
+| 3.1 | CORS configurado con `origin: process.env.ALLOWED_ORIGINS?.split(',')` | Must | `src/backend/src/index.ts` — DONE (03-01) |
+| 3.2 | Schemas Zod definidos para los 5 endpoints CRUD más críticos (Employee, Payroll, ClockLog, Deduction, User) | Must | Nuevos archivos en `src/backend/src/schemas/` — DONE (03-01) |
+| 3.3 | `req.body` inválido retorna 400 con mensaje descriptivo | Must | Verificable con curl — DONE (03-02) |
+| 3.4 | `npx tsc --noEmit` pasa después del cambio | Must | DONE (03-02) |
 
 ---
 
