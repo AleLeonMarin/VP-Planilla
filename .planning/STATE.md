@@ -24,9 +24,9 @@ Last session: 2026-03-26 — Completed 03-02-PLAN.md (validateBody wired into al
 
 | Phase | Title | Status |
 |-------|-------|--------|
-| 1 | Singleton Prisma | ⬜ Not Started |
-| 2 | Seguridad de Autenticación | ⬜ Not Started |
-| 3 | Validación de Inputs y CORS | ✅ Complete |
+| 1 | Singleton Prisma | ✅ Validated |
+| 2 | Seguridad de Autenticación | ✅ Validated |
+| 3 | Validación de Inputs y CORS | ✅ Validated |
 | 4 | Performance del Cálculo de Planilla | ⬜ Not Started |
 | 5 | Funcionalidad de Negocio Faltante | ⬜ Not Started |
 | 6 | Feriados Nacionales Costa Rica | ⬜ Not Started |
