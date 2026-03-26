@@ -4,6 +4,7 @@ import Sidebar from "@/components/ui/Sidebar";
 import Header from "@/components/ui/Header";
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { ThemeProvider } from '@/hooks/useTheme';
 import { useEffect } from 'react';
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
@@ -20,9 +21,9 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   }, [loading, isAuthenticated, isAuthPage, router]);
 
   return isAuthPage ? (
-    <div className="h-screen bg-[#FBF8F0]">{children}</div>
+    <div className="h-screen bg-[#FBF8F0] dark:bg-[#1a1a1a]">{children}</div>
   ) : (
-    <div className="flex h-screen bg-[#E7DCC1]">
+    <div className="flex h-screen bg-[#E7DCC1] dark:bg-[#121212]">
       <Sidebar />
       <div className="flex flex-col flex-1">
         <Header />
@@ -39,7 +40,9 @@ export default function ClientLayout({
 }) {
   return (
     <AuthProvider>
-      <InnerLayout>{children}</InnerLayout>
+      <ThemeProvider>
+        <InnerLayout>{children}</InnerLayout>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

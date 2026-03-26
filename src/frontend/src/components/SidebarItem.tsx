@@ -27,7 +27,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems })
         href={subItems ? '#' : href} // If subItems exist, link to # or prevent default
         onClick={subItems ? toggleSubmenu : undefined}
         className={`flex items-center p-2 rounded-lg transition-colors duration-200 ${
-          isActive ? 'bg-[#E7DCC1] text-[#4A5D3A]' : 'text-[#4A5D3A] hover:bg-[#E7DCC1]'
+          isActive 
+            ? 'bg-[#E7DCC1] dark:bg-[#3d3d3d] text-[#4A5D3A] dark:text-[#E5E5E5]' 
+            : 'text-[#4A5D3A] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]'
         } ${subItems ? 'cursor-pointer' : ''}`} // Add cursor pointer for items with submenus
       >
         <div className="mr-2 text-lg">
@@ -49,7 +51,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems })
               key={subItem.href}
               href={subItem.href}
               className={`flex items-center p-1.5 rounded-md transition-colors duration-200 text-xs ${
-                pathname === subItem.href ? 'bg-[#E7DCC1] text-[#4A5D3A] font-medium' : 'text-[#6B7556] hover:bg-[#E7DCC1]'
+                pathname === subItem.href 
+                  ? 'bg-[#E7DCC1] dark:bg-[#3d3d3d] text-[#4A5D3A] dark:text-[#E5E5E5] font-medium' 
+                  : 'text-[#6B7556] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]'
               }`}
             >
               {subItem.text}
