@@ -308,13 +308,14 @@ export class NomineeService {
 
       console.log(`Processing payroll for ${employees.length} employees from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
-      const [clockLogsMap, vacationsMap, laborEventsMap, bonusesMap, deductionsMap] =
+      const [clockLogsMap, vacationsMap, laborEventsMap, bonusesMap, deductionsMap, positionsMap] =
         await Promise.all([
           NomineeService.preloadClockLogs(startDate, endDate),
           NomineeService.preloadVacations(),
           NomineeService.preloadLaborEvents(startDate, endDate),
           NomineeService.preloadBonuses(startDate, endDate),
-          NomineeService.preloadDeductions()
+          NomineeService.preloadDeductions(),
+          NomineeService.preloadPositions()
         ]);
 
       for (const employee of employees) {
@@ -327,7 +328,8 @@ export class NomineeService {
             vacationsMap.get(Number(employee.id)) || [],
             laborEventsMap.get(Number(employee.id)) || [],
             bonusesMap.get(Number(employee.id)) || [],
-            deductionsMap.get(Number(employee.id)) || []
+            deductionsMap.get(Number(employee.id)) || [],
+            positionsMap
           );
           
           result.employees.push(employeePayroll);
@@ -420,7 +422,8 @@ export class NomineeService {
     employeeVacations: any[],
     employeeLaborEvents: any[],
     employeeBonuses: any[],
-    employeeDeductions: any[]
+    employeeDeductions: any[],
+    positionsMap: Map<number, any>
   ): Promise<EmployeePayroll> {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
@@ -455,11 +458,10 @@ export class NomineeService {
     };
 
     try {
-      // Get employee position and salary
+      // Get employee position and salary from preloaded data
       if (employee.position_id) {
-        const position = await PositionService.getPositionById(employee.position_id);
+        const position = positionsMap.get(employee.position_id);
         if (position) {
-          // Treat base_salary as hourly rate directly
           employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary);
           employeePayroll.position = position.name;
           employeePayroll.position_name = position.name;
@@ -814,6 +816,15 @@ export class NomineeService {
       include: { vpg_deductions: true }
     });
     return NomineeService.groupByEmployee(assignments, (item) => item.deductions_per_employee_employee_id);
+  }
+
+  private static async preloadPositions(): Promise<Map<number, any>> {
+    const positions = await prisma.vpg_positions.findMany();
+    const positionMap = new Map<number, any>();
+    for (const pos of positions) {
+      positionMap.set(pos.position_id, pos);
+    }
+    return positionMap;
   }
 
   private calculateBonusesFromData(bonuses: any[]): number {
