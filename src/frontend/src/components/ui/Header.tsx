@@ -11,7 +11,7 @@ export default function Header() {
   const currentDate = getCurrentSpanishFormattedDateString();
   const { weather: currentWeather, isLoadingWeather } = useWeather();
   const { user: currentUser } = useUser();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, mounted } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Notificaciones de ejemplo
@@ -99,17 +99,19 @@ export default function Header() {
         </p>
       </div>      <div className="relative flex items-center space-x-3 notification-container">
         {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className="w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-[#4a4a4a] flex items-center justify-center text-[#4A5D3A] dark:text-[#E5E5E5] cursor-pointer hover:bg-[#F0E6D2] dark:hover:bg-[#3d3d3d] transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === 'light' ? (
-            <MoonIcon className="w-5 h-5" />
-          ) : (
-            <SunIcon className="w-5 h-5" />
-          )}
-        </button>
+        {mounted && (
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-[#4a4a4a] flex items-center justify-center text-[#4A5D3A] dark:text-[#E5E5E5] cursor-pointer hover:bg-[#F0E6D2] dark:hover:bg-[#3d3d3d] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <MoonIcon className="w-5 h-5" />
+            ) : (
+              <SunIcon className="w-5 h-5" />
+            )}
+          </button>
+        )}
         
         {/* Notification Bell Icon */}
         <div 
