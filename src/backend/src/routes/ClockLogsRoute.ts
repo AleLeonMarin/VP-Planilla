@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { ClockLogsController } from "../controller/ClockLogsController";
 import { asyncHandler } from "../utils/asyncHandler";
+import { AuthMiddleware } from "../middleware/AuthMiddleware";
 
 const router = Router();
+
+router.use(AuthMiddleware.verifyToken);
 const controller = new ClockLogsController();
 
 /**
