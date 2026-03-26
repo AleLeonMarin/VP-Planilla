@@ -31,7 +31,7 @@
 **Frontend:**
 - Next.js 15.5.6 — React framework, Turbopack dev server (`src/frontend/`)
 - React 19.0.0 — UI library
-- Tailwind CSS 4 — Utility-first CSS (via `@tailwindcss/postcss ^4`, config: `src/frontend/tailwind.config.js`)
+- Tailwind CSS 4 — Utility-first CSS (via `@tailwindcss/postcss ^4`)
 
 **Testing:**
 - Jest 29.7.0 — Backend test runner (`src/backend/jest.config.js`)
@@ -71,8 +71,8 @@
 | `express` | ^5.1.0 | HTTP server |
 | `jsonwebtoken` | ^9.0.2 | JWT signing/verification (`src/backend/src/service/AuthService.ts`) |
 | `bcrypt` | ^6.0.0 | Password hashing — **pre-release, prefer `^5.1.1`** |
-| `zod` | ^4.3.6 | Backend request body validation (`src/backend/src/schemas/`) |
-| `cors` | ^2.8.5 | CORS handling |
+| `zod` | ^4.3.6 | Backend request body validation via `validateBody` middleware (`src/backend/src/schemas/`) |
+| `cors` | ^2.8.5 | CORS handling — configured with `ALLOWED_ORIGINS` env var in `src/backend/src/index.ts` |
 | `dotenv` | ^16.5.0 | `.env` loading |
 
 **Backend — Feature:**
@@ -113,8 +113,20 @@
 **ORM:** Prisma 6.14.0
 - Schema: `src/backend/prisma/schema.prisma`
 - Singleton client: `src/backend/src/lib/prisma.ts` — import as `import { prisma } from '../lib/prisma'`
+- All services must use the singleton. One remaining violation: `src/backend/src/controller/ClockLogsController.ts` still calls `new PrismaClient()` directly.
 - 22 models defined, all using `vpg_` table prefix and `snake_case` field naming convention
 - Connection via `DATABASE_URL` environment variable
+- Query logging enabled in singleton — emits query events with count tracking via `getQueryCount()` / `resetQueryCount()`
+
+## Middleware Stack (Backend)
+
+Applied in `src/backend/src/index.ts`:
+1. `cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') })` — Phase 3: CORS restricted to env-configured origins
+2. `express.json()` — Body parsing
+
+Per-route middleware (applied at router level):
+- `AuthMiddleware.verifyToken` — JWT verification. Applied via `router.use(...)` in all 15 protected route files, and via individual route handlers in `AuthRoute.ts` and `UserRoute.ts`. Entry point asserts `JWT_SECRET` is set or exits.
+- `validateBody(schema)` — Zod schema validation from `src/backend/src/middleware/validateBody.ts`. Applied to 5 route files: `EmployeeRoute.ts`, `DeductionsRoute.ts`, `ClockLogsRoute.ts`, `PayrollRoutes.ts`, `UserRoute.ts`.
 
 ## Testing Details
 
@@ -141,6 +153,20 @@ src/backend/src/__tests__/
 
 **Frontend testing:** No test framework configured in `src/frontend/package.json`.
 
+## Zod Schemas
+
+**Backend** (`src/backend/src/schemas/`):
+- `EmployeeSchema.ts` — `createEmployeeSchema`, `updateEmployeeSchema`
+- `DeductionSchema.ts` — create/update deduction schemas
+- `ClockLogSchema.ts` — `bulkCreateClockLogSchema`
+- `PayrollSchema.ts` — `createPayrollSchema`, `updatePayrollSchema`
+- `UserSchema.ts` — `updatePermissionsSchema`
+- `index.ts` — re-exports all schemas
+
+**Frontend** (`src/frontend/src/schemas/`):
+- `employee.ts` — employee form schema
+- `vacationSchema.ts` — vacation form schema
+
 ## API Documentation
 
 - OpenAPI 3.0 spec generated from `@swagger` JSDoc in `src/backend/src/routes/*.ts`
@@ -154,8 +180,7 @@ src/backend/src/__tests__/
 | `src/backend/tsconfig.json` | Backend TypeScript compiler options |
 | `src/backend/jest.config.js` | Jest test runner config |
 | `src/frontend/tsconfig.json` | Frontend TypeScript + `@/*` path alias |
-| `src/frontend/next.config.ts` | Next.js config (minimal, no overrides currently) |
-| `src/frontend/tailwind.config.js` | Tailwind CSS config |
+| `src/frontend/next.config.ts` | Next.js config |
 | `src/frontend/postcss.config.mjs` | PostCSS pipeline |
 | `src/frontend/eslint.config.mjs` | ESLint rules (next/core-web-vitals) |
 

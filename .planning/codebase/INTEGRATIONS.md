@@ -67,7 +67,9 @@
 
 **Roles:** Stored in `vpg_users.user_role`. Role gate: `AuthMiddleware.requireRole(allowedRoles[])`.
 
-**Known gap:** Only 3 of 16 route files apply `AuthMiddleware.verifyToken`. Most routes are currently unauthenticated. See `CONCERNS.md`.
+**Auth status (post Phase 2):** All 16 route files apply `AuthMiddleware.verifyToken`. 15 use `router.use(AuthMiddleware.verifyToken)` at the top of the router; `AuthRoute.ts` applies it per-handler for protected endpoints (`/me`, `/validate`, `/change-password`) while login/refresh/logout remain public.
+
+**Remaining gap:** `src/backend/src/service/AuthService.ts` `generateToken()` and `verifyToken()` both contain a hardcoded fallback: `process.env.JWT_SECRET || 'your-default-secret-key'`. The startup assertion in `src/backend/src/index.ts` prevents the server from starting without `JWT_SECRET`, but the fallback string inside `AuthService.ts` is still present and would be reachable if `AuthService` were ever instantiated outside of the main server entry point (e.g., in tests). See `CONCERNS.md`.
 
 ## Email (SMTP)
 
@@ -79,7 +81,7 @@
 1. Environment variables: `REPORTS_SMTP_HOST` / `SMTP_HOST` / `EMAIL_HOST`, port, user, pass, from address, SSL/TLS flags
 2. Database table: `vpg_mail_server_settings` (last record by ID)
 
-**Trigger:** `POST /api/reports/payroll/:id/send` — authenticated endpoint
+**Trigger:** `POST /api/reports/payroll/:id/send` — requires `Authorization: Bearer` token
 
 ## PDF Generation (Server-Side)
 
@@ -114,8 +116,8 @@ Files persisted to local filesystem before email dispatch. Dispatch target endpo
 - `@scalar/express-api-reference ^0.8.16` — Interactive Swagger UI
 
 **Endpoints:**
-- `GET /api/docs/swagger.json` — Raw OpenAPI spec
-- `GET /api/docs` — Interactive Scalar UI
+- `GET /api/docs/swagger.json` — Raw OpenAPI spec (public)
+- `GET /api/docs` — Interactive Scalar UI (public)
 
 ## Frontend → Backend HTTP Layer
 
@@ -128,45 +130,46 @@ Files persisted to local filesystem before email dispatch. Dispatch target endpo
 
 ## Exposed API Endpoints
 
-All prefixed with `/api`. Most require `Authorization: Bearer <token>` header.
+All prefixed with `/api`. All routes except login, refresh, logout, and docs require `Authorization: Bearer <token>` header.
 
-| Route group | Path prefix | Auth required |
+| Route group | Path prefix | Auth |
 |---|---|---|
-| Auth | `/api/login`, `/api/logout`, `/api/me`, `/api/refresh`, `/api/validate`, `/api/change-password` | Partial (login/refresh are public) |
-| Employees | `/api/employees` | Yes (middleware gap — see CONCERNS.md) |
-| Positions | `/api/positions` | Yes (middleware gap) |
-| Payroll | `/api/payrolls` | Yes (middleware gap) |
-| Payroll Types | `/api/payroll-types` | Yes (middleware gap) |
-| Clock Logs | `/api/clock-logs` | Yes (middleware gap) |
-| Vacations | `/api/vacations` | Yes (middleware gap) |
-| Deductions | `/api/deductions` | Yes (middleware gap) |
-| Employee Deductions | `/api/employee-deductions` | Yes (middleware gap) |
-| Bonuses | `/api/bonuses` | Yes (middleware gap) |
-| Labor Events | `/api/labor-events` | Yes (middleware gap) |
-| Nominees | `/api/nominees` | Yes (middleware gap) |
-| Users | `/api/users` | Yes (middleware gap) |
-| Audit Logs | `/api/audit-logs` | Yes (middleware gap) |
-| Reports | `/api/reports` | Yes — route-level `router.use(AuthMiddleware.verifyToken)` |
-| Payment Receipts | `/api/payment-receipts` | Yes (middleware gap) |
+| Auth — public | `/api/login`, `/api/logout`, `/api/refresh` | None |
+| Auth — protected | `/api/me`, `/api/validate`, `/api/change-password` | `verifyToken` per-handler |
+| Employees | `/api/employees`, `/api/employee/create`, `/api/employee/:id` | `router.use(verifyToken)` |
+| Positions | `/api/positions` | `router.use(verifyToken)` |
+| Payroll | `/api/payrolls`, `/api/payroll/create`, `/api/payroll/:id` | `router.use(verifyToken)` |
+| Payroll Types | `/api/payroll-types` | `router.use(verifyToken)` |
+| Clock Logs | `/api/clock-logs` | `router.use(verifyToken)` |
+| Vacations | `/api/vacations` | `router.use(verifyToken)` |
+| Deductions | `/api/deductions` | `router.use(verifyToken)` |
+| Employee Deductions | `/api/employee-deductions` | `router.use(verifyToken)` |
+| Bonuses | `/api/bonuses` | `router.use(verifyToken)` |
+| Labor Events | `/api/labor-events` | `router.use(verifyToken)` |
+| Nominees | `/api/nominees` | `router.use(verifyToken)` |
+| Users | `/api/users` | `router.use(verifyToken)` per-handler |
+| Audit Logs | `/api/audit-logs` | `router.use(verifyToken)` |
+| Reports | `/api/reports` | `router.use(verifyToken)` |
+| Payment Receipts | `/api/payment-receipts` | `router.use(verifyToken)` |
 | Docs | `/api/docs`, `/api/docs/swagger.json` | Public |
 | Health | `/health`, `/` | Public |
 
 ## Webhooks & Callbacks
 
 **Incoming:** None detected.
-**Outgoing:** Reports can be dispatched to external institution URLs stored in `vpg_report_targets.report_targets_endpoint_url` — the mechanism for this dispatch is defined in the schema but the HTTP dispatch implementation is not yet confirmed in the service layer.
+**Outgoing:** Reports can be dispatched to external institution URLs stored in `vpg_report_targets.report_targets_endpoint_url` — the mechanism for this dispatch is defined in the schema but the HTTP dispatch implementation in `ReportsService.ts` uses email rather than HTTP POST to the target URL.
 
 ## Monitoring & Observability
 
 **Error Tracking:** None (no Sentry, Datadog, Rollbar, etc.)
 **Logs:** `console.log` / `console.error` only
-**Prisma query logging:** Enabled in development — `log: ['query', 'error', 'warn']` in `src/backend/src/lib/prisma.ts`
+**Prisma query logging:** Enabled — singleton emits `query` events with counter at `src/backend/src/lib/prisma.ts`; `getQueryCount()` and `resetQueryCount()` are exported for use in tests and performance validation.
 
 ## Environment Variables
 
 **Backend (`src/backend/`) — required at startup:**
 - `DATABASE_URL` — PostgreSQL connection string (**required**)
-- `JWT_SECRET` — JWT signing secret (**required** — server exits with non-zero code if missing, see `src/backend/src/index.ts`)
+- `JWT_SECRET` — JWT signing secret (**required** — server exits with `process.exit(1)` if missing, see `src/backend/src/index.ts`)
 
 **Backend — optional:**
 - `PORT` — HTTP port (default: `3001`)
@@ -182,7 +185,7 @@ All prefixed with `/api`. Most require `Authorization: Bearer <token>` header.
 - `REPORTS_FROM` / `SMTP_FROM` / `EMAIL_FROM`
 - `REPORTS_SMTP_SECURE` / `SMTP_SECURE` — Use SSL (default: `false`)
 - `REPORTS_SMTP_TLS` / `SMTP_TLS` — Require TLS (default: `false`)
-- `NODE_ENV` — Controls Prisma query log level (`development` = verbose)
+- `NODE_ENV` — Controls Prisma query log level
 
 **Frontend (`src/frontend/`) — optional:**
 - `NEXT_PUBLIC_API_URL` — Backend API base URL (default: `http://localhost:3001`)
