@@ -1,14 +1,9 @@
 import { Request, Response } from "express";
 import { ClockLogsService } from "../service/ClockLogsService";
 import { prisma } from "../lib/prisma";
-import { EmployeeDeductions } from "../model/employeeDeductions";
-import { DeductionsPerEmployee } from "../model/deductionsPerEmployee";
 import { DeductionsService } from "./DeductionsService";
 import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
-import { BonusesService } from "./BonusesService";
-import { VacationService } from "./VacationService";
-import { LaborEventsService } from "./LaborEventsService";
 import * as PayrollUtils from "../utils/payrollUtils";
 import {
   PayrollPeriod,
@@ -724,123 +719,6 @@ export class NomineeService {
       hours: totalHours,
       messages,
       hasInconsistency: false
-    };
-  }
-
-  /**
-   * Calculate bonuses for an employee in the given period
-   * @param employeeId - Employee ID
-   * @param startDate - Start date of the period
-   * @param endDate - End date of the period
-   * @returns Promise<number> - Total bonus amount
-   */
-  private async calculateBonuses(
-    employeeId: number,
-    startDate: Date,
-    endDate: Date
-  ): Promise<number> {
-    try {
-      const bonuses = await prisma.vpg_bonuses.findMany({
-        where: {
-          bonuses_employee_id: employeeId,
-          bonuses_granted_at: {
-            gte: startDate,
-            lte: endDate
-          }
-        }
-      });
-      return PayrollUtils.roundToMoney(
-        bonuses.reduce((sum, b) => sum + Number(b.bonuses_amount), 0)
-      );
-    } catch (error) {
-      console.error(`Error calculating bonuses for employee ${employeeId}:`, error);
-      return 0;
-    }
-  }
-
-  /**
-   * Calculate deductions for an employee
-   * @param employeeId - Employee ID
-   * @param grossSalary - Employee gross salary for percentage calculations
-   * @returns Promise with total deductions and breakdown
-   */
-  private async calculateDeductions(
-    employeeId: number,
-    grossSalary: number
-  ): Promise<{ total: number; breakdown: DeductionBreakdown[] }> {
-    const breakdown: DeductionBreakdown[] = [];
-    let total = 0;
-
-    try {
-      const employeeDeductions = await this.getEmployeeDeductions(employeeId);
-      if (!employeeDeductions || employeeDeductions.length === 0) {
-        console.log(`[Payroll] No deductions assigned for employee ${employeeId}`);
-      }
-      
-      for (const empDeduction of employeeDeductions) {
-        try {
-          // Prefer the values already loaded by the JOIN to avoid extra roundtrips
-          let name = empDeduction.deduction_name as string | undefined;
-          let fixed = empDeduction.fixed_amount as number | undefined;
-          let percent = empDeduction.percentage as number | undefined;
-
-          // Fallback: fetch full definition if missing
-          if ((fixed == null || percent == null) && !name) {
-            const deduction = await DeductionsService.getDeductionById(empDeduction.deduction_id);
-            if (!deduction) {
-              breakdown.push({
-                code: `DED_${empDeduction.deduction_id}`,
-                type: 'fixed',
-                amount: 0,
-                message: `Deducción no encontrada (ID: ${empDeduction.deduction_id})`
-              });
-              continue;
-            }
-            name = deduction.name;
-            fixed = deduction.fixed_amount;
-            percent = deduction.percentage;
-          }
-
-          let amount = 0;
-          let type: 'fixed' | 'percent' = 'fixed';
-
-          if (fixed && fixed > 0) {
-            amount = PayrollUtils.roundToMoney(fixed);
-            type = 'fixed';
-          } else if (percent && percent > 0) {
-            amount = PayrollUtils.applyPercentageDeduction(grossSalary, percent);
-            type = 'percent';
-          }
-
-          const codeBase = (name || `DED_${empDeduction.deduction_id}`);
-          breakdown.push({
-            deduction_id: empDeduction.deduction_id,
-            code: codeBase.replace(/\s+/g, '_').toUpperCase(),
-            type,
-            amount,
-            message: `${codeBase}: ${type === 'percent' ? `${percent}%` : `₡${fixed ?? 0}`}`
-          });
-
-          total += amount;
-          
-        } catch (error) {
-          console.error(`Error processing deduction ${empDeduction.deduction_id}:`, error);
-          breakdown.push({
-            code: `DED_${empDeduction.deduction_id}`,
-            type: 'fixed',
-            amount: 0,
-            message: `Error procesando deducción: ${error instanceof Error ? error.message : 'Error desconocido'}`
-          });
-        }
-      }
-      
-    } catch (error) {
-      console.error(`Error calculating deductions for employee ${employeeId}:`, error);
-    }
-
-    return {
-      total: PayrollUtils.roundToMoney(total),
-      breakdown
     };
   }
 
