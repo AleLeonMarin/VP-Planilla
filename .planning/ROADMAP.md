@@ -55,9 +55,9 @@ Plans:
   2. `req.body` inválido a endpoint Employee/Payroll retorna 400 con mensaje descriptivo
   3. Schemas Zod existen para Employee, Payroll, ClockLog, Deduction, User
   4. `npx tsc --noEmit` pasa
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 03-01-PLAN.md — CORS fix, install Zod, create validateBody middleware, define all 5 domain schemas
+- [x] 03-01-PLAN.md — CORS fix, install Zod, create validateBody middleware, define all 5 domain schemas
 - [ ] 03-02-PLAN.md — Wire validateBody middleware into all 5 route files
 
 ### Phase 4: Performance del Cálculo de Planilla
@@ -123,7 +123,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Singleton Prisma | 3/3 | Complete   | 2026-03-25 |
 | 2. Seguridad de Autenticación | 0/2 | Planned | - |
-| 3. Validación de Inputs y CORS | 0/2 | Planned | - |
+| 3. Validación de Inputs y CORS | 1/2 | In Progress|  |
 | 4. Performance del Cálculo de Planilla | 0/TBD | Not started | - |
 | 5. Funcionalidad de Negocio Faltante | 0/TBD | Not started | - |
 | 6. Feriados Nacionales Costa Rica | 0/TBD | Not started | - |
