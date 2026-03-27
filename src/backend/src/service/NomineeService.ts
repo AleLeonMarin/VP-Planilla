@@ -1,14 +1,9 @@
 import { Request, Response } from "express";
 import { ClockLogsService } from "../service/ClockLogsService";
 import { prisma } from "../lib/prisma";
-import { EmployeeDeductions } from "../model/employeeDeductions";
-import { DeductionsPerEmployee } from "../model/deductionsPerEmployee";
 import { DeductionsService } from "./DeductionsService";
 import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
-import { BonusesService } from "./BonusesService";
-import { VacationService } from "./VacationService";
-import { LaborEventsService } from "./LaborEventsService";
 import * as PayrollUtils from "../utils/payrollUtils";
 import {
   PayrollPeriod,
@@ -117,68 +112,6 @@ export class NomineeService {
       // If there's an error, return empty array instead of throwing
       // This allows the UI to show "no deductions" instead of an error
       return [];
-    }
-  }
-
-  /**
-   * Calculate nominee (legacy method - basic implementation)
-   * @returns Promise<void>
-   * @deprecated Use calculatePayrollForPeriod instead for complete payroll calculations
-   */
-  async calculateNominee(): Promise<void> {
-    console.log("Starting legacy nominee calculation...");
-
-    // Init services needed for the process
-    const logsService = new ClockLogsService();
-
-    // Using current month as default period
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    const logs = await logsService.getClockLogs({
-      initDate: startOfMonth,
-      endDate: endOfMonth,
-    });
-
-    // Process each log to calculate the nominee
-    for (const log of logs) {
-      const employeeDeductions = await this.getEmployeeDeductions(
-        log.employee_id,
-      );
-
-      if (!employeeDeductions.length) {
-        console.log(
-          `No se encontraron deducciones para el empleado ${log.employee_id}`,
-        );
-        continue;
-      }
-
-      for (const employeeDeduction of employeeDeductions) {
-        const deduction = await DeductionsService.getDeductionById(
-          employeeDeduction.deduction_id,
-        );
-
-        if (!deduction) {
-          console.log(
-            `Deducción no encontrada con ID: ${employeeDeduction.deduction_id}`,
-          );
-          continue;
-        }
-
-        let sum = 0;
-        if (deduction.fixed_amount) {
-          sum += deduction.fixed_amount;
-        }
-        if (deduction.percentage) {
-          const employeeSalary = 1000;
-          sum += (deduction.percentage / 100) * employeeSalary;
-        }
-
-        console.log(
-          `Total de deducciones para el empleado ${log.employee_id}: $${sum.toFixed(2)}`,
-        );
-      }
     }
   }
 
@@ -348,12 +281,28 @@ export class NomineeService {
         `Processing payroll for ${employees.length} employees from ${startDate.toISOString()} to ${endDate.toISOString()}`,
       );
 
+      const [clockLogsMap, vacationsMap, laborEventsMap, bonusesMap, deductionsMap, positionsMap] =
+        await Promise.all([
+          NomineeService.preloadClockLogs(startDate, endDate),
+          NomineeService.preloadVacations(),
+          NomineeService.preloadLaborEvents(startDate, endDate),
+          NomineeService.preloadBonuses(startDate, endDate),
+          NomineeService.preloadDeductions(),
+          NomineeService.preloadPositions()
+        ]);
+
       for (const employee of employees) {
         try {
           const employeePayroll = await this.calculateEmployeePayroll(
             employee,
             startDate,
             endDate,
+            clockLogsMap.get(Number(employee.id)) || [],
+            vacationsMap.get(Number(employee.id)) || [],
+            laborEventsMap.get(Number(employee.id)) || [],
+            bonusesMap.get(Number(employee.id)) || [],
+            deductionsMap.get(Number(employee.id)) || [],
+            positionsMap
           );
 
           result.employees.push(employeePayroll);
@@ -450,6 +399,12 @@ export class NomineeService {
     employee: any,
     startDate: Date,
     endDate: Date,
+    employeeClockLogs: any[],
+    employeeVacations: any[],
+    employeeLaborEvents: any[],
+    employeeBonuses: any[],
+    employeeDeductions: any[],
+    positionsMap: Map<number, any>
   ): Promise<EmployeePayroll> {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
@@ -485,16 +440,11 @@ export class NomineeService {
     };
 
     try {
-      // Get employee position and salary
+      // Get employee position and salary from preloaded data
       if (employee.position_id) {
-        const position = await PositionService.getPositionById(
-          employee.position_id,
-        );
+        const position = positionsMap.get(employee.position_id);
         if (position) {
-          // Treat base_salary as hourly rate directly
-          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(
-            position.base_salary,
-          );
+          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary);
           employeePayroll.position = position.name;
           employeePayroll.position_name = position.name;
         } else {
@@ -508,49 +458,22 @@ export class NomineeService {
         );
       }
 
-      // Get clock logs for the period
-      const clockLogsService = new ClockLogsService();
-      const clockLogs = await clockLogsService.getClockLogs({
-        initDate: startDate,
-        endDate: endDate,
-      });
-
-      const employeeClockLogs = clockLogs.filter(
-        (log) => log.employee_id === employee.id,
-      );
-
-      // Get vacations for the period
-      const vacations = await VacationService.getAllVacations();
-      const employeeVacations = vacations.filter(
-        (vacation) =>
-          vacation.employee_id === employee.id &&
+      // Filter vacations to only those in the current period (preloaded)
+      const filteredVacations = employeeVacations.filter(
+        vacation =>
           vacation.paid &&
           this.dateRangesOverlap(
             vacation.start_date,
             vacation.end_date,
             startDate,
-            endDate,
-          ),
+            endDate
+          )
       );
 
-      // Get active labor events (suspension, disability, etc.) overlapping the period
-      const employeeLaborEvents =
-        await prisma.vpg_employee_labor_event.findMany({
-          where: {
-            employee_labor_event_employee_id: employee.id,
-            employee_labor_event_start_date: { lte: endDate },
-            OR: [
-              { employee_labor_event_end_date: null },
-              { employee_labor_event_end_date: { gte: startDate } },
-            ],
-          },
-          include: { vpg_labor_events: true },
-        });
-
-      // Process daily work
+      // Process daily work (using preloaded data)
       const dailyWork = this.processDailyWork(
         employeeClockLogs,
-        employeeVacations,
+        filteredVacations,
         employeeLaborEvents,
         startDate,
         endDate,
@@ -617,12 +540,8 @@ export class NomineeService {
         employeePayroll.overtimeHours * employeePayroll.baseHourlySalary * 1.5,
       );
 
-      // Get bonuses for the period
-      employeePayroll.bonuses = await this.calculateBonuses(
-        employee.id,
-        startDate,
-        endDate,
-      );
+      // Calculate bonuses from preloaded data
+      employeePayroll.bonuses = this.calculateBonusesFromData(employeeBonuses);
 
       // Gross salary = regular pay + overtime pay (×1.5) + weekly rest pay + bonuses
       // Use already-computed values for consistency
@@ -632,11 +551,11 @@ export class NomineeService {
           employeePayroll.weeklyRestPay +
           employeePayroll.bonuses,
       );
-
-      // Calculate deductions
-      const deductionsData = await this.calculateDeductions(
-        employee.id,
-        employeePayroll.grossSalary,
+      
+      // Calculate deductions from preloaded data
+      const deductionsData = this.calculateDeductionsFromData(
+        employeeDeductions,
+        employeePayroll.grossSalary
       );
 
       employeePayroll.totalDeductions = deductionsData.total;
@@ -721,8 +640,12 @@ export class NomineeService {
         dayWork.hoursWorked = 8.0; // Standard vacation day hours
 
         // Check if there are also clock logs for this vacation day
-        const dayClockLogs = clockLogs.filter((log) => {
-          const logDate = new Date(log.timestamp).toISOString().split("T")[0];
+        const dayClockLogs = clockLogs.filter(log => {
+          const timestamp = log.timestamp;
+          if (!timestamp) return false;
+          const parsedDate = new Date(timestamp);
+          if (isNaN(parsedDate.getTime())) return false;
+          const logDate = parsedDate.toISOString().split('T')[0];
           return logDate === dateStr;
         });
 
@@ -743,8 +666,12 @@ export class NomineeService {
         );
       } else {
         // Process clock logs for the day
-        const dayClockLogs = clockLogs.filter((log) => {
-          const logDate = new Date(log.timestamp).toISOString().split("T")[0];
+        const dayClockLogs = clockLogs.filter(log => {
+          const timestamp = log.timestamp;
+          if (!timestamp) return false;
+          const parsedDate = new Date(timestamp);
+          if (isNaN(parsedDate.getTime())) return false;
+          const logDate = parsedDate.toISOString().split('T')[0];
           return logDate === dateStr;
         });
 
@@ -818,137 +745,6 @@ export class NomineeService {
       hours: totalHours,
       messages,
       hasInconsistency: false,
-    };
-  }
-
-  /**
-   * Calculate bonuses for an employee in the given period
-   * @param employeeId - Employee ID
-   * @param startDate - Start date of the period
-   * @param endDate - End date of the period
-   * @returns Promise<number> - Total bonus amount
-   */
-  private async calculateBonuses(
-    employeeId: number,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<number> {
-    try {
-      const bonuses = await prisma.vpg_bonuses.findMany({
-        where: {
-          bonuses_employee_id: employeeId,
-          bonuses_granted_at: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-      });
-      return PayrollUtils.roundToMoney(
-        bonuses.reduce((sum, b) => sum + Number(b.bonuses_amount), 0),
-      );
-    } catch (error) {
-      console.error(
-        `Error calculating bonuses for employee ${employeeId}:`,
-        error,
-      );
-      return 0;
-    }
-  }
-
-  /**
-   * Calculate deductions for an employee
-   * @param employeeId - Employee ID
-   * @param grossSalary - Employee gross salary for percentage calculations
-   * @returns Promise with total deductions and breakdown
-   */
-  private async calculateDeductions(
-    employeeId: number,
-    grossSalary: number,
-  ): Promise<{ total: number; breakdown: DeductionBreakdown[] }> {
-    const breakdown: DeductionBreakdown[] = [];
-    let total = 0;
-
-    try {
-      const employeeDeductions = await this.getEmployeeDeductions(employeeId);
-      if (!employeeDeductions || employeeDeductions.length === 0) {
-        console.log(
-          `[Payroll] No deductions assigned for employee ${employeeId}`,
-        );
-      }
-
-      for (const empDeduction of employeeDeductions) {
-        try {
-          // Prefer the values already loaded by the JOIN to avoid extra roundtrips
-          let name = empDeduction.deduction_name as string | undefined;
-          let fixed = empDeduction.fixed_amount as number | undefined;
-          let percent = empDeduction.percentage as number | undefined;
-
-          // Fallback: fetch full definition if missing
-          if ((fixed == null || percent == null) && !name) {
-            const deduction = await DeductionsService.getDeductionById(
-              empDeduction.deduction_id,
-            );
-            if (!deduction) {
-              breakdown.push({
-                code: `DED_${empDeduction.deduction_id}`,
-                type: "fixed",
-                amount: 0,
-                message: `Deducción no encontrada (ID: ${empDeduction.deduction_id})`,
-              });
-              continue;
-            }
-            name = deduction.name;
-            fixed = deduction.fixed_amount;
-            percent = deduction.percentage;
-          }
-
-          let amount = 0;
-          let type: "fixed" | "percent" = "fixed";
-
-          if (fixed && fixed > 0) {
-            amount = PayrollUtils.roundToMoney(fixed);
-            type = "fixed";
-          } else if (percent && percent > 0) {
-            amount = PayrollUtils.applyPercentageDeduction(
-              grossSalary,
-              percent,
-            );
-            type = "percent";
-          }
-
-          const codeBase = name || `DED_${empDeduction.deduction_id}`;
-          breakdown.push({
-            deduction_id: empDeduction.deduction_id,
-            code: codeBase.replace(/\s+/g, "_").toUpperCase(),
-            type,
-            amount,
-            message: `${codeBase}: ${type === "percent" ? `${percent}%` : `₡${fixed ?? 0}`}`,
-          });
-
-          total += amount;
-        } catch (error) {
-          console.error(
-            `Error processing deduction ${empDeduction.deduction_id}:`,
-            error,
-          );
-          breakdown.push({
-            code: `DED_${empDeduction.deduction_id}`,
-            type: "fixed",
-            amount: 0,
-            message: `Error procesando deducción: ${error instanceof Error ? error.message : "Error desconocido"}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Error calculating deductions for employee ${employeeId}:`,
-        error,
-      );
-    }
-
-    return {
-      total: PayrollUtils.roundToMoney(total),
-      breakdown,
     };
   }
 
@@ -1079,5 +875,142 @@ export class NomineeService {
     }
 
     return results;
+  }
+  private static groupByEmployee<T>(
+    items: T[],
+    getEmployeeId: (item: T) => number
+  ): Map<number, T[]> {
+    const grouped = new Map<number, T[]>();
+    for (const item of items) {
+      const employeeId = getEmployeeId(item);
+      const existing = grouped.get(employeeId) || [];
+      existing.push(item);
+      grouped.set(employeeId, existing);
+    }
+    return grouped;
+  }
+
+  private static async preloadClockLogs(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Map<number, any[]>> {
+    const logs = await prisma.vpg_clock_logs.findMany({
+      where: {
+        clock_logs_timestamp: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+    return NomineeService.groupByEmployee(logs, (item) => item.clock_logs_employee_id);
+  }
+
+  private static async preloadVacations(): Promise<Map<number, any[]>> {
+    const vacations = await prisma.vpg_vacations.findMany({
+      where: {
+        vacations_paid: true
+      }
+    });
+    return NomineeService.groupByEmployee(vacations, (item) => item.vacations_employee_id);
+  }
+
+  private static async preloadLaborEvents(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Map<number, any[]>> {
+    const events = await prisma.vpg_employee_labor_event.findMany({
+      where: {
+        employee_labor_event_start_date: { lte: endDate },
+        OR: [
+          { employee_labor_event_end_date: null },
+          { employee_labor_event_end_date: { gte: startDate } }
+        ]
+      },
+      include: { vpg_labor_events: true }
+    });
+    return NomineeService.groupByEmployee(events, (item) => item.employee_labor_event_employee_id);
+  }
+
+  private static async preloadBonuses(
+    startDate: Date,
+    endDate: Date
+  ): Promise<Map<number, any[]>> {
+    const bonuses = await prisma.vpg_bonuses.findMany({
+      where: {
+        bonuses_granted_at: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+    return NomineeService.groupByEmployee(bonuses, (item) => item.bonuses_employee_id);
+  }
+
+  private static async preloadDeductions(): Promise<Map<number, any[]>> {
+    const assignments = await prisma.vpg_deductions_per_employee.findMany({
+      include: { vpg_deductions: true }
+    });
+    return NomineeService.groupByEmployee(assignments, (item) => item.deductions_per_employee_employee_id);
+  }
+
+  private static async preloadPositions(): Promise<Map<number, any>> {
+    const positions = await prisma.vpg_positions.findMany();
+    const positionMap = new Map<number, any>();
+    for (const pos of positions) {
+      positionMap.set(pos.position_id, pos);
+    }
+    return positionMap;
+  }
+
+  private calculateBonusesFromData(bonuses: any[]): number {
+    return PayrollUtils.roundToMoney(
+      bonuses.reduce((sum, b) => sum + Number(b.bonuses_amount), 0)
+    );
+  }
+
+  private calculateDeductionsFromData(
+    deductions: any[],
+    grossSalary: number
+  ): { total: number; breakdown: DeductionBreakdown[] } {
+    const breakdown: DeductionBreakdown[] = [];
+    let total = 0;
+
+    for (const ded of deductions) {
+      const deductionDef = ded.vpg_deductions;
+      const name = deductionDef?.deductions_name || '';
+      const fixed = deductionDef?.deductions_fixed_amount != null
+        ? Number(deductionDef.deductions_fixed_amount)
+        : 0;
+      const percent = deductionDef?.deductions_percentage != null
+        ? Number(deductionDef.deductions_percentage)
+        : 0;
+
+      let amount = 0;
+      let type: 'fixed' | 'percent' = 'fixed';
+
+      if (fixed && fixed > 0) {
+        amount = PayrollUtils.roundToMoney(fixed);
+        type = 'fixed';
+      } else if (percent && percent > 0) {
+        amount = PayrollUtils.applyPercentageDeduction(grossSalary, percent);
+        type = 'percent';
+      }
+
+      const codeBase = (name || `DED_${ded.deductions_per_employee_deduction_id}`);
+      breakdown.push({
+        deduction_id: ded.deductions_per_employee_deduction_id,
+        code: codeBase.replace(/\s+/g, '_').toUpperCase(),
+        type,
+        amount,
+        message: `${codeBase}: ${type === 'percent' ? `${percent}%` : `₡${fixed}`}`
+      });
+
+      total += amount;
+    }
+
+    return {
+      total: PayrollUtils.roundToMoney(total),
+      breakdown
+    };
   }
 }

@@ -31,7 +31,7 @@ export class VacationController {
    */
   static async getVacationById(req: Request, res: Response): Promise<Response> {
     try {
-      const vacationId = parseInt(req.params.id, 10);
+      const vacationId = parseInt(req.params.id as string, 10);
       
       if (isNaN(vacationId)) {
         return res.status(400).json({ 
@@ -89,7 +89,7 @@ export class VacationController {
    */
   static async updateVacation(req: Request, res: Response): Promise<Response> {
     try {
-      const vacationId = parseInt(req.params.id, 10);
+      const vacationId = parseInt(req.params.id as string, 10);
       const vacationData = req.body;
 
       if (isNaN(vacationId)) {
@@ -128,7 +128,7 @@ export class VacationController {
    */
   static async deleteVacation(req: Request, res: Response): Promise<Response> {
     try {
-      const vacationId = parseInt(req.params.id, 10);
+      const vacationId = parseInt(req.params.id as string, 10);
 
       if (isNaN(vacationId)) {
         return res.status(400).json({ 

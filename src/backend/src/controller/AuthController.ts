@@ -123,17 +123,29 @@ export class AuthController {
   }
 
   /**
-   * Logout 
+   * Logout
    * POST /auth/logout
    */
   static async logout(req: Request, res: Response): Promise<Response> {
     try {
-      // En un sistema JWT stateless, el logout se maneja del lado del cliente
-      // eliminando el token del localStorage/sessionStorage
-      
+      const authHeader = req.headers.authorization;
+
+      if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        if (token) {
+          // Decode token to get expiration
+          const decoded = AuthService.verifyToken(token);
+          const expiresAt = new Date(decoded.exp * 1000);
+
+          // Add token to blocklist
+          await AuthService.addTokenToBlocklist(token, expiresAt);
+        }
+      }
+
       return res.status(200).json({
         success: true,
-        message: 'Logout exitoso. Token debe ser eliminado del cliente.'
+        message: 'Sesión cerrada exitosamente'
       });
     } catch (error) {
       console.error('Error en logout:', error);

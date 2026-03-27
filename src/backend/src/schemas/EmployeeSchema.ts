@@ -15,11 +15,38 @@ export const createEmployeeSchema = z.object({
   employee_status: z.string().max(25, 'Estado de empleado invalido').optional().default('A'),
 });
 
-export const updateEmployeeSchema = createEmployeeSchema.extend({
-  employee_exit_date: z.string().optional(),
-  employee_fired: z.boolean().optional().default(false),
+export const updateEmployeeSchema = z.object({
+  // Frontend sends without employee_ prefix
+  name: z.string().max(50).optional().nullable(),
+  last_name: z.string().max(50).optional().nullable(),
+  middle_name: z.string().max(50).optional().nullable(),
+  national_id: z.string().max(30).optional().nullable(),
+  social_code: z.string().max(100).optional().nullable(),
+  email: z.string().email().max(100).optional().nullable(),
+  position_id: z.coerce.number().int().positive().optional().nullable(),
+  hire_date: z.string().optional().nullable(),
+  required_hours_biweekly: z.coerce.number().optional().nullable(),
+  status: z.string().max(25).optional().nullable(),
+  // Also accept with employee_ prefix (backward compatibility)
+  employee_first_name: z.string().max(50).optional().nullable(),
+  employee_last_name: z.string().max(50).optional().nullable(),
+  employee_middle_name: z.string().max(50).optional().nullable(),
+  employee_national_id: z.string().max(30).optional().nullable(),
+  employee_social_code: z.string().max(100).optional().nullable(),
+  employee_email: z.string().email().max(100).optional().nullable(),
+  employee_position_id: z.coerce.number().int().positive().optional().nullable(),
+  employee_hire_date: z.string().optional().nullable(),
+  employee_required_hours_biweekly: z.coerce.number().optional().nullable(),
+  employee_status: z.string().max(25).optional().nullable(),
+  // Dismiss fields
+  employee_exit_date: z.string().optional().nullable(),
+  employee_fired: z.boolean().optional(),
+  exit_date: z.string().optional().nullable(),
+  fired: z.boolean().optional(),
+  // Version for optimistic locking
   employee_version: z.coerce.number().optional(),
-}).partial();
+  version: z.coerce.number().optional(),
+});
 
 export type CreateEmployeeInput = z.infer<typeof createEmployeeSchema>;
 export type UpdateEmployeeInput = z.infer<typeof updateEmployeeSchema>;

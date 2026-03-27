@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { EmployeeDeductionsService } from "../service/EmployeeDeductions";
+import { AuditLogsService } from "../service/AuditLogsService";
 
 export class EmployeeDeductionsController {
   /**
@@ -23,6 +24,14 @@ export class EmployeeDeductionsController {
         Number(employeeId),
         Number(deductionId)
       );
+
+      await AuditLogsService.createAuditLog({
+        userId: req.user.id,
+        action: 'ASSIGN_DEDUCTION',
+        entity: 'employee_deduction',
+        entityId: result.employee_id,
+        details: `Employee ${result.employee_id} assigned deduction ${result.deduction_id}`,
+      });
 
       return res.status(201).json({
         success: true,

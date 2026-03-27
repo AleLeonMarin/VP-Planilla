@@ -299,6 +299,7 @@ model vpg_users {
   user_password    String            @db.VarChar(255)
   user_role        String            @db.VarChar(20)
   user_version     Int               @default(1)
+  user_last_login  DateTime?         @db.Timestamp(6)
   vpg_audit_logs   vpg_audit_logs[]
   vpg_report_logs  vpg_report_logs[]
 
@@ -353,4 +354,13 @@ model vpg_deductions_per_employee {
   vpg_employees                        vpg_employees  @relation(fields: [deductions_per_employee_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_deductions_per_employee_employees_22")
 
   @@id([deductions_per_employee_employee_id, deductions_per_employee_deduction_id])
+}
+
+model vpg_token_blocklist {
+  blocklist_id       Int       @id @default(autoincrement())
+  blocklist_token   String    @db.VarChar(500)
+  blocklist_expires DateTime  @db.Timestamp(6)
+  blocklist_created DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([blocklist_token], map: "idx_token_blocklist_token")
 }

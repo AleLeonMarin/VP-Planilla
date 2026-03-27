@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { EmployeeService } from "../service/EmployeeService";
+import { AuditLogsService } from "../service/AuditLogsService";
 
 export class EmployeeController {
   /**
@@ -27,7 +28,7 @@ export class EmployeeController {
     };
 
     try {
-      const newEmployee = await EmployeeService.createEmployee(employeeData);
+      const newEmployee = await EmployeeService.createEmployee(employeeData as any);
       return res.status(201).json(newEmployee);
     } catch (error) {
       console.error("Error creating employee:", error);
@@ -43,7 +44,7 @@ export class EmployeeController {
    * @returns Promise<Response> - HTTP response with employee data or error
    */
   static async getEmployeeById(req: Request, res: Response): Promise<Response> {
-    const employeeId = req.params.id;
+    const employeeId = req.params.id as string;
 
     if (!employeeId || isNaN(Number(employeeId))) {
       return res.status(400).json({ error: `Invalid employee ID` });
@@ -73,22 +74,22 @@ export class EmployeeController {
    * @returns Promise<Response> - HTTP response with updated employee data or error
    */
   static async updateEmployee(req: Request, res: Response): Promise<Response> {
-    const employeeId = parseInt(req.params.id, 10);
+    const employeeId = parseInt(req.params.id as string, 10);
     const rawData = req.body;
 
-    // Map frontend fields to Employee model fields
+    // Map frontend fields to Employee model fields (support both prefixed and non-prefixed)
     const employeeData = {
-      name: rawData.employee_first_name,
+      name: rawData.employee_first_name || rawData.name,
       last_name: rawData.employee_last_name || rawData.last_name,
       middle_name: rawData.employee_middle_name || rawData.middle_name || '',
       national_id: rawData.employee_national_id || rawData.national_id || '',
       social_code: rawData.employee_social_code || rawData.social_code || '',
       email: rawData.employee_email || rawData.email,
-      position_id: rawData.employee_position_id || rawData.position_id,
+      position_id: rawData.employee_position_id ?? rawData.position_id,
       hire_date: rawData.employee_hire_date || rawData.hire_date,
       exit_date: rawData.employee_exit_date || rawData.exit_date,
       fired: rawData.employee_fired ?? rawData.fired ?? false,
-      required_hours_biweekly: rawData.employee_required_hours_biweekly || rawData.required_hours_biweekly || null,
+      required_hours_biweekly: rawData.employee_required_hours_biweekly ?? rawData.required_hours_biweekly ?? null,
       status: rawData.employee_status || rawData.status,
       version: rawData.employee_version || rawData.version
     };
@@ -100,6 +101,15 @@ export class EmployeeController {
       );
       if (!updatedEmployee) {
         return res.status(404).json({ error: "Employee not found" });
+      }
+      if (rawData.employee_status || rawData.status) {
+        await AuditLogsService.createAuditLog({
+          userId: req.user.id,
+          action: 'CHANGE_EMPLOYEE_STATUS',
+          entity: 'employee',
+          entityId: employeeId,
+          details: `Employee ${employeeId} status changed to ${rawData.employee_status || rawData.status}`,
+        });
       }
       return res.status(200).json(updatedEmployee);
     } catch (error) {

@@ -141,6 +141,7 @@ describe('PayrollService', () => {
           payrolls_payment_date: new Date('2026-04-05'),
           payrolls_status: 'PENDIENTE',
           payrolls_version: 1,
+          vpg_payroll_employee: [],
         },
         {
           payrolls_id: 2,
@@ -150,6 +151,7 @@ describe('PayrollService', () => {
           payrolls_payment_date: new Date('2026-03-05'),
           payrolls_status: 'COMPLETADO',
           payrolls_version: 1,
+          vpg_payroll_employee: [],
         },
         {
           payrolls_id: 1,
@@ -159,6 +161,7 @@ describe('PayrollService', () => {
           payrolls_payment_date: new Date('2026-02-05'),
           payrolls_status: 'COMPLETADO',
           payrolls_version: 1,
+          vpg_payroll_employee: [],
         },
       ];
 
@@ -174,6 +177,9 @@ describe('PayrollService', () => {
       expect(result[2].id).toBe(1);
       
       expect(prismaMock.vpg_payrolls.findMany).toHaveBeenCalledWith({
+        include: {
+          vpg_payroll_employee: true,
+        },
         orderBy: {
           payrolls_id: 'desc',
         },
@@ -204,6 +210,7 @@ describe('PayrollService', () => {
         payrolls_payment_date: new Date('2026-03-01'),
         payrolls_status: 'PROCESANDO',
         payrolls_version: 2,
+        vpg_payroll_employee: [],
       };
 
       prismaMock.vpg_payrolls.findMany.mockResolvedValue([mockPayroll]);
@@ -220,6 +227,16 @@ describe('PayrollService', () => {
         payment_date: new Date('2026-03-01'),
         status: 'PROCESANDO',
         version: 2,
+        total_employees: 0,
+        total_gross: 0,
+        total_deductions: 0,
+        total_net: 0,
+        total_bonuses: 0,
+        total_hours: 0,
+        total_overtime_hours: 0,
+        total_weekly_rest_hours: 0,
+        total_overtime_pay: 0,
+        total_weekly_rest_pay: 0,
       });
     });
 

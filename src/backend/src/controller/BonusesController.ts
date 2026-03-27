@@ -30,12 +30,12 @@ export class BonusesController {
    */
   static async getBonusById(req: Request, res: Response): Promise<Response> {
     try {
-      const bonusId = parseInt(req.params.id, 10);
-      
+      const bonusId = parseInt(req.params.id as string, 10);
+
       if (isNaN(bonusId)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false,
-          error: "Invalid bonus ID" 
+          error: "Invalid bonus ID"
         });
       }
 
@@ -67,7 +67,7 @@ export class BonusesController {
    */
   static async updateBonus(req: Request, res: Response): Promise<Response> {
     try {
-      const bonusId = parseInt(req.params.id, 10);
+      const bonusId = parseInt(req.params.id as string, 10);
       const bonusData = req.body;
 
       if (isNaN(bonusId)) {
@@ -106,7 +106,7 @@ export class BonusesController {
    */
   static async deleteBonus(req: Request, res: Response): Promise<Response> {
     try {
-      const bonusId = parseInt(req.params.id, 10);
+      const bonusId = parseInt(req.params.id as string, 10);
 
       if (isNaN(bonusId)) {
         return res.status(400).json({ 

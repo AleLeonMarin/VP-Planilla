@@ -55,28 +55,6 @@ export class NomineeController {
   }
 
   /**
-   * Calculate nominee for payroll (legacy method)
-   * POST /nominee/calculate
-   */
-  static async calculateNominee(req: Request, res: Response): Promise<Response> {
-    try {
-      const nomineeService = new NomineeService();
-      await nomineeService.calculateNominee();
-
-      return res.status(200).json({
-        success: true,
-        message: "Cálculo de nómina completado exitosamente"
-      });
-    } catch (error) {
-      console.error("Error calculating nominee:", error);
-      return res.status(500).json({ 
-        success: false,
-        error: "Error al calcular la nómina" 
-      });
-    }
-  }
-
-  /**
    * Calculate complete payroll for all employees in a given period
    * POST /nominee/calculate-payroll
    */

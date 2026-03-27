@@ -4,11 +4,14 @@ import { getCurrentSpanishFormattedDateString } from "@/utils/time";
 import { useWeather } from "@/utils/weather";
 import { useState, useEffect } from "react";
 import { useUser } from "@/hooks/user";
+import { useTheme } from "@/hooks/useTheme";
+import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 
 export default function Header() {
   const currentDate = getCurrentSpanishFormattedDateString();
   const { weather: currentWeather, isLoadingWeather } = useWeather();
   const { user: currentUser } = useUser();
+  const { theme, toggleTheme, mounted } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Notificaciones de ejemplo
@@ -84,17 +87,33 @@ export default function Header() {
 
   const unreadCount = notifications.filter(n => n.unread).length;
   return (
-    <header className="bg-[#FCF1D5] px-6 py-3 flex items-center justify-between shadow-sm border-b border-[#D4C89A]">
-      <div>        <h1 className="text-base font-medium text-[#4A5D3A] leading-tight">
+    <header className="bg-[#FCF1D5] dark:bg-[#252525] px-6 py-3 flex items-center justify-between shadow-sm border-b border-[#D4C89A] dark:border-[#404040]">
+      <div>        <h1 className="text-base font-medium text-[#4A5D3A] dark:text-[#E5E5E5] leading-tight">
           Bienvenido de vuelta, {getFullName()}
         </h1>
-        <p className="text-sm text-[#D9C38B] mt-0.5">
+        <p className="text-sm text-[#D9C38B] dark:text-[#A3A3A3] mt-0.5">
           {currentDate} |{" "}
           {isLoadingWeather
             ? "Cargando clima..."
             : `Día de ${currentWeather?.description} en ${currentWeather?.city}`}
         </p>
-      </div>      <div className="relative flex items-center space-x-3 notification-container">        {/* Notification Bell Icon */}
+      </div>      <div className="relative flex items-center space-x-3 notification-container">
+        {/* Theme Toggle Button */}
+        {mounted && (
+          <button
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-[#4a4a4a] flex items-center justify-center text-[#4A5D3A] dark:text-[#E5E5E5] cursor-pointer hover:bg-[#F0E6D2] dark:hover:bg-[#3d3d3d] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <MoonIcon className="w-5 h-5" />
+            ) : (
+              <SunIcon className="w-5 h-5" />
+            )}
+          </button>
+        )}
+        
+        {/* Notification Bell Icon */}
         <div 
           className="relative w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] flex items-center justify-center text-[#4A5D3A] cursor-pointer hover:bg-[#F0E6D2] transition-colors"
           onClick={toggleNotifications}

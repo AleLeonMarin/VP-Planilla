@@ -1,9 +1,21 @@
 import { Router } from "express";
 import { AuthController } from "../controller/AuthController";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
-import { asyncHandler } from "../utils/asyncHandler"; // Import the new utility
+import { asyncHandler } from "../utils/asyncHandler";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per window per IP
+  message: {
+    success: false,
+    error: "Demasiados intentos de login. Intente de nuevo en 15 minutos.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * @route   POST /login
@@ -52,7 +64,7 @@ const router = Router();
  *       '401':
  *         description: Incorrect credentials.
  */
-router.post("/login", asyncHandler(AuthController.login));
+router.post("/login", loginLimiter, asyncHandler(AuthController.login));
 
 /**
  * @route   GET /me

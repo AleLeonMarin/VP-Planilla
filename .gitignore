@@ -35,6 +35,10 @@
 !.planning/**
 !.planning/**/*.json
 
+# Test coverage reports — generated, do not commit
+coverage/
+*.lcov
+
 # Temp/debug scripts — do not commit
 parse_tmp.js
 temp_script.py

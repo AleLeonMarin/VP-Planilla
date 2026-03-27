@@ -279,11 +279,10 @@ export class AuthService {
    * Actualiza la última fecha de login del usuario
    */
   static async updateLastLogin(userId: number): Promise<void> {
-    try {
-      console.log(`Usuario ${userId} hizo login en ${new Date().toISOString()}`);
-    } catch (error) {
-      console.error('Error actualizando último login:', error);
-    }
+    await prisma.vpg_users.update({
+      where: { user_id: userId },
+      data: { user_last_login: new Date() },
+    });
   }
 
   /**
@@ -291,5 +290,45 @@ export class AuthService {
    */
   static async disconnect(): Promise<void> {
     await prisma.$disconnect();
+  }
+
+  /**
+   * Agrega un token a la blocklist de logout
+   */
+  static async addTokenToBlocklist(token: string, expiresAt: Date): Promise<void> {
+    await prisma.vpg_token_blocklist.create({
+      data: {
+        blocklist_token: token,
+        blocklist_expires: expiresAt,
+      },
+    });
+  }
+
+  /**
+   * Verifica si un token está en la blocklist
+   */
+  static async isTokenBlocklisted(token: string): Promise<boolean> {
+    const found = await prisma.vpg_token_blocklist.findFirst({
+      where: {
+        blocklist_token: token,
+        blocklist_expires: {
+          gt: new Date(),
+        },
+      },
+    });
+    return !!found;
+  }
+
+  /**
+   * Limpia tokens expirados de la blocklist
+   */
+  static async cleanupExpiredTokens(): Promise<void> {
+    await prisma.vpg_token_blocklist.deleteMany({
+      where: {
+        blocklist_expires: {
+          lt: new Date(),
+        },
+      },
+    });
   }
 }

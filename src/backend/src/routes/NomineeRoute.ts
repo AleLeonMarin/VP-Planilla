@@ -76,27 +76,6 @@ router.get("/nominee/clocklogs", asyncHandler(NomineeController.getClockLogs));
 router.get("/nominee/employee-deductions/:employeeId", asyncHandler(NomineeController.getEmployeeDeductions));
 
 /**
- * @route   POST /nominee/calculate
- * @desc    Execute the nominee calculation process for payroll (legacy)
- * @access  Private
- */
-/**
- * @swagger
- * /api/nominee/calculate:
- *   post:
- *     tags:
- *       - Nominee
- *     summary: Calculate nominee (legacy)
- *     description: Execute the basic nominee calculation process for payroll
- *     responses:
- *       '200':
- *         description: Nominee calculation completed successfully
- *       '500':
- *         description: Internal server error
- */
-router.post("/nominee/calculate", asyncHandler(NomineeController.calculateNominee));
-
-/**
  * @route   POST /nominee/calculate-payroll
  * @desc    Calculate complete payroll for all employees in a period
  * @access  Private

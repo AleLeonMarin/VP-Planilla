@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PayrollService } from "../service/PayrollService";
+import { AuditLogsService } from "../service/AuditLogsService";
 
 export class PayrollController {
   /**
@@ -46,6 +47,13 @@ export class PayrollController {
       };
       
       const payroll = await PayrollService.createPayroll(payrollData);
+      await AuditLogsService.createAuditLog({
+        userId: req.user.id,
+        action: 'CREATE_PAYROLL',
+        entity: 'payroll',
+        entityId: payroll.id,
+        details: `Period: ${payrollData.period_start.toISOString().split('T')[0]} to ${payrollData.period_end.toISOString().split('T')[0]}`,
+      });
       res.status(201).json(payroll);
     } catch (error) {
       console.error("Failed to create payroll:", error);
