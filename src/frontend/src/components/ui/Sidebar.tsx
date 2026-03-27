@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import SidebarItem from '@/components/SidebarItem';
 import React from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Sidebar() {
+  const { logout } = useAuth();
   // Define your sidebar items with potential submenus
   const mainMenuItems = [
     { href: "/pages/main", icon: "/images/layout/dashboard.png", text: "Dashboard" },
@@ -53,7 +55,6 @@ export default function Sidebar() {
 
   const bottomMenuItems = [
     { href: "/configuracion", icon: "/images/layout/settings.png", text: "Configuración" },
-    { href: "/", icon: "/images/layout/logOut.png", text: "Cerrar sesión" },
   ];
   return (
     <aside className="w-60 bg-[#FCF1D5] dark:bg-[#252525] text-white flex flex-col shadow-sm border-r border-[#E0D6B7] dark:border-[#404040]">      <div className="flex items-center justify-start px-6 py-3">
@@ -85,6 +86,16 @@ export default function Sidebar() {
             )}
           </React.Fragment>
         ))}
+        <div className="border-t border-[#E0D6B7] my-2"></div>
+        <button
+          onClick={() => logout()}
+          className="flex items-center w-full p-2 rounded-lg transition-colors duration-200 text-[#4A5D3A] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]"
+        >
+          <div className="mr-2 text-lg">
+            <Image src="/images/layout/logOut.png" alt="Cerrar sesión" width={20} height={20} />
+          </div>
+          <span className="flex-1 text-sm font-medium text-left">Cerrar sesión</span>
+        </button>
       </div>
     </aside>
   );
