@@ -1,5 +1,5 @@
 ---
-status: awaiting_human_verify
+status: VERIFIED FIX/ FIXED
 trigger: "updateEmployee falla con PrismaClientValidationError Unknown argument employee_required_hours_biweekly"
 created: 2026-03-25T00:00:00Z
 updated: 2026-03-25T00:02:00Z

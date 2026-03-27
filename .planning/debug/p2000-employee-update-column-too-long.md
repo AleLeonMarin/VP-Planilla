@@ -1,5 +1,5 @@
 ---
-status: awaiting_human_verify
+status: VERIFIED FIX - fixed 
 trigger: "updateEmployee falla con Prisma P2000 — The provided value for the column is too long for the column's type. Prisma no reporta qué columna. Error en EmployeeService.ts:119"
 created: 2026-03-25T00:00:00Z
 updated: 2026-03-25T00:05:00Z
