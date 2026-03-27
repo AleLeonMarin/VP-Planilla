@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { NomineeService } from "../service/NomineeService";
+import { error } from "console";
 
 export class NomineeController {
   /**
@@ -133,6 +134,78 @@ export class NomineeController {
         success: false,
         error: "Error al calcular la nómina del periodo",
         details: error instanceof Error ? error.message : "Error desconocido"
+      });
+    }
+  }
+
+  static async calculateAguinaldo(req: Request, res:Response) : Promise<Response>{
+    try{
+      const { employeeIds, start_date, end_date } = req.body;
+
+      if(!start_date || !end_date){
+        return res.status(400).json({
+          success: false,
+          error: "Debes de incluir las fechas de inicio y fin para realizar el calculo"
+        });
+      }
+
+      const parseLocalDate = (s: string) => {
+        const [y, m, d] = String(s).split('-').map(Number);
+        return new Date(y, m - 1, d, 0, 0, 0, 0);
+      };
+
+      const start = parseLocalDate(start_date);
+      const end   = parseLocalDate(end_date);
+    
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: "Formato de fecha inválido. Use YYYY-MM-DD"
+        });
+      }
+    
+      if (start > end) {
+        return res.status(400).json({
+          success: false,
+          error: "La fecha de inicio debe ser anterior a la fecha de fin"
+        });
+      }
+
+      if (!Array.isArray(employeeIds) || employeeIds.length === 0) {
+        return res.status(400).json({
+          success:false,
+          error: "Debe incluir una lista de employeeIds"
+        });
+      }
+
+      const ids = employeeIds
+        .map((id: any) => Number(id))
+        .filter((n) => !Number.isNaN(n));
+
+      if (ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "La lista de employeeIds está vacía o es inválida"
+        });
+      }
+
+      const resultados = await NomineeService.aguinaldoForEmployees(
+        ids,
+        start,
+        end,
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: resultados,
+        message: "Aguinaldo calculado para la lista de empleados"
+      });
+    } catch (error) {
+      console.error("Error calculando aguinaldo:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Error al calcular el aguinaldo",
+        details: error instanceof Error ? error.message : "Error desconocido",
       });
     }
   }

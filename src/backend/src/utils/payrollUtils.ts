@@ -2,12 +2,12 @@
  * Payroll calculation utility functions
  * Contains pure helper functions for payroll processing
  */
-import { DayWork } from '../types/payroll.types';
+import { DayWork } from "../types/payroll.types";
 
 // ── Costa Rica labor law constants ────────────────────────────────────────────
-const REGULAR_HOURS_PER_DAY  = 8;
-const OVERTIME_MULTIPLIER    = 1.5;
-const WORKING_DAYS_PER_WEEK  = 6; // Monday – Saturday
+const REGULAR_HOURS_PER_DAY = 8;
+const OVERTIME_MULTIPLIER = 1.5;
+const WORKING_DAYS_PER_WEEK = 6; // Monday – Saturday
 
 /**
  * Calculate working hours between two timestamps
@@ -28,7 +28,11 @@ export function calculateHoursBetween(startTime: Date, endTime: Date): number {
  * @param endDate - End of range
  * @returns True if date is within range
  */
-export function isDateInRange(date: Date, startDate: Date, endDate: Date): boolean {
+export function isDateInRange(
+  date: Date,
+  startDate: Date,
+  endDate: Date,
+): boolean {
   return date >= startDate && date <= endDate;
 }
 
@@ -38,7 +42,7 @@ export function isDateInRange(date: Date, startDate: Date, endDate: Date): boole
  * @returns Formatted date string
  */
 export function formatDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**
@@ -63,12 +67,12 @@ export function parseDateString(dateStr: string): Date | null {
 export function generateDateRange(startDate: Date, endDate: Date): Date[] {
   const dates: Date[] = [];
   const currentDate = new Date(startDate);
-  
+
   while (currentDate <= endDate) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  
+
   return dates;
 }
 
@@ -93,60 +97,64 @@ export function validateClockLogPairs(logs: any[]): {
 } {
   const messages: string[] = [];
   const pairs: Array<{ in: any; out: any }> = [];
-  
+
   if (logs.length === 0) {
     return { isValid: true, messages: [], pairs: [] };
   }
-  
+
   if (logs.length === 1) {
-    messages.push('Solo una marca detectada');
+    messages.push("Solo una marca detectada");
     return { isValid: false, messages, pairs: [] };
   }
-  
+
   if (logs.length % 2 !== 0) {
     messages.push(`Número impar de marcas (${logs.length})`);
     return { isValid: false, messages, pairs: [] };
   }
-  
+
   // Sort logs by timestamp
-  const sortedLogs = [...logs].sort((a, b) => 
-    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  const sortedLogs = [...logs].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
-  
+
   let isValid = true;
-  
+
   for (let i = 0; i < sortedLogs.length; i += 2) {
-    const inLog  = sortedLogs[i];
+    const inLog = sortedLogs[i];
     const outLog = sortedLogs[i + 1];
 
     // Validate log_type sequence: first of each pair must be IN, second must be OUT
-    const inType  = (inLog.log_type  || '').toUpperCase();
-    const outType = (outLog.log_type || '').toUpperCase();
+    const inType = (inLog.log_type || "").toUpperCase();
+    const outType = (outLog.log_type || "").toUpperCase();
 
-    if (inType !== 'IN') {
-      messages.push(`Se esperaba marcaje de entrada (IN) pero se encontró "${inLog.log_type}" en posición ${i + 1}`);
+    if (inType !== "IN") {
+      messages.push(
+        `Se esperaba marcaje de entrada (IN) pero se encontró "${inLog.log_type}" en posición ${i + 1}`,
+      );
       isValid = false;
       continue;
     }
 
-    if (outType !== 'OUT') {
-      messages.push(`Se esperaba marcaje de salida (OUT) pero se encontró "${outLog.log_type}" en posición ${i + 2}`);
+    if (outType !== "OUT") {
+      messages.push(
+        `Se esperaba marcaje de salida (OUT) pero se encontró "${outLog.log_type}" en posición ${i + 2}`,
+      );
       isValid = false;
       continue;
     }
 
-    const inTime  = new Date(inLog.timestamp);
+    const inTime = new Date(inLog.timestamp);
     const outTime = new Date(outLog.timestamp);
-    
+
     if (outTime <= inTime) {
       messages.push(`Hora de salida anterior o igual a entrada`);
       isValid = false;
       continue;
     }
-    
+
     pairs.push({ in: inLog, out: outLog });
   }
-  
+
   return { isValid, messages, pairs };
 }
 
@@ -155,16 +163,18 @@ export function validateClockLogPairs(logs: any[]): {
  * @param pairs - Array of valid in/out pairs
  * @returns Total hours worked
  */
-export function calculateTotalHoursFromPairs(pairs: Array<{ in: any; out: any }>): number {
+export function calculateTotalHoursFromPairs(
+  pairs: Array<{ in: any; out: any }>,
+): number {
   let totalHours = 0;
-  
+
   for (const pair of pairs) {
     const inTime = new Date(pair.in.timestamp);
     const outTime = new Date(pair.out.timestamp);
     const hours = calculateHoursBetween(inTime, outTime);
     totalHours += hours;
   }
-  
+
   return roundToMoney(totalHours);
 }
 
@@ -173,16 +183,18 @@ export function calculateTotalHoursFromPairs(pairs: Array<{ in: any; out: any }>
  * @param pairs - Array of time pairs
  * @returns True if there are overlaps
  */
-export function hasOverlappingPairs(pairs: Array<{ in: any; out: any }>): boolean {
+export function hasOverlappingPairs(
+  pairs: Array<{ in: any; out: any }>,
+): boolean {
   for (let i = 0; i < pairs.length - 1; i++) {
     const currentOut = new Date(pairs[i].out.timestamp);
     const nextIn = new Date(pairs[i + 1].in.timestamp);
-    
+
     if (currentOut > nextIn) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -192,7 +204,10 @@ export function hasOverlappingPairs(pairs: Array<{ in: any; out: any }>): boolea
  * @param percentage - Percentage to apply (0-100)
  * @returns Calculated deduction amount
  */
-export function applyPercentageDeduction(baseAmount: number, percentage: number): number {
+export function applyPercentageDeduction(
+  baseAmount: number,
+  percentage: number,
+): number {
   return roundToMoney((baseAmount * percentage) / 100);
 }
 
@@ -202,7 +217,10 @@ export function applyPercentageDeduction(baseAmount: number, percentage: number)
  * @param totalDeductions - Total deductions amount
  * @returns Net salary (minimum 0)
  */
-export function calculateNetSalary(grossSalary: number, totalDeductions: number): number {
+export function calculateNetSalary(
+  grossSalary: number,
+  totalDeductions: number,
+): number {
   return Math.max(0, roundToMoney(grossSalary - totalDeductions));
 }
 
@@ -212,33 +230,37 @@ export function calculateNetSalary(grossSalary: number, totalDeductions: number)
  * @param endDate - End date
  * @returns Validation result with messages
  */
-export function validatePayrollPeriod(startDate: Date, endDate: Date): {
+export function validatePayrollPeriod(
+  startDate: Date,
+  endDate: Date,
+): {
   isValid: boolean;
   messages: string[];
 } {
   const messages: string[] = [];
-  
+
   if (isNaN(startDate.getTime())) {
-    messages.push('Fecha de inicio inválida');
+    messages.push("Fecha de inicio inválida");
   }
-  
+
   if (isNaN(endDate.getTime())) {
-    messages.push('Fecha de fin inválida');
+    messages.push("Fecha de fin inválida");
   }
-  
+
   if (startDate > endDate) {
-    messages.push('La fecha de inicio debe ser anterior a la fecha de fin');
+    messages.push("La fecha de inicio debe ser anterior a la fecha de fin");
   }
-  
+
   // Check if period is not too long (e.g., more than 1 year)
-  const daysDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+  const daysDiff =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
   if (daysDiff > 365) {
-    messages.push('El periodo no puede ser mayor a un año');
+    messages.push("El periodo no puede ser mayor a un año");
   }
-  
+
   return {
     isValid: messages.length === 0,
-    messages
+    messages,
   };
 }
 
@@ -249,7 +271,10 @@ export function validatePayrollPeriod(startDate: Date, endDate: Date): {
  */
 export function calculateRegularHours(days: DayWork[]): number {
   return roundToMoney(
-    days.reduce((sum, day) => sum + Math.min(day.hoursWorked, REGULAR_HOURS_PER_DAY), 0)
+    days.reduce(
+      (sum, day) => sum + Math.min(day.hoursWorked, REGULAR_HOURS_PER_DAY),
+      0,
+    ),
   );
 }
 
@@ -258,7 +283,10 @@ export function calculateRegularHours(days: DayWork[]): number {
  */
 export function calculateOvertimeHours(days: DayWork[]): number {
   return roundToMoney(
-    days.reduce((sum, day) => sum + Math.max(0, day.hoursWorked - REGULAR_HOURS_PER_DAY), 0)
+    days.reduce(
+      (sum, day) => sum + Math.max(0, day.hoursWorked - REGULAR_HOURS_PER_DAY),
+      0,
+    ),
   );
 }
 
@@ -269,7 +297,10 @@ export function calculateOvertimeHours(days: DayWork[]): number {
  * @param requiredHours - Total hours required (e.g., from employee_required_hours_biweekly)
  * @returns Overtime hours (worked - required), or 0 if worked <= required
  */
-export function calculateOvertimeHoursBiweekly(totalWorkedHours: number, requiredHours: number): number {
+export function calculateOvertimeHoursBiweekly(
+  totalWorkedHours: number,
+  requiredHours: number,
+): number {
   return roundToMoney(Math.max(0, totalWorkedHours - requiredHours));
 }
 
@@ -281,7 +312,8 @@ export function calculateOvertimeHoursBiweekly(totalWorkedHours: number, require
  */
 export function getWeeklyRestDays(days: DayWork[]): number {
   const workingDays = days.filter(
-    d => !d.isVacation && d.hoursWorked > 0 && new Date(d.date).getDay() !== 0
+    (d) =>
+      !d.isVacation && d.hoursWorked > 0 && new Date(d.date).getDay() !== 0,
   ).length;
   return Math.floor(workingDays / WORKING_DAYS_PER_WEEK);
 }
@@ -303,7 +335,10 @@ export function getSundaysInPeriod(startDate: Date, endDate: Date): Date[] {
  * Count Mon–Sat working days in the full period.
  * Used both for weekly-rest denominator and scheduled hours.
  */
-export function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number {
+export function countWorkingDaysInPeriod(
+  startDate: Date,
+  endDate: Date,
+): number {
   let count = 0;
   const current = new Date(startDate);
   while (current <= endDate) {
@@ -316,7 +351,10 @@ export function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number
 /**
  * Scheduled (required) hours for a period: Mon–Sat days × 8.
  */
-export function calculateScheduledHours(startDate: Date, endDate: Date): number {
+export function calculateScheduledHours(
+  startDate: Date,
+  endDate: Date,
+): number {
   return countWorkingDaysInPeriod(startDate, endDate) * REGULAR_HOURS_PER_DAY;
 }
 
@@ -329,10 +367,10 @@ export function calculateScheduledHours(startDate: Date, endDate: Date): number 
 export function calculateWeeklyRestHours(
   regularHours: number,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): number {
   // Fórmula exacta de la empresa: horas_trabajadas × 8 / 104 × 2
-  return roundToMoney((regularHours * 8 / 104) * 2);
+  return roundToMoney(((regularHours * 8) / 104) * 2);
 }
 
 // ── Salary component helpers ──────────────────────────────────────────────────
@@ -340,8 +378,13 @@ export function calculateWeeklyRestHours(
 /**
  * Overtime pay amount: overtime hours × base rate × 1.5.
  */
-export function calculateOvertimePay(days: DayWork[], hourlyRate: number): number {
-  return roundToMoney(calculateOvertimeHours(days) * hourlyRate * OVERTIME_MULTIPLIER);
+export function calculateOvertimePay(
+  days: DayWork[],
+  hourlyRate: number,
+): number {
+  return roundToMoney(
+    calculateOvertimeHours(days) * hourlyRate * OVERTIME_MULTIPLIER,
+  );
 }
 
 /**
@@ -352,10 +395,10 @@ export function calculateWeeklyRestPay(
   days: DayWork[],
   hourlyRate: number,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): number {
   const regularHours = calculateRegularHours(days);
-  const restHours    = calculateWeeklyRestHours(regularHours, startDate, endDate);
+  const restHours = calculateWeeklyRestHours(regularHours, startDate, endDate);
   return roundToMoney(restHours * hourlyRate);
 }
 
@@ -367,10 +410,35 @@ export function calculateGrossSalary(
   hourlyRate: number,
   bonuses: number,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): number {
-  const regular    = roundToMoney(calculateRegularHours(days) * hourlyRate);
-  const overtime   = calculateOvertimePay(days, hourlyRate);
-  const weeklyRest = calculateWeeklyRestPay(days, hourlyRate, startDate, endDate);
+  const regular = roundToMoney(calculateRegularHours(days) * hourlyRate);
+  const overtime = calculateOvertimePay(days, hourlyRate);
+  const weeklyRest = calculateWeeklyRestPay(
+    days,
+    hourlyRate,
+    startDate,
+    endDate,
+  );
   return roundToMoney(regular + overtime + weeklyRest + bonuses);
+}
+
+export function hasAYear(hired_date: Date, end_date: Date) {
+  const anniversary = new Date(hired_date);
+  anniversary.setFullYear(anniversary.getFullYear() + 1);
+
+  return end_date >= anniversary;
+}
+
+export function averageOfSalaries(salaries: number[]) {
+  if (salaries.length === 0) {
+    return 0;
+  }
+
+  let sum = 0;
+  salaries.forEach((salary) => {
+    sum += salary;
+  });
+
+  return roundToMoney(sum / 12);
 }

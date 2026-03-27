@@ -154,4 +154,7 @@ router.post("/nominee/calculate", asyncHandler(NomineeController.calculateNomine
  */
 router.post("/nominee/calculate-payroll", asyncHandler(NomineeController.calculatePayrollForPeriod));
 
+
+
+router.post("/nominee/calculate-aguinaldo", asyncHandler(NomineeController.calculateAguinaldo))
 export default router;
