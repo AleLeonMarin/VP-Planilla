@@ -31,7 +31,7 @@ export class PositionController {
    */
   static async getPositionById(req: Request, res: Response): Promise<Response> {
     try {
-      const positionId = parseInt(req.params.id, 10);
+      const positionId = parseInt(req.params.id as string, 10);
       
       if (isNaN(positionId)) {
         return res.status(400).json({ 
@@ -89,7 +89,7 @@ export class PositionController {
    */
   static async updatePosition(req: Request, res: Response): Promise<Response> {
     try {
-      const positionId = parseInt(req.params.id, 10);
+      const positionId = parseInt(req.params.id as string, 10);
       const positionData = req.body;
 
       if (isNaN(positionId)) {
@@ -130,7 +130,7 @@ export class PositionController {
    */
   static async deletePosition(req: Request, res: Response): Promise<Response> {
     try {
-      const positionId = parseInt(req.params.id, 10);
+      const positionId = parseInt(req.params.id as string, 10);
 
       if (isNaN(positionId)) {
         return res.status(400).json({ 

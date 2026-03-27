@@ -47,7 +47,7 @@ export class DeductionsController {
    * @returns Promise<Response> - HTTP response with updated deduction data or error
    */
   static async updateDeduction(req: Request, res: Response): Promise<Response> {
-    const deductionId = parseInt(req.params.id, 10);
+    const deductionId = parseInt(req.params.id as string, 10);
     const deductionData = req.body;
 
     try {
@@ -73,7 +73,7 @@ export class DeductionsController {
    * @returns Promise<Response> - HTTP response with success message or error
    */
   static async deleteDeduction(req: Request, res: Response): Promise<Response> {
-    const deductionId = parseInt(req.params.id, 10);
+    const deductionId = parseInt(req.params.id as string, 10);
 
     try {
       const deleted = await DeductionsService.deleteDeduction(deductionId);

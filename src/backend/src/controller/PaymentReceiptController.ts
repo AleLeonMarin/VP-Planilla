@@ -8,8 +8,8 @@ export class PaymentReceiptController {
    */
   static async generateReceiptPDF(req: Request, res: Response): Promise<void> {
     try {
-      const payrollId = parseInt(req.params.payrollId);
-      const employeeId = parseInt(req.params.employeeId);
+      const payrollId = parseInt(req.params.payrollId as string);
+      const employeeId = parseInt(req.params.employeeId as string);
 
       if (isNaN(payrollId) || isNaN(employeeId)) {
         res.status(400).json({
@@ -47,8 +47,8 @@ export class PaymentReceiptController {
    */
   static async getReceiptData(req: Request, res: Response): Promise<void> {
     try {
-      const payrollId = parseInt(req.params.payrollId);
-      const employeeId = parseInt(req.params.employeeId);
+      const payrollId = parseInt(req.params.payrollId as string);
+      const employeeId = parseInt(req.params.employeeId as string);
 
       if (isNaN(payrollId) || isNaN(employeeId)) {
         res.status(400).json({
@@ -81,8 +81,8 @@ export class PaymentReceiptController {
    */
   static async getReceiptHTML(req: Request, res: Response): Promise<void> {
     try {
-      const payrollId = parseInt(req.params.payrollId);
-      const employeeId = parseInt(req.params.employeeId);
+      const payrollId = parseInt(req.params.payrollId as string);
+      const employeeId = parseInt(req.params.employeeId as string);
 
       if (isNaN(payrollId) || isNaN(employeeId)) {
         res.status(400).json({
@@ -114,7 +114,7 @@ export class PaymentReceiptController {
    */
   static async generateBatchReceipts(req: Request, res: Response): Promise<void> {
     try {
-      const payrollId = parseInt(req.params.payrollId);
+      const payrollId = parseInt(req.params.payrollId as string);
 
       if (isNaN(payrollId)) {
         res.status(400).json({

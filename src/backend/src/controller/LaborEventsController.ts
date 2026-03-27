@@ -60,7 +60,7 @@ export class LaborEventsController {
     req: Request,
     res: Response
   ): Promise<Response> {
-    const laborEventId = parseInt(req.params.id, 10);
+    const laborEventId = parseInt(req.params.id as string, 10);
     const laborEventData = req.body;
 
     try {
@@ -89,7 +89,7 @@ export class LaborEventsController {
     req: Request,
     res: Response
   ): Promise<Response> {
-    const laborEventId = parseInt(req.params.id, 10);
+    const laborEventId = parseInt(req.params.id as string, 10);
 
     try {
       const deleted = await LaborEventsService.deleteLaborEvent(laborEventId);

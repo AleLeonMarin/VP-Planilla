@@ -28,7 +28,7 @@ export class EmployeeController {
     };
 
     try {
-      const newEmployee = await EmployeeService.createEmployee(employeeData);
+      const newEmployee = await EmployeeService.createEmployee(employeeData as any);
       return res.status(201).json(newEmployee);
     } catch (error) {
       console.error("Error creating employee:", error);
@@ -44,7 +44,7 @@ export class EmployeeController {
    * @returns Promise<Response> - HTTP response with employee data or error
    */
   static async getEmployeeById(req: Request, res: Response): Promise<Response> {
-    const employeeId = req.params.id;
+    const employeeId = req.params.id as string;
 
     if (!employeeId || isNaN(Number(employeeId))) {
       return res.status(400).json({ error: `Invalid employee ID` });
@@ -74,7 +74,7 @@ export class EmployeeController {
    * @returns Promise<Response> - HTTP response with updated employee data or error
    */
   static async updateEmployee(req: Request, res: Response): Promise<Response> {
-    const employeeId = parseInt(req.params.id, 10);
+    const employeeId = parseInt(req.params.id as string, 10);
     const rawData = req.body;
 
     // Map frontend fields to Employee model fields (support both prefixed and non-prefixed)
