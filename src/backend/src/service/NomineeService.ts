@@ -100,64 +100,6 @@ export class NomineeService {
   }
 
   /**
-   * Calculate nominee (legacy method - basic implementation)
-   * @returns Promise<void>
-   * @deprecated Use calculatePayrollForPeriod instead for complete payroll calculations
-   */
-  async calculateNominee(): Promise<void> {
-    console.log('Starting legacy nominee calculation...');
-    
-    // Init services needed for the process
-    const logsService = new ClockLogsService();
-    
-    // Using current month as default period
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    const logs = await logsService.getClockLogs({
-      initDate: startOfMonth,
-      endDate: endOfMonth,
-    });
-
-    // Process each log to calculate the nominee
-    for (const log of logs) {
-      const employeeDeductions = await this.getEmployeeDeductions(
-        log.employee_id
-      );
-
-      if (!employeeDeductions.length) {
-        console.log(`No se encontraron deducciones para el empleado ${log.employee_id}`);
-        continue;
-      }
-
-      for (const employeeDeduction of employeeDeductions) {
-        const deduction = await DeductionsService.getDeductionById(
-          employeeDeduction.deduction_id
-        );
-
-        if (!deduction) {
-          console.log(`Deducción no encontrada con ID: ${employeeDeduction.deduction_id}`);
-          continue;
-        }
-
-        let sum = 0;
-        if (deduction.fixed_amount) {
-          sum += deduction.fixed_amount;
-        }
-        if (deduction.percentage) {
-          const employeeSalary = 1000;
-          sum += (deduction.percentage / 100) * employeeSalary;
-        }
-
-        console.log(
-          `Total de deducciones para el empleado ${log.employee_id}: $${sum.toFixed(2)}`
-        );
-      }
-    }
-  }
-
-  /**
    * Save payroll employee calculations to the database
    * @param payrollId - The ID of the payroll to associate the employee records with
    * @param employees - Array of employee payroll data to save

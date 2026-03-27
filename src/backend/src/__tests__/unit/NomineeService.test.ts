@@ -1,0 +1,279 @@
+import { NomineeService } from '../../service/NomineeService';
+
+jest.mock('../../service/EmployeeService');
+
+const BASE_HOURLY = 1000;
+
+const mockPosition = {
+  position_id: 1,
+  base_salary: BASE_HOURLY,
+  name: 'Developer',
+};
+
+const mockEmployee = {
+  id: '1',
+  name: 'Test Employee',
+  national_id: '1-1234-5678',
+  position_id: 1,
+  required_hours_biweekly: null,
+};
+
+jest.mock('../../lib/prisma', () => ({
+  prisma: {
+    vpg_clock_logs: { findMany: jest.fn() },
+    vpg_vacations: { findMany: jest.fn() },
+    vpg_employee_labor_event: { findMany: jest.fn() },
+    vpg_bonuses: { findMany: jest.fn() },
+    vpg_deductions_per_employee: { findMany: jest.fn() },
+    vpg_positions: { findMany: jest.fn() },
+    vpg_payrolls: { findUnique: jest.fn() },
+  },
+}));
+
+const { EmployeeService } = require('../../service/EmployeeService');
+const { prisma } = require('../../lib/prisma');
+
+const service = new NomineeService();
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([]);
+  jest.mocked(EmployeeService.getAllEmployees).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_clock_logs.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_vacations.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_employee_labor_event.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_bonuses.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_deductions_per_employee.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_positions.findMany).mockResolvedValue([]);
+  jest.mocked(prisma.vpg_payrolls.findUnique).mockResolvedValue(null);
+});
+
+function makeClockLogPair(date: string, localInHour: number, localOutHour: number, empId = 1) {
+  const UTC_OFFSET_HOURS = 6;
+  const utcInHour = localInHour - UTC_OFFSET_HOURS;
+  const utcOutHour = localOutHour - UTC_OFFSET_HOURS;
+  const inDate = new Date(`${date}T${String(utcInHour).padStart(2, '0')}:00:00.000Z`);
+  const outDate = new Date(`${date}T${String(utcOutHour).padStart(2, '0')}:00:00.000Z`);
+  return [
+    {
+      clock_logs_id: Math.random(),
+      clock_logs_employee_id: empId,
+      timestamp: inDate.toISOString(),
+      log_type: 'IN',
+    },
+    {
+      clock_logs_id: Math.random(),
+      clock_logs_employee_id: empId,
+      timestamp: outDate.toISOString(),
+      log_type: 'OUT',
+    },
+  ];
+}
+
+function setUpMocks(employee: any, clockLogs: any[], deductions: any[]) {
+  jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([employee]);
+  jest.mocked(prisma.vpg_clock_logs.findMany).mockResolvedValue(clockLogs);
+  jest.mocked(prisma.vpg_positions.findMany).mockResolvedValue([mockPosition]);
+  jest.mocked(prisma.vpg_deductions_per_employee.findMany).mockResolvedValue(deductions);
+}
+
+describe('NomineeService — REQ 8.1 Normal 8h/day', () => {
+  it('should calculate 48 regular hours, 0 overtime for 6 days at 8h each', async () => {
+    const clockLogs = [
+      ...makeClockLogPair('2026-02-02', 8, 16),
+      ...makeClockLogPair('2026-02-03', 8, 16),
+      ...makeClockLogPair('2026-02-04', 8, 16),
+      ...makeClockLogPair('2026-02-05', 8, 16),
+      ...makeClockLogPair('2026-02-06', 8, 16),
+      ...makeClockLogPair('2026-02-07', 8, 16),
+    ];
+    setUpMocks(mockEmployee, clockLogs, []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.regularHours).toBe(48);
+    expect(ep.overtimeHours).toBe(0);
+  });
+});
+
+describe('NomineeService — REQ 8.2 Overtime 1.5x', () => {
+  it('should calculate 48 regular + 12 overtime hours for 6 days at 10h each', async () => {
+    const clockLogs = [
+      ...makeClockLogPair('2026-02-02', 8, 18),
+      ...makeClockLogPair('2026-02-03', 8, 18),
+      ...makeClockLogPair('2026-02-04', 8, 18),
+      ...makeClockLogPair('2026-02-05', 8, 18),
+      ...makeClockLogPair('2026-02-06', 8, 18),
+      ...makeClockLogPair('2026-02-07', 8, 18),
+    ];
+    setUpMocks(mockEmployee, clockLogs, []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.regularHours).toBe(48);
+    expect(ep.overtimeHours).toBe(12);
+    expect(ep.overtimePay).toBeCloseTo(18000, 2);
+  });
+});
+
+describe('NomineeService — REQ 8.3 Overtime 2x', () => {
+  it('should calculate 48 regular + 24 overtime hours for 6 days at 12h each', async () => {
+    const clockLogs = [
+      ...makeClockLogPair('2026-02-02', 7, 19),
+      ...makeClockLogPair('2026-02-03', 7, 19),
+      ...makeClockLogPair('2026-02-04', 7, 19),
+      ...makeClockLogPair('2026-02-05', 7, 19),
+      ...makeClockLogPair('2026-02-06', 7, 19),
+      ...makeClockLogPair('2026-02-07', 7, 19),
+    ];
+    setUpMocks(mockEmployee, clockLogs, []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.regularHours).toBe(48);
+    expect(ep.overtimeHours).toBe(24);
+    expect(ep.overtimePay).toBeCloseTo(36000, 2);
+  });
+});
+
+describe('NomineeService — REQ 8.4 Weekly Rest Worked', () => {
+  it('should calculate positive weeklyRestHours for a period including Sundays', async () => {
+    const clockLogs = [
+      ...makeClockLogPair('2026-02-02', 8, 16),
+      ...makeClockLogPair('2026-02-03', 8, 16),
+      ...makeClockLogPair('2026-02-04', 8, 16),
+      ...makeClockLogPair('2026-02-05', 8, 16),
+      ...makeClockLogPair('2026-02-06', 8, 16),
+      ...makeClockLogPair('2026-02-07', 8, 16),
+      ...makeClockLogPair('2026-02-08', 9, 17),
+    ];
+    setUpMocks(mockEmployee, clockLogs, []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-08')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.weeklyRestHours).toBeGreaterThan(0);
+    expect(ep.weeklyRestPay).toBeGreaterThan(0);
+  });
+});
+
+describe('NomineeService — REQ 8.5 Holiday Period', () => {
+  it('should use correct scheduled hours for May 2026 (excludes May 1 holiday and Sundays)', async () => {
+    jest.mocked(prisma.vpg_positions.findMany).mockResolvedValue([mockPosition]);
+    jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([mockEmployee]);
+    jest.mocked(prisma.vpg_clock_logs.findMany).mockResolvedValue([]);
+    jest.mocked(prisma.vpg_deductions_per_employee.findMany).mockResolvedValue([]);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-05-01'),
+      new Date('2026-05-15')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.scheduledHours).toBe(96);
+  });
+});
+
+describe('NomineeService — REQ 8.6 CCSS Deduction', () => {
+  it('should include CCSS deduction in deductionsBreakdown and totalDeductions', async () => {
+    const clockLogs = [
+      ...makeClockLogPair('2026-02-02', 8, 16),
+      ...makeClockLogPair('2026-02-03', 8, 16),
+      ...makeClockLogPair('2026-02-04', 8, 16),
+      ...makeClockLogPair('2026-02-05', 8, 16),
+      ...makeClockLogPair('2026-02-06', 8, 16),
+      ...makeClockLogPair('2026-02-07', 8, 16),
+    ];
+    const deductions = [
+      {
+        deductions_per_employee_employee_id: 1,
+        deductions_per_employee_deduction_id: 1,
+        deductions_per_employee_version: 1,
+        vpg_deductions: {
+          deductions_id: 1,
+          deductions_name: 'CCSS',
+          deductions_description: 'Caja Costarricense de Seguro Social',
+          deductions_fixed_amount: null,
+          deductions_percentage: 3.5,
+        },
+      },
+    ];
+    setUpMocks(mockEmployee, clockLogs, deductions);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.deductionsBreakdown).toHaveLength(1);
+    expect(ep.deductionsBreakdown[0].type).toBe('percent');
+    expect(ep.deductionsBreakdown[0].amount).toBeGreaterThan(0);
+    expect(ep.totalDeductions).toBeGreaterThan(0);
+  });
+});
+
+describe('NomineeService — Edge cases', () => {
+  it('should handle employee with no clock logs gracefully', async () => {
+    setUpMocks(mockEmployee, [], []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.regularHours).toBe(0);
+    expect(ep.overtimeHours).toBe(0);
+  });
+
+  it('should handle period with no active employees', async () => {
+    jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([]);
+    jest.mocked(EmployeeService.getAllEmployees).mockResolvedValue([]);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.summary.employeesProcessed).toBe(0);
+    expect(result.summary.messages.length).toBeGreaterThan(0);
+  });
+
+  it('should handle employee without position gracefully', async () => {
+    const empNoPosition = { ...mockEmployee, position_id: null };
+    setUpMocks(empNoPosition, [], []);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toHaveLength(1);
+    const ep = result.employees[0];
+    expect(ep.baseHourlySalary).toBe(0);
+    expect(ep.generalMessages.some((m: string) => m.includes('sin puesto'))).toBe(true);
+  });
+});

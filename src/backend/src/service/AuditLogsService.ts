@@ -95,6 +95,25 @@ export class AuditLogsService {
    * @param id - The ID of the audit log
    * @returns Promise<AuditLog | null> - The audit log or null if not found
    */
+  static async createAuditLog(params: {
+    userId: number;
+    action: string;
+    entity: string;
+    entityId: number;
+    details?: string;
+  }): Promise<void> {
+    await prisma.vpg_audit_logs.create({
+      data: {
+        audit_logs_user_id: params.userId,
+        audit_logs_action: params.action,
+        audit_logs_entity: params.entity,
+        audit_logs_entity_id: params.entityId,
+        audit_logs_timestamp: new Date(),
+        audit_logs_details: params.details || null,
+      },
+    });
+  }
+
   static async getAuditLogById(id: number): Promise<any> {
     const log = await prisma.vpg_audit_logs.findUnique({
       where: { audit_logs_id: id },

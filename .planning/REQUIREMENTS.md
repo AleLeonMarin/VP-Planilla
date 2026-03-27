@@ -76,7 +76,7 @@ Llevar VP-Planilla de "funcional pero frágil" a "estable, seguro y completo". E
 | 5.1 | Ruta `POST /api/nominee/calculate` eliminada (estaba deprecated con salario hardcodeado = 1000) | Must | |
 | 5.2 | `AuthService.updateLastLogin()` actualiza campo `last_login` en `vpg_users` | Must | Requiere migración Prisma |
 | 5.3 | Migración `add_last_login_to_users` aplicada y generada | Must | `npx prisma migrate dev` |
-| 5.4 | Audit log escrito en operaciones críticas: crear planilla, eliminar empleado, asignar deducción | Should | `vpg_audit_logs` ya existe |
+| 5.4 | Audit log escrito en operaciones críticas: crear planilla, cambiar estado de empleado, asignar deducción | Should | `vpg_audit_logs` ya existe |
 
 ---
 
@@ -134,6 +134,7 @@ Llevar VP-Planilla de "funcional pero frágil" a "estable, seguro y completo". E
 | Migración de bcrypt v6 → v5 | Riesgo bajo, no crítico para funcionalidad |
 | Puppeteer como dependencia de dev | Optimización de deploy, no urgente |
 | Multitenancy | Fuera de alcance del proyecto |
+| Eliminar empleados permanentemente | Los empleados solo se desactivan (status: inactivo). Eliminar rompería el historial de planillas, actas y documentos asociados. |
 
 ---
 

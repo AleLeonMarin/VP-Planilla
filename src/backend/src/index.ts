@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
 import authRoutes from "./routes/AuthRoute";
 import employeeRoutes from "./routes/EmployeeRoute";
 import laborEventsRoutes from "./routes/LaborEventsRoute";
@@ -31,6 +32,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
 // Middlewares básicos
 app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') }));
+app.use(helmet());
 app.use(express.json());
 
 console.log("Servidor en ejecución...");

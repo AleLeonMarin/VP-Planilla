@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { EmployeeService } from "../service/EmployeeService";
+import { AuditLogsService } from "../service/AuditLogsService";
 
 export class EmployeeController {
   /**
@@ -100,6 +101,15 @@ export class EmployeeController {
       );
       if (!updatedEmployee) {
         return res.status(404).json({ error: "Employee not found" });
+      }
+      if (rawData.employee_status || rawData.status) {
+        await AuditLogsService.createAuditLog({
+          userId: req.user.id,
+          action: 'CHANGE_EMPLOYEE_STATUS',
+          entity: 'employee',
+          entityId: employeeId,
+          details: `Employee ${employeeId} status changed to ${rawData.employee_status || rawData.status}`,
+        });
       }
       return res.status(200).json(updatedEmployee);
     } catch (error) {

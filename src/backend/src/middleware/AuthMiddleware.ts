@@ -38,7 +38,16 @@ export class AuthMiddleware {
 
       // Verificar token
       const decoded = AuthService.verifyToken(token);
-      
+
+      // Check if token is blocklisted
+      const isBlocklisted = await AuthService.isTokenBlocklisted(token);
+      if (isBlocklisted) {
+        return res.status(401).json({
+          success: false,
+          message: 'Token ha sido invalidado'
+        });
+      }
+
       // Obtener información completa del usuario
       const user = await AuthService.getUserById(decoded.id);
       

@@ -9,6 +9,38 @@ const REGULAR_HOURS_PER_DAY  = 8;
 const OVERTIME_MULTIPLIER    = 1.5;
 const WORKING_DAYS_PER_WEEK  = 6; // Monday – Saturday
 
+// ── Costa Rica National Holidays (Feriados Nacionales) ───────────────────────
+export const FERIADOS_CR: Record<number, string[]> = {
+  2026: ['01-01', '04-02', '04-03', '04-11', '05-01', '07-25', '08-15', '09-15', '10-12', '12-25'],
+  2027: ['01-01', '03-25', '03-26', '04-11', '05-01', '07-25', '08-15', '09-15', '10-12', '12-25'],
+};
+
+/**
+ * Check if a date is a Costa Rica national holiday
+ * @param date - Date to check
+ * @param year - Year for holiday lookup (defaults to date's year)
+ * @returns True if date is a CR national holiday
+ */
+export function isCRHoliday(date: Date, year?: number): boolean {
+  const yr = year ?? date.getUTCFullYear();
+  const mmdd = `${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+  return FERIADOS_CR[yr]?.includes(mmdd) ?? false;
+}
+
+/**
+ * Get all holiday dates for a given year
+ * @param year - Year to get holidays for
+ * @returns Array of Date objects for each holiday
+ */
+export function getCRHolidays(year: number): Date[] {
+  const holidays = FERIADOS_CR[year] ?? [];
+  return holidays.map((mmdd) => {
+    const [month, day] = mmdd.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    return date;
+  });
+}
+
 /**
  * Calculate working hours between two timestamps
  * @param startTime - Start timestamp
@@ -300,15 +332,18 @@ export function getSundaysInPeriod(startDate: Date, endDate: Date): Date[] {
 }
 
 /**
- * Count Mon–Sat working days in the full period.
+ * Count Mon–Sat working days in the full period, excluding CR national holidays.
  * Used both for weekly-rest denominator and scheduled hours.
  */
-export function countWorkingDaysInPeriod(startDate: Date, endDate: Date): number {
+export function countWorkingDaysInPeriod(startDate: Date, endDate: Date, year?: number): number {
+  const yr = year ?? startDate.getUTCFullYear();
   let count = 0;
   const current = new Date(startDate);
   while (current <= endDate) {
-    if (current.getDay() !== 0) count++;
-    current.setDate(current.getDate() + 1);
+    if (current.getUTCDay() !== 0 && !isCRHoliday(current, yr)) {
+      count++;
+    }
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   return count;
 }
