@@ -1,22 +1,19 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-27T00:58:27.425Z",
-  "phase": "05",
-  "phase_name": "Funcionalidad de Negocio Faltante",
-  "phase_dir": ".planning/phases/05-funcionalidad-de-negocio-faltante",
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
-  "status": "paused-between-phases",
+  "timestamp": "2026-03-27T02:32:07.615Z",
+  "phase": "6",
+  "phase_name": "Feriados Nacionales Costa Rica",
+  "phase_dir": ".planning/phases/06-feriados-nacionales-costa-rica",
+  "status": "complete",
   "completed_phases": [
     {"phase": "01", "name": "Singleton Prisma", "status": "validated"},
     {"phase": "02", "name": "Seguridad de Autenticacion", "status": "validated"},
     {"phase": "03", "name": "Validacion de Inputs y CORS", "status": "validated"},
-    {"phase": "04", "name": "Performance del Calculo de Planilla", "status": "validated"}
+    {"phase": "04", "name": "Performance del Calculo de Planilla", "status": "validated"},
+    {"phase": "05", "name": "Funcionalidad de Negocio Faltante", "status": "validated"},
+    {"phase": "06", "name": "Feriados Nacionales Costa Rica", "status": "validated"}
   ],
   "remaining_phases": [
-    {"phase": "05", "name": "Funcionalidad de Negocio Faltante", "status": "not_started"},
-    {"phase": "06", "name": "Feriados Nacionales Costa Rica", "status": "not_started"},
     {"phase": "07", "name": "Rate Limiting, Helmet y Token Revocation", "status": "not_started"},
     {"phase": "08", "name": "Tests Unitarios NomineeService", "status": "not_started"}
   ],
@@ -25,15 +22,33 @@
   "decisions": [
     {"decision": "z.coerce.number() en lugar de z.number({ coerce: true })", "rationale": "Zod 4 elimino la opcion constructor-based coerce", "phase": "03"},
     {"decision": "validateBody en src/middleware/ no src/utils/", "rationale": "Convencion CLAUDE.md", "phase": "03"},
-    {"decision": "validateBody despues de auth middleware en UserRoute", "rationale": "Preservar orden de seguridad 401-antes-de-400", "phase": "03"},
     {"decision": "groupByEmployee + preload methods en NomineeService", "rationale": "O(N*5) -> O(6) queries", "phase": "04"},
-    {"decision": "ClockLogsController singleton fix", "rationale": "Quedó pendiente en Phase 1, corregido post-validate", "phase": "01"}
+    {"decision": "Employees se desactivan (status: inactivo), no se eliminan", "rationale": "Business rule: delete romperia historial de planillas", "phase": "05"},
+    {"decision": "Usó prisma db push en vez de migrate dev", "rationale": "DB drift - sincroniza sin perder datos", "phase": "05"},
+    {"decision": "isCRHoliday usa UTC methods (getUTCMonth, getUTCDate)", "rationale": "new Date('YYYY-MM-DD') se interpreta como UTC midnight - timezone -6 hacia que getMonth() retornara dia anterior", "phase": "06"},
+    {"decision": "Semana Santa 2026: Easter=April 5, Jueves Santo=April 2, Viernes Santo=April 3", "rationale": "Verificado con calendario", "phase": "06"},
+    {"decision": "Tests corregidos para contar domingos + feriados", "rationale": "May 1-15=12 dias, Sep 11-17=5 dias, Dec 21-27=5 dias", "phase": "06"}
   ],
-  "uncommitted_files": [],
+  "uncommitted_files": [
+    ".planning/phases/05-funcionalidad-negocio/",
+    ".planning/phases/06-feriados-nacionales-costa-rica/",
+    "src/backend/src/__tests__/unit/payrollUtils.test.ts",
+    "src/backend/src/utils/payrollUtils.ts",
+    "src/backend/src/service/AuthService.ts",
+    "src/backend/src/service/AuditLogsService.ts",
+    "src/backend/src/controller/EmployeeController.ts",
+    "src/backend/src/controller/EmployeeDeductionsController.ts",
+    "src/backend/src/controller/PayrollController.ts",
+    "src/backend/src/routes/NomineeRoute.ts",
+    "src/backend/prisma/schema.prisma",
+    ".planning/REQUIREMENTS.md",
+    ".planning/STATE.md",
+    ".continue-here.md"
+  ],
   "known_issues": [
-    {"issue": "PayrollService.test.ts tiene 2 tests fallidos", "detail": "getAllPayrolls mock no incluye include:vpg_payroll_employee y campos total_* faltantes", "blocking": false},
-    {"issue": "Pre-existing TS errors en controllers", "detail": "req.params.id type string|string[], no introducidos por GSD", "blocking": false}
+    {"issue": "PayrollService.test.ts tiene 2 tests fallidos", "detail": "getAllPayrolls mock desactualizado desde Phase 4 - no relacionado a Phase 6", "blocking": false},
+    {"issue": "Pre-existing TS errors en controllers", "detail": "req.params.id type string|string[] - 27 errores pre-existentes", "blocking": false}
   ],
-  "next_action": "/gsd:plan-phase 5",
-  "context_notes": "Sesion completa. Phases 1-4 validadas. README creado. Coverage folder removida de git. ClockLogsController fix aplicado post-phase-1. Usuario entiende el flujo Claude<->OpenCode. Listo para Phase 5."
+  "next_action": "/gsd:plan-phase 7 - Rate Limiting, Helmet y Token Revocation",
+  "context_notes": "6/8 fases completadas. Cambios SIN COMMITear. Recomendacion: /clear cada 2-3 fases para mantener performance. HANDOFF.json actualizado."
 }
