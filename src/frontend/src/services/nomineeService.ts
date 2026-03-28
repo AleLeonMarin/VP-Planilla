@@ -1,4 +1,4 @@
-import { http } from './http';
+import { http } from "./http";
 
 export interface ClockLog {
   id: number;
@@ -15,41 +15,92 @@ export interface EmployeeDeduction {
   amount: number;
 }
 
+export interface AguinaldoResult {
+  employeeId: number;
+  aguinaldo: number | null;
+  message: string;
+}
+
 export const NomineeService = {
   async getClockLogs(initDate: string, endDate: string): Promise<ClockLog[]> {
     try {
       const query = `?initDate=${encodeURIComponent(initDate)}&endDate=${encodeURIComponent(endDate)}`;
       return await http.get(`/nominee/clocklogs${query}`);
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Error al obtener registros de marcación');
+      throw new Error(
+        err instanceof Error
+          ? err.message
+          : "Error al obtener registros de marcación",
+      );
     }
   },
 
-  async getEmployeeDeductions(employeeId: number): Promise<EmployeeDeduction[]> {
+  async getEmployeeDeductions(
+    employeeId: number,
+  ): Promise<EmployeeDeduction[]> {
     try {
       return await http.get(`/nominee/employee-deductions/${employeeId}`);
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Error al obtener deducciones del empleado');
+      throw new Error(
+        err instanceof Error
+          ? err.message
+          : "Error al obtener deducciones del empleado",
+      );
     }
   },
 
   async calculateNominee(): Promise<unknown> {
     try {
-      return await http.post('/nominee/calculate');
+      return await http.post("/nominee/calculate");
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Error al ejecutar cálculo de nómina (legacy)');
+      throw new Error(
+        err instanceof Error
+          ? err.message
+          : "Error al ejecutar cálculo de nómina (legacy)",
+      );
     }
   },
 
-  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number): Promise<unknown> {
+  async calculatePayrollForPeriod(
+    startDate: string,
+    endDate: string,
+    payrollId?: number,
+  ): Promise<unknown> {
     try {
-      const payload: { startDate: string; endDate: string; payrollId?: number } = { startDate, endDate };
+      const payload: {
+        startDate: string;
+        endDate: string;
+        payrollId?: number;
+      } = { startDate, endDate };
       if (payrollId) {
         payload.payrollId = payrollId;
       }
-      return await http.post('/nominee/calculate-payroll', payload);
+      return await http.post("/nominee/calculate-payroll", payload);
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Error al calcular planilla para el periodo');
+      throw new Error(
+        err instanceof Error
+          ? err.message
+          : "Error al calcular planilla para el periodo",
+      );
+    }
+  },
+
+  async calculateAguinaldo(
+    employeeIds: number[],
+    startDate: string,
+    endDate: string,
+  ): Promise<AguinaldoResult[]> {
+    try {
+      const payload = {
+        employeeIds,
+        start_date: startDate,
+        end_date: endDate,
+      };
+      return await http.post("/nominee/calculate-aguinaldo", payload);
+    } catch (err) {
+      throw new Error(
+        err instanceof Error ? err.message : "Error al calcular aguinaldo",
+      );
     }
   },
 };
