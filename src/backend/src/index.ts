@@ -31,7 +31,17 @@ const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
 // Middlewares básicos
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') }));
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isVercel = origin.endsWith('.vercel.app') || origin === 'https://vp-planilla.vercel.app';
+    const isAllowed = allowedOrigins.includes(origin);
+    if (isVercel || isAllowed) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(helmet());
 app.use(express.json());
 
