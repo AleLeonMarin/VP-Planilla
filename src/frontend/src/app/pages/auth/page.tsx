@@ -159,7 +159,7 @@ const LoginScreen = () => {
             alt="Decorative Background Pattern"
             fill
             style={{ objectFit: "cover" }}
-            className="opacity-50 mix-blend-multiply"
+            className="opacity-50 mix-blend-multiply dark:opacity-20 dark:mix-blend-screen"
           />
         </div>
       </div>
