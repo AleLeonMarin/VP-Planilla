@@ -27,7 +27,7 @@ const LoginScreen = () => {
     <>
       <div className="flex min-h-screen font-inter">
         {/* Left Panel */}
-        <div className="flex-none w-[40%] bg-[#FCF1D5] dark:bg-[#1a1a1a] flex flex-col p-10 shadow-lg relative z-10 rounded-l-lg">
+        <div className="flex-none w-[40%] bg-[#FCF1D5] dark:bg-gradient-to-b dark:from-[#0d1a0d] dark:via-[#111f11] dark:to-[#0a150a] flex flex-col p-10 shadow-lg relative z-10 rounded-l-lg dark:border-r dark:border-[#2a4a2a]">
           {/* Top-left aligned Logo and Title Section */}
           <div className="flex items-center self-start mb-auto">
             <Image
@@ -153,14 +153,15 @@ const LoginScreen = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="flex-1 bg-[#344838] dark:bg-[#0a0f0a] relative overflow-hidden">
+        <div className="flex-1 bg-[#344838] dark:bg-gradient-to-br dark:from-[#0d2010] dark:via-[#0f2a12] dark:to-[#071208] relative overflow-hidden">
           <Image
             src="/images/LogInBackground.png"
             alt="Decorative Background Pattern"
             fill
             style={{ objectFit: "cover" }}
-            className="opacity-50 mix-blend-multiply dark:opacity-20 dark:mix-blend-screen"
+            className="opacity-50 mix-blend-multiply dark:opacity-15 dark:mix-blend-screen"
           />
+          <div className="absolute inset-0 dark:bg-gradient-to-t dark:from-[#0a1a0a]/60 dark:via-transparent dark:to-transparent" />
         </div>
       </div>
 
