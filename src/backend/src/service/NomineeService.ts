@@ -281,15 +281,12 @@ export class NomineeService {
         `Processing payroll for ${employees.length} employees from ${startDate.toISOString()} to ${endDate.toISOString()}`,
       );
 
-      const [clockLogsMap, vacationsMap, laborEventsMap, bonusesMap, deductionsMap, positionsMap] =
-        await Promise.all([
-          NomineeService.preloadClockLogs(startDate, endDate),
-          NomineeService.preloadVacations(),
-          NomineeService.preloadLaborEvents(startDate, endDate),
-          NomineeService.preloadBonuses(startDate, endDate),
-          NomineeService.preloadDeductions(),
-          NomineeService.preloadPositions()
-        ]);
+      const clockLogsMap   = await NomineeService.preloadClockLogs(startDate, endDate);
+      const vacationsMap   = await NomineeService.preloadVacations();
+      const laborEventsMap = await NomineeService.preloadLaborEvents(startDate, endDate);
+      const bonusesMap     = await NomineeService.preloadBonuses(startDate, endDate);
+      const deductionsMap  = await NomineeService.preloadDeductions();
+      const positionsMap   = await NomineeService.preloadPositions();
 
       for (const employee of employees) {
         try {
@@ -409,7 +406,7 @@ export class NomineeService {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
       employeeName: employee.name,
-      positionId: employee.position_id?.toString() || "0",
+            positionId: employee.position_id?.toString() || "0",
       baseHourlySalary: 0,
       days: [],
       // Hour breakdown (populated after processDailyWork)
@@ -444,9 +441,9 @@ export class NomineeService {
       if (employee.position_id) {
         const position = positionsMap.get(employee.position_id);
         if (position) {
-          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary);
-          employeePayroll.position = position.name;
-          employeePayroll.position_name = position.name;
+          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(Number(position.position_base_salary));
+          employeePayroll.position = position.position_name;
+          employeePayroll.position_name = position.position_name;
         } else {
           employeePayroll.generalMessages.push(
             `Advertencia: No se encontró información del puesto (ID: ${employee.position_id}). Usando salario base de 0.`,
@@ -902,7 +899,15 @@ export class NomineeService {
         }
       }
     });
-    return NomineeService.groupByEmployee(logs, (item) => item.clock_logs_employee_id);
+    // Map DB field names to the shape expected by processDailyWork and payrollUtils
+    const mapped = logs.map(l => ({
+      id: l.clock_logs_id,
+      employee_id: l.clock_logs_employee_id,
+      timestamp: l.clock_logs_timestamp,
+      log_type: l.clock_logs_log_type,
+      remarks: l.clock_logs_remarks,
+    }));
+    return NomineeService.groupByEmployee(mapped, (item) => item.employee_id);
   }
 
   private static async preloadVacations(): Promise<Map<number, any[]>> {
