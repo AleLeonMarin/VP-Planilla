@@ -26,12 +26,16 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
 - **Repositorio:** brownfield — código existente mejorado en v1.0
 
-## Next Milestone Goals (v1.1)
+## Current Milestone: v1.1 Calidad, UI Moderna y Cobertura de Tests
 
-- Corregir 27 errores TypeScript pre-existentes
-- Fix logout frontend (no limpia localStorage)
-- Tests E2E con Playwright
-- Tests de frontend (Vitest)
+**Goal:** Elevar la calidad del sistema en tres frentes: cobertura de tests ~60%, rediseño visual dark mode moderno consistente en todo el frontend, y validación de la integración frontend-backend.
+
+**Target features:**
+- Tests unitarios ~60% de cobertura (módulo empleados + otros módulos críticos)
+- Design system dark mode: sidebar, cards, tipografía y colores cohesivos en TODOS los módulos
+- Modales de confirmación/advertencia en flujos críticos
+- Corrección de bugs visuales, inconsistencias y flujo UX mejorado
+- Validación completa de conexión frontend-backend (contratos de API)
 
 ## Key Decisions
 
@@ -53,4 +57,22 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - Eliminar empleados permanentemente — solo desactivar (status: inactivo)
 
 ---
-*Last updated: 2026-03-31 — v1.0 milestone archived, ready for v1.1*
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
+---
+*Last updated: 2026-03-31 — v1.1 milestone started*
