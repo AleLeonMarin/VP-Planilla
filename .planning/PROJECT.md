@@ -53,4 +53,4 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - Eliminar empleados permanentemente — solo desactivar (status: inactivo)
 
 ---
-*Last updated: 2026-03-27 — v1.0 shipped*
+*Last updated: 2026-03-31 — v1.0 milestone archived, ready for v1.1*
