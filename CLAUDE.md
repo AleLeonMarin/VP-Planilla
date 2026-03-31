@@ -186,15 +186,9 @@ Frontend:  Page → Hook → Service → http.ts → Backend API
 
 These are documented issues. Do not silently "fix" them while working on something else — they require coordinated changes:
 
-1. **Auth gap**: 13/16 route files have no `AuthMiddleware.verifyToken`. Fixing requires a public-endpoint allowlist.
-2. **Multiple PrismaClient instances**: 16 services use `new PrismaClient()` instead of the singleton. Fix one service at a time.
-3. **PayrollService bad import**: `import { error } from 'console'` causes `throw undefined`. Replace with `throw new Error(...)`.
-4. **No backend input validation**: No Zod/joi on any backend controller. Add per-route middleware.
-5. **Wildcard CORS**: `app.use(cors())` with no origin restriction. Fix: `cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') })`.
-6. **JWT fallback secret**: Falls back to `'your-default-secret-key'`. Replace with startup assertion.
-7. **bcrypt@6.0.0 pre-release**: Prefer `bcrypt@^5.1.1`.
-8. **Credentials in query params**: `AuthController.login` reads `req.query.username/password` as fallback — remove.
-9. **`@prisma/client` in devDependencies**: Must be in `dependencies` for production deploys.
+1. **bcrypt@6.0.0 pre-release**: Prefer `bcrypt@^5.1.1`. Still pending as of v1.0.
+
+> Items resolved in v1.0: auth gap (all routes protected), PrismaClient singleton, PayrollService bad import, Zod validation on endpoints, CORS restriction, JWT fallback secret, credentials in query params, `@prisma/client` moved to dependencies.
 
 ---
 
@@ -212,4 +206,46 @@ This is a **Costa Rican payroll system** (planilla). Key domain rules baked into
 
 ---
 
-*Last updated: 2026-03-25 — generated from .planning/codebase/ map*
+## GSD — Workflow for Daily Operations
+
+/gsd:audit-milestone   → confirmar que v1.0 está completo
+/gsd:complete-milestone → archivar v1.0
+/gsd:new-milestone      → definir v1.1
+
+
+Use GSD commands at every stage, not just planning:
+
+**Bug found:**
+```
+/gsd:debug
+```
+Opens a systematic debug session with persistent state. Investigates with hypotheses and evidence before touching any code.
+
+**Quick obvious fix (1-2 files):**
+```
+/gsd:fast <descripción>
+```
+No planning overhead. For simple color changes, typos, single-line fixes.
+
+**Medium fix (not trivial, not a full feature):**
+```
+/gsd:quick <descripción>
+```
+Atomic commits and tracking, no planning subagents. For fixes like the payroll field mismatch.
+
+**New feature or larger work:**
+```
+/gsd:plan-phase → /gsd:execute-phase
+```
+Full flow: research + plan + verification.
+
+**Rule of thumb:**
+- Bug → `/gsd:debug`
+- Obvious 1-line fix → `/gsd:fast`
+- Feature / improvement → `/gsd:plan-phase` + `/gsd:execute-phase`
+
+**Why this matters:** Without `/gsd:debug`, Claude may guess the root cause, touch unrelated files, and introduce new breakage while fixing one thing.
+
+---
+
+*Last updated: 2026-03-31 — v1.0 complete, tech debt section updated*

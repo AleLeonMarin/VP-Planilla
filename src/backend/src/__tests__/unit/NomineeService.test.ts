@@ -1,37 +1,34 @@
+import { PrismaClient } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
 import { NomineeService } from '../../service/NomineeService';
+
+jest.mock('../../lib/prisma', () => {
+  const mock = mockDeep<PrismaClient>();
+  return { prisma: mock };
+});
 
 jest.mock('../../service/EmployeeService');
 
-const BASE_HOURLY = 1000;
+const { EmployeeService } = require('../../service/EmployeeService');
+const { prisma } = require('../../lib/prisma');
+
+const BASE_HOURLY = 1680;
 
 const mockPosition = {
   position_id: 1,
-  base_salary: BASE_HOURLY,
-  name: 'Developer',
+  position_base_salary: BASE_HOURLY,
+  position_name: 'Developer',
+  position_description: 'Test position',
+  position_version: 1,
 };
 
 const mockEmployee = {
-  id: '1',
+  id: 1,
   name: 'Test Employee',
   national_id: '1-1234-5678',
   position_id: 1,
   required_hours_biweekly: null,
 };
-
-jest.mock('../../lib/prisma', () => ({
-  prisma: {
-    vpg_clock_logs: { findMany: jest.fn() },
-    vpg_vacations: { findMany: jest.fn() },
-    vpg_employee_labor_event: { findMany: jest.fn() },
-    vpg_bonuses: { findMany: jest.fn() },
-    vpg_deductions_per_employee: { findMany: jest.fn() },
-    vpg_positions: { findMany: jest.fn() },
-    vpg_payrolls: { findUnique: jest.fn() },
-  },
-}));
-
-const { EmployeeService } = require('../../service/EmployeeService');
-const { prisma } = require('../../lib/prisma');
 
 const service = new NomineeService();
 
@@ -39,13 +36,13 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([]);
   jest.mocked(EmployeeService.getAllEmployees).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_clock_logs.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_vacations.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_employee_labor_event.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_bonuses.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_deductions_per_employee.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_positions.findMany).mockResolvedValue([]);
-  jest.mocked(prisma.vpg_payrolls.findUnique).mockResolvedValue(null);
+  prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
+  prisma.vpg_vacations.findMany.mockResolvedValue([]);
+  prisma.vpg_employee_labor_event.findMany.mockResolvedValue([]);
+  prisma.vpg_bonuses.findMany.mockResolvedValue([]);
+  prisma.vpg_deductions_per_employee.findMany.mockResolvedValue([]);
+  prisma.vpg_positions.findMany.mockResolvedValue([]);
+  prisma.vpg_payrolls.findUnique.mockResolvedValue(null);
 });
 
 function makeClockLogPair(date: string, localInHour: number, localOutHour: number, empId = 1) {
@@ -58,23 +55,23 @@ function makeClockLogPair(date: string, localInHour: number, localOutHour: numbe
     {
       clock_logs_id: Math.random(),
       clock_logs_employee_id: empId,
-      timestamp: inDate.toISOString(),
-      log_type: 'IN',
+      clock_logs_timestamp: inDate,
+      clock_logs_log_type: 'IN',
     },
     {
       clock_logs_id: Math.random(),
       clock_logs_employee_id: empId,
-      timestamp: outDate.toISOString(),
-      log_type: 'OUT',
+      clock_logs_timestamp: outDate,
+      clock_logs_log_type: 'OUT',
     },
   ];
 }
 
 function setUpMocks(employee: any, clockLogs: any[], deductions: any[]) {
   jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([employee]);
-  jest.mocked(prisma.vpg_clock_logs.findMany).mockResolvedValue(clockLogs);
-  jest.mocked(prisma.vpg_positions.findMany).mockResolvedValue([mockPosition]);
-  jest.mocked(prisma.vpg_deductions_per_employee.findMany).mockResolvedValue(deductions);
+  prisma.vpg_clock_logs.findMany.mockResolvedValue(clockLogs);
+  prisma.vpg_positions.findMany.mockResolvedValue([mockPosition]);
+  prisma.vpg_deductions_per_employee.findMany.mockResolvedValue(deductions);
 }
 
 describe('NomineeService — REQ 8.1 Normal 8h/day', () => {
@@ -122,7 +119,7 @@ describe('NomineeService — REQ 8.2 Overtime 1.5x', () => {
     const ep = result.employees[0];
     expect(ep.regularHours).toBe(48);
     expect(ep.overtimeHours).toBe(12);
-    expect(ep.overtimePay).toBeCloseTo(18000, 2);
+    expect(ep.overtimePay).toBeCloseTo(30240, 2);
   });
 });
 
@@ -147,7 +144,7 @@ describe('NomineeService — REQ 8.3 Overtime 2x', () => {
     const ep = result.employees[0];
     expect(ep.regularHours).toBe(48);
     expect(ep.overtimeHours).toBe(24);
-    expect(ep.overtimePay).toBeCloseTo(36000, 2);
+    expect(ep.overtimePay).toBeCloseTo(60480, 2);
   });
 });
 

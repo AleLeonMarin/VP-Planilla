@@ -49,7 +49,7 @@ Ver `.planning/STATE.md` — siempre tiene la posición exacta y el siguiente co
 
 ---
 
-## Fases del Milestone 1
+## Milestone v1.0 — COMPLETO (2026-03-27)
 
 | # | Fase | Estado |
 |---|------|--------|
@@ -57,10 +57,23 @@ Ver `.planning/STATE.md` — siempre tiene la posición exacta y el siguiente co
 | 2 | Seguridad de Autenticación | ✅ Completa |
 | 3 | Validación de Inputs y CORS | ✅ Completa |
 | 4 | Performance del Cálculo de Planilla | ✅ Completa |
-| 5 | Funcionalidad de Negocio Faltante | 📋 Planificada |
-| 6 | Feriados Nacionales Costa Rica | ⬜ Pendiente |
-| 7 | Rate Limiting, Helmet y Token Revocation | ⬜ Pendiente |
-| 8 | Tests Unitarios NomineeService | ⬜ Pendiente |
+| 5 | Funcionalidad de Negocio Faltante | ✅ Completa |
+| 6 | Feriados Nacionales Costa Rica | ✅ Completa |
+| 7 | Rate Limiting, Helmet y Token Revocation | ✅ Completa |
+| 8 | Tests Unitarios NomineeService | ✅ Completa |
+
+45 tests pasando · 0 failures · O(6) queries para cálculo de planilla
+
+---
+
+## Próximo: Milestone v1.1
+
+Candidatos (definir con `/gsd:new-milestone`):
+- Corregir 27 errores TypeScript en controllers
+- Fix logout frontend (no limpia localStorage)
+- Tests E2E con Playwright
+- Tests de frontend con Vitest
+- bcrypt downgrade v6 → v5 estable
 
 ---
 
@@ -69,6 +82,9 @@ Ver `.planning/STATE.md` — siempre tiene la posición exacta y el siguiente co
 ```bash
 # Ver estado y siguiente paso
 /gsd:progress
+
+# Iniciar nuevo milestone
+/gsd:new-milestone
 
 # Ver todas las fases y planes
 /gsd:stats
