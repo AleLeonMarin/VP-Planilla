@@ -270,7 +270,7 @@ export default function ReportsPage() {
   const renderReportTarget = (target: ReportTargetSummary) => (
     <div
       key={target.id}
-      className="flex flex-col gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-gray-700/50 p-4"
+      className="flex flex-col gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-700/50 p-4"
     >
       <div className="flex items-center gap-2">
         <ShieldCheckIcon className="h-5 w-5 text-green-700" />
@@ -286,7 +286,7 @@ export default function ReportsPage() {
   return (
     <div className="h-full overflow-auto bg-zinc-100 dark:bg-[#121212] p-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+        <header className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm uppercase tracking-wide text-green-700">Reportes oficiales</p>
@@ -296,13 +296,13 @@ export default function ReportsPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-gray-700 px-4 py-2">
+              <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 px-4 py-2">
                 <UserGroupIcon className="h-5 w-5 text-green-700" />
                 <span className="text-sm font-semibold text-zinc-700 dark:text-white">
                   {dataset?.payroll.total_employees ?? 0} colaboradores
                 </span>
               </div>
-              <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-gray-700 px-4 py-2">
+              <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 px-4 py-2">
                 <DocumentArrowUpIcon className="h-5 w-5 text-green-700" />
                 <span className="text-sm font-semibold text-zinc-700 dark:text-white">Generación XML</span>
               </div>
@@ -310,7 +310,7 @@ export default function ReportsPage() {
           </div>
         </header>
 
-        <section className="grid gap-4 rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-6 shadow-sm lg:grid-cols-4">
+        <section className="grid gap-4 rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-6 shadow-sm lg:grid-cols-4">
           <div className="lg:col-span-2">
             <label className="text-sm font-semibold text-zinc-700 dark:text-white">
               Planilla disponible
@@ -318,7 +318,7 @@ export default function ReportsPage() {
             <select
               value={selectedPayrollId ?? ''}
               onChange={(event) => setSelectedPayrollId(Number(event.target.value))}
-              className="mt-2 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-gray-700 px-4 py-3 text-zinc-700 dark:text-white focus:border-[#6F7153] focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 px-4 py-3 text-zinc-700 dark:text-white focus:border-[#6F7153] dark:focus:border-zinc-500 focus:outline-none"
             >
               {!dashboard && <option value="">Cargando planillas...</option>}
               {dashboard?.payrolls.map((payroll) => (
@@ -334,14 +334,14 @@ export default function ReportsPage() {
               </p>
             )}
           </div>
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-gray-700 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 p-4">
             <p className="text-xs uppercase tracking-wide text-green-700">Monto neto</p>
             <p className="mt-1 text-2xl font-semibold text-zinc-700 dark:text-white">
               {formatCurrency(dataset?.payroll.total_net)}
             </p>
             <p className="text-xs text-gray-500 dark:text-zinc-400">Periodo {formatDate(dataset?.payroll.period_start)} – {formatDate(dataset?.payroll.period_end)}</p>
           </div>
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-gray-700 p-4">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 p-4">
             <p className="text-xs uppercase tracking-wide text-green-700">Reporte</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {(['CCSS', 'HACIENDA'] as OfficialReportType[]).map((type) => (
@@ -351,7 +351,7 @@ export default function ReportsPage() {
                   className={`rounded-xl border px-3 py-1 text-xs font-semibold transition ${
                     reportTypes.includes(type)
                       ? 'border-[#6F7153] bg-green-700 text-white'
-                      : 'border-zinc-200 dark:border-zinc-600 bg-white dark:bg-gray-600 text-green-700 dark:text-white'
+                      : 'border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-600 text-green-700 dark:text-white'
                   }`}
                 >
                   {REPORT_LABELS[type]}
@@ -363,7 +363,7 @@ export default function ReportsPage() {
 
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex flex-col gap-3 rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 shadow-sm md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-2">
                 <DocumentArrowUpIcon className="h-5 w-5 text-green-700" />
                 <span className="text-sm font-semibold text-zinc-700 dark:text-white">
@@ -375,18 +375,18 @@ export default function ReportsPage() {
                   placeholder="Buscar por nombre, correo o cédula"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  className="flex-1 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] focus:outline-none"
+                  className="flex-1 rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-4 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] dark:focus:border-zinc-500 focus:outline-none"
                 />
                 <button
                   onClick={toggleSelectAll}
-                  className="rounded-2xl border border-zinc-200 dark:border-zinc-600 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-white hover:border-[#6F7153]"
+                  className="rounded-2xl border border-zinc-200 dark:border-zinc-600 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-white hover:border-[#6F7153] dark:hover:border-zinc-500"
                 >
                   {allSelected ? 'Quitar selección' : 'Seleccionar visibles'}
                 </button>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 shadow-sm">
+            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm">
               {loadingDataset ? (
                 <div className="flex items-center justify-center py-16 text-green-700">
                   <ArrowPathIcon className="mr-2 h-5 w-5 animate-spin" />
@@ -394,8 +394,8 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-[#E0D6B7] dark:divide-gray-700 text-sm text-zinc-700 dark:text-white">
-                    <thead className="bg-zinc-50 dark:bg-gray-700">
+                  <table className="min-w-full divide-y divide-[#E0D6B7] dark:divide-zinc-700 text-sm text-zinc-700 dark:text-white">
+                    <thead className="bg-zinc-50 dark:bg-zinc-700">
                       <tr>
                         <th className="px-4 py-3">
                           <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
@@ -408,7 +408,7 @@ export default function ReportsPage() {
                         <th className="px-4 py-3 text-left font-semibold">Último envío</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#F2E7C9] dark:divide-gray-700">
+                    <tbody className="divide-y divide-[#F2E7C9] dark:divide-zinc-700">
                       {filteredEmployees.map((employee) => (
                         <tr key={employee.employeeId} className="hover:bg-[#FBF8F0] dark:hover:bg-zinc-700">
                           <td className="px-4 py-3">
@@ -465,7 +465,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <EnvelopeIcon className="h-6 w-6 text-green-700" />
                 <div>
@@ -482,7 +482,7 @@ export default function ReportsPage() {
                     value={ccInput}
                     onChange={(event) => setCcInput(event.target.value)}
                     placeholder="separa varios correos con coma"
-                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] focus:outline-none"
+                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-3 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] dark:focus:border-zinc-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -493,7 +493,7 @@ export default function ReportsPage() {
                     value={customMessage}
                     onChange={(event) => setCustomMessage(event.target.value)}
                     rows={3}
-                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] focus:outline-none"
+                    className="mt-1 w-full rounded-2xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-3 py-2 text-sm text-zinc-700 dark:text-white focus:border-[#6F7153] dark:focus:border-zinc-500 focus:outline-none"
                     placeholder="Mensaje breve que acompañará el correo..."
                   />
                 </div>
@@ -524,8 +524,8 @@ export default function ReportsPage() {
                   onClick={handleSendReports}
                   className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
                     sending || downloadingPdf || selectedEmployees.length === 0
-                      ? 'bg-gray-400'
-                      : 'bg-[#3B4D36] hover:bg-[#2f3b2a]'
+                      ? 'bg-gray-400 dark:bg-zinc-600'
+                      : 'bg-[#3B4D36] dark:bg-zinc-800 hover:bg-[#2f3b2a] dark:hover:bg-zinc-700'
                   }`}
                 >
                   {sending ? (
@@ -543,7 +543,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
                 <BuildingOffice2Icon className="h-5 w-5 text-green-700" />
                 <p className="text-sm font-semibold text-zinc-700 dark:text-white">Destinos oficiales</p>
@@ -559,7 +559,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+            <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
                 <ClockIcon className="h-5 w-5 text-green-700" />
                 <p className="text-sm font-semibold text-zinc-700 dark:text-white">Últimos envíos</p>
@@ -569,7 +569,7 @@ export default function ReportsPage() {
                   <p className="text-sm text-gray-500 dark:text-zinc-400">Sin historial para esta planilla.</p>
                 )}
                 {logs.map((log) => (
-                  <div key={log.id} className="rounded-2xl border border-[#F0E6C5] dark:border-zinc-600 bg-[#FBF8F0] dark:bg-gray-700 p-3">
+                  <div key={log.id} className="rounded-2xl border border-[#F0E6C5] dark:border-zinc-600 bg-[#FBF8F0] dark:bg-zinc-700 p-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-zinc-700 dark:text-white">{log.type}</span>
                       <span className="text-gray-500 dark:text-zinc-400">{formatDate(log.generated_at)}</span>
@@ -588,7 +588,7 @@ export default function ReportsPage() {
             </div>
 
             {dispatchSummary && (
-              <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+              <div className="rounded-3xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm">
                 <div className="mb-2 flex items-center gap-2">
                   {dispatchSummary.failed === 0 ? (
                     <CheckCircleIcon className="h-5 w-5 text-green-600" />
@@ -611,7 +611,7 @@ export default function ReportsPage() {
                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                             : result.status === 'failed'
                             ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-zinc-300'
+                            : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300'
                         }`}
                       >
                         {result.status.toUpperCase()}

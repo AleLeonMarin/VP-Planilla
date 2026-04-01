@@ -256,7 +256,7 @@ export default function PayrollDetailPage() {
           <div className="mb-6">
             <Link
               href="/pages/payroll/list"
-              className="inline-flex items-center gap-2 text-green-700 dark:text-zinc-400 hover:text-[#5D614A] dark:hover:text-gray-300 font-medium mb-4 transition-colors"
+              className="inline-flex items-center gap-2 text-green-700 dark:text-zinc-400 hover:text-[#5D614A] dark:hover:text-zinc-300 font-medium mb-4 transition-colors"
             >
               <ArrowLeftIcon className="w-4 h-4" />
               Volver al listado
@@ -270,7 +270,7 @@ export default function PayrollDetailPage() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-white mb-1">Planilla #{payroll.id}</h1>
-                    <p className="text-[#E7DCC1]">Detalle completo del cálculo de planilla</p>
+                    <p className="text-[#E7DCC1] dark:text-zinc-200">Detalle completo del cálculo de planilla</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -387,7 +387,7 @@ export default function PayrollDetailPage() {
               {/* Fila 2: Datos monetarios */}
               <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <CurrencyDollarIcon className="w-5 h-5 text-[#A0826D]" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-[#A0826D] dark:text-zinc-400" />
                   <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Salario Bruto</p>
                 </div>
                 <p className="text-lg font-bold text-zinc-700 dark:text-white">{formatCRC(totals.grossSalary)}</p>
@@ -426,11 +426,11 @@ export default function PayrollDetailPage() {
                 <p className="text-lg font-bold text-red-600">{formatCRC(totals.totalDeductions)}</p>
               </div>
 
-              <div className="bg-green-700 rounded-lg p-4 border border-[#5D614A] shadow-sm lg:col-span-3">
+              <div className="bg-green-700 rounded-lg p-4 border border-[#5D614A] dark:border-zinc-600 shadow-sm lg:col-span-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CurrencyDollarIcon className="w-6 h-6 text-white" />
-                    <p className="text-sm font-medium text-[#E7DCC1]">TOTAL NETO A PAGAR</p>
+                    <p className="text-sm font-medium text-[#E7DCC1] dark:text-zinc-200">TOTAL NETO A PAGAR</p>
                   </div>
                   <p className="text-3xl font-bold text-white">{formatCRC(totals.netSalary)}</p>
                 </div>
@@ -464,7 +464,7 @@ export default function PayrollDetailPage() {
                       <th className="px-6 py-4 text-right text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">Neto</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E0D6B7] dark:divide-gray-700">
+                  <tbody className="divide-y divide-[#E0D6B7] dark:divide-zinc-700">
                     {employees.map((emp, idx) => {
                       const isExpanded = expandedRows.has(emp.id);
                       
@@ -591,8 +591,8 @@ export default function PayrollDetailPage() {
                                       </p>
                                     </div>
 
-                                    <div className="bg-green-700 rounded-xl p-4 border border-[#5D614A] shadow-sm">
-                                      <p className="text-xs font-bold text-[#E7DCC1] uppercase tracking-wide mb-1">
+                                    <div className="bg-green-700 rounded-xl p-4 border border-[#5D614A] dark:border-zinc-600 shadow-sm">
+                                      <p className="text-xs font-bold text-[#E7DCC1] dark:text-zinc-200 uppercase tracking-wide mb-1">
                                         Salario Neto
                                       </p>
                                       <p className="text-xl font-bold text-white">

@@ -122,7 +122,7 @@ export default function AttendancePage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white mb-1">Registro de Asistencia</h1>
-                <p className="text-[#E7DCC1]">
+                <p className="text-[#E7DCC1] dark:text-zinc-200">
                   Gestiona las marcas de entrada y salida de los empleados
                 </p>
               </div>
@@ -181,7 +181,7 @@ export default function AttendancePage() {
                   setEndDate('');
                   setData([]);
                 }}
-                className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-all font-medium"
+                className="px-6 py-2.5 bg-gray-200 dark:bg-zinc-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-all font-medium"
               >
                 Limpiar
               </button>
@@ -229,7 +229,7 @@ export default function AttendancePage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E0D6B7] dark:divide-gray-700">
+                <tbody className="divide-y divide-[#E0D6B7] dark:divide-zinc-700">
                   {data.map((entry, idx) => {
                     const key = `${entry.employee_id}_${entry.date}`;
                     const isExpanded = expandedRows.has(key);
@@ -451,7 +451,7 @@ export default function AttendancePage() {
               <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                 <button
                   onClick={() => setEditingLog(null)}
-                  className="flex-1 px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-colors font-medium"
+                  className="flex-1 px-5 py-2.5 bg-gray-200 dark:bg-zinc-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-colors font-medium"
                 >
                   Cancelar
                 </button>

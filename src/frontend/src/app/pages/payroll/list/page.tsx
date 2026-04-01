@@ -71,7 +71,7 @@ export default function PayrollListPage() {
     }
 
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F5F1E8] dark:bg-gray-700 text-zinc-500 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-600">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F5F1E8] dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-600">
         <ClockIcon className="w-4 h-4" />
         {status || 'Sin estado'}
       </span>
@@ -148,7 +148,7 @@ export default function PayrollListPage() {
             <button
               onClick={loadPayrolls}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D2B48C] text-zinc-700 text-sm font-semibold rounded-lg hover:bg-[#C5A87A] transition-colors disabled:opacity-50 shadow-sm"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D2B48C] dark:bg-zinc-700 text-zinc-700 dark:text-zinc-100 text-sm font-semibold rounded-lg hover:bg-[#C5A87A] dark:hover:bg-zinc-600 transition-colors disabled:opacity-50 shadow-sm"
             >
               <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
               Recargar
@@ -174,7 +174,7 @@ export default function PayrollListPage() {
 
         {/* Loading state */}
         {isLoading && (
-          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-12 text-center">
+          <div className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-12 text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#E7DCC1] dark:border-zinc-600 border-t-[#6F7153] mx-auto mb-4"></div>
             <p className="text-lg text-zinc-600 dark:text-zinc-300 font-medium">Cargando planillas...</p>
           </div>
@@ -185,9 +185,9 @@ export default function PayrollListPage() {
           <>
             {/* Estadísticas rápidas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
+              <div className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-zinc-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-700 rounded-xl flex items-center justify-center">
                     <DocumentTextIcon className="w-6 h-6 text-green-700" />
                   </div>
                   <div>
@@ -197,7 +197,7 @@ export default function PayrollListPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
+              <div className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-green-700 rounded-xl flex items-center justify-center">
                     <CheckCircleIcon className="w-6 h-6 text-white" />
@@ -211,7 +211,7 @@ export default function PayrollListPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
+              <div className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-[#D2B48C] dark:bg-amber-600 rounded-xl flex items-center justify-center">
                     <ClockIcon className="w-6 h-6 text-zinc-700 dark:text-white" />
@@ -230,10 +230,10 @@ export default function PayrollListPage() {
               {payrolls.map((p) => (
                 <div
                   key={p.id}
-                  className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition-all duration-300"
+                  className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition-all duration-300"
                 >
                   {/* Header de la tarjeta */}
-                  <div className="bg-[#EDE5D2] dark:bg-gray-700 px-5 py-4 border-b border-zinc-300 dark:border-zinc-600">
+                  <div className="bg-[#EDE5D2] dark:bg-zinc-700 px-5 py-4 border-b border-zinc-300 dark:border-zinc-600">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 bg-green-700 rounded-xl flex items-center justify-center shadow-sm">
@@ -299,7 +299,7 @@ export default function PayrollListPage() {
                       disabled={updatingId === p.id || p.status === 'PAGADO'}
                       className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg transition-colors font-semibold shadow-sm disabled:cursor-not-allowed text-sm ${
                         p.status === 'PAGADO'
-                          ? 'bg-[#8B8B8B] text-white'
+                          ? 'bg-[#8B8B8B] dark:bg-zinc-600 text-white'
                           : 'bg-green-700 hover:bg-green-800 text-white disabled:opacity-50'
                       }`}
                     >
@@ -324,9 +324,9 @@ export default function PayrollListPage() {
 
         {/* Estado vacío */}
         {!isLoading && payrolls.length === 0 && (
-          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-16 text-center">
+          <div className="bg-[#F5F1E8] dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-16 text-center">
             <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 bg-zinc-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm">
+              <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-700 rounded-2xl flex items-center justify-center shadow-sm">
                 <DocumentTextIcon className="w-12 h-12 text-green-700" />
               </div>
             </div>

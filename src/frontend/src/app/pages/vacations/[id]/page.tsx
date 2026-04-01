@@ -122,7 +122,7 @@ export default function VacationDetailPage({ params }: PageProps) {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-green-700 dark:text-zinc-400 hover:text-[#5D614A] dark:hover:text-gray-300 transition-colors mb-4 font-medium"
+            className="flex items-center gap-2 text-green-700 dark:text-zinc-400 hover:text-[#5D614A] dark:hover:text-zinc-300 transition-colors mb-4 font-medium"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             Volver
@@ -253,7 +253,7 @@ export default function VacationDetailPage({ params }: PageProps) {
                 </button>
                 <button
                   onClick={() => router.back()}
-                  className="w-full px-5 py-3 bg-zinc-100 dark:bg-gray-700 text-zinc-700 dark:text-white rounded-xl hover:bg-[#D2C9AE] dark:hover:bg-zinc-600 transition-all font-medium"
+                  className="w-full px-5 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-white rounded-xl hover:bg-[#D2C9AE] dark:hover:bg-zinc-600 transition-all font-medium"
                 >
                   Volver a la Lista
                 </button>

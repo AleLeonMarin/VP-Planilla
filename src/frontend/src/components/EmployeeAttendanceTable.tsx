@@ -119,45 +119,45 @@ const EmployeeAttendanceTable: React.FC<EmployeeAttendanceTableProps> = ({
         <div className="flex items-center gap-2">
           <button 
             onClick={goToPreviousMonth}
-            className="px-2 py-2 bg-[#D5CDB3] dark:bg-[#3d3d3d] rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-[#4a4a4a] text-zinc-700 dark:text-[#E5E5E5]"
+            className="px-2 py-2 bg-[#D5CDB3] dark:bg-zinc-800 rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-100"
           >
             ←
           </button>
-          <button className="px-4 py-2 bg-[#D5CDB3] dark:bg-[#3d3d3d] rounded text-base text-zinc-700 dark:text-[#E5E5E5]">
+          <button className="px-4 py-2 bg-[#D5CDB3] dark:bg-zinc-800 rounded text-base text-zinc-700 dark:text-zinc-100">
             {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
           </button>
           <button 
             onClick={goToNextMonth}
-            className="px-2 py-2 bg-[#D5CDB3] dark:bg-[#3d3d3d] rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-[#4a4a4a] text-zinc-700 dark:text-[#E5E5E5]"
+            className="px-2 py-2 bg-[#D5CDB3] dark:bg-zinc-800 rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-100"
           >
             →
           </button>
         </div>
         <button 
           onClick={goToToday}
-          className="px-4 py-2 bg-[#D5CDB3] dark:bg-[#3d3d3d] rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-[#4a4a4a] text-zinc-700 dark:text-[#E5E5E5]"
+          className="px-4 py-2 bg-[#D5CDB3] dark:bg-zinc-800 rounded text-base hover:bg-[#B5AF9A] dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-100"
         >
           Hoy
         </button>
       </div>
       <div className="flex items-center justify-between mb-4">
-        <div className="text-zinc-600 dark:text-[#A3A3A3] text-lg">
+        <div className="text-zinc-600 dark:text-zinc-400 text-lg">
           {dateRange.start} - {dateRange.end}
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-[#B5AF9A] dark:bg-[#4a4a4a] rounded text-zinc-700 dark:text-[#E5E5E5]">
+          <button className="px-4 py-2 bg-[#B5AF9A] dark:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-100">
             Acciones
           </button>
-          <button className="px-4 py-2 bg-[#B5AF9A] dark:bg-[#4a4a4a] rounded text-zinc-700 dark:text-[#E5E5E5]">
+          <button className="px-4 py-2 bg-[#B5AF9A] dark:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-100">
             Declarar Ausencia
           </button>
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg border border-zinc-300 dark:border-[#404040] h-[750px]">
+      <div className="overflow-hidden rounded-lg border border-zinc-300 dark:border-zinc-700 h-[750px]">
         <div className="h-full overflow-y-auto">
           <table className="w-full text-xl">
             <thead className="sticky top-0">
-              <tr className="bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-[#E5E5E5]">
+              <tr className="bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100">
                 <th className="px-8 py-6 text-left"></th>
                 <th className="px-8 py-6 text-left">Fecha</th>
                 <th className="px-8 py-6 text-left"></th>
@@ -168,27 +168,27 @@ const EmployeeAttendanceTable: React.FC<EmployeeAttendanceTableProps> = ({
                 <th className="px-8 py-6 text-left">Balance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#D2B48C] dark:divide-[#404040] bg-white dark:bg-[#2d2d2d]">
+            <tbody className="divide-y divide-[#D2B48C] dark:divide-zinc-700 bg-white dark:bg-zinc-900">
             {displayRecords.map((record, index) => (
               <tr
                 key={index}
                 className={`${
-                  record.isWeekend ? "bg-[#929292]/52 dark:bg-gray-800/50" : "dark:bg-[#2d2d2d]"
+                  record.isWeekend ? "bg-[#929292]/52 dark:bg-zinc-800/50" : "dark:bg-zinc-900"
                 } ${
                   record.isToday ? "bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-l-yellow-500 dark:border-l-yellow-400" : ""
-                } hover:bg-[#F8F4E6] dark:hover:bg-[#333333] transition-colors`}
+                } hover:bg-[#F8F4E6] dark:hover:bg-zinc-800 transition-colors`}
               >
-                <td className="px-8 py-5 text-zinc-600 dark:text-[#A3A3A3]">
-                  <input type="checkbox" className="w-5 h-5 text-[#B5AF9A] dark:text-[#A3A3A3] border-zinc-300 dark:border-[#404040] rounded focus:ring-[#B5AF9A] dark:focus:ring-[#A3A3A3]" />
+                <td className="px-8 py-5 text-zinc-600 dark:text-zinc-400">
+                  <input type="checkbox" className="w-5 h-5 text-[#B5AF9A] dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 rounded focus:ring-[#B5AF9A] dark:focus:ring-zinc-400" />
                 </td>
-                <td className="px-8 py-5 text-zinc-700 dark:text-[#E5E5E5]">{record.date}</td>
-                <td className="px-8 py-5 text-[#B5AF9A] dark:text-[#737373]">
+                <td className="px-8 py-5 text-zinc-700 dark:text-zinc-100">{record.date}</td>
+                <td className="px-8 py-5 text-[#B5AF9A] dark:text-zinc-500">
                   ▶
                 </td>
-                <td className="px-8 py-5 text-zinc-700 dark:text-[#E5E5E5]">{record.schedule}</td>
-                <td className="px-8 py-5 text-zinc-700 dark:text-[#E5E5E5]">{record.entryTime}</td>
-                <td className="px-8 py-5 text-zinc-700 dark:text-[#E5E5E5]">{record.exitTime}</td>
-                <td className="px-8 py-5 text-zinc-700 dark:text-[#E5E5E5]">{record.total}</td>
+                <td className="px-8 py-5 text-zinc-700 dark:text-zinc-100">{record.schedule}</td>
+                <td className="px-8 py-5 text-zinc-700 dark:text-zinc-100">{record.entryTime}</td>
+                <td className="px-8 py-5 text-zinc-700 dark:text-zinc-100">{record.exitTime}</td>
+                <td className="px-8 py-5 text-zinc-700 dark:text-zinc-100">{record.total}</td>
                 <td
                   className={`px-8 py-5 ${
                     record.balance.startsWith("+")
