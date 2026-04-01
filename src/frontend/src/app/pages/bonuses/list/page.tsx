@@ -6,13 +6,12 @@ import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useBonuses } from '@/hooks/useBonuses';
 import { Bonus } from '@/services/bonusesService';
-import { useModal } from '@/hooks/useModal';
 import { UseFormReturn } from 'react-hook-form';
 import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function BonusesPage() {
   const { data, isLoading, error, refetch, create, update, remove } = useBonuses();
-  const modal = useModal();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Bonus | null>(null);
@@ -38,14 +37,14 @@ export default function BonusesPage() {
     try {
       if (editing) {
         await update(editing.id, values);
-        modal.showSuccess('Actualizado', 'Bonificación actualizada correctamente');
+        toast.success('Bonificación actualizada correctamente');
       } else {
         await create(values);
-        modal.showSuccess('Creado', 'Bonificación creada correctamente');
+        toast.success('Bonificación creada correctamente');
       }
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -53,10 +52,10 @@ export default function BonusesPage() {
     if (!toDelete) return;
     try {
       await remove(toDelete.id);
-      modal.showSuccess('Eliminado', 'Bonificación eliminada correctamente');
+      toast.success('Bonificación eliminada correctamente');
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);

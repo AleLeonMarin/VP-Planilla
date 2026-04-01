@@ -4,11 +4,12 @@ import { PositionsService, Position } from '@/services/positionsService';
 
 export const usePositions = () => {
   const [data, setData] = useState<Position[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isMutating, setIsMutating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    setIsLoading(true);
+    setIsFetching(true);
     setError(null);
     try {
       const res = await PositionsService.getAllPositions();
@@ -16,37 +17,37 @@ export const usePositions = () => {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cargando posiciones');
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
     }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const create = async (payload: Partial<Position>) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       const created = await PositionsService.createPosition(payload);
       setData(prev => prev ? [created, ...prev] : [created]);
       return created;
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
   const update = async (id: number, payload: Partial<Position>) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       const updated = await PositionsService.updatePosition(id, payload);
       setData(prev => prev ? prev.map(p => p.id === id ? updated : p) : [updated]);
       return updated;
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
   const remove = async (id: number) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       await PositionsService.deletePosition(id);
       setData(prev => prev ? prev.filter(p => p.id !== id) : null);
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
-  return { data, isLoading, error, refetch: fetchAll, create, update, remove };
+  return { data, isLoading: isFetching, isMutating, error, refetch: fetchAll, create, update, remove };
 };

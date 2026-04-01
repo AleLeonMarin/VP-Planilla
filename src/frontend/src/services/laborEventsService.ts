@@ -41,7 +41,7 @@ export class LaborEventsService {
     try {
       const payload = {
         employee_id: data.employee_id,
-        labor_event_ids: [data.labor_event_id],
+        labor_event_id: data.labor_event_id,
         start_date: data.start_date,
         end_date: data.end_date,
         status: data.status,

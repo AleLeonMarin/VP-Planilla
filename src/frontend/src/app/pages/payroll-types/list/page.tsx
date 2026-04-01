@@ -6,7 +6,7 @@ import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { usePayrollTypes } from '@/hooks/usePayrollTypes';
 import { PayrollType } from '@/types/payrollTypes';
-import { useModal } from '@/hooks/useModal';
+import { toast } from 'sonner';
 import { 
   DocumentTextIcon, 
   PlusCircleIcon, 
@@ -23,7 +23,6 @@ import {
  */
 export default function PayrollTypesPage() {
   const { data, isLoading, error, refetch, create, update, remove } = usePayrollTypes();
-  const modal = useModal();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PayrollType | null>(null);
@@ -61,15 +60,15 @@ export default function PayrollTypesPage() {
     try {
       if (editing) {
         await update(editing.id, values);
-        modal.showSuccess('Actualizado', 'Tipo de planilla actualizado correctamente');
+        toast.success('Tipo de planilla actualizado correctamente');
       } else {
         await create({ name: values.name!, description: values.description!, frequency: (values as any).frequency || 'mensual' });
-        modal.showSuccess('Creado', 'Tipo de planilla creado correctamente');
+        toast.success('Tipo de planilla creado correctamente');
       }
       refetch();
       setFormOpen(false);
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -80,10 +79,10 @@ export default function PayrollTypesPage() {
     if (!toDelete) return;
     try {
       await remove();
-      modal.showSuccess('Eliminado', 'Tipo de planilla eliminado correctamente');
+      toast.success('Tipo de planilla eliminado correctamente');
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar. Esta funcionalidad aún no está disponible.');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar. Esta funcionalidad aún no está disponible.');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
@@ -295,7 +294,7 @@ export default function PayrollTypesPage() {
         onConfirm={handleConfirmDelete} 
       />
 
-      <modal.ModalComponent />
+
     </div>
   );
 }

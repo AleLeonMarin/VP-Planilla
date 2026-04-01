@@ -9,7 +9,7 @@ import { useLaborEvents } from '@/hooks/useLaborEvents';
 import useEmployeeList from '@/hooks/useEmployeeList';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { LaborEventFormData, EmployeeLaborEvent } from '@/types/laborEvent';
-import { useModal } from '@/hooks/useModal';
+import { toast } from 'sonner';
 
 const LaborEventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | undefined>();
@@ -18,7 +18,6 @@ const LaborEventsPage: React.FC = () => {
   const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
   const { events, isLoading, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
-  const { showError, showSuccess } = useModal();
 
   const activeEvents = events.filter(event => event.status === 'active').length;
   const completedEvents = events.filter(event => event.status === 'completed').length;
@@ -65,15 +64,15 @@ const LaborEventsPage: React.FC = () => {
     try {
       if (selectedEvent) {
         await updateEvent(selectedEvent.id, data);
-        showSuccess('Éxito', 'Evento actualizado correctamente');
+        toast.success('Evento actualizado correctamente');
       } else {
         await createEvent(data);
-        showSuccess('Éxito', 'Evento creado correctamente');
+        toast.success('Evento creado correctamente');
       }
       setShowEventModal(false);
       setModalInitialDates(null);
     } catch {
-      showError('Error', 'No se pudo guardar el evento. Por favor intente nuevamente.');
+      toast.error('No se pudo guardar el evento. Por favor intente nuevamente.');
     }
   };
 

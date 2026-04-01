@@ -4,11 +4,12 @@ import { BonusesService, Bonus } from '@/services/bonusesService';
 
 export const useBonuses = () => {
   const [data, setData] = useState<Bonus[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isMutating, setIsMutating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    setIsLoading(true);
+    setIsFetching(true);
     setError(null);
     try {
       const res = await BonusesService.getAllBonuses();
@@ -16,37 +17,37 @@ export const useBonuses = () => {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cargando bonificaciones');
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
     }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const create = async (payload: Partial<Bonus>) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       const created = await BonusesService.createBonus(payload);
       setData(prev => prev ? [created, ...prev] : [created]);
       return created;
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
   const update = async (id: number, payload: Partial<Bonus>) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       const updated = await BonusesService.updateBonus(id, payload);
       setData(prev => prev ? prev.map(p => p.id === id ? updated : p) : [updated]);
       return updated;
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
   const remove = async (id: number) => {
-    setIsLoading(true);
+    setIsMutating(true);
     try {
       await BonusesService.deleteBonus(id);
       setData(prev => prev ? prev.filter(p => p.id !== id) : null);
-    } finally { setIsLoading(false); }
+    } finally { setIsMutating(false); }
   };
 
-  return { data, isLoading, error, refetch: fetchAll, create, update, remove };
+  return { data, isLoading: isFetching, isMutating, error, refetch: fetchAll, create, update, remove };
 };

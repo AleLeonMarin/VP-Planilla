@@ -7,12 +7,11 @@ import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { usePositions } from '@/hooks/usePositions';
 import { Position } from '@/services/positionsService';
-import { useModal } from '@/hooks/useModal';
 import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function PositionsPage() {
   const { data, isLoading, error, refetch, create, update, remove } = usePositions();
-  const modal = useModal();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Position | null>(null);
@@ -30,7 +29,7 @@ export default function PositionsPage() {
       if (editing) {
         try {
           await update(editing.id, values);
-          modal.showSuccess('Actualizado', 'Posición actualizada correctamente');
+          toast.success('Posición actualizada correctamente');
         } catch (err: unknown) {
           const apiErr = err as { status?: number; message?: string };
           if (apiErr?.status === 409) {
@@ -42,12 +41,12 @@ export default function PositionsPage() {
         }
       } else {
         await create(values);
-        modal.showSuccess('Creado', 'Posición creada correctamente');
+        toast.success('Posición creada correctamente');
       }
       refetch();
       setFormOpen(false);
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -55,10 +54,10 @@ export default function PositionsPage() {
     if (!toDelete) return;
     try {
       await remove(toDelete.id);
-      modal.showSuccess('Eliminado', 'Posición eliminada correctamente');
+      toast.success('Posición eliminada correctamente');
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
