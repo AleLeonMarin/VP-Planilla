@@ -84,11 +84,14 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
   2. Un usuario que provoca un error del backend (ej. duplicado, campo inválido) ve el mensaje de error específico del servidor, no un mensaje genérico "algo salió mal"
   3. Todos los hooks de datos del frontend muestran un spinner o skeleton mientras cargan y un mensaje de error descriptivo si la petición falla — ninguna vista queda en blanco indefinidamente
   4. `npx tsc --noEmit` pasa en backend y frontend sin errores nuevos
-**Plans**: 3 plans
+**Plans**: 6 plans (3 original + 3 gap closure)
 Plans:
-- [ ] 13-01-PLAN.md — Audit frontend service payloads against backend Zod schemas, fix mismatches
-- [ ] 13-02-PLAN.md — Enhance error message propagation from backend to frontend
-- [ ] 13-03-PLAN.md — Wire loading/error states to all data pages with Table skeletons
+- [x] 13-01-PLAN.md — Audit frontend service payloads against backend Zod schemas, fix mismatches
+- [x] 13-02-PLAN.md — Enhance error message propagation from backend to frontend
+- [x] 13-03-PLAN.md — Wire loading/error states to all data pages with Table skeletons
+- [ ] 13-04-PLAN.md — Replace modal notifications with sonner toasts across 4 page files
+- [ ] 13-05-PLAN.md — Separate isFetching/isMutating state, fix error state detection
+- [ ] 13-06-PLAN.md — Fix labor_event_ids → labor_event_id field name mismatch (blocker)
 
 ---
 
