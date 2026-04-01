@@ -25,7 +25,7 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
 - [x] **Phase 11: Design System Dark Mode** - Tokens CSS globales, sidebar dark moderno y navegación cohesiva
 - [x] **Phase 12: Tablas, Formularios y Modales** - UI dark consistente en todos los módulos de datos y flujos críticos
 - [ ] **Phase 13: Integración Frontend-Backend** - Contratos de API verificados, manejo de errores real y estados de carga
-- [ ] **Phase 14: Servicio de Notificaciones** - Implementar el servicio de notificaciones aún no desarrollado
+- [x] **Phase 14: Servicio de Notificaciones** - Implementar el servicio de notificaciones aún no desarrollado (completed 2026-04-01)
 
 ## Phase Details
 
@@ -105,7 +105,7 @@ Plans:
 | 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
-| 14. Servicio de Notificaciones | v1.1 | 1/2 | In Progress|  |
+| 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete   | 2026-04-01 |
 
 ### Phase 14: Servicio de Notificaciones
 **Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
@@ -120,14 +120,14 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 14-01-PLAN.md — Backend: modelo Prisma, servicio, controller y rutas API protegidas
-- [ ] 14-02-PLAN.md — Frontend: types, service, hook, NotificationPanel, Header actualizado y página /notifications
+- [x] 14-02-PLAN.md — Frontend: types, service, hook, NotificationPanel, Header actualizado y página /notifications
 
 ### Phase 15: UI Polish - Skeletons y Error Banners en todas las vistas
 
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 14
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 15 to break down)

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Calidad, UI Moderna y Cobertura de Tests
-status: executing
-stopped_at: Completed 14-01-PLAN.md - Backend notification service
-last_updated: "2026-04-01T23:38:59.657Z"
+status: verifying
+stopped_at: Completed 14-02-PLAN.md - Frontend notification UI
+last_updated: "2026-04-01T23:48:32.281Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
   percent: 100
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 Phase: 14 (Servicio de Notificaciones) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [████████████] 100% (v1.1 — 6/6 fases completas)
@@ -61,6 +61,7 @@ Key decisions from v1.0/v1.1:
 - [13] Loading states: separar `isFetching` (initial load) de `isMutating` (CRUD ops) en hooks
 - [13] Field names: frontend debe coincidir exactamente con backend controller destructuring
 - [14-01] Notification service: static class pattern, ownership verification on markAsRead/deleteNotification, prisma db push used instead of migrate dev due to shadow DB conflict
+- [Phase 14-servicio-de-notificaciones]: NotificationPanel uses named export (export const) matching project convention for UI components
 
 ### Tests
 
@@ -81,8 +82,8 @@ Key decisions from v1.0/v1.1:
 
 ## Session Continuity
 
-Last session: 2026-04-01T23:38:59.652Z
-Stopped at: Completed 14-01-PLAN.md - Backend notification service
+Last session: 2026-04-01T23:48:32.275Z
+Stopped at: Completed 14-02-PLAN.md - Frontend notification UI
 Resume: ejecutar `/gsd:plan-phase 14` para Phase 14
 
 ---
