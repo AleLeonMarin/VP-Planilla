@@ -124,17 +124,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
         onMarkAllRead={handleMarkAllRead}
         isLoading={isLoading}
       />
-
-      {/* "View all" link rendered inside NotificationPanel footer */}
-      <div className="hidden">
-        <button
-          id="view-all-notifications-btn"
-          onClick={() => {
-            setShowNotifications(false);
-            router.push("/pages/notifications");
-          }}
-        />
-      </div>
     </header>
   );
 }

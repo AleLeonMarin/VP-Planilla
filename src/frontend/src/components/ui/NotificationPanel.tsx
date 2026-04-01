@@ -54,6 +54,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   onMarkAllRead,
   isLoading,
 }) => {
+  const router = useRouter();
+
   return (
     <AnimatePresence>
       {open && (
@@ -164,12 +166,15 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                   Marcar todas como leídas
                 </button>
               )}
-              <a
-                href="/pages/notifications"
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push("/pages/notifications");
+                }}
                 className="text-xs text-[#4A5D3A] dark:text-zinc-400 hover:text-[#2A3A1A] dark:hover:text-zinc-200 font-medium transition-colors"
               >
                 Ver todas las notificaciones
-              </a>
+              </button>
             </div>
           </motion.div>
         </motion.div>
