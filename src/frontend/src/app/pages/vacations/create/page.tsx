@@ -106,47 +106,34 @@ export default function CreateVacationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] via-[#F9F1DC] to-[#E7DCC1] dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="p-6">
-        {/* Header */}
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
+      <div className="p-6 max-w-7xl mx-auto">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-4 text-sm"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Volver
+        </button>
+
         <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-[#6F7153] hover:text-[#5D614A] transition-colors mb-4 font-medium"
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
-            Volver
-          </button>
-          <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-lg p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-                <CalendarDaysIcon className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Nueva Solicitud de Vacaciones</h1>
-                <p className="text-white/80 mt-1">
-                  Completa los datos para crear una nueva solicitud
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">Recursos Humanos</p>
+          <h1 className="text-2xl font-bold text-zinc-700 dark:text-zinc-100">Nueva Solicitud de Vacaciones</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Formulario */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-8">
+            <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
               <div className="space-y-6">
-                {/* Empleado */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
-                    <UserIcon className="w-5 h-5 text-[#6F7153]" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">
+                    <UserIcon className="w-4 h-4 text-green-600" />
                     Empleado
                   </label>
                   {loadingEmployees ? (
-                    <div className="flex items-center gap-2 p-4 bg-[#F9F1DC] dark:bg-gray-700 rounded-xl">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#E7DCC1] dark:border-gray-600 border-t-[#6F7153]"></div>
-                      <span className="text-sm text-[#6B5B3D] dark:text-gray-400">Cargando empleados...</span>
+                    <div className="flex items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-zinc-200 dark:border-zinc-700 border-t-green-600"></div>
+                      <span className="text-sm text-zinc-500 dark:text-zinc-400">Cargando empleados...</span>
                     </div>
                   ) : (
                     <select
@@ -154,7 +141,7 @@ export default function CreateVacationPage() {
                       value={formData.employee_id}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-[#F9F1DC] dark:bg-gray-700 border-2 border-[#E0D6B7] dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent text-[#3B4D36] dark:text-white transition-all"
+                      className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-zinc-700 dark:text-zinc-100"
                     >
                       <option value="">Selecciona un empleado</option>
                       {employees.map((emp) => (
@@ -166,11 +153,10 @@ export default function CreateVacationPage() {
                   )}
                 </div>
 
-                {/* Fechas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
-                      <CalendarDaysIcon className="w-5 h-5 text-[#6F7153]" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">
+                      <CalendarDaysIcon className="w-4 h-4 text-green-600" />
                       Fecha de Inicio
                     </label>
                     <input
@@ -179,13 +165,13 @@ export default function CreateVacationPage() {
                       value={formData.start_date}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-[#F9F1DC] dark:bg-gray-700 border-2 border-[#E0D6B7] dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent text-[#3B4D36] dark:text-white transition-all"
+                      className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-zinc-700 dark:text-zinc-100"
                     />
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
-                      <CalendarDaysIcon className="w-5 h-5 text-[#6F7153]" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">
+                      <CalendarDaysIcon className="w-4 h-4 text-green-600" />
                       Fecha de Fin
                     </label>
                     <input
@@ -195,52 +181,50 @@ export default function CreateVacationPage() {
                       onChange={handleChange}
                       required
                       min={formData.start_date}
-                      className="w-full px-4 py-3 bg-[#F9F1DC] dark:bg-gray-700 border-2 border-[#E0D6B7] dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent text-[#3B4D36] dark:text-white transition-all"
+                      className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-zinc-700 dark:text-zinc-100"
                     />
                   </div>
                 </div>
 
-                {/* Estado de Pago */}
-                <div className="bg-[#F9F1DC] dark:bg-gray-700 rounded-xl p-4 border-2 border-[#E0D6B7] dark:border-gray-600">
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       name="paid"
                       checked={formData.paid}
                       onChange={handleChange}
-                      className="w-5 h-5 text-[#6F7153] border-2 border-[#E0D6B7] dark:border-gray-500 rounded focus:ring-2 focus:ring-[#6F7153] transition-all"
+                      className="w-4 h-4 text-green-600 border-zinc-300 dark:border-zinc-600 rounded focus:ring-green-500"
                     />
                     <div className="flex items-center gap-2">
-                      <CheckCircleIcon className="w-5 h-5 text-[#6F7153]" />
-                      <span className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
                         Marcar como pagado
                       </span>
                     </div>
                   </label>
-                  <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mt-2 ml-8">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 ml-7">
                     Indica si las vacaciones ya fueron pagadas al empleado
                   </p>
                 </div>
               </div>
 
-              {/* Botones */}
-              <div className="flex gap-4 mt-8 pt-6 border-t-2 border-[#E0D6B7] dark:border-gray-600">
+              <div className="flex gap-3 mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
                 <button
                   type="button"
                   onClick={() => router.back()}
                   disabled={submitting}
-                  className="flex-1 px-6 py-3 bg-[#E7DCC1] dark:bg-gray-700 text-[#3B4D36] dark:text-white rounded-xl hover:bg-[#D2C9AE] dark:hover:bg-gray-600 transition-all font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#6F7153] to-[#3B4D36] text-white rounded-xl hover:shadow-xl transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                       Creando...
                     </>
                   ) : (
@@ -251,52 +235,49 @@ export default function CreateVacationPage() {
             </form>
           </div>
 
-          {/* Panel lateral - Resumen */}
           <div className="space-y-6">
-            {/* Resumen de días */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="bg-gradient-to-br from-[#6F7153] to-[#3B4D36] dark:from-gray-600 dark:to-gray-700 p-3 rounded-xl">
-                  <ClockIcon className="w-6 h-6 text-white" />
+                <div className="bg-green-600 p-2 rounded-lg">
+                  <ClockIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-[#3B4D36] dark:text-white">Duración</h3>
+                <h3 className="text-base font-semibold text-zinc-700 dark:text-zinc-100">Duración</h3>
               </div>
-              <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 text-center">
-                <p className="text-sm text-[#6B5B3D] dark:text-gray-400 mb-2">Días Totales</p>
-                <p className="text-5xl font-bold text-[#6F7153]">{days}</p>
-                <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mt-2">
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 text-center border border-zinc-200 dark:border-zinc-700">
+                <p className="text-xs text-zinc-400 mb-2">Días Totales</p>
+                <p className="text-4xl font-bold text-green-600">{days}</p>
+                <p className="text-xs text-zinc-400 mt-2">
                   {days === 1 ? 'día' : 'días'} de vacaciones
                 </p>
               </div>
             </div>
 
-            {/* Información adicional */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-[#3B4D36] dark:text-white mb-4">Información</h3>
+            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
+              <h3 className="text-base font-semibold text-zinc-700 dark:text-zinc-100 mb-4">Información</h3>
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 bg-[#F9F1DC] dark:bg-gray-700 rounded-lg">
-                  <div className="text-xl">📅</div>
+                <div className="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div className="text-lg">📅</div>
                   <div>
-                    <p className="text-xs font-semibold text-[#3B4D36] dark:text-white">Periodo</p>
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mt-1">
+                    <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Periodo</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                       Las fechas incluyen tanto el día de inicio como el de fin
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-3 bg-[#F9F1DC] dark:bg-gray-700 rounded-lg">
-                  <div className="text-xl">💰</div>
+                <div className="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div className="text-lg">💰</div>
                   <div>
-                    <p className="text-xs font-semibold text-[#3B4D36] dark:text-white">Estado de Pago</p>
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mt-1">
+                    <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Estado de Pago</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                       Puedes marcar si las vacaciones ya fueron pagadas
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-3 bg-[#F9F1DC] dark:bg-gray-700 rounded-lg">
-                  <div className="text-xl">✅</div>
+                <div className="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                  <div className="text-lg">✅</div>
                   <div>
-                    <p className="text-xs font-semibold text-[#3B4D36] dark:text-white">Aprobación</p>
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mt-1">
+                    <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Aprobación</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                       La solicitud quedará pendiente de aprobación
                     </p>
                   </div>

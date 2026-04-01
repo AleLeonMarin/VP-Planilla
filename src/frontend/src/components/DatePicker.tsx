@@ -168,37 +168,37 @@ export default function DatePicker({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6F7153] dark:text-gray-400 hover:text-[#5D614A] transition-colors disabled:opacity-50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-green-700 dark:text-zinc-400 hover:text-[#5D614A] transition-colors disabled:opacity-50"
         >
           <CalendarIcon className="w-5 h-5" />
         </button>
       </div>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-2 bg-white dark:bg-[#1e1e1e] rounded-lg shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-4 w-80">
+        <div className="absolute z-50 mt-2 bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 p-4 w-80">
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
               onClick={goToPreviousMonth}
-              className="p-1 hover:bg-[#F9F1DC] dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded transition-colors"
             >
-              <ChevronLeftIcon className="w-5 h-5 text-[#6F7153]" />
+              <ChevronLeftIcon className="w-5 h-5 text-green-700" />
             </button>
-            <span className="font-semibold text-[#3B4D36] dark:text-white">
+            <span className="font-semibold text-zinc-700 dark:text-white">
               {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
             </span>
             <button
               type="button"
               onClick={goToNextMonth}
-              className="p-1 hover:bg-[#F9F1DC] dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded transition-colors"
             >
-              <ChevronRightIcon className="w-5 h-5 text-[#6F7153]" />
+              <ChevronRightIcon className="w-5 h-5 text-green-700" />
             </button>
           </div>
 
           <div className="grid grid-cols-7 gap-1 mb-2">
             {dayNames.map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-[#6B5B3D] dark:text-gray-400 py-1">
+              <div key={day} className="text-center text-xs font-medium text-zinc-500 dark:text-zinc-400 py-1">
                 {day}
               </div>
             ))}
@@ -214,12 +214,12 @@ export default function DatePicker({
                     className={`
                       w-full h-full flex items-center justify-center rounded-lg text-sm transition-colors relative
                       ${isSelectedDate(day) || isRangeStart(day) || isRangeEnd(day)
-                        ? 'bg-[#6F7153] text-white font-semibold z-10' 
+                        ? 'bg-green-700 text-white font-semibold z-10' 
                         : isInRange(day)
-                        ? 'bg-[#E7DCC1] dark:bg-gray-700 text-[#3B4D36] dark:text-white'
+                        ? 'bg-zinc-100 dark:bg-gray-700 text-zinc-700 dark:text-white'
                         : isToday(day)
-                        ? 'bg-[#F9F1DC] dark:bg-gray-700 text-[#3B4D36] dark:text-white font-medium'
-                        : 'hover:bg-[#F9F1DC] dark:hover:bg-gray-700 text-[#3B4D36] dark:text-white'
+                        ? 'bg-zinc-50 dark:bg-gray-700 text-zinc-700 dark:text-white font-medium'
+                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white'
                       }
                       ${(isRangeStart(day) || isRangeEnd(day)) && 'ring-2 ring-[#5D614A]'}
                     `}
@@ -234,25 +234,25 @@ export default function DatePicker({
           </div>
 
           {rangeStartDate && rangeEndDate && (
-            <div className="mt-3 pt-3 border-t border-[#E0D6B7] dark:border-gray-700">
-              <div className="flex items-center justify-center gap-2 text-xs text-[#5D4E37] dark:text-gray-400">
+            <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-[#6F7153]"></div>
+                  <div className="w-3 h-3 rounded bg-green-700"></div>
                   <span>Inicio/Fin</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-[#E7DCC1] dark:bg-gray-700"></div>
+                  <div className="w-3 h-3 rounded bg-zinc-100 dark:bg-gray-700"></div>
                   <span>Rango</span>
                 </div>
               </div>
             </div>
           )}
 
-          <div className={`${rangeStartDate && rangeEndDate ? 'mt-2' : 'mt-3 pt-3 border-t border-[#E0D6B7] dark:border-gray-700'}`}>
+          <div className={`${rangeStartDate && rangeEndDate ? 'mt-2' : 'mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700'}`}>
             <button
               type="button"
               onClick={() => handleDateSelect(new Date())}
-              className="w-full py-2 text-sm font-medium text-[#6F7153] hover:bg-[#F9F1DC] dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full py-2 text-sm font-medium text-green-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             >
               Hoy
             </button>

@@ -2,12 +2,20 @@
 
 import Image from 'next/image';
 import SidebarItem from '@/components/SidebarItem';
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import ConfirmDialog from './ConfirmDialog';
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const { logout } = useAuth();
-  // Define your sidebar items with potential submenus
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const mainMenuItems = [
     { href: "/pages/main", icon: "/images/layout/dashboard.png", text: "Dashboard" },
     {
@@ -56,47 +64,79 @@ export default function Sidebar() {
   const bottomMenuItems = [
     { href: "/configuracion", icon: "/images/layout/settings.png", text: "Configuración" },
   ];
-  return (
-    <aside className="w-60 bg-[#FCF1D5] dark:bg-[#252525] text-white flex flex-col shadow-sm border-r border-[#E0D6B7] dark:border-[#404040]">      <div className="flex items-center justify-start px-6 py-3">
-        <Image src="/images/Logo.png" alt="Verde Gestión Logo" width={45} height={45} className="mr-3 rounded-full" />
-        <span className="text-2xl text-[#4A5D3A] dark:text-[#E5E5E5] font-titulo titulo-verde-gestion" style={{ fontFamily: 'VerdeFont, Inter, sans-serif' }}>VERDE GESTIÓN</span>
-      </div>
 
-      <nav className="flex-1 p-3 space-y-1">
-        {mainMenuItems.map((item) => (
-          <SidebarItem
-            key={item.href}
-            href={item.href}
-            icon={item.icon}
-            text={item.text}
-            subItems={item.subItems}
-          />
-        ))}
-      </nav>       <div className="p-3 mt-auto"> {/* Padding consistente */}
-        {bottomMenuItems.map((item, index) => (
-          <React.Fragment key={item.href}>
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setShowLogoutConfirm(false);
+    await logout();
+    setIsLoggingOut(false);
+  };
+
+  return (
+    <>
+      <aside className="w-56 lg:w-60 bg-[#FCF1D5] dark:bg-zinc-900 text-white flex flex-col shadow-sm border-r border-[#E0D6B7] dark:border-zinc-800 h-screen overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 md:hidden">
+          <Image src="/images/Logo.png" alt="Verde Gestión Logo" width={35} height={35} className="mr-2 rounded-full" />
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-[#F0E6D2] dark:hover:bg-zinc-800 text-[#4A5D3A] dark:text-zinc-400"
+            aria-label="Close menu"
+          >
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="hidden md:flex items-center justify-start px-6 py-4">
+          <Image src="/images/Logo.png" alt="Verde Gestión Logo" width={40} height={40} className="mr-3 rounded-full" />
+          <span className="text-xl text-[#4A5D3A] dark:text-zinc-100 font-titulo titulo-verde-gestion" style={{ fontFamily: 'VerdeFont, Inter, sans-serif' }}>VERDE GESTIÓN</span>
+        </div>
+
+        <nav className="flex-1 p-3 space-y-1">
+          {mainMenuItems.map((item) => (
             <SidebarItem
+              key={item.href}
               href={item.href}
               icon={item.icon}
               text={item.text}
+              subItems={item.subItems}
             />
-            {/* Render the border after the first item if there are more items */}
-            {index === 0 && bottomMenuItems.length > 1 && (
-              <div className="border-t border-[#E0D6B7] my-2"></div>
-            )}
-          </React.Fragment>
-        ))}
-        <div className="border-t border-[#E0D6B7] my-2"></div>
-        <button
-          onClick={() => logout()}
-          className="flex items-center w-full p-2 rounded-lg transition-colors duration-200 text-[#4A5D3A] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]"
-        >
-          <div className="mr-2 text-lg">
-            <Image src="/images/layout/logOut.png" alt="Cerrar sesión" width={20} height={20} />
-          </div>
-          <span className="flex-1 text-sm font-medium text-left">Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
+          ))}
+        </nav>
+
+        <div className="p-3 mt-auto">
+          {bottomMenuItems.map((item, index) => (
+            <React.Fragment key={item.href}>
+              <SidebarItem
+                href={item.href}
+                icon={item.icon}
+                text={item.text}
+              />
+              {index === 0 && bottomMenuItems.length > 1 && (
+                <div className="border-t border-[#E0D6B7] dark:border-zinc-800 my-2"></div>
+              )}
+            </React.Fragment>
+          ))}
+          <div className="border-t border-[#E0D6B7] dark:border-zinc-800 my-2"></div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            disabled={isLoggingOut}
+            className="flex items-center w-full p-2 rounded-lg transition-colors duration-200 text-[#4A5D3A] dark:text-zinc-400 hover:bg-[#E7DCC1] dark:hover:bg-zinc-800 disabled:opacity-50"
+          >
+            <div className="mr-3 text-lg">
+              <Image src="/images/layout/logOut.png" alt="Cerrar sesión" width={20} height={20} />
+            </div>
+            <span className="flex-1 text-sm font-medium text-left">{isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}</span>
+          </button>
+        </div>
+      </aside>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Cerrar sesión"
+        description="¿Estás seguro de que deseas cerrar sesión? Perderás acceso temporal hasta volver a iniciar."
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
+    </>
   );
 }

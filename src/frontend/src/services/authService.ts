@@ -1,6 +1,7 @@
 import { API_CONFIG } from '@/config';
 
 const BASE = `${API_CONFIG.baseUrl.replace(/\/$/, '')}/api`;
+const TIMEOUT_MS = API_CONFIG.timeout || 15000;
 
 interface AuthUser {
   id: number;
@@ -17,9 +18,15 @@ export interface LoginResponse {
   user?: AuthUser;
 }
 
+function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+}
+
 export const AuthService = {
   async login(username: string, password: string): Promise<LoginResponse> {
-    const res = await fetch(`${BASE}/login`, {
+    const res = await fetchWithTimeout(`${BASE}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -32,7 +39,7 @@ export const AuthService = {
   },
 
   async me(token: string): Promise<AuthUser> {
-    const res = await fetch(`${BASE}/me`, {
+    const res = await fetchWithTimeout(`${BASE}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Error al obtener información del usuario');
@@ -40,7 +47,7 @@ export const AuthService = {
   },
 
   async logout(token: string): Promise<void> {
-    const res = await fetch(`${BASE}/logout`, {
+    const res = await fetchWithTimeout(`${BASE}/logout`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -48,7 +55,7 @@ export const AuthService = {
   },
 
   async validateToken(token: string): Promise<boolean> {
-    const res = await fetch(`${BASE}/validate`, {
+    const res = await fetchWithTimeout(`${BASE}/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
@@ -58,7 +65,7 @@ export const AuthService = {
   },
 
   async refreshToken(refreshToken: string): Promise<{ token: string }>{
-    const res = await fetch(`${BASE}/refresh`, {
+    const res = await fetchWithTimeout(`${BASE}/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
@@ -71,7 +78,7 @@ export const AuthService = {
   },
 
   async changePassword(token: string, current_password: string, new_password: string): Promise<void> {
-    const res = await fetch(`${BASE}/change-password`, {
+    const res = await fetchWithTimeout(`${BASE}/change-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ current_password, new_password }),

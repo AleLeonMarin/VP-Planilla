@@ -26,9 +26,6 @@ interface EmployeeTableProps {
 type SortColumn = 'name' | 'position' | 'salary' | 'extraHours' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-/**
- * Componente de tabla de empleados con funcionalidades de búsqueda y acciones
- */
 const EmployeeTable: React.FC<EmployeeTableProps> = ({ 
   employees, 
   searchTerm, 
@@ -53,23 +50,15 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  /**
-   * Maneja el click en el encabezado de una columna para ordenar
-   */
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      // Si ya estamos ordenando por esta columna, invertir la dirección
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Si es una nueva columna, ordenar ascendente por defecto
       setSortColumn(column);
       setSortDirection('asc');
     }
   };
 
-  /**
-   * Ordenar empleados según la columna y dirección seleccionadas
-   */
   const sortedEmployees = useMemo(() => {
     const sorted = [...employees].sort((a, b) => {
       let aValue: string | number;
@@ -113,9 +102,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
     return sorted;
   }, [employees, sortColumn, sortDirection]);
 
-  /**
-   * Renderiza el icono de ordenamiento para una columna
-   */
   const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) {
       return null;
@@ -127,10 +113,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
     );
   };
 
-
-  /**
-   * Maneja las acciones sobre empleados específicos
-   */
   const handleEmployeeAction = (action: string, employeeId: string) => {
     onEmployeeAction(action, employeeId);
     setSelectedEmployee(null);
@@ -138,40 +120,36 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
   return (
     <>
-      {/* Modal de perfil del empleado */}
       <EmployeeProfileModal 
         isOpen={showProfileModal} 
         onClose={closeProfileModal}
         employeeData={getEmployeeProfileData(selectedEmployeeData) as Parameters<typeof EmployeeProfileModal>[0]['employeeData']}
       />
 
-      <div className="bg-[#F2E8CF] dark:bg-gray-800 rounded-xl border border-[#D2B48C] dark:border-gray-700 shadow-sm overflow-hidden">
-        {/* Encabezado con búsqueda y filtros */}
-        <div className="px-5 py-4 bg-[#E7DCC1] dark:bg-gray-700 border-b border-[#D2B48C] dark:border-gray-600 flex items-center justify-between">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
           <div>
-            <h2 className="text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-widest">
+            <h2 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
               Directorio
             </h2>
-            <p className="text-sm text-[#6B5B3D] dark:text-gray-400 mt-0.5">
+            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-0.5">
               {employees.length} {employees.length === 1 ? 'empleado registrado' : 'empleados registrados'}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Campo de búsqueda */}
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute w-4 h-4 text-[#8B7355] dark:text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+              <MagnifyingGlassIcon className="absolute w-4 h-4 text-zinc-400 dark:text-zinc-500 transform -translate-y-1/2 left-3 top-1/2" />
               <input
                 type="text"
                 placeholder="Buscar empleado..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="py-2 pl-9 pr-4 border border-[#D2B48C] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] focus:border-transparent bg-white dark:bg-gray-700 text-[#3B4D36] dark:text-white text-sm placeholder-[#C5BFAA] dark:placeholder-gray-400 w-52"
+                className="py-2 pl-9 pr-4 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-sm placeholder-zinc-400 dark:placeholder-zinc-500 w-52"
               />
             </div>
-            {/* Botón de filtro */}
             <button
               onClick={() => setFilterOpen(!filterOpen)}
-              className="flex items-center gap-2 px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-lg hover:bg-[#D5CDB3] dark:hover:bg-gray-600 bg-white dark:bg-gray-700 text-[#5D4E37] dark:text-gray-300 text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm transition-colors"
             >
               <FunnelIcon className="w-4 h-4" />
               Filtro
@@ -179,17 +157,16 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </div>
         </div>
 
-        {/* Panel de filtros */}
         {filterOpen && (
-          <div className="px-5 py-4 bg-[#F5EDD5] dark:bg-gray-700 border-b border-[#D2B48C] dark:border-gray-600">
+          <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-[#5D4E37] dark:text-gray-300">
+              <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 Estado de empleado:
               </label>
               <select
                 value={showFiredEmployees ? "all" : "active"}
                 onChange={(e) => onToggleFiredEmployees(e.target.value === "all")}
-                className="px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-gray-800 text-[#3B4D36] dark:text-white text-sm"
+                className="px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-sm"
               >
                 <option value="active">Solo activos</option>
                 <option value="all">Todos (incluir despedidos)</option>
@@ -198,47 +175,46 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </div>
         )}
 
-        {/* Tabla de empleados */}
         <div className="overflow-x-auto overflow-y-auto max-h-130">
           <table className="w-full">
-            <thead className="sticky top-0 bg-[#E7DCC1] dark:bg-gray-700 z-10">
+            <thead className="sticky top-0 bg-zinc-50 dark:bg-zinc-800 z-10">
               <tr>
                 <th 
                   onClick={() => handleSort('name')}
-                  className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-[#DDD4B8] dark:hover:bg-gray-600 transition-colors select-none"
+                  className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none"
                 >
                   Nombre{renderSortIcon('name')}
                 </th>
                 <th 
                   onClick={() => handleSort('position')}
-                  className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-[#DDD4B8] dark:hover:bg-gray-600 transition-colors select-none"
+                  className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none"
                 >
                   Posición{renderSortIcon('position')}
                 </th>
                 <th 
                   onClick={() => handleSort('salary')}
-                  className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-[#DDD4B8] dark:hover:bg-gray-600 transition-colors select-none"
+                  className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none"
                 >
-                  Salario <span className="text-[10px] font-normal text-[#8B7355] dark:text-gray-400 normal-case">x Hora</span>{renderSortIcon('salary')}
+                  Salario <span className="text-[10px] font-normal text-zinc-400 dark:text-zinc-500 normal-case">x Hora</span>{renderSortIcon('salary')}
                 </th>
                 <th 
                   onClick={() => handleSort('extraHours')}
-                  className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-[#DDD4B8] dark:hover:bg-gray-600 transition-colors select-none"
+                  className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none"
                 >
-                  Hora Extra <span className="text-[10px] font-normal text-[#8B7355] dark:text-gray-400 normal-case">(x1.5)</span>{renderSortIcon('extraHours')}
+                  Hora Extra <span className="text-[10px] font-normal text-zinc-400 dark:text-zinc-500 normal-case">(x1.5)</span>{renderSortIcon('extraHours')}
                 </th>
                 <th 
                   onClick={() => handleSort('status')}
-                  className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-[#DDD4B8] dark:hover:bg-gray-600 transition-colors select-none"
+                  className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none"
                 >
                   Estado{renderSortIcon('status')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-[#5D4E37] dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E8DEC4] dark:divide-gray-700">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {sortedEmployees.map((employee) => {
                 const isFired = employee.fired === true || employee.status === 'fired';
                 return (
@@ -246,20 +222,20 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   key={employee.id}
                   className={`transition-colors ${
                     isFired
-                      ? 'bg-red-50 dark:bg-red-900/20 opacity-70'
-                      : 'hover:bg-[#EEE8D4] dark:hover:bg-gray-700 bg-[#F9F3E3] dark:bg-gray-800'
+                      ? 'bg-red-50 dark:bg-red-900/10 opacity-70'
+                      : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
                   }`}
                 >
-                  <td className={`px-6 py-3.5 text-sm font-semibold ${isFired ? 'text-red-400 line-through' : 'text-[#3B4D36] dark:text-white'}`}>
+                  <td className={`px-6 py-3.5 text-sm font-semibold ${isFired ? 'text-red-400 line-through' : 'text-zinc-700 dark:text-zinc-100'}`}>
                     {employee.name}
                   </td>
-                  <td className={`px-6 py-3.5 text-sm ${isFired ? 'text-red-300' : 'text-[#6B5B3D] dark:text-gray-400'}`}>
+                  <td className={`px-6 py-3.5 text-sm ${isFired ? 'text-red-300' : 'text-zinc-500 dark:text-zinc-400'}`}>
                     {employee.position}
                   </td>
-                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-[#3B4D36] dark:text-white'}`}>
+                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-zinc-700 dark:text-zinc-100'}`}>
                     {formatSalary(employee.salary)}
                   </td>
-                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-[#3B4D36] dark:text-white'}`}>
+                  <td className={`px-6 py-3.5 text-sm font-medium ${isFired ? 'text-red-300' : 'text-zinc-700 dark:text-zinc-100'}`}>
                     {formatSalary(employee.salary * 1.5)}
                   </td>
                   <td className="px-6 py-3.5">
@@ -267,26 +243,26 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       {getStatusBadge(employee.status).text}
                     </span>
                     {isFired && employee.exit_date && (
-                      <p className="mt-1 text-xs text-red-400 dark:text-red-300">
+                      <p className="mt-1 text-xs text-red-400 dark:text-red-400">
                         Salida: {new Date(employee.exit_date).toLocaleDateString('es-CR')}
                       </p>
                     )}
                   </td>
-                  <td className="px-6 py-3.5 text-sm text-gray-600 dark:text-gray-400">
+                  <td className="px-6 py-3.5 text-sm text-zinc-500 dark:text-zinc-400">
                     <div className="relative">
                       <button
                         onClick={() => setSelectedEmployee(selectedEmployee === employee.id ? null : employee.id)}
-                        className="p-1 rounded-full hover:bg-[#DDDDC8] dark:hover:bg-gray-600 transition-colors"
+                        className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                         aria-label="Opciones del empleado"
                       >
                         <EllipsisVerticalIcon className="w-4 h-4" />
                       </button>
                       {selectedEmployee === employee.id && (
-                        <div className="absolute right-0 z-10 w-52 mt-2 bg-[#F9F1DC] dark:bg-gray-700 border border-[#D2B48C] dark:border-gray-600 rounded-lg shadow-xl">
+                        <div className="absolute right-0 z-10 w-52 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl">
                           <div className="py-1">
                             <button
                               onClick={() => handleViewProfile(employee)}
-                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] dark:text-white hover:bg-[#E7DCC1] dark:hover:bg-gray-600 transition-colors"
+                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                             >
                               <EyeIcon className="w-4 h-4" />
                               Ver Perfil
@@ -294,7 +270,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             {!isFired && (
                               <button
                                 onClick={() => handleEmployeeAction('edit', employee.id)}
-                                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] dark:text-white hover:bg-[#E7DCC1] dark:hover:bg-gray-600 transition-colors"
+                                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                               >
                                 <PencilIcon className="w-4 h-4" />
                                 Editar Información
@@ -302,7 +278,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             )}
                             {!isFired && (
                               <>
-                                <div className="border-t border-[#E7DCC1] dark:border-gray-600 mx-2 my-1" />
+                                <div className="border-t border-zinc-200 dark:border-zinc-700 mx-2 my-1" />
                                 <button
                                   onClick={() => handleEmployeeAction('dismiss', employee.id)}
                                   className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"

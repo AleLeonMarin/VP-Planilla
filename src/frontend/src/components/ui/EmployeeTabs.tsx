@@ -14,7 +14,7 @@ const EmployeeTabs = () => {
 
   return (
     <div className="mb-6">
-      <nav className="flex gap-4" aria-label="Tabs">
+      <nav className="flex gap-1 bg-[#E7DCC1] dark:bg-zinc-800 rounded-lg p-1 w-fit" aria-label="Tabs">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
           return (
@@ -22,10 +22,10 @@ const EmployeeTabs = () => {
               key={tab.name}
               onClick={() => router.push(tab.href)}
               className={`
-                px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                px-4 py-2 text-sm font-medium rounded-md transition-colors
                 ${isActive 
-                  ? 'bg-[#6F7153] text-white' 
-                  : 'text-[#3B4D36] dark:text-gray-300 hover:bg-[#A7AA94]/50 dark:hover:bg-gray-700'
+                  ? 'bg-white dark:bg-zinc-700 text-[#4A5D3A] dark:text-zinc-100 shadow-sm' 
+                  : 'text-[#6B7556] dark:text-zinc-400 hover:text-[#4A5D3A] dark:hover:text-zinc-200'
                 }
               `}
             >

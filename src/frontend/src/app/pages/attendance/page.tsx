@@ -802,10 +802,10 @@ export default function AttendancePage() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-[#404040] p-6 mb-6">
+        <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-zinc-200 dark:border-[#404040] p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-[#E5E5E5]">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-[#E5E5E5]">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha inicio
               </label>
@@ -813,11 +813,11 @@ export default function AttendancePage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-[#404040] px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#333333] text-[#3B4D36] dark:text-[#E5E5E5]"
+                className="w-full border border-zinc-200 dark:border-[#404040] px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-[#E5E5E5]"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-[#E5E5E5]">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-[#E5E5E5]">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha fin
               </label>
@@ -825,7 +825,7 @@ export default function AttendancePage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-[#404040] px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#333333] text-[#3B4D36] dark:text-[#E5E5E5]"
+                className="w-full border border-zinc-200 dark:border-[#404040] px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-[#E5E5E5]"
               />
             </div>
             <div className="flex gap-3 md:col-span-2">
@@ -860,7 +860,7 @@ export default function AttendancePage() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <label className="relative inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-dashed border-[#B99B6B] dark:border-[#4a4a4a] text-[#3B4D36] dark:text-[#E5E5E5] font-semibold cursor-pointer hover:bg-[#FDF6E6] dark:hover:bg-[#3d3d3d] transition-colors">
+            <label className="relative inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-dashed border-[#B99B6B] dark:border-[#4a4a4a] text-zinc-700 dark:text-[#E5E5E5] font-semibold cursor-pointer hover:bg-[#FDF6E6] dark:hover:bg-[#3d3d3d] transition-colors">
               <ArrowUpTrayIcon className="w-5 h-5 mr-2" />
               {isImporting ? 'Procesando archivo...' : 'Importar marcas (.xlsx)'}
               <input
@@ -872,11 +872,11 @@ export default function AttendancePage() {
               />
             </label>
             {uploadSummary && (
-              <div className="text-sm text-[#3B4D36] dark:text-[#E5E5E5] space-y-0.5">
+              <div className="text-sm text-zinc-700 dark:text-[#E5E5E5] space-y-0.5">
                 <p>
                   <span className="font-semibold">Archivo:</span> {uploadSummary.fileName}
                 </p>
-                <p className="text-xs text-[#6B5B3D] dark:text-[#A3A3A3]">
+                <p className="text-xs text-zinc-500 dark:text-[#A3A3A3]">
                   Marcas válidas: {uploadSummary.validRows}/{uploadSummary.totalRows} · Empleados sin coincidencia:{' '}
                   {uploadSummary.unmatchedEmployees}
                 </p>
@@ -887,11 +887,11 @@ export default function AttendancePage() {
 
         {/* Tabla de asistencia */}
         {data.length > 0 && (
-          <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-[#404040] overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#E0D6B7] dark:border-[#404040] bg-gradient-to-r from-[#E7DCC1] to-[#F9F1DC] dark:from-[#333333] dark:to-[#2d2d2d]">
+          <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-zinc-200 dark:border-[#404040] overflow-hidden">
+            <div className="px-6 py-5 border-b border-zinc-200 dark:border-[#404040] bg-gradient-to-r from-[#E7DCC1] to-[#F9F1DC] dark:from-[#333333] dark:to-[#2d2d2d]">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#3B4D36] dark:text-[#E5E5E5]">Registros de Asistencia</h2>
-                <div className="flex items-center gap-2 text-sm text-[#6B5B3D] dark:text-[#A3A3A3]">
+                <h2 className="text-xl font-bold text-zinc-700 dark:text-[#E5E5E5]">Registros de Asistencia</h2>
+                <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-[#A3A3A3]">
                   <UserGroupIcon className="w-5 h-5" />
                   <span className="font-semibold">{data.length} registros</span>
                 </div>
@@ -900,30 +900,30 @@ export default function AttendancePage() {
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#E7DCC1] dark:bg-[#333333]">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Fecha
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Empleado
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Entrada
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Salida almuerzo
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Entrada almuerzo
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Salida final
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Horas trabajadas
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-[#E5E5E5] uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-[#E5E5E5] uppercase tracking-wider">
                       Balance
                     </th>
                   </tr>
@@ -938,49 +938,49 @@ export default function AttendancePage() {
                       <React.Fragment key={key}>
                         <tr
                           onClick={() => toggleRow(key)}
-                          className={`cursor-pointer hover:bg-[#F5EDD5] dark:hover:bg-[#3d3d3d] transition-colors ${
-                            idx % 2 === 0 ? 'bg-white dark:bg-[#2d2d2d]' : 'bg-[#FEFBF5] dark:bg-[#333333]'
+                          className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#3d3d3d] transition-colors ${
+                            idx % 2 === 0 ? 'bg-white dark:bg-[#2d2d2d]' : 'bg-zinc-50 dark:bg-zinc-800'
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               {isExpanded ? (
-                                <ChevronDownIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronDownIcon className="w-5 h-5 text-green-700" />
                               ) : (
-                                <ChevronRightIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronRightIcon className="w-5 h-5 text-green-700" />
                               )}
-                              <span className="text-sm font-medium text-[#3B4D36] dark:text-[#E5E5E5]">
+                              <span className="text-sm font-medium text-zinc-700 dark:text-[#E5E5E5]">
                                 {formatDate(entry.date)}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                            <div className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                               {entry.employee_name}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                               {formatTime(entry.check_in)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                               {formatTime(entry.lunch_out)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                               {formatTime(entry.lunch_in)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                               {formatTime(entry.check_out)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-bold text-[#6F7153] dark:text-[#A3A3A3]">
+                            <span className="text-sm font-bold text-green-700 dark:text-[#A3A3A3]">
                               {formatHours(entry.hours_worked)}
                             </span>
                           </td>
@@ -1001,10 +1001,10 @@ export default function AttendancePage() {
 
                         {/* Fila expandida con detalles de marcas */}
                         {isExpanded && (
-                          <tr className="bg-[#FEFBF5] dark:bg-[#333333]">
+                          <tr className="bg-zinc-50 dark:bg-zinc-800">
                             <td colSpan={8} className="px-6 py-6">
                               <div className="pl-7">
-                                <h4 className="text-sm font-bold text-[#3B4D36] dark:text-[#E5E5E5] mb-4">
+                                <h4 className="text-sm font-bold text-zinc-700 dark:text-[#E5E5E5] mb-4">
                                   Detalle de marcas del día
                                 </h4>
 
@@ -1025,20 +1025,20 @@ export default function AttendancePage() {
                                   {entry.logs.map((log: NormalizedClockLog, logIdx: number) => (
                                     <div
                                       key={log.id}
-                                      className="bg-white dark:bg-[#2d2d2d] border border-[#E0D6B7] dark:border-[#404040] rounded-xl p-4 hover:shadow-md transition-shadow"
+                                      className="bg-white dark:bg-[#2d2d2d] border border-zinc-200 dark:border-[#404040] rounded-xl p-4 hover:shadow-md transition-shadow"
                                     >
                                       <div className="flex items-start justify-between mb-3">
                                         <div>
                                           <div className="flex items-center gap-2">
-                                            <div className="w-10 h-10 rounded-lg bg-[#E7DCC1] dark:bg-[#3d3d3d] flex items-center justify-center">
-                                              <span className="text-sm font-bold text-[#3B4D36] dark:text-[#E5E5E5]">{logIdx + 1}</span>
+                                            <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-[#3d3d3d] flex items-center justify-center">
+                                              <span className="text-sm font-bold text-zinc-700 dark:text-[#E5E5E5]">{logIdx + 1}</span>
                                             </div>
                                             <div>
-                                              <p className="text-sm font-semibold text-[#3B4D36] dark:text-[#E5E5E5]">
+                                              <p className="text-sm font-semibold text-zinc-700 dark:text-[#E5E5E5]">
                                                 {LOG_LABELS[log.normalized_type] || log.normalized_type}
                                               </p>
                                               {log.log_type && (
-                                                <p className="text-xs text-[#6B5B3D] dark:text-[#A3A3A3]">Tipo original: {log.log_type}</p>
+                                                <p className="text-xs text-zinc-500 dark:text-[#A3A3A3]">Tipo original: {log.log_type}</p>
                                               )}
                                             </div>
                                           </div>
@@ -1046,15 +1046,15 @@ export default function AttendancePage() {
                                       </div>
                                       <div className="space-y-2">
                                         <div>
-                                          <p className="text-xs text-[#6B5B3D] dark:text-[#A3A3A3] mb-1">Hora</p>
-                                          <p className="text-sm font-bold text-[#3B4D36] dark:text-[#E5E5E5]">
+                                          <p className="text-xs text-zinc-500 dark:text-[#A3A3A3] mb-1">Hora</p>
+                                          <p className="text-sm font-bold text-zinc-700 dark:text-[#E5E5E5]">
                                             {new Date(log.timestamp).toLocaleTimeString('es-CR')}
                                           </p>
                                         </div>
                                         {log.remarks && (
                                           <div>
-                                            <p className="text-xs text-[#6B5B3D] dark:text-[#A3A3A3] mb-1">Observaciones</p>
-                                            <p className="text-xs text-[#5D4E37] dark:text-[#A3A3A3]">{log.remarks}</p>
+                                            <p className="text-xs text-zinc-500 dark:text-[#A3A3A3] mb-1">Observaciones</p>
+                                            <p className="text-xs text-zinc-600 dark:text-[#A3A3A3]">{log.remarks}</p>
                                           </div>
                                         )}
                                       </div>
@@ -1076,16 +1076,16 @@ export default function AttendancePage() {
 
         {/* Estado vacío */}
         {data.length === 0 && !isLoading && (
-          <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-[#404040] p-16 text-center">
+          <div className="bg-white dark:bg-[#2d2d2d] rounded-2xl shadow-lg border border-zinc-200 dark:border-[#404040] p-16 text-center">
             <div className="flex justify-center mb-6">
               <div className="w-24 h-24 bg-gradient-to-br from-[#E7DCC1] to-[#D2B48C] dark:from-[#3d3d3d] dark:to-[#2d2d2d] rounded-2xl flex items-center justify-center shadow-lg">
-                <ClockIcon className="w-12 h-12 text-[#6F7153]" />
+                <ClockIcon className="w-12 h-12 text-green-700" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#3B4D36] dark:text-[#E5E5E5] mb-3">
+            <h3 className="text-2xl font-bold text-zinc-700 dark:text-[#E5E5E5] mb-3">
               No hay registros de asistencia
             </h3>
-            <p className="text-base text-[#6B5B3D] dark:text-[#A3A3A3] max-w-md mx-auto">
+            <p className="text-base text-zinc-500 dark:text-[#A3A3A3] max-w-md mx-auto">
               Selecciona un rango de fechas para consultar los registros de marcación de los empleados
             </p>
           </div>

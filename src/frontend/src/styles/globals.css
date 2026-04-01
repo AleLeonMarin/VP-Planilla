@@ -60,27 +60,49 @@
   --color-info: #3B82F6;
 }
 
-/* DARK MODE */
+/* DARK MODE - Linear/Vercel Style */
 .dark {
-  /* Fondos */
-  --color-bg-page: #1a1a1a;
-  --color-bg-sidebar: #252525;
-  --color-bg-header: #252525;
-  --color-bg-main: #121212;
-  --color-bg-card: #2d2d2d;
-  --color-bg-input: #333333;
-  --color-bg-hover: #3d3d3d;
+  /* Fondos - Zinc-950 base */
+  --color-bg-page: #09090B;
+  --color-bg-sidebar: #18181B;
+  --color-bg-header: #18181B;
+  --color-bg-main: #09090B;
+  --color-bg-card: #18181B;
+  --color-bg-input: #27272A;
+  --color-bg-hover: #27272A;
   
-  /* Bordes */
-  --color-border: #404040;
-  --color-border-light: #4a4a4a;
-  --color-border-dark: #333333;
+  /* Bordes - sutiles */
+  --color-border: #27272A;
+  --color-border-light: #3F3F46;
+  --color-border-dark: #18181B;
   
   /* Textos */
-  --color-text-primary: #E5E5E5;
-  --color-text-secondary: #A3A3A3;
-  --color-text-muted: #737373;
+  --color-text-primary: #FAFAFA;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #71717A;
   --color-text-accent: #A3A3A3;
+  
+  /* Scrollbar dark */
+  scrollbar-width: thin;
+  scrollbar-color: #3F3F46 #18181B;
+}
+
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #18181B;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3F3F46;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #52525B;
 }
 
 /* Aplicar PraderaFont como fuente por defecto */

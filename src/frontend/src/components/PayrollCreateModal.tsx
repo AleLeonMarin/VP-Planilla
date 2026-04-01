@@ -143,10 +143,10 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
                 {/* Period Info */}
                 <div className="bg-gradient-to-br from-[#E7DCC1] to-[#F9F1DC] dark:from-gray-700 dark:to-gray-800 border-2 border-[#6F7153]/20 rounded-xl p-4">
                   <div className="flex items-start gap-3">
-                    <CalendarIcon className="w-5 h-5 text-[#3B4D36] dark:text-white mt-0.5 flex-shrink-0" />
+                    <CalendarIcon className="w-5 h-5 text-zinc-700 dark:text-white mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-[#3B4D36] dark:text-white mb-1">Periodo</p>
-                      <p className="text-base font-bold text-[#6F7153]">
+                      <p className="text-sm font-semibold text-zinc-700 dark:text-white mb-1">Periodo</p>
+                      <p className="text-base font-bold text-green-700">
                         {periodStart} — {periodEnd}
                       </p>
                     </div>
@@ -155,38 +155,38 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
 
                 {/* Type ID */}
                 <div>
-                  <label className="block text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-white mb-2">
                     Tipo de planilla (ID)
                   </label>
                   <input
                     {...register('payroll_type_id', { valueAsNumber: true })}
                     type="number"
-                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-gray-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-[#3B4D36] dark:text-white"
+                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-zinc-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-zinc-700 dark:text-white"
                     placeholder="1"
                   />
                 </div>
 
                 {/* Payment Date */}
                 <div>
-                  <label className="block text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-white mb-2">
                     Fecha de pago
                   </label>
                   <input
                     {...register('payment_date')}
                     type="date"
-                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-gray-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-[#3B4D36] dark:text-white"
+                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-zinc-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-zinc-700 dark:text-white"
                   />
                 </div>
 
                 {/* Status */}
                 <div>
-                  <label className="block text-sm font-semibold text-[#3B4D36] dark:text-white mb-2">
+                  <label className="block text-sm font-semibold text-zinc-700 dark:text-white mb-2">
                     Estado
                   </label>
                   <input
                     {...register('status')}
                     type="text"
-                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-gray-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-[#3B4D36] dark:text-white"
+                    className="w-full px-4 py-3 border-2 border-[#E7DCC1] dark:border-zinc-600 rounded-lg focus:border-[#6F7153] focus:ring-2 focus:ring-[#6F7153]/20 outline-none transition-all bg-white dark:bg-gray-700 text-zinc-700 dark:text-white"
                     placeholder="CALCULADO"
                   />
                 </div>
@@ -224,7 +224,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
                     type="button"
                     onClick={onClose}
                     disabled={saving}
-                    className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-colors disabled:opacity-50"
+                    className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 font-semibold rounded-xl transition-colors disabled:opacity-50"
                   >
                     Cancelar
                   </button>

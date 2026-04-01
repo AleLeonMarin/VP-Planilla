@@ -88,10 +88,10 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#E7DCC1] dark:bg-[#121212] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-100 dark:bg-[#121212] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6F7153] mx-auto"></div>
-          <p className="mt-4 text-[#3B4D36] dark:text-gray-300">Cargando empleado...</p>
+          <p className="mt-4 text-zinc-700 dark:text-zinc-300">Cargando empleado...</p>
         </div>
       </div>
     );
@@ -99,14 +99,14 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#E7DCC1] dark:bg-[#121212] flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-[#1e1e1e] rounded-lg shadow-lg p-6 max-w-md w-full">
+      <div className="min-h-screen bg-zinc-100 dark:bg-[#121212] flex items-center justify-center p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-6 max-w-md w-full">
           <div className="text-red-600 dark:text-red-400 text-center">
             <h2 className="text-xl font-semibold mb-2">Error</h2>
             <p>{error}</p>
             <button
               onClick={() => router.push('/pages/employee/list')}
-              className="mt-4 px-4 py-2 bg-[#6F7153] text-white rounded-lg hover:bg-[#5D614A] transition-colors"
+              className="mt-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
             >
               Volver a la lista
             </button>
@@ -117,19 +117,19 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#E7DCC1] dark:bg-[#121212]">
+    <div className="min-h-screen bg-zinc-100 dark:bg-[#121212]">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/pages/employee/list')}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white rounded-lg hover:bg-[#F5F1E8] dark:hover:bg-[#333333] transition-colors border border-[#D2B48C] dark:border-gray-700"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white rounded-lg hover:bg-[#F5F1E8] dark:hover:bg-[#333333] transition-colors border border-zinc-300 dark:border-zinc-700"
             >
               <ArrowLeftIcon className="w-5 h-5" />
               Volver
             </button>
-            <h1 className="text-2xl font-semibold text-[#3B4D36] dark:text-white">
+            <h1 className="text-2xl font-semibold text-zinc-700 dark:text-white">
               Editar Empleado
             </h1>
           </div>
@@ -158,8 +158,8 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
         )}
 
         {/* Formulario */}
-        <div className="bg-[#F9F1DC] dark:bg-[#1e1e1e] rounded-xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 overflow-hidden">
-          <div className="bg-[#6F7153] px-6 py-4">
+        <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+          <div className="bg-green-700 px-6 py-4">
             <h2 className="text-xl font-semibold text-white">
               Información del Empleado
             </h2>
@@ -169,17 +169,17 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Nombres */}
               <div>
-                <h3 className="text-lg font-medium text-[#3B4D36] dark:text-white mb-3 border-b border-[#D2B48C] dark:border-gray-700 pb-2">
+                <h3 className="text-lg font-medium text-zinc-700 dark:text-white mb-3 border-b border-zinc-300 dark:border-zinc-700 pb-2">
                   Datos Personales
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Primer nombre <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register('employee_first_name')}
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                     {errors.employee_first_name && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -189,22 +189,22 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Segundo nombre
                     </label>
                     <input
                       {...register('employee_middle_name')}
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Apellidos <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register('employee_last_name')}
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                     {errors.employee_last_name && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -217,18 +217,18 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
               {/* Identificación */}
               <div>
-                <h3 className="text-lg font-medium text-[#3B4D36] dark:text-white mb-3 border-b border-[#D2B48C] dark:border-gray-700 pb-2">
+                <h3 className="text-lg font-medium text-zinc-700 dark:text-white mb-3 border-b border-zinc-300 dark:border-zinc-700 pb-2">
                   Identificación
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Cédula de identidad <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register('employee_national_id')}
                       placeholder="1-2345-6789"
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                     {errors.employee_national_id && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -238,13 +238,13 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Código de la CCSS
                     </label>
                     <input
                       {...register('employee_social_code')}
                       placeholder="123456789012"
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                   </div>
                 </div>
@@ -252,19 +252,19 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
               {/* Contacto */}
               <div>
-                <h3 className="text-lg font-medium text-[#3B4D36] dark:text-white mb-3 border-b border-[#D2B48C] dark:border-gray-700 pb-2">
+                <h3 className="text-lg font-medium text-zinc-700 dark:text-white mb-3 border-b border-zinc-300 dark:border-zinc-700 pb-2">
                   Información de Contacto
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Correo electrónico <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register('employee_email')}
                       type="email"
                       placeholder="juan.rodriguez@empresa.com"
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                     {errors.employee_email && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -274,13 +274,13 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Número telefónico
                     </label>
                     <input
                       {...register('employee_phone')}
                       placeholder="8888-1234"
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                   </div>
                 </div>
@@ -288,18 +288,18 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
               {/* Información Laboral */}
               <div>
-                <h3 className="text-lg font-medium text-[#3B4D36] dark:text-white mb-3 border-b border-[#D2B48C] dark:border-gray-700 pb-2">
+                <h3 className="text-lg font-medium text-zinc-700 dark:text-white mb-3 border-b border-zinc-300 dark:border-zinc-700 pb-2">
                   Información Laboral
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Posición <span className="text-red-500">*</span>
                     </label>
                     <select
                       {...register('employee_position_id')}
                       disabled={positionsLoading}
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     >
                       <option value="">{positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}</option>
                       {positionOptions.map((position) => (
@@ -316,23 +316,23 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Fecha de contratación
                     </label>
                     <input
                       {...register('employee_hire_date')}
                       type="date"
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Horario
                     </label>
                     <select
                       {...register('employee_schedule')}
-                      className="w-full px-3 py-2 border border-[#D2B48C] dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                      className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B5AF9A] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                     >
                       <option value="Horario Diurno">Horario Diurno</option>
                       <option value="Horario Nocturno">Horario Nocturno</option>
@@ -342,7 +342,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#5D4E37] dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-2">
                       Género
                     </label>
                     <div className="flex gap-4 pt-2">
@@ -353,7 +353,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                           value="Masculino"
                           className="mr-2"
                         />
-                        <span className="text-[#5D4E37] dark:text-gray-300">Masculino</span>
+                        <span className="text-zinc-600 dark:text-zinc-300">Masculino</span>
                       </label>
                       <label className="flex items-center cursor-pointer">
                         <input
@@ -362,7 +362,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                           value="Femenino"
                           className="mr-2"
                         />
-                        <span className="text-[#5D4E37] dark:text-gray-300">Femenino</span>
+                        <span className="text-zinc-600 dark:text-zinc-300">Femenino</span>
                       </label>
                       <label className="flex items-center cursor-pointer">
                         <input
@@ -371,7 +371,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                           value="Otro"
                           className="mr-2"
                         />
-                        <span className="text-[#5D4E37] dark:text-gray-300">Otro</span>
+                        <span className="text-zinc-600 dark:text-zinc-300">Otro</span>
                       </label>
                     </div>
                   </div>
@@ -379,20 +379,20 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
               </div>
 
               {/* Botones de acción */}
-              <div className="border-t border-[#E0D6B7] dark:border-gray-700 pt-6">
+              <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={() => router.push('/pages/employee/list')}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-3 text-[#3B4D36] dark:text-white border border-[#3B4D36] dark:border-gray-600 rounded-lg hover:bg-[#E7DCC1] dark:hover:bg-gray-700 transition-all duration-200 font-medium"
+                    className="flex-1 px-4 py-3 text-zinc-700 dark:text-white border border-[#3B4D36] dark:border-zinc-600 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all duration-200 font-medium"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-3 bg-[#6F7153] text-white rounded-lg hover:bg-[#5D614A] transition-all duration-200 font-medium disabled:opacity-50"
+                    className="flex-1 px-4 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-all duration-200 font-medium disabled:opacity-50"
                   >
                     {isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
                   </button>

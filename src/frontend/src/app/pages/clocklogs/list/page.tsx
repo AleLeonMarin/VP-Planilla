@@ -131,10 +131,10 @@ export default function AttendancePage() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-white">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha inicio
               </label>
@@ -142,11 +142,11 @@ export default function AttendancePage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                className="w-full border border-zinc-200 dark:border-zinc-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-white">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha fin
               </label>
@@ -154,7 +154,7 @@ export default function AttendancePage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                className="w-full border border-zinc-200 dark:border-zinc-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
               />
             </div>
             <div className="flex gap-3 md:col-span-2">
@@ -181,7 +181,7 @@ export default function AttendancePage() {
                   setEndDate('');
                   setData([]);
                 }}
-                className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl transition-all font-medium"
+                className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-all font-medium"
               >
                 Limpiar
               </button>
@@ -191,11 +191,11 @@ export default function AttendancePage() {
 
         {/* Tabla de asistencia */}
         {data.length > 0 && (
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#E0D6B7] dark:border-gray-700 bg-[#E7DCC1] dark:bg-[#2a2a2a]">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+            <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#3B4D36] dark:text-white">Registros de Asistencia</h2>
-                <div className="flex items-center gap-2 text-sm text-[#6B5B3D] dark:text-gray-400">
+                <h2 className="text-xl font-bold text-zinc-700 dark:text-white">Registros de Asistencia</h2>
+                <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                   <UserGroupIcon className="w-5 h-5" />
                   <span className="font-semibold">{data.length} registros</span>
                 </div>
@@ -204,27 +204,27 @@ export default function AttendancePage() {
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#E7DCC1] dark:bg-[#2a2a2a]">
+                <thead className="bg-zinc-100 dark:bg-zinc-800">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Fecha
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Empleado
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Horario
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Entrada
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Salida
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-700 dark:text-white uppercase tracking-wider">
                       Balance
                     </th>
                   </tr>
@@ -239,42 +239,42 @@ export default function AttendancePage() {
                       <React.Fragment key={key}>
                         <tr
                           onClick={() => toggleRow(key)}
-                          className={`cursor-pointer hover:bg-[#F5EDD5] dark:hover:bg-[#2a2a2a] transition-colors ${
-                            idx % 2 === 0 ? 'bg-white dark:bg-[#1e1e1e]' : 'bg-[#FEFBF5] dark:bg-[#252525]'
+                          className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#2a2a2a] transition-colors ${
+                            idx % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-zinc-50 dark:bg-zinc-800'
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               {isExpanded ? (
-                                <ChevronDownIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronDownIcon className="w-5 h-5 text-green-700" />
                               ) : (
-                                <ChevronRightIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronRightIcon className="w-5 h-5 text-green-700" />
                               )}
-                              <span className="text-sm font-medium text-[#3B4D36] dark:text-white">
+                              <span className="text-sm font-medium text-zinc-700 dark:text-white">
                                 {formatDate(entry.date)}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <div className="text-sm font-semibold text-zinc-700 dark:text-white">
                               {entry.employee_name}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-center text-sm text-[#6B5B3D] dark:text-gray-400">
+                          <td className="px-6 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
                             Mañana 8h
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-white">
                               {formatTime(entry.check_in)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-white">
                               {formatTime(entry.check_out)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-bold text-[#6F7153]">
+                            <span className="text-sm font-bold text-green-700">
                               {formatHours(entry.hours_worked)}
                             </span>
                           </td>
@@ -295,10 +295,10 @@ export default function AttendancePage() {
 
                         {/* Fila expandida con detalles de marcas */}
                         {isExpanded && (
-                          <tr className="bg-[#FEFBF5] dark:bg-[#252525]">
+                          <tr className="bg-zinc-50 dark:bg-zinc-800">
                             <td colSpan={7} className="px-6 py-6">
                               <div className="pl-7">
-                                <h4 className="text-sm font-bold text-[#3B4D36] dark:text-white mb-4">
+                                <h4 className="text-sm font-bold text-zinc-700 dark:text-white mb-4">
                                   Detalle de marcas del día
                                 </h4>
 
@@ -319,7 +319,7 @@ export default function AttendancePage() {
                                   {entry.logs.map((log: ClockLog, logIdx: number) => (
                                     <div
                                       key={log.id}
-                                      className="bg-white dark:bg-[#2a2a2a] border border-[#E0D6B7] dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow"
+                                      className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 hover:shadow-md transition-shadow"
                                     >
                                       <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ export default function AttendancePage() {
                                               {log.log_type}
                                             </span>
                                           </div>
-                                          <span className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium">
+                                          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                                             Marca #{logIdx + 1}
                                           </span>
                                         </div>
@@ -341,22 +341,22 @@ export default function AttendancePage() {
                                             e.stopPropagation();
                                             handleEditLog(log);
                                           }}
-                                          className="p-1.5 hover:bg-[#E7DCC1] dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                          className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
                                         >
-                                          <PencilIcon className="w-4 h-4 text-[#6F7153]" />
+                                          <PencilIcon className="w-4 h-4 text-green-700" />
                                         </button>
                                       </div>
                                       <div className="space-y-2">
                                         <div>
-                                          <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mb-1">Hora</p>
-                                          <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
+                                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Hora</p>
+                                          <p className="text-sm font-bold text-zinc-700 dark:text-white">
                                             {new Date(log.timestamp).toLocaleTimeString('es-CR')}
                                           </p>
                                         </div>
                                         {log.remarks && (
                                           <div>
-                                            <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mb-1">Observaciones</p>
-                                            <p className="text-xs text-[#5D4E37] dark:text-gray-300">{log.remarks}</p>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Observaciones</p>
+                                            <p className="text-xs text-zinc-600 dark:text-zinc-300">{log.remarks}</p>
                                           </div>
                                         )}
                                       </div>
@@ -378,16 +378,16 @@ export default function AttendancePage() {
 
         {/* Estado vacío */}
         {data.length === 0 && !isLoading && (
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-16 text-center">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-700 p-16 text-center">
             <div className="flex justify-center mb-6">
               <div className="w-24 h-24 bg-gradient-to-br from-[#E7DCC1] to-[#D2B48C] dark:from-[#2a2a2a] dark:to-[#3a3a3a] rounded-2xl flex items-center justify-center shadow-lg">
-                <ClockIcon className="w-12 h-12 text-[#6F7153]" />
+                <ClockIcon className="w-12 h-12 text-green-700" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#3B4D36] dark:text-white mb-3">
+            <h3 className="text-2xl font-bold text-zinc-700 dark:text-white mb-3">
               No hay registros de asistencia
             </h3>
-            <p className="text-base text-[#6B5B3D] dark:text-gray-400 max-w-md mx-auto">
+            <p className="text-base text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
               Selecciona un rango de fechas para consultar los registros de marcación de los empleados
             </p>
           </div>
@@ -397,7 +397,7 @@ export default function AttendancePage() {
       {/* Modal de edición */}
       {editingLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#E0D6B7] dark:border-gray-700 overflow-hidden">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
             <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white">Editar Marca</h3>
               <button
@@ -410,25 +410,25 @@ export default function AttendancePage() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-white">
                   Fecha y Hora
                 </label>
                 <input
                   type="datetime-local"
                   value={editingLog.timestamp}
                   onChange={(e) => setEditingLog({ ...editingLog, timestamp: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-white">
                   Tipo de Marca
                 </label>
                 <select
                   value={editingLog.log_type}
                   onChange={(e) => setEditingLog({ ...editingLog, log_type: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                 >
                   <option value="IN">Entrada (IN)</option>
                   <option value="OUT">Salida (OUT)</option>
@@ -436,22 +436,22 @@ export default function AttendancePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-white">
                   Observaciones
                 </label>
                 <textarea
                   value={editingLog.remarks || ''}
                   onChange={(e) => setEditingLog({ ...editingLog, remarks: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
                   rows={3}
                   placeholder="Ajuste manual, corrección de error, etc."
                 />
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-[#E0D6B7] dark:border-gray-700">
+              <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                 <button
                   onClick={() => setEditingLog(null)}
-                  className="flex-1 px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl transition-colors font-medium"
+                  className="flex-1 px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-zinc-600 text-gray-700 dark:text-zinc-200 rounded-xl transition-colors font-medium"
                 >
                   Cancelar
                 </button>

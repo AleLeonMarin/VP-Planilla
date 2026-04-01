@@ -235,7 +235,7 @@ const LaborEventsCalendar: React.FC<Props> = ({
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-96 text-[#8B8B8B] dark:text-gray-500">Cargando eventos...</div>;
+    return <div className="flex items-center justify-center h-96 text-[#8B8B8B] dark:text-zinc-500">Cargando eventos...</div>;
   }
 
   return (
@@ -303,24 +303,24 @@ const LaborEventsCalendar: React.FC<Props> = ({
         {anchor && selectedEvent && (
           <div
             style={{ position: 'fixed', left: anchor.x, top: anchor.y, transform: 'translate(6px, 6px)', zIndex: 1000 }}
-            className="laborevent-options-menu w-48 bg-white dark:bg-[#1e1e1e] border border-[#E0D6B7] dark:border-gray-700 rounded-lg shadow-lg"
+            className="laborevent-options-menu w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg"
           >
             <div className="py-1">
               <button
                 onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-zinc-700 transition-colors"
               >
                 <EyeIcon className="w-4 h-4" />
                 Ver Detalles
               </button>
               <button
                 onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-[#3B4D36] dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-zinc-700 transition-colors"
               >
                 <PencilIcon className="w-4 h-4" />
                 Editar Evento
               </button>
-              <div className="border-t border-[#E0D6B7] dark:border-gray-700 mx-2 my-1"></div>
+              <div className="border-t border-zinc-200 dark:border-zinc-700 mx-2 my-1"></div>
               <button
                 onClick={handleDeleteClick}
                 className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

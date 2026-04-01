@@ -9,22 +9,18 @@ interface StatsCardsProps {
   stats: StatCard[];
 }
 
-/**
- * Componente reutilizable para mostrar tarjetas de estadísticas
- * Puede ser usado en cualquier parte de la aplicación que necesite mostrar stats
- */
 const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
         <div
           key={`${stat.title}-${index}`}
-          className="bg-[#F2E8CF] dark:bg-gray-800 rounded-xl p-5 border border-[#D2B48C] dark:border-gray-700 shadow-sm border-l-4 border-l-[#6F7153]"
+          className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 border-l-4 border-l-green-600"
         >
-          <h3 className="text-xs font-bold text-[#8B7355] dark:text-gray-400 uppercase tracking-widest mb-3">
+          <h3 className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
             {stat.title}
           </h3>
-          <p className="text-4xl font-extrabold text-[#3B4D36] dark:text-white leading-none">
+          <p className="text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-none">
             {stat.value}
           </p>
         </div>

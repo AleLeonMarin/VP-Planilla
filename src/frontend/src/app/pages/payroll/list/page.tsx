@@ -45,7 +45,7 @@ export default function PayrollListPage() {
   const getStatusBadge = (status: string | undefined) => {
     if (status === 'CALCULADO') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D2B48C] dark:bg-amber-900/50 text-[#3B4D36] dark:text-amber-200 border border-[#C5A87A] dark:border-amber-700">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D2B48C] dark:bg-amber-900/50 text-zinc-700 dark:text-amber-200 border border-[#C5A87A] dark:border-amber-700">
           <ChartBarIcon className="w-4 h-4" />
           Calculado
         </span>
@@ -54,7 +54,7 @@ export default function PayrollListPage() {
 
     if (status === 'PAGADO' || status === 'completed') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#6F7153] text-white border border-[#5D614A]">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-700 text-white border border-[#5D614A]">
           <CheckCircleIcon className="w-4 h-4" />
           Pagado
         </span>
@@ -63,7 +63,7 @@ export default function PayrollListPage() {
 
     if (status === 'PENDIENTE' || status === 'draft') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#E7DCC1] dark:bg-yellow-900/30 text-[#5D4E37] dark:text-yellow-200 border border-[#D2B48C] dark:border-yellow-700">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-yellow-900/30 text-zinc-600 dark:text-yellow-200 border border-zinc-300 dark:border-yellow-700">
           <ClockIcon className="w-4 h-4" />
           Pendiente
         </span>
@@ -71,7 +71,7 @@ export default function PayrollListPage() {
     }
 
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F5F1E8] dark:bg-gray-700 text-[#6B5B3D] dark:text-gray-300 border border-[#E0D6B7] dark:border-gray-600">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F5F1E8] dark:bg-gray-700 text-zinc-500 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-600">
         <ClockIcon className="w-4 h-4" />
         {status || 'Sin estado'}
       </span>
@@ -131,16 +131,16 @@ export default function PayrollListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E7DCC1] dark:bg-[#121212]">
+    <div className="min-h-screen bg-zinc-100 dark:bg-[#121212]">
       <div className="px-8 py-6 max-w-screen-2xl mx-auto">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-5">
           <div>
-            <p className="text-xs font-semibold text-[#8B7355] uppercase tracking-widest mb-1">
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
               Gestión de Planillas
             </p>
-            <h1 className="text-3xl font-bold text-[#3B4D36] dark:text-white leading-none">Historial de Planillas</h1>
-            <p className="text-sm text-[#6B5B3D] dark:text-gray-400 mt-2">
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-white leading-none">Historial de Planillas</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
               Gestiona y consulta todas las planillas generadas
             </p>
           </div>
@@ -148,14 +148,14 @@ export default function PayrollListPage() {
             <button
               onClick={loadPayrolls}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D2B48C] text-[#3B4D36] text-sm font-semibold rounded-lg hover:bg-[#C5A87A] transition-colors disabled:opacity-50 shadow-sm"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D2B48C] text-zinc-700 text-sm font-semibold rounded-lg hover:bg-[#C5A87A] transition-colors disabled:opacity-50 shadow-sm"
             >
               <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
               Recargar
             </button>
             <Link
               href="/pages/payroll/calculate"
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#6F7153] text-white text-sm font-semibold rounded-lg hover:bg-[#5D614A] transition-colors shadow-sm"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-green-700 text-white text-sm font-semibold rounded-lg hover:bg-green-800 transition-colors shadow-sm"
             >
               <PlusCircleIcon className="w-5 h-5" />
               Nueva Planilla
@@ -163,7 +163,7 @@ export default function PayrollListPage() {
           </div>
         </div>
 
-        <div className="border-b border-[#C8BA9A] dark:border-gray-700 mb-6" />
+        <div className="border-b border-[#C8BA9A] dark:border-zinc-700 mb-6" />
 
         {/* Error message */}
         {error && (
@@ -174,9 +174,9 @@ export default function PayrollListPage() {
 
         {/* Loading state */}
         {isLoading && (
-          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E0D6B7] dark:border-gray-700 p-12 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#E7DCC1] dark:border-gray-600 border-t-[#6F7153] mx-auto mb-4"></div>
-            <p className="text-lg text-[#5D4E37] dark:text-gray-300 font-medium">Cargando planillas...</p>
+          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-12 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#E7DCC1] dark:border-zinc-600 border-t-[#6F7153] mx-auto mb-4"></div>
+            <p className="text-lg text-zinc-600 dark:text-zinc-300 font-medium">Cargando planillas...</p>
           </div>
         )}
 
@@ -185,40 +185,40 @@ export default function PayrollListPage() {
           <>
             {/* Estadísticas rápidas */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-[#E0D6B7] dark:border-gray-700">
+              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#E7DCC1] dark:bg-gray-700 rounded-xl flex items-center justify-center">
-                    <DocumentTextIcon className="w-6 h-6 text-[#6F7153]" />
+                  <div className="w-12 h-12 bg-zinc-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                    <DocumentTextIcon className="w-6 h-6 text-green-700" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-[#8B7355] dark:text-gray-400 uppercase tracking-wide">Total Planillas</p>
-                    <p className="text-2xl font-bold text-[#3B4D36] dark:text-white">{payrolls.length}</p>
+                    <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-400 uppercase tracking-wide">Total Planillas</p>
+                    <p className="text-2xl font-bold text-zinc-700 dark:text-white">{payrolls.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-[#E0D6B7] dark:border-gray-700">
+              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#6F7153] rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-green-700 rounded-xl flex items-center justify-center">
                     <CheckCircleIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-[#8B7355] dark:text-gray-400 uppercase tracking-wide">Pagadas</p>
-                    <p className="text-2xl font-bold text-[#3B4D36] dark:text-white">
+                    <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-400 uppercase tracking-wide">Pagadas</p>
+                    <p className="text-2xl font-bold text-zinc-700 dark:text-white">
                       {payrolls.filter(p => p.status === 'PAGADO').length}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-[#E0D6B7] dark:border-gray-700">
+              <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-[#D2B48C] dark:bg-amber-600 rounded-xl flex items-center justify-center">
-                    <ClockIcon className="w-6 h-6 text-[#3B4D36] dark:text-white" />
+                    <ClockIcon className="w-6 h-6 text-zinc-700 dark:text-white" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-[#8B7355] dark:text-gray-400 uppercase tracking-wide">Pendientes</p>
-                    <p className="text-2xl font-bold text-[#3B4D36] dark:text-white">
+                    <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-400 uppercase tracking-wide">Pendientes</p>
+                    <p className="text-2xl font-bold text-zinc-700 dark:text-white">
                       {payrolls.filter(p => p.status === 'PENDIENTE' || p.status === 'CALCULADO').length}
                     </p>
                   </div>
@@ -230,20 +230,20 @@ export default function PayrollListPage() {
               {payrolls.map((p) => (
                 <div
                   key={p.id}
-                  className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E0D6B7] dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-300"
+                  className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden hover:shadow-md transition-all duration-300"
                 >
                   {/* Header de la tarjeta */}
-                  <div className="bg-[#EDE5D2] dark:bg-gray-700 px-5 py-4 border-b border-[#D2B48C] dark:border-gray-600">
+                  <div className="bg-[#EDE5D2] dark:bg-gray-700 px-5 py-4 border-b border-zinc-300 dark:border-zinc-600">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 bg-[#6F7153] rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-11 h-11 bg-green-700 rounded-xl flex items-center justify-center shadow-sm">
                           <DocumentTextIcon className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-[#3B4D36] dark:text-white">
+                          <h3 className="text-lg font-bold text-zinc-700 dark:text-white">
                             Planilla #{p.id}
                           </h3>
-                          <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                             {getPayrollTypeName(p.payroll_type)}
                           </p>
                         </div>
@@ -256,14 +256,14 @@ export default function PayrollListPage() {
                   <div className="p-5 space-y-4">
                     {/* Periodo */}
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 bg-[#E7DCC1] dark:bg-gray-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <CalendarIcon className="w-5 h-5 text-[#6F7153]" />
+                      <div className="w-9 h-9 bg-zinc-100 dark:bg-gray-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <CalendarIcon className="w-5 h-5 text-green-700" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-[#6B5B3D] dark:text-gray-400 uppercase tracking-wide mb-0.5">
+                        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-0.5">
                           Periodo
                         </p>
-                        <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
+                        <p className="text-sm font-bold text-zinc-700 dark:text-white">
                           {formatDate(p.period_start)} — {formatDate(p.period_end)}
                         </p>
                       </div>
@@ -271,14 +271,14 @@ export default function PayrollListPage() {
 
                     {/* Fecha de pago */}
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 bg-[#E7DCC1] dark:bg-gray-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <CurrencyDollarIcon className="w-5 h-5 text-[#6F7153]" />
+                      <div className="w-9 h-9 bg-zinc-100 dark:bg-gray-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <CurrencyDollarIcon className="w-5 h-5 text-green-700" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-[#6B5B3D] dark:text-gray-400 uppercase tracking-wide mb-0.5">
+                        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-0.5">
                           Fecha de Pago
                         </p>
-                        <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
+                        <p className="text-sm font-bold text-zinc-700 dark:text-white">
                           {formatDate(p.payment_date)}
                         </p>
                       </div>
@@ -287,7 +287,7 @@ export default function PayrollListPage() {
                     {/* Botón de acción */}
                     <Link
                       href={`/pages/payroll/${p.id}`}
-                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#6F7153] hover:bg-[#5D614A] text-white rounded-lg transition-colors font-semibold shadow-sm mt-2 text-sm"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-lg transition-colors font-semibold shadow-sm mt-2 text-sm"
                     >
                       <EyeIcon className="w-5 h-5" />
                       Ver Detalle
@@ -300,7 +300,7 @@ export default function PayrollListPage() {
                       className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg transition-colors font-semibold shadow-sm disabled:cursor-not-allowed text-sm ${
                         p.status === 'PAGADO'
                           ? 'bg-[#8B8B8B] text-white'
-                          : 'bg-[#6F7153] hover:bg-[#5D614A] text-white disabled:opacity-50'
+                          : 'bg-green-700 hover:bg-green-800 text-white disabled:opacity-50'
                       }`}
                     >
                       {updatingId === p.id ? (
@@ -324,21 +324,21 @@ export default function PayrollListPage() {
 
         {/* Estado vacío */}
         {!isLoading && payrolls.length === 0 && (
-          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-[#E0D6B7] dark:border-gray-700 p-16 text-center">
+          <div className="bg-[#F5F1E8] dark:bg-gray-800 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-16 text-center">
             <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 bg-[#E7DCC1] dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm">
-                <DocumentTextIcon className="w-12 h-12 text-[#6F7153]" />
+              <div className="w-24 h-24 bg-zinc-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm">
+                <DocumentTextIcon className="w-12 h-12 text-green-700" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#3B4D36] dark:text-white mb-3">
+            <h3 className="text-2xl font-bold text-zinc-700 dark:text-white mb-3">
               No hay planillas guardadas
             </h3>
-            <p className="text-base text-[#6B5B3D] dark:text-gray-400 mb-8 max-w-md mx-auto">
+            <p className="text-base text-zinc-500 dark:text-zinc-400 mb-8 max-w-md mx-auto">
               Comienza calculando tu primera planilla para ver el historial completo aquí
             </p>
             <Link
               href="/pages/payroll/calculate"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#6F7153] hover:bg-[#5D614A] text-white rounded-lg transition-colors font-semibold shadow-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-700 hover:bg-green-800 text-white rounded-lg transition-colors font-semibold shadow-sm"
             >
               <PlusCircleIcon className="w-5 h-5" />
               Calcular Primera Planilla

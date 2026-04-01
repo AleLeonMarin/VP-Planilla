@@ -52,7 +52,7 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
 **Tests**: 104 total (11 DeductionsService + 17 AuthService + 73 previous + 3 fixed)
 **Note**: TESTS-03/04 complete. TESTS-05 at 33% — target 60% no alcanzable sin NomineeService coverage adicional.
 
-### Phase 11: Design System Dark Mode
+### Phase 11: Design System Dark Mode ✅ COMPLETE
 **Goal**: El sistema visual del frontend tiene identidad dark mode cohesiva aplicada globalmente mediante tokens CSS centralizados
 **Depends on**: Phase 8 (v1.0)
 **Requirements**: UI-01, UI-02
@@ -61,10 +61,9 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
   2. Los tokens CSS globales (colores, radii, sombras, tipografía) existen en un solo lugar y son consumidos por todos los componentes
   3. El sidebar muestra estado activo del ítem de navegación actual, colapsa correctamente en mobile y tiene estilo dark consistente con el resto del sistema
   4. `npx next lint` y `npx tsc --noEmit` pasan sin errores nuevos en el frontend
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: [11-PLAN.md](.planning/phases/11-design-system-dark-mode/11-PLAN.md) | [11-SUMMARY.md](.planning/phases/11-design-system-dark-mode/11-SUMMARY.md)
 
-### Phase 12: Tablas, Formularios y Modales
+### Phase 12: Tablas, Formularios y Modales ✅ COMPLETE
 **Goal**: Todos los módulos de datos tienen UI dark uniforme y los flujos destructivos/críticos requieren confirmación explícita del usuario
 **Depends on**: Phase 11
 **Requirements**: UI-03, UI-04, UI-05
@@ -73,8 +72,7 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
   2. Un usuario que completa un formulario ve inputs dark con feedback visual de validación y mensajes de error visibles cuando los campos son inválidos
   3. Un usuario que intenta desactivar un empleado, eliminar un registro, o cerrar sesión ve un modal de confirmación antes de que la acción se ejecute
   4. `npx next lint` y `npx tsc --noEmit` pasan sin errores nuevos en el frontend
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: [12-PLAN.md](.planning/phases/12-tablas-formularios-modales/12-PLAN.md) | [12-SUMMARY.md](.planning/phases/12-tablas-formularios-modales/12-SUMMARY.md)
 
 ### Phase 13: Integración Frontend-Backend
 **Goal**: La conexión entre frontend y backend está auditada y el usuario recibe feedback real y accionable en todo momento
@@ -96,8 +94,8 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
 | 1-8. v1.0 | v1.0 | 22/22 | Complete | 2026-03-27 |
 | 9. Tests — EmployeeService y ClockLogService | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 10. Tests — DeductionService, AuthService y cobertura 60% | v1.1 | 2/3 | ⚠️ Partial | 2026-03-31 |
-| 11. Design System Dark Mode | v1.1 | 0/? | Not started | - |
-| 12. Tablas, Formularios y Modales | v1.1 | 0/? | Not started | - |
+| 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
+| 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
 
 ---

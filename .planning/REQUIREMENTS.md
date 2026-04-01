@@ -15,11 +15,11 @@
 
 ### UI — Design System
 
-- [ ] **UI-01**: Usuario ve colores, tipografía y espaciado consistentes en todas las vistas mediante design tokens CSS (dark mode aplicado globalmente)
-- [ ] **UI-02**: Usuario navega con un sidebar dark moderno que muestra estado activo, colapsa en mobile y es visualmente coherente con el resto del sistema
-- [ ] **UI-03**: Usuario ve tablas de datos con hover, estados vacíos y paginación con estilo dark moderno — sin tablas que parezcan de sistema diferente
-- [ ] **UI-04**: Usuario completa formularios e inputs con estilo dark consistente, feedback visual de validación y estados de error visibles
-- [ ] **UI-05**: Usuario ve modales de confirmación/advertencia antes de acciones destructivas o críticas (eliminar, desactivar, cerrar sesión)
+- [x] **UI-01**: Usuario ve colores, tipografía y espaciado consistentes en todas las vistas mediante design tokens CSS (dark mode aplicado globalmente)
+- [x] **UI-02**: Usuario navega con un sidebar dark moderno que muestra estado activo, colapsa en mobile y es visualmente coherente con el resto del sistema
+- [x] **UI-03**: Usuario ve tablas de datos con hover, estados vacíos y paginación con estilo dark moderno — sin tablas que parezcan de sistema diferente
+- [x] **UI-04**: Usuario completa formularios e inputs con estilo dark consistente, feedback visual de validación y estados de error visibles
+- [x] **UI-05**: Usuario ve modales de confirmación/advertencia antes de acciones destructivas o críticas (eliminar, desactivar, cerrar sesión)
 
 ### Integración Frontend-Backend
 
@@ -57,11 +57,11 @@
 | TESTS-03 | Phase 10 | ✅ Complete |
 | TESTS-04 | Phase 10 | ✅ Complete |
 | TESTS-05 | Phase 10 | ⚠️ Partial (33%) |
-| UI-01 | Phase 11 | Pending |
-| UI-02 | Phase 11 | Pending |
-| UI-03 | Phase 12 | Pending |
-| UI-04 | Phase 12 | Pending |
-| UI-05 | Phase 12 | Pending |
+| UI-01 | Phase 11 | ✅ Complete |
+| UI-02 | Phase 11 | ✅ Complete |
+| UI-03 | Phase 12 | ✅ Complete |
+| UI-04 | Phase 12 | ✅ Complete |
+| UI-05 | Phase 12 | ✅ Complete |
 | INTEG-01 | Phase 13 | Pending |
 | INTEG-02 | Phase 13 | Pending |
 | INTEG-03 | Phase 13 | Pending |
