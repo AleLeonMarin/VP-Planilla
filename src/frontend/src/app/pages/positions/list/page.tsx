@@ -11,7 +11,7 @@ import { useModal } from '@/hooks/useModal';
 import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function PositionsPage() {
-  const { data, refetch, create, update, remove } = usePositions();
+  const { data, isLoading, error, refetch, create, update, remove } = usePositions();
   const modal = useModal();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -105,7 +105,7 @@ export default function PositionsPage() {
       </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-        <Table columns={columns} data={data || []} onEdit={openEdit} onDelete={openDelete} />
+        <Table columns={columns} data={data || []} isLoading={isLoading} error={error} onRetry={refetch} onEdit={openEdit} onDelete={openDelete} />
       </div>
 
       <FormModal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Editar Posición' : 'Nueva Posición'} initialValues={editing || undefined} onSubmit={handleSubmit}>
