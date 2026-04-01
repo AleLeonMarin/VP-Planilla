@@ -110,12 +110,27 @@ Plans:
 ### Phase 14: Servicio de Notificaciones
 **Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
 **Depends on**: Phase 13
-**Requirements**: TBD — definir con `/gsd:plan-phase 14`
+**Requirements**: NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04
 **Success Criteria** (what must be TRUE):
-  1. Existe un servicio backend de notificaciones con al menos creación, listado y marcado como leído
-  2. El frontend muestra notificaciones en tiempo real o al polling con badge de conteo en el header
-  3. `npx tsc --noEmit` y `npm test` pasan sin errores nuevos
-**Plans**: TBD
+  1. Existe un servicio backend de notificaciones con creación, listado, marcado como leído y eliminación
+  2. El frontend muestra notificaciones reales en el Header con badge de conteo y panel desplegable
+  3. Existe una página /pages/notifications con historial completo paginado
+  4. Polling automático actualiza el conteo de no leídas cada 30 segundos
+  5. `npx tsc --noEmit` pasa en backend y frontend sin errores nuevos
+**Plans**: 2 plans
+Plans:
+- [ ] 14-01-PLAN.md — Backend: modelo Prisma, servicio, controller y rutas API protegidas
+- [ ] 14-02-PLAN.md — Frontend: types, service, hook, NotificationPanel, Header actualizado y página /notifications
+
+### Phase 15: UI Polish - Skeletons y Error Banners en todas las vistas
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 14
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 15 to break down)
 
 ---
 
