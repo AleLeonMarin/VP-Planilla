@@ -5,7 +5,7 @@ milestone_name: Calidad, UI Moderna y Cobertura de Tests
 status: In progress
 last_updated: "2026-03-31T00:00:00.000Z"
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 4
   total_plans: 0
   completed_plans: 0
@@ -27,7 +27,7 @@ Plan: 0 of ? in current phase
 Status: Ready to plan Phase 13
 Last activity: 2026-03-31 — Phases 11-12 verified; dark mode gaps closed (commit a159bbe); planning docs synced
 
-Progress: [████████░░] 80% (v1.1 — 4/5 fases completas)
+Progress: [████████░░] 67% (v1.1 — 4/6 fases completas)
 
 ## Milestone Progress
 
@@ -60,9 +60,14 @@ Key decisions from v1.0/v1.1 affecting Phase 13:
 - Backend: 104 tests pasando (8 suites), 0 failures
 - Frontend: sin tests automatizados aún (pendiente en Phase 13 o milestone futuro)
 
+### Roadmap Evolution
+
+- Phase 14 added: Servicio de Notificaciones (2026-04-01)
+
 ### Pending Todos
 
 - Planificar y ejecutar Phase 13 (Integración Frontend-Backend)
+- Planificar y ejecutar Phase 14 (Servicio de Notificaciones)
 
 ### Blockers/Concerns
 

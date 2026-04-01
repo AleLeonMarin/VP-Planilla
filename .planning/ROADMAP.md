@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 — Estabilización y Completitud** (2026-03-25 → 2026-03-27) — 8 fases, 45 tests, seguridad + performance + feriados CR — [ver detalle](.planning/milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1 — Calidad, UI Moderna y Cobertura de Tests** — Phases 9-13 (in progress)
+- 🚧 **v1.1 — Calidad, UI Moderna y Cobertura de Tests** — Phases 9-14 (in progress)
 
 ---
 
@@ -20,11 +20,12 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
 
 **Milestone Goal:** Elevar la calidad del sistema en tres frentes: cobertura de tests ~60%, rediseño visual dark mode moderno consistente en todo el frontend, y validación de la integración frontend-backend.
 
-- [ ] **Phase 9: Tests — EmployeeService y ClockLogService** - Tests unitarios para los módulos de empleados y registros de reloj
-- [ ] **Phase 10: Tests — DeductionService, AuthService y cobertura 60%** - Completar cobertura de tests en servicios críticos hasta umbral mínimo
-- [ ] **Phase 11: Design System Dark Mode** - Tokens CSS globales, sidebar dark moderno y navegación cohesiva
-- [ ] **Phase 12: Tablas, Formularios y Modales** - UI dark consistente en todos los módulos de datos y flujos críticos
+- [x] **Phase 9: Tests — EmployeeService y ClockLogService** - Tests unitarios para los módulos de empleados y registros de reloj
+- [x] **Phase 10: Tests — DeductionService, AuthService y cobertura 60%** - Completar cobertura de tests en servicios críticos hasta umbral mínimo
+- [x] **Phase 11: Design System Dark Mode** - Tokens CSS globales, sidebar dark moderno y navegación cohesiva
+- [x] **Phase 12: Tablas, Formularios y Modales** - UI dark consistente en todos los módulos de datos y flujos críticos
 - [ ] **Phase 13: Integración Frontend-Backend** - Contratos de API verificados, manejo de errores real y estados de carga
+- [ ] **Phase 14: Servicio de Notificaciones** - Implementar el servicio de notificaciones aún no desarrollado
 
 ## Phase Details
 
@@ -97,6 +98,17 @@ Phases 1-8 archived in `.planning/milestones/v1.0-ROADMAP.md`.
 | 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
+| 14. Servicio de Notificaciones | v1.1 | 0/? | Not started | - |
+
+### Phase 14: Servicio de Notificaciones
+**Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
+**Depends on**: Phase 13
+**Requirements**: TBD — definir con `/gsd:plan-phase 14`
+**Success Criteria** (what must be TRUE):
+  1. Existe un servicio backend de notificaciones con al menos creación, listado y marcado como leído
+  2. El frontend muestra notificaciones en tiempo real o al polling con badge de conteo en el header
+  3. `npx tsc --noEmit` y `npm test` pasan sin errores nuevos
+**Plans**: TBD
 
 ---
 
