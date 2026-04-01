@@ -54,20 +54,20 @@ export default function AuditLogsPage() {
     if (lowerAction.includes('update') || lowerAction.includes('edit')) return 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/50';
     if (lowerAction.includes('delete') || lowerAction.includes('remove')) return 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50';
     if (lowerAction.includes('login') || lowerAction.includes('auth')) return 'text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/50';
-    return 'text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-gray-700';
+    return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700';
   };
 
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-[#121212] p-6">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-700 dark:bg-[#4a4a4a] bg-opacity-10 rounded-lg">
-              <ShieldCheckIcon className="w-8 h-8 text-green-700" />
+            <div className="p-3 bg-green-100 dark:bg-zinc-800 rounded-lg">
+              <ShieldCheckIcon className="w-8 h-8 text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-zinc-700 dark:text-white">Logs de Auditoría</h1>
+              <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">Logs de Auditoría</h1>
               <p className="text-zinc-500 dark:text-zinc-400">Historial de actividades del sistema</p>
             </div>
           </div>
@@ -76,8 +76,8 @@ export default function AuditLogsPage() {
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 showFilters 
-                  ? 'bg-green-700 text-white' 
-                  : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-white border border-zinc-200 dark:border-zinc-700'
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700'
               }`}
             >
               <FunnelIcon className="w-5 h-5" />
@@ -86,7 +86,7 @@ export default function AuditLogsPage() {
             <button
               onClick={() => fetchAuditLogs(filters)}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-green-700 dark:bg-[#4a4a4a] text-white rounded-lg hover:bg-green-800 dark:hover:bg-[#3d3d3d] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors disabled:opacity-50"
             >
               <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
               Recargar
@@ -96,10 +96,10 @@ export default function AuditLogsPage() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-100 mb-2">
                   Acción
                 </label>
                 <input
@@ -107,12 +107,12 @@ export default function AuditLogsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar acción..."
-                  className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-100 mb-2">
                   Entidad
                 </label>
                 <input
@@ -120,31 +120,31 @@ export default function AuditLogsPage() {
                   value={filters.entity || ''}
                   onChange={(e) => handleFilterChange('entity', e.target.value || undefined)}
                   placeholder="Filtrar por entidad..."
-                  className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-100 mb-2">
                   Fecha Inicio
                 </label>
                 <input
                   type="date"
                   value={filters.startDate || ''}
                   onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
-                  className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-100 mb-2">
                   Fecha Fin
                 </label>
                 <input
                   type="date"
                   value={filters.endDate || ''}
                   onChange={(e) => handleFilterChange('endDate', e.target.value || undefined)}
-                  className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
                 />
               </div>
             </div>
@@ -152,14 +152,14 @@ export default function AuditLogsPage() {
             <div className="flex items-center gap-2 mt-4">
               <button
                 onClick={handleSearch}
-                className="flex items-center gap-2 px-4 py-2 bg-green-700 dark:bg-[#4a4a4a] text-white rounded-lg hover:bg-green-800 dark:hover:bg-[#3d3d3d] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors"
               >
                 <MagnifyingGlassIcon className="w-5 h-5" />
                 Buscar
               </button>
               <button
                 onClick={handleClearFilters}
-                className="px-4 py-2 bg-[#B8A989] dark:bg-gray-600 text-zinc-700 dark:text-white rounded-lg hover:bg-[#A89979] dark:hover:bg-zinc-500 transition-colors"
+                className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
               >
                 Limpiar Filtros
               </button>
@@ -174,23 +174,23 @@ export default function AuditLogsPage() {
         )}
 
         {/* Stats */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-4 mb-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 mb-6">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Mostrando <span className="font-semibold text-zinc-700 dark:text-white">{logs.length}</span> de{' '}
-            <span className="font-semibold text-zinc-700 dark:text-white">{total}</span> registros
+            Mostrando <span className="font-semibold text-zinc-800 dark:text-zinc-100">{logs.length}</span> de{' '}
+            <span className="font-semibold text-zinc-800 dark:text-zinc-100">{total}</span> registros
           </p>
         </div>
 
         {/* Logs List */}
-        <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-700 p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
           {isLoading ? (
             <div className="text-center py-12">
-              <ArrowPathIcon className="w-12 h-12 animate-spin text-green-700 mx-auto mb-3" />
+              <ArrowPathIcon className="w-12 h-12 animate-spin text-green-600 mx-auto mb-3" />
               <p className="text-zinc-600 dark:text-zinc-400">Cargando logs...</p>
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-12">
-              <DocumentTextIcon className="w-16 h-16 text-[#D2B48C] dark:text-zinc-600 mx-auto mb-3" />
+              <DocumentTextIcon className="w-16 h-16 text-zinc-400 dark:text-zinc-600 mx-auto mb-3" />
               <p className="text-zinc-500 dark:text-zinc-400">No se encontraron logs de auditoría</p>
             </div>
           ) : (
@@ -198,7 +198,7 @@ export default function AuditLogsPage() {
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:shadow-md transition-shadow"
+                  className="p-4 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -206,7 +206,7 @@ export default function AuditLogsPage() {
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
                           {log.action}
                         </span>
-                        <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-zinc-300 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full text-xs font-medium">
                           {log.entity}
                         </span>
                       </div>
@@ -215,7 +215,7 @@ export default function AuditLogsPage() {
                         <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
                           <UserIcon className="w-4 h-4" />
                           <span>{log.username}</span>
-                          <span className="text-xs text-[#A89979] dark:text-zinc-500">({log.user_email})</span>
+                          <span className="text-xs text-zinc-500 dark:text-zinc-500">({log.user_email})</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
@@ -257,7 +257,7 @@ export default function AuditLogsPage() {
               <button
                 onClick={() => handleFilterChange('offset', Math.max(0, (filters.offset || 0) - (filters.limit || 50)))}
                 disabled={!filters.offset || filters.offset === 0}
-                className="px-4 py-2 bg-green-700 dark:bg-[#4a4a4a] text-white rounded-lg hover:bg-green-800 dark:hover:bg-[#3d3d3d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Anterior
               </button>
@@ -267,7 +267,7 @@ export default function AuditLogsPage() {
               <button
                 onClick={() => handleFilterChange('offset', (filters.offset || 0) + (filters.limit || 50))}
                 disabled={(filters.offset || 0) + (filters.limit || 50) >= total}
-                className="px-4 py-2 bg-green-700 dark:bg-[#4a4a4a] text-white rounded-lg hover:bg-green-800 dark:hover:bg-[#3d3d3d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Siguiente
               </button>
