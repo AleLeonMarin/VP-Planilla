@@ -105,7 +105,7 @@ Plans:
 | 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
-| 14. Servicio de Notificaciones | v1.1 | 0/? | Not started | - |
+| 14. Servicio de Notificaciones | v1.1 | 1/2 | In Progress|  |
 
 ### Phase 14: Servicio de Notificaciones
 **Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
@@ -119,7 +119,7 @@ Plans:
   5. `npx tsc --noEmit` pasa en backend y frontend sin errores nuevos
 **Plans**: 2 plans
 Plans:
-- [ ] 14-01-PLAN.md — Backend: modelo Prisma, servicio, controller y rutas API protegidas
+- [x] 14-01-PLAN.md — Backend: modelo Prisma, servicio, controller y rutas API protegidas
 - [ ] 14-02-PLAN.md — Frontend: types, service, hook, NotificationPanel, Header actualizado y página /notifications
 
 ### Phase 15: UI Polish - Skeletons y Error Banners en todas las vistas
@@ -127,7 +127,7 @@ Plans:
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 14
-**Plans:** 0 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 15 to break down)
