@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { AuditLogsService } from '@/services/auditLogsService';
 import { AuditLog, AuditLogFilters } from '@/types/auditLog';
 
@@ -25,6 +26,7 @@ export const useAuditLogs = () => {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar logs de auditoría';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);

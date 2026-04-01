@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { NomineeService } from '@/services/nomineeService';
 
 export const useNominee = () => {
@@ -14,7 +15,9 @@ export const useNominee = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al calcular nómina');
+      const message = err instanceof Error ? err.message : 'Error al calcular nómina';
+      setError(message);
+      toast.error(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -28,6 +31,7 @@ export const useNominee = () => {
       const res = await NomineeService.getClockLogs(initDate, endDate);
       return res;
     } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al obtener registros';
       setError(err instanceof Error ? err.message : 'Error al obtener registros');
       throw err;
     } finally {
@@ -42,6 +46,7 @@ export const useNominee = () => {
       const res = await NomineeService.getEmployeeDeductions(employeeId);
       return res;
     } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al obtener deducciones';
       setError(err instanceof Error ? err.message : 'Error al obtener deducciones');
       throw err;
     } finally {

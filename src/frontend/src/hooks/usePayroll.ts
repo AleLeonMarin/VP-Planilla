@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { PayrollService, Payroll } from '@/services/payrollService';
 
 export const usePayroll = () => {
@@ -14,6 +15,7 @@ export const usePayroll = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error getting payrolls';
       setError(err instanceof Error ? err.message : 'Error getting payrolls');
       throw err;
     } finally {
@@ -29,7 +31,9 @@ export const usePayroll = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error creating payroll');
+      const message = err instanceof Error ? err.message : 'Error creating payroll';
+      setError(message);
+      toast.error(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -44,6 +48,7 @@ export const usePayroll = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error getting payroll';
       setError(err instanceof Error ? err.message : 'Error getting payroll');
       throw err;
     } finally {

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { BranchService } from '@/services/branchService';
 import { Branch, BranchFormData } from '@/types/branch';
 
@@ -42,6 +43,7 @@ export const useBranches = () => {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear sucursal';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);

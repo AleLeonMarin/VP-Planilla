@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { PayrollEmployeesService } from '@/services/payrollEmployeesService';
 import { PayrollEmployee } from '@/types/payrollEmployee';
 
@@ -23,6 +24,7 @@ export const usePayrollEmployees = (payrollId?: number) => {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar empleados de la planilla';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
