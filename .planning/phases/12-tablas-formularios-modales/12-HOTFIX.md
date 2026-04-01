@@ -64,17 +64,17 @@ Phases 11-12 applied dark mode via batch sed replacements, resulting in:
 
 ## Remaining Work (not in this hotfix)
 
-These files still have hardcoded hex colors but were not visible in the reported screenshot:
-- `components/EmployeeProfileModal.tsx` — heavy hex usage, needs full refactor
-- `components/EmployeeAttendanceTable.tsx` — mixed hex/zinc/gray
-- `app/pages/main/page.tsx` — dashboard with 21+ unique hex values
-- `app/pages/auth/page.tsx` — separate green gradient color system
-- `app/pages/payroll/*` — various inconsistencies
-- `app/pages/vacations/*` — gray instead of zinc
-- `app/pages/deductions/*` — gray instead of zinc
-- `app/pages/reports/page.tsx` — mixed zinc/gray
+~~These files still have hardcoded hex colors but were not visible in the reported screenshot~~
 
-These should be addressed in a follow-up pass.
+**✅ All items resolved in follow-up commit `a159bbe` (2026-03-31):**
+- `components/EmployeeProfileModal.tsx` — zinc dark: variants added alongside all hex colors
+- `components/EmployeeAttendanceTable.tsx` — zinc dark: variants added, gray→zinc replaced
+- `app/pages/payroll/list/page.tsx` — dark: zinc variants added for hex colors
+- `app/pages/payroll/[id]/page.tsx` — dark: zinc variants added for hex colors
+- `app/pages/vacations/[id]/page.tsx` — gray→zinc replaced
+- `app/pages/deductions/*` — gray→zinc replaced
+- `app/pages/reports/page.tsx` — hex dark: variants added, gray→zinc replaced
+- `app/pages/clocklogs/list/page.tsx` — hex dark: variant added, gray→zinc replaced
 
 ---
 

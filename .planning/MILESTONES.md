@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.1 Calidad UI Moderna y Cobertura de Tests (In Progress)
+
+**Phases completed:** 4/5 (Phases 09–12 complete, Phase 13 TBD)
+**Timeline:** 2026-03-28 → presente
+**Status:** Phases 11 (Design System Dark Mode) y 12 (Tablas/Formularios/Modales) verificadas ✅
+
+**Key accomplishments:**
+1. Tests unitarios para EmployeeService y ClockLogService (Fase 09)
+2. Tests para DeductionService + cobertura auth (Fase 10)
+3. Sistema dark mode completo — paleta zinc-950, `useTheme`, toggle Sun/Moon, sidebar mobile (Fase 11)
+4. Dark mode uniforme en todos los módulos de datos — tables, modals, forms, pages (Fase 12)
+
+**Archive:** `.planning/milestones/v1.1-ROADMAP.md` (pendiente de crear al cierre)
+
+---
+
 ## v1.0 Estabilización y Completitud (Shipped: 2026-03-27)
 
 **Phases completed:** 8 phases, 22 plans
