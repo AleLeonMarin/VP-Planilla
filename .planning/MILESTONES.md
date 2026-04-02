@@ -1,18 +1,27 @@
 # Milestones
 
-## v1.1 Calidad UI Moderna y Cobertura de Tests (In Progress)
+## v1.1 Calidad, UI Moderna y Cobertura de Tests (Shipped: 2026-04-02)
 
-**Phases completed:** 4/5 (Phases 09–12 complete, Phase 13 TBD)
-**Timeline:** 2026-03-28 → presente
-**Status:** Phases 11 (Design System Dark Mode) y 12 (Tablas/Formularios/Modales) verificadas ✅
+**Phases completed:** 8 phases, 22 plans, 30 tasks
+**Timeline:** 2026-03-31 → 2026-04-02 (2 días)
+**Tests:** 104 pasando (8 suites backend), 0 failures
 
 **Key accomplishments:**
-1. Tests unitarios para EmployeeService y ClockLogService (Fase 09)
-2. Tests para DeductionService + cobertura auth (Fase 10)
-3. Sistema dark mode completo — paleta zinc-950, `useTheme`, toggle Sun/Moon, sidebar mobile (Fase 11)
-4. Dark mode uniforme en todos los módulos de datos — tables, modals, forms, pages (Fase 12)
 
-**Archive:** `.planning/milestones/v1.1-ROADMAP.md` (pendiente de crear al cierre)
+1. Tests unitarios para EmployeeService, ClockLogService, DeductionService y AuthService (Fases 09-10)
+2. Design system dark mode completo — tokens CSS globales, paleta zinc-950, sidebar moderno (Fase 11)
+3. UI dark consistente en todas las tablas, formularios y modales del sistema (Fase 12)
+4. Integración frontend-backend auditada — 3 payload mismatches corregidos, errores concretos del backend, skeletons y toasts (Fase 13)
+5. Servicio de notificaciones completo — backend API + UI en Header + página dedicada + polling 30s (Fase 14)
+6. Skeleton loading + error banners con retry en las 18 vistas del sistema (Fase 15)
+7. Rendimiento web mejorado — ~1.55MB JS diferido, imágenes comprimidas 11.5MB → 39KB (99.7%) (Fase 16)
+
+**Known gaps at close:**
+
+- TESTS-05: Cobertura de tests en 33% (target 60% no alcanzable sin NomineeService coverage adicional)
+- 1 error TypeScript pre-existente en `attendance/page.tsx` (`skipped_count`) — no bloqueante
+
+**Archive:** `.planning/milestones/v1.1-ROADMAP.md`
 
 ---
 
@@ -33,6 +42,7 @@
 7. 45 tests unitarios/integración para NomineeService y PayrollService
 
 **Known gaps at close:**
+
 - REQ 5.3: `prisma db push` en vez de `migrate dev` — user_last_login no reproducible en deploy limpio
 - REQ 8.8: Sin tests de integración para POST /api/nominee/payroll (Should, no Must)
 

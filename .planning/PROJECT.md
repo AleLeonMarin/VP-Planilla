@@ -8,34 +8,34 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.0 — 2026-03-27)
+## Current State (v1.1 — 2026-04-02)
 
-**v1.0 SHIPPED** — Sistema estabilizado:
-- ✅ Singleton Prisma en todos los servicios
-- ✅ Todas las rutas protegidas con AuthMiddleware
-- ✅ Validación Zod en endpoints críticos
-- ✅ Performance: O(6) queries para cualquier número de empleados
-- ✅ Feriados nacionales CR en cálculo de planilla
-- ✅ Rate limiting, Helmet, token revocation
-- ✅ 45 tests (42 unit + 3 integration), 0 failures
+**v1.1 SHIPPED** — Calidad, UI Moderna y Cobertura de Tests:
+- ✅ 104 tests backend pasando (8 suites): EmployeeService, ClockLogService, DeductionService, AuthService + v1.0 suites
+- ✅ Design system dark mode: tokens CSS globales, paleta zinc-950, sidebar moderno con colapso mobile
+- ✅ UI consistente: tablas, formularios, modales en todos los módulos con estilo dark
+- ✅ Integración frontend-backend auditada: 3 payload mismatches corregidos, errores concretos, skeletons + toasts
+- ✅ Servicio de notificaciones: backend API + Header panel + página dedicada + polling 30s
+- ✅ Skeleton loading + error banners con retry en 18 vistas del sistema
+- ✅ Rendimiento: ~1.55MB JS diferido, imágenes 11.5MB → 39KB (99.7% reducción)
 
 ## Context
 
 - **Stack:** Express 5 + TypeScript 5.8 (backend) · Next.js 15 + React 19 (frontend) · Prisma 6 + PostgreSQL · Tailwind 4
 - **Arquitectura:** Route → Controller → Service → Prisma (backend) / Page → Hook → Service → http.ts (frontend)
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
-- **Repositorio:** brownfield — código existente mejorado en v1.0
+- **Repositorio:** brownfield — código existente mejorado en v1.0, UI modernizada en v1.1
+- **Tests:** 104 backend tests (8 suites), 0 failures
+- **Performance:** ~1.55MB JS diferido, imágenes comprimidas 99.7%, Next.js compress habilitado
 
-## Current Milestone: v1.1 Calidad, UI Moderna y Cobertura de Tests
+## Current Milestone: v1.2 (Planning)
 
-**Goal:** Elevar la calidad del sistema en tres frentes: cobertura de tests ~60%, rediseño visual dark mode moderno consistente en todo el frontend, y validación de la integración frontend-backend.
+**Previous:** v1.1 shipped 2026-04-02 — 8 phases, 22 plans, 30 tasks
 
-**Target features:**
-- Tests unitarios ~60% de cobertura (módulo empleados + otros módulos críticos)
-- Design system dark mode: sidebar, cards, tipografía y colores cohesivos en TODOS los módulos
-- Modales de confirmación/advertencia en flujos críticos
-- Corrección de bugs visuales, inconsistencias y flujo UX mejorado
-- Validación completa de conexión frontend-backend (contratos de API)
+**v1.1 accomplishments:**
+- 104 backend tests, design system dark mode, UI consistente en todos los módulos
+- Integración frontend-backend auditada, servicio de notificaciones completo
+- Skeleton loading + error banners en 18 vistas, rendimiento mejorado (JS diferido, imágenes 99.7% comprimidas)
 
 ## Key Decisions
 
@@ -47,6 +47,20 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 | Feriados CR como lista estática | No hay API pública confiable | ✅ v1.0 |
 | Token revocation con DB blocklist | Redis no está en el stack | ✅ v1.0 |
 | No eliminar empleados — solo desactivar | Eliminar rompería historial de planillas | ✅ Regla de negocio |
+| Dark mode: paleta zinc-950 exclusivamente | Consistencia visual, no gray-* ni hex sin dark: | ✅ v1.1 |
+| Toast notifications: sonner, NO modales | Feedback CRUD más limpio y no intrusivo | ✅ v1.1 |
+| Loading states: separar isFetching de isMutating | Evitar skeletons durante operaciones CRUD | ✅ v1.1 |
+| Skeleton loading: solo en initial fetch | Condición `isLoading && data.length === 0` | ✅ v1.1 |
+| Dynamic imports para librerías pesadas | FullCalendar, ExcelJS, framer-motion diferidos (~1.55MB) | ✅ v1.1 |
+| Imágenes comprimidas con sharp | 11.5MB → 39KB (99.7% reducción) | ✅ v1.1 |
+| NotificationPanel: named export | Convención del proyecto para componentes UI | ✅ v1.1 |
+| Dark mode: paleta zinc-950 exclusivamente | Consistencia visual, no gray-* ni hex sin dark: | ✅ v1.1 |
+| Toast notifications: sonner, NO modales | Feedback CRUD más limpio y no intrusivo | ✅ v1.1 |
+| Loading states: separar isFetching de isMutating | Evitar skeletons durante operaciones CRUD | ✅ v1.1 |
+| Skeleton loading: solo en initial fetch | Condición `isLoading && data.length === 0` | ✅ v1.1 |
+| Dynamic imports para librerías pesadas | FullCalendar, ExcelJS, framer-motion diferidos (~1.55MB) | ✅ v1.1 |
+| Imágenes comprimidas con sharp | 11.5MB → 39KB (99.7% reducción) | ✅ v1.1 |
+| NotificationPanel: named export | Convención del proyecto para componentes UI | ✅ v1.1 |
 
 ## Out of Scope
 
@@ -75,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 — v1.1 milestone started*
+*Last updated: 2026-04-02 — v1.1 milestone complete*
