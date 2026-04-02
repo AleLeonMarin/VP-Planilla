@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Calidad, UI Moderna y Cobertura de Tests
 status: verifying
-stopped_at: Completed 15-04-PLAN.md - Error banners with retry on 4 pages
-last_updated: "2026-04-02T03:46:36.647Z"
+stopped_at: Completed 16-01-PLAN.md - Lazy-load heavy third-party libraries
+last_updated: "2026-04-02T04:12:12.471Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 19
+  completed_plans: 17
   percent: 100
 ---
 
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Current Position
 
-Phase: 15 (UI Polish - Skeletons y Error Banners) — COMPLETE
-Plan: 2 of 2 — ALL COMPLETE
+Phase: 16
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
@@ -72,6 +72,8 @@ Key decisions from v1.0/v1.1:
 - [Phase 15-ui-polish-skeletons-y-error-banners-en-todas-las-vistas]: Payroll detail page uses three separate early returns (loading → error → content) instead of conditional rendering inside a single return block
 - [Phase 15-ui-polish-skeletons-y-error-banners-en-todas-las-vistas]: Payroll detail page uses three separate early returns (loading → error → content) instead of conditional rendering inside a single return block
 - [Phase 15-ui-polish-skeletons-y-error-banners-en-todas-las-vistas]: Error banners use three separate early returns (loading → error → content) for payroll detail page instead of conditional rendering inside loading block
+- [Phase 16]: FullCalendar plugins kept static (small ~30-50KB each, needed as plain objects not React components); useDragControls kept static (React hooks cannot be dynamically imported); ExcelJS uses await import() inside async handlers, not next/dynamic (not a React component)
+- [Phase 16]: FullCalendar plugins kept static (small ~30-50KB each, needed as plain objects not React components); useDragControls kept static (React hooks cannot be dynamically imported); ExcelJS uses await import() inside async handlers, not next/dynamic (not a React component)
 
 ### Tests
 
@@ -94,8 +96,8 @@ Key decisions from v1.0/v1.1:
 
 ## Session Continuity
 
-Last session: 2026-04-02T03:46:36.641Z
-Stopped at: Completed 15-04-PLAN.md - Error banners with retry on 4 pages
+Last session: 2026-04-02T04:12:12.467Z
+Stopped at: Completed 16-01-PLAN.md - Lazy-load heavy third-party libraries
 Resume: ejecutar `/gsd:plan-phase 14` para Phase 14
 
 ---
