@@ -73,6 +73,8 @@ Key decisions from v1.0/v1.1:
 ### Roadmap Evolution
 
 - Phase 14 added: Servicio de Notificaciones (2026-04-01)
+- Phase 17 added: Mejorar rendimiento web — reducir LCP de 5.86s a <2.5s (2026-04-02)
+- Phase 17 added: Mejorar rendimiento web — reducir LCP de 5.86s a <2.5s (2026-04-02)
 
 ### Pending Todos
 
