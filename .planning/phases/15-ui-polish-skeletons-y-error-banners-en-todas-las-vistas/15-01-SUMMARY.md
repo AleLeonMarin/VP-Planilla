@@ -77,7 +77,7 @@ Each task was committed atomically:
 1. **Task 1: Replace spinners with skeleton loading in 6 list pages** - `a5c92f1` (feat), `c035c6c` (feat)
 2. **Task 2: Add error banners with retry to all 6 list pages** - `3b07333` (feat)
 
-**Plan metadata:** `3b07333` (docs: complete plan)
+**Plan metadata:** `14750ab` (docs: complete plan)
 
 ## Files Created/Modified
 
