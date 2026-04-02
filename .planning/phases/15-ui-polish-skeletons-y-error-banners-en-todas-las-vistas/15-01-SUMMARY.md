@@ -77,7 +77,7 @@ Each task was committed atomically:
 1. **Task 1: Replace spinners with skeleton loading in 6 list pages** - `a5c92f1` (feat), `c035c6c` (feat)
 2. **Task 2: Add error banners with retry to all 6 list pages** - `3b07333` (feat)
 
-**Plan metadata:** pending (docs: complete plan)
+**Plan metadata:** `3b07333` (docs: complete plan)
 
 ## Files Created/Modified
 
@@ -131,3 +131,21 @@ None - no external service configuration required.
 
 *Phase: 15-ui-polish-skeletons-y-error-banners-en-todas-las-vistas*
 *Completed: 2026-04-02*
+
+## Self-Check: PASSED
+
+- [x] All 6 source files exist
+- [x] SUMMARY.md exists at correct path
+- [x] Commits a5c92f1, c035c6c, 3b07333 all present in git log
+- [x] TypeScript compiles (only pre-existing skipped_count error)
+- [x] All 6 pages have animate-pulse skeleton loading
+- [x] All 6 pages have error banner with "Reintentar" button
+
+## Self-Check: PASSED
+
+- [x] All 6 source files exist
+- [x] SUMMARY.md exists at correct path
+- [x] Commits a5c92f1, c035c6c, 3b07333 all present in git log
+- [x] TypeScript compiles (only pre-existing skipped_count error)
+- [x] All 6 pages have animate-pulse skeleton loading
+- [x] All 6 pages have error banner with "Reintentar" button
