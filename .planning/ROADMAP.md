@@ -104,7 +104,7 @@ Plans:
 | 10. Tests — DeductionService, AuthService y cobertura 60% | v1.1 | 2/3 | ⚠️ Partial | 2026-03-31 |
 | 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
-| 13. Integración Frontend-Backend | v1.1 | 8/8 | Complete   | 2026-04-02 |
+| 13. Integración Frontend-Backend | v1.1 | 9/9 | Complete   | 2026-04-02 |
 | 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-02 |
 | 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-02 |
 | 15. UI Polish - Skeletons y Error Banners | v1.1 | 4/4 | Complete    | 2026-04-02 |
@@ -129,7 +129,7 @@ Plans:
 **Goal:** Todas las vistas del sistema muestran estados de carga (skeletons) y banners de error con reintento consistentes — ninguna vista queda en blanco indefinidamente
 **Requirements**: UI-POLISH-01, UI-POLISH-02, UI-POLISH-03
 **Depends on:** Phase 14
-**Plans:** 8/8 plans complete
+**Plans:** 9/9 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md — Skeleton loading + error banners en 6 list pages (deductions, vacations, branches, payroll-types, events, users)

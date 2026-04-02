@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Calidad, UI Moderna y Cobertura de Tests
 status: verifying
-stopped_at: Completed 13-08-PLAN.md - Fix toggle switches and conditional dark mode styling
-last_updated: "2026-04-02T05:14:30.050Z"
+stopped_at: Completed 13-09-PLAN.md - Skeleton loading states for employee list
+last_updated: "2026-04-02T05:17:24.684Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
   completed_phases: 8
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 22
+  completed_plans: 22
   percent: 100
 ---
 
@@ -80,6 +80,7 @@ Key decisions from v1.0/v1.1:
 - [Phase 16]: Compressed 10 LCP-critical images from ~11.5MB to 39KB (99.7% reduction); sidebar icons 40x40px, LogInBackground alpha stripped for opacity-15 usage
 - [Phase 13-integracion-frontend-backend]: Dark mode: zinc-* palette exclusively for all dark: variants — no gray-*, no duplicate dark: classes on same element
 - [Phase 13-integracion-frontend-backend]: Dark mode: zinc-* palette exclusively for all dark: variants — no gray-*, no duplicate dark: classes on same element
+- [Phase 13-integracion-frontend-backend]: Skeleton loading: only shown during initial fetch (isLoading && employees.length === 0), not during CRUD mutations
 
 ### Tests
 
@@ -102,8 +103,8 @@ Key decisions from v1.0/v1.1:
 
 ## Session Continuity
 
-Last session: 2026-04-02T05:14:30.045Z
-Stopped at: Completed 13-08-PLAN.md - Fix toggle switches and conditional dark mode styling
+Last session: 2026-04-02T05:17:20.624Z
+Stopped at: Completed 13-09-PLAN.md - Skeleton loading states for employee list
 Resume: ejecutar `/gsd:plan-phase 14` para Phase 14
 
 ---
