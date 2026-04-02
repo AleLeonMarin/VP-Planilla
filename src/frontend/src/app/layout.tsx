@@ -14,6 +14,12 @@ export const metadata = {
     shortcut: "/logo.ico",
     apple: "/logo.ico",
   },
+  other: {
+    link: [
+      { rel: 'preload', href: '/fonts/VerdeFont.woff', as: 'font', type: 'font/woff', crossOrigin: 'anonymous' },
+      { rel: 'preload', href: '/fonts/PraderaFont.woff', as: 'font', type: 'font/woff', crossOrigin: 'anonymous' },
+    ],
+  },
 };
 
 export default function RootLayout({
