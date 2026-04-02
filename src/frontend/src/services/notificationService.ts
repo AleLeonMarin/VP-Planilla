@@ -8,38 +8,49 @@ import { Notification, NotificationListResponse } from '@/types/notification';
 export const NotificationService = {
   /**
    * Get paginated list of notifications for the current user.
+   * Note: http.get auto-unwraps { success, data } → returns data only.
+   * We need total too, so we use http.raw to get the full response.
    */
   async getNotifications(page = 1, limit = 20): Promise<NotificationListResponse> {
-    return http.get(`/notifications?page=${page}&limit=${limit}`) as Promise<NotificationListResponse>;
+    const res = await http.raw(`/notifications?page=${page}&limit=${limit}`);
+    const json = await res.json();
+    return {
+      data: json.data as Notification[],
+      total: json.total as number,
+    };
   },
 
   /**
    * Get the count of unread notifications for the current user.
    */
   async getUnreadCount(): Promise<number> {
-    const result = await http.get('/notifications/unread-count');
-    return (result as { count: number }).count;
+    const res = await http.raw('/notifications/unread-count');
+    const json = await res.json();
+    return json.data?.count as number;
   },
 
   /**
    * Mark a single notification as read (ownership verified by backend).
    */
   async markAsRead(id: number): Promise<Notification> {
-    return http.put(`/notifications/${id}/read`) as Promise<Notification>;
+    const res = await http.raw(`/notifications/${id}/read`, { method: 'PUT' });
+    const json = await res.json();
+    return json.data as Notification;
   },
 
   /**
    * Mark all notifications as read for the current user.
    */
   async markAllAsRead(): Promise<number> {
-    const result = await http.put('/notifications/read-all');
-    return (result as { count: number }).count;
+    const res = await http.raw('/notifications/read-all', { method: 'PUT' });
+    const json = await res.json();
+    return json.data?.count as number;
   },
 
   /**
    * Delete a notification (ownership verified by backend).
    */
   async deleteNotification(id: number): Promise<void> {
-    await http.delete(`/notifications/${id}`);
+    await http.raw(`/notifications/${id}`, { method: 'DELETE' });
   },
 };
