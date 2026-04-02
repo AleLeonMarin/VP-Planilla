@@ -370,6 +370,33 @@ export default function PayrollCalculatePage() {
           </div>
         )}
 
+        {/* Loading skeleton for results */}
+        {isLoading && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 mb-6">
+            <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
+                  <div className="h-3 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-2" />
+                  <div className="h-6 w-28 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3 animate-pulse">
+                  <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-36 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                    <div className="h-3 w-20 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                  </div>
+                  <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Resultados */}
         <PayrollResults data={data} onCreate={() => setShowCreate(true)} />
 

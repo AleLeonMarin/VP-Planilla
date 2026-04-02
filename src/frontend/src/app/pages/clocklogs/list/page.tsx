@@ -192,8 +192,45 @@ export default function AttendancePage() {
           </div>
         </div>
 
+        {/* Loading state - skeleton table */}
+        {isLoading && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden mb-6">
+            <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+              <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Fecha</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Empleado</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Horario</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Entrada</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Salida</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Balance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-4 w-28 bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-36 bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-20 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-14 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-12 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Tabla de asistencia */}
-        {data.length > 0 && (
+        {data.length > 0 && !isLoading && (
           <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
             <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
               <div className="flex items-center justify-between">

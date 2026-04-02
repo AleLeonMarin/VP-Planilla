@@ -122,9 +122,19 @@ export default function PayrollEmployeesPage({ params }: PageProps) {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-12">
-              <ArrowPathIcon className="w-12 h-12 animate-spin text-green-600 mx-auto mb-3" />
-              <p className="text-zinc-600 dark:text-zinc-400">Cargando empleados...</p>
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3 animate-pulse">
+                  <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-40 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                    <div className="h-3 w-20 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                  </div>
+                  <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                  <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                  <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                </div>
+              ))}
             </div>
           ) : employees.length === 0 ? (
             <div className="text-center py-12">
