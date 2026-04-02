@@ -14,7 +14,9 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ArrowDownTrayIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { PayrollService, Payroll, PayrollEmployee } from '@/services/payrollService';
 import { formatCRC } from '@/utils/number';
@@ -30,6 +32,7 @@ export default function PayrollDetailPage() {
   const [employees, setEmployees] = useState<PayrollEmployee[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const parts = pathname?.split('/') || [];
@@ -45,6 +48,7 @@ export default function PayrollDetailPage() {
 
   const loadPayrollDetails = async (id: number) => {
     setIsLoading(true);
+    setError(null);
     try {
       const payrollData = await PayrollService.getPayrollById(id);
       setPayroll(payrollData);
@@ -52,7 +56,7 @@ export default function PayrollDetailPage() {
       setEmployees(employeesData);
     } catch (err) {
       const message = (err as Error)?.message || 'Error al cargar los detalles de la planilla';
-      toast.error(message);
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -216,77 +220,58 @@ export default function PayrollDetailPage() {
     }
   );
 
-  if (isLoading) {
+  if (isLoading && !error) {
     return (
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
         <div className="p-6">
           <div className="mx-auto max-w-7xl">
-            {/* Skeleton breadcrumb */}
+            {/* Breadcrumb */}
             <div className="mb-6">
-              <div className="h-3 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-2" />
-              <div className="h-4 w-36 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-4" />
-              {/* Skeleton header card */}
+              <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Planilla / Detalle</p>
+              <div className="h-4 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-4" />
+              {/* Header Card Skeleton */}
               <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse" />
-                    <div className="space-y-2">
-                      <div className="h-8 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                      <div className="h-4 w-64 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="h-12 w-44 bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse" />
-                    <div className="h-12 w-32 bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse" />
-                    <div className="h-8 w-24 bg-zinc-200 dark:bg-zinc-700 rounded-full animate-pulse" />
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse" />
+                  <div className="space-y-2">
+                    <div className="h-8 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                    <div className="h-4 w-64 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Skeleton stat cards */}
+            {/* Info Cards Skeleton */}
             <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-              {[0, 1, 2, 3].map((i) => (
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse" />
                     <div className="h-4 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                   </div>
-                  <div className="h-6 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                  <div className="h-6 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                 </div>
               ))}
             </div>
-
-            {/* Skeleton summary section */}
+            {/* Summary Skeleton */}
             <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 mb-6">
               <div className="h-6 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-6" />
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
-                    <div className="h-3 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-2" />
-                    <div className="h-7 w-32 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+                  <div key={i} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
+                    <div className="h-4 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse mb-2" />
+                    <div className="h-8 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Skeleton employee table */}
+            {/* Employee Table Skeleton */}
             <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+              <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="h-6 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
               </div>
-              <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="px-6 py-4 flex items-center gap-4">
-                    <div className="w-5 h-5 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-40 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                      <div className="h-3 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                    </div>
-                    <div className="h-4 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                    <div className="h-4 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                    <div className="h-4 w-20 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
-                  </div>
+              <div className="p-6 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
                 ))}
               </div>
             </div>
@@ -296,24 +281,43 @@ export default function PayrollDetailPage() {
     );
   }
 
-  if (!payroll) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="p-8 text-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl">
-            <p className="mb-4 text-zinc-700 dark:text-zinc-300">No se pudo cargar la planilla</p>
-            <Link
-              href="/pages/payroll/list"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Volver al listado
-            </Link>
+      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
+        <div className="p-6">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-6">
+              <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Planilla / Detalle</p>
+              <Link
+                href="/pages/payroll/list"
+                className="inline-flex items-center gap-2 text-green-600 dark:text-zinc-400 hover:text-green-500 dark:hover:text-zinc-300 font-medium mb-4 transition-colors"
+              >
+                <ArrowLeftIcon className="w-4 h-4" />
+                Volver al listado
+              </Link>
+            </div>
+            <div className="overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+              <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+                <ExclamationTriangleIcon className="w-10 h-10 mx-auto mb-3 text-red-500 dark:text-red-400" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar la planilla</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={() => payrollId && loadPayrollDetails(payrollId)}
+                  className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <ArrowPathIcon className="w-4 h-4" />
+                  Reintentar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+        <modal.ModalComponent />
       </div>
     );
   }
+
+  if (!payroll) return null;
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
@@ -420,7 +424,6 @@ export default function PayrollDetailPage() {
           <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 mb-6">
             <h2 className="mb-6 text-xl font-bold text-zinc-800 dark:text-zinc-100">Resumen Total de la Planilla</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {/* Fila 1: Datos generales */}
               <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-2 mb-2">
                   <UserGroupIcon className="w-5 h-5 text-green-600" />
@@ -453,7 +456,6 @@ export default function PayrollDetailPage() {
                 <p className="text-2xl font-bold text-blue-600">{totals.totalWeeklyRestHours.toFixed(1)}h</p>
               </div>
 
-              {/* Fila 2: Datos monetarios */}
               <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center gap-2 mb-2">
                   <CurrencyDollarIcon className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
@@ -486,7 +488,6 @@ export default function PayrollDetailPage() {
                 <p className="text-lg font-bold text-green-600">{formatCRC(totals.totalBonuses)}</p>
               </div>
 
-              {/* Fila 3: Deducciones y total */}
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
                 <div className="flex items-center gap-2 mb-2">
                   <CurrencyDollarIcon className="w-5 h-5 text-red-600" />
@@ -580,7 +581,6 @@ export default function PayrollDetailPage() {
                             </td>
                           </tr>
 
-                          {/* Fila expandida */}
                           {isExpanded && (
                             <tr className="bg-zinc-50 dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700">
                               <td colSpan={4} className="px-6 py-0">
