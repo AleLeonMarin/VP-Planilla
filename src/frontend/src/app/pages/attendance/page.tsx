@@ -268,6 +268,7 @@ export default function AttendancePage() {
     unmatchedEmployees: number;
   } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadEmployees();
@@ -694,6 +695,7 @@ export default function AttendancePage() {
     }
 
     setIsLoading(true);
+    setError(null);
     try {
       let logs: ClockLog[] = [];
       let source: 'excel' | 'api' = 'api';
@@ -730,6 +732,7 @@ export default function AttendancePage() {
           : `Se encontraron ${processed.length} registros desde la API`
       );
     } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al obtener registros');
       modal.showError('Error', err instanceof Error ? err.message : 'Error al obtener registros');
     } finally {
       setIsLoading(false);
@@ -792,6 +795,24 @@ export default function AttendancePage() {
             <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">Registro de Asistencia</h1>
           </div>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <ExclamationTriangleIcon className="w-10 h-10 mx-auto mb-3 text-red-500 dark:text-red-400" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar asistencia</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button
+                onClick={handleFetch}
+                className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">

@@ -92,8 +92,10 @@ export default function ReportsPage() {
   const [sending, setSending] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [dispatchSummary, setDispatchSummary] = useState<ReportDispatchSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDashboard = async () => {
+    setError(null);
     try {
       const data = await ReportsService.getDashboard();
       setDashboard(data);
@@ -101,13 +103,14 @@ export default function ReportsPage() {
         setSelectedPayrollId(data.payrolls[0].id);
       }
     } catch (error) {
-      console.error(error);
+      setError(error instanceof Error ? error.message : 'No se pudo cargar el dashboard de reportes');
       modal.showError('Error', 'No se pudo cargar el dashboard de reportes');
     }
   };
 
   const refreshDataset = async (payrollId: number) => {
     setLoadingDataset(true);
+    setError(null);
     try {
       const [datasetResponse, logsResponse] = await Promise.all([
         ReportsService.getPayrollDataset(payrollId),
@@ -117,7 +120,7 @@ export default function ReportsPage() {
       setLogs(logsResponse);
       setSelectedEmployees(datasetResponse.employees.map((employee) => employee.employeeId));
     } catch (error) {
-      console.error(error);
+      setError(error instanceof Error ? error.message : 'No se pudo cargar la planilla seleccionada');
       modal.showError('Error', 'No se pudo cargar la planilla seleccionada');
     } finally {
       setLoadingDataset(false);
@@ -310,6 +313,24 @@ export default function ReportsPage() {
             </div>
           </div>
         </header>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <ExclamationTriangleIcon className="w-10 h-10 mx-auto mb-3 text-red-500 dark:text-red-400" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar datos</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button
+                onClick={loadDashboard}
+                className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
 
         <section className="grid gap-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm lg:grid-cols-4">
           <div className="lg:col-span-2">
