@@ -124,13 +124,14 @@ Plans:
 
 ### Phase 15: UI Polish - Skeletons y Error Banners en todas las vistas
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Todas las vistas del sistema muestran estados de carga (skeletons) y banners de error con reintento consistentes — ninguna vista queda en blanco indefinidamente
+**Requirements**: UI-POLISH-01, UI-POLISH-02, UI-POLISH-03
 **Depends on:** Phase 14
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 15 to break down)
+- [ ] 15-01-PLAN.md — Skeleton loading + error banners en 6 list pages (deductions, vacations, branches, payroll-types, events, users)
+- [ ] 15-02-PLAN.md — Skeleton loading + error banners en 12 complex pages (payroll, attendance, audit-logs, employee edit, notifications)
 
 ### Phase 16: Mejorar rendimiento web — reducir LCP de 5.86s a <2.5s y mejorar CLS
 
