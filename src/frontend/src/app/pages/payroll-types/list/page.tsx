@@ -145,9 +145,33 @@ export default function PayrollTypesPage() {
 
         {/* Loading state */}
         {isLoading && (
-          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-zinc-200 dark:border-zinc-700 border-t-green-600 mx-auto mb-4"></div>
-            <p className="text-lg text-zinc-600 dark:text-zinc-300 font-medium">Cargando tipos de planilla...</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-pulse"
+              >
+                <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="flex-1">
+                      <div className="h-5 bg-zinc-200 dark:bg-zinc-700 rounded w-2/3 mb-2" />
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 mb-4">
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3 mb-2" />
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="h-10 w-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

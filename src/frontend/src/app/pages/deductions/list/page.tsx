@@ -14,6 +14,7 @@ import {
   TrashIcon,
   ArrowPathIcon,
   CalculatorIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 export default function DeductionsPage() {
@@ -96,15 +97,59 @@ export default function DeductionsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
-            {error}
+          <div className="mb-6 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <div className="flex flex-col items-center">
+                <ExclamationTriangleIcon className="w-10 h-10 mb-3 text-red-500 dark:text-red-400" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar datos</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <ArrowPathIcon className="w-4 h-4" />
+                  Reintentar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
         {isLoading && (
-          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-200 dark:border-zinc-700 border-t-green-600 mx-auto mb-4"></div>
-            <p className="text-zinc-500 dark:text-zinc-400">Cargando deducciones...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-pulse"
+              >
+                <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="flex-1">
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/4" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-full mb-4" />
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 border border-zinc-200 dark:border-zinc-700">
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2 mb-2" />
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4" />
+                    </div>
+                    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 border border-zinc-200 dark:border-zinc-700">
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2 mb-2" />
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                    <div className="flex-1 h-9 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="h-9 w-9 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

@@ -10,6 +10,7 @@ import {
   ArrowPathIcon,
   ShieldCheckIcon,
   UsersIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from 'sonner';
 import { Select, SelectItem } from '@/components/ui/Select';
@@ -25,6 +26,7 @@ export default function UsersPermissionsPage() {
   const [users, setUsers] = useState<UserAccountSummary[]>([]);
   const [roles, setRoles] = useState<RoleDefinition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [savingUserId, setSavingUserId] = useState<number | null>(null);
   const [filter, setFilter] = useState("");
 
@@ -37,7 +39,13 @@ export default function UsersPermissionsPage() {
       ]);
       setUsers(usersResponse);
       setRoles(roleCatalog);
+      setError(null);
     } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron cargar los usuarios y permisos"
+      );
       toast.error(
         err instanceof Error
           ? err.message
@@ -130,6 +138,65 @@ export default function UsersPermissionsPage() {
         </div>
       </section>
 
+      {/* Error banner */}
+      {error && (
+        <div className="overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+          <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+            <div className="flex flex-col items-center">
+              <ExclamationTriangleIcon className="w-10 h-10 mb-3 text-red-500 dark:text-red-400" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar datos</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button
+                onClick={() => void fetchData()}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Skeleton loading */}
+      {loading && !error && (
+        <section className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+          <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+            <thead className="bg-zinc-50 dark:bg-zinc-900 text-left text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+              <tr>
+                <th className="px-6 py-3">Colaborador</th>
+                <th className="px-6 py-3">Usuario</th>
+                <th className="px-6 py-3">Rol asignado</th>
+                <th className="px-6 py-3">Permisos efectivos</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-6 py-4">
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded-full w-20 mb-2" />
+                    <div className="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-32" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <div className="h-5 bg-zinc-200 dark:bg-zinc-700 rounded-full w-16" />
+                      <div className="h-5 bg-zinc-200 dark:bg-zinc-700 rounded-full w-20" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
       <section className="grid gap-4 md:grid-cols-2">
         {roleOptions.map((role) => (
           <div
@@ -185,13 +252,7 @@ export default function UsersPermissionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {loading ? (
-                <tr>
-                  <td className="px-6 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400" colSpan={4}>
-                    Cargando usuarios...
-                  </td>
-                </tr>
-              ) : filteredUsers.length === 0 ? (
+              {!loading && filteredUsers.length === 0 ? (
                 <tr>
                   <td className="px-6 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400" colSpan={4}>
                     No hay usuarios que coincidan con el criterio de búsqueda.

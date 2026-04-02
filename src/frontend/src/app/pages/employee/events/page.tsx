@@ -7,7 +7,7 @@ import LaborEventsCalendar from '@/components/LaborEventsCalendar';
 import LaborEventModal from '@/components/LaborEventModal';
 import { useLaborEvents } from '@/hooks/useLaborEvents';
 import useEmployeeList from '@/hooks/useEmployeeList';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { LaborEventFormData, EmployeeLaborEvent } from '@/types/laborEvent';
 import { toast } from 'sonner';
 
@@ -16,7 +16,7 @@ const LaborEventsPage: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [previewEvent, setPreviewEvent] = useState<Partial<EmployeeLaborEvent> | null>(null);
   const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
-  const { events, isLoading, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
+  const { events, isLoading, error, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
 
   const activeEvents = events.filter(event => event.status === 'active').length;
@@ -105,12 +105,73 @@ const LaborEventsPage: React.FC = () => {
         {/* Employee Tabs */}
         <EmployeeTabs />
 
-        <div className="mt-6">
-          {/* Stats Cards using reusable component */}
-          <StatsCards stats={eventsStatsData} />
+        {/* Error banner */}
+        {error && (
+          <div className="mt-4 mb-4 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <div className="flex flex-col items-center">
+                <ExclamationTriangleIcon className="w-10 h-10 mb-3 text-red-500 dark:text-red-400" />
+                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar datos</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={refreshEvents}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <ArrowPathIcon className="w-4 h-4" />
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Calendar and Events List */}
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2.2fr_1fr] pb-8">
+        {/* Stats Cards using reusable component */}
+        <StatsCards stats={eventsStatsData} />
+
+        {/* Skeleton loading */}
+        {isLoading && (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2.2fr_1fr] pb-8 mt-6">
+            <section className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 min-h-[600px] animate-pulse">
+              <div className="p-6">
+                <div className="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3 mb-6" />
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                  ))}
+                </div>
+                {Array.from({ length: 5 }).map((_, row) => (
+                  <div key={row} className="grid grid-cols-7 gap-2 mb-2">
+                    {Array.from({ length: 7 }).map((_, col) => (
+                      <div key={col} className="h-20 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </section>
+            <aside className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col min-h-[600px] animate-pulse">
+              <div className="bg-zinc-50 dark:bg-zinc-800 px-5 py-4 rounded-t-2xl border-b border-zinc-200 dark:border-zinc-800">
+                <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+              </div>
+              <div className="flex-1 p-5 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="p-3 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded" />
+                      <div className="flex-1">
+                        <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mb-1" />
+                        <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* Calendar and Events List — only when not loading */}
+        {!isLoading && (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2.2fr_1fr] pb-8 mt-6">
             {/* Main Calendar Container */}
             <section className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 min-h-[600px]">
               <div className="p-6 h-full">
@@ -231,7 +292,7 @@ const LaborEventsPage: React.FC = () => {
               </div>
             </aside>
           </div>
-        </div>
+        )}
       </div>
 
       <LaborEventModal

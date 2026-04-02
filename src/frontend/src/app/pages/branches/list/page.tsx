@@ -113,9 +113,38 @@ export default function BranchesPage() {
         )}
 
         {isLoading && (
-          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-200 dark:border-zinc-700 border-t-green-600 mx-auto mb-4"></div>
-            <p className="text-zinc-500 dark:text-zinc-400">Cargando sucursales...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-pulse"
+              >
+                <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="flex-1">
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/4" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="mb-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 border border-zinc-200 dark:border-zinc-700">
+                    <div className="flex items-start gap-2">
+                      <div className="w-4 h-4 bg-zinc-200 dark:bg-zinc-700 rounded flex-shrink-0 mt-0.5" />
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-full" />
+                    </div>
+                  </div>
+                  <div className="mb-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 border border-zinc-200 dark:border-zinc-700">
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2" />
+                  </div>
+                  <div className="flex gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                    <div className="flex-1 h-9 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                    <div className="h-9 w-9 bg-zinc-200 dark:bg-zinc-700 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
