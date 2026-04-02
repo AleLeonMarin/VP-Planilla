@@ -4,10 +4,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import { useDragControls } from 'framer-motion';
 import { LaborEventFormData, EmployeeLaborEvent } from '@/types/laborEvent';
 import { Employee } from '@/types/employee';
 import { Select, SelectItem } from '@/components/ui/Select';
+
+// Lazy-load framer-motion animation primitives — hooks kept static (cannot be dynamic)
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface Props {
   isOpen: boolean;
@@ -239,7 +244,7 @@ const LaborEventModal: React.FC<Props> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <MotionDiv 
             className="fixed inset-0 bg-black/30 dark:bg-black/50 z-40"
             variants={backdropVariants}
             initial="hidden"
@@ -250,7 +255,7 @@ const LaborEventModal: React.FC<Props> = ({
           />
           
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <MotionDiv
               ref={modalRef}
               className="pointer-events-auto w-full max-w-lg"
               variants={modalVariants}
@@ -273,13 +278,13 @@ const LaborEventModal: React.FC<Props> = ({
                 transformStyle: 'preserve-3d'
               } as React.CSSProperties}
             >
-                <motion.div 
+                <MotionDiv 
                   className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden"
                   variants={compactVariants}
                   animate={isCompact ? "compact" : "expanded"}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div
+                <div
                     className="bg-green-700 px-6 py-4 flex items-center justify-between cursor-move select-none"
                     role="banner"
                     tabIndex={0}
@@ -331,7 +336,7 @@ const LaborEventModal: React.FC<Props> = ({
                   </div>
 
                   {!isCompact && (
-                    <motion.div 
+                    <MotionDiv 
                       className="max-h-[70vh] overflow-y-auto p-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -472,11 +477,11 @@ const LaborEventModal: React.FC<Props> = ({
                           />
                         </div>
                       </form>
-                    </motion.div>
+                    </MotionDiv>
                   )}
 
                   {!isCompact && (
-                    <motion.div 
+                    <MotionDiv 
                       className="border-t border-zinc-200 dark:border-zinc-700 p-6 bg-[#F5F1E8] dark:bg-zinc-800 rounded-b-xl"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -507,10 +512,10 @@ const LaborEventModal: React.FC<Props> = ({
                           )}
                         </button>
                       </div>
-                    </motion.div>
+                    </MotionDiv>
                   )}
-                </motion.div>
-            </motion.div>
+                </MotionDiv>
+            </MotionDiv>
           </div>
         </>
       )}

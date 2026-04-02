@@ -3,10 +3,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { Position } from '@/services/positionsService';
 import { Select, SelectItem } from '@/components/ui/Select';
+
+// Lazy-load framer-motion animation primitives
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
@@ -72,7 +76,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <MotionDiv
             className="fixed inset-0 bg-black/50 z-40"
             variants={backdropVariants}
             initial="hidden"
@@ -83,7 +87,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <MotionDiv
               ref={modalRef}
               className="pointer-events-auto w-full max-w-2xl"
               variants={modalVariants}
@@ -223,7 +227,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   </form>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </>
       )}

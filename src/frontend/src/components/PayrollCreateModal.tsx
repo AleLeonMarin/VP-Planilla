@@ -2,11 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { usePayroll } from '@/hooks/usePayroll';
 import { useNominee } from '@/hooks/useNominee';
 import { XMarkIcon, CalendarIcon, DocumentTextIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
+
+// Lazy-load framer-motion animation primitives
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface Props {
   open: boolean;
@@ -98,7 +102,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <MotionDiv
             className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-40"
             variants={backdropVariants}
             initial="hidden"
@@ -109,7 +113,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <MotionDiv
               ref={modalRef}
               className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl pointer-events-auto overflow-hidden"
               variants={modalVariants}
@@ -229,7 +233,7 @@ export default function PayrollCreateModal({ open, onClose, periodStart, periodE
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </MotionDiv>
           </div>
         </>
       )}

@@ -1,9 +1,13 @@
 "use client";
 
 import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Notification } from "@/types/notification";
+
+// Lazy-load framer-motion animation primitives
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface NotificationPanelProps {
   open: boolean;
@@ -59,7 +63,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <MotionDiv
           className="fixed inset-0 z-50"
           variants={backdropVariants}
           initial="hidden"
@@ -70,7 +74,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
           <div className="absolute inset-0" onClick={onClose} />
 
           {/* Panel */}
-          <motion.div
+          <MotionDiv
             className="absolute top-16 right-6 w-80 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-[#E0D6B7] dark:border-zinc-800 z-50"
             variants={modalVariants}
             initial="hidden"
@@ -176,8 +180,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                 Ver todas las notificaciones
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </MotionDiv>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );

@@ -3,10 +3,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { Position } from '@/services/positionsService';
 import { Select, SelectItem } from '@/components/ui/Select';
+
+// Lazy-load framer-motion animation primitives
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface RawEmployeeData {
   employee_first_name?: string;
@@ -98,7 +102,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div
+            <MotionDiv
               className="fixed inset-0 bg-black/50 z-40"
               variants={backdropVariants}
               initial="hidden"
@@ -108,7 +112,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               onClick={onClose}
             />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-              <motion.div
+              <MotionDiv
                 className="pointer-events-auto bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-8"
                 variants={modalVariants}
                 initial="hidden"
@@ -119,7 +123,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
                   <p className="mt-4 text-zinc-700 dark:text-zinc-700 dark:text-zinc-300">Cargando empleado...</p>
                 </div>
-              </motion.div>
+              </MotionDiv>
             </div>
           </>
         )}
@@ -131,7 +135,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <MotionDiv
             className="fixed inset-0 bg-black/50 z-40"
             variants={backdropVariants}
             initial="hidden"
@@ -142,7 +146,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <MotionDiv
               ref={modalRef}
               className="pointer-events-auto w-full max-w-4xl"
               variants={modalVariants}
@@ -304,7 +308,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   </form>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </>
       )}
