@@ -105,7 +105,7 @@ Plans:
 | 11. Design System Dark Mode | v1.1 | 2/2 | ✅ Complete | 2026-03-31 |
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
-| 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-01 |
+| 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-02 |
 
 ### Phase 14: Servicio de Notificaciones
 **Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
