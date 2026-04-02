@@ -129,11 +129,13 @@ Plans:
 **Goal:** Todas las vistas del sistema muestran estados de carga (skeletons) y banners de error con reintento consistentes — ninguna vista queda en blanco indefinidamente
 **Requirements**: UI-POLISH-01, UI-POLISH-02, UI-POLISH-03
 **Depends on:** Phase 14
-**Plans:** 2/2 plans complete
+**Plans:** 4/4 plans (2 original + 2 gap closure)
 
 Plans:
 - [x] 15-01-PLAN.md — Skeleton loading + error banners en 6 list pages (deductions, vacations, branches, payroll-types, events, users)
 - [x] 15-02-PLAN.md — Skeleton loading + error banners en 12 complex pages (payroll, attendance, audit-logs, employee edit, notifications)
+- [ ] 15-03-PLAN.md — Fix error banner bugs: employee-deductions wrong condition + notifications duplicate banner
+- [ ] 15-04-PLAN.md — Add missing error banners to payroll detail, attendance, clocklogs, reports pages
 
 ### Phase 16: Mejorar rendimiento web — reducir LCP de 5.86s a <2.5s y mejorar CLS
 
