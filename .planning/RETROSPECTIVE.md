@@ -121,4 +121,4 @@
 
 ---
 
-*Last updated: 2026-03-31 after v1.0 milestone*
+*Last updated: 2026-04-02 after v1.1 milestone*
