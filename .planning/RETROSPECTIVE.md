@@ -52,15 +52,72 @@
 
 ---
 
+## Milestone: v1.1 — Calidad, UI Moderna y Cobertura de Tests
+
+**Shipped:** 2026-04-02
+**Phases:** 8 | **Plans:** 22 | **Tasks:** 30 | **Timeline:** 2 días
+
+### What Was Built
+
+1. 59 tests unitarios nuevos: EmployeeService, ClockLogService, DeductionService, AuthService (total: 104)
+2. Design system dark mode: tokens CSS globales, paleta zinc-950, sidebar moderno con colapso mobile
+3. UI dark consistente en todas las tablas, formularios y modales del sistema
+4. Integración frontend-backend auditada: 3 payload mismatches corregidos, errores concretos, skeletons + toasts
+5. Servicio de notificaciones completo: backend API (6 endpoints) + Header panel + página dedicada + polling 30s
+6. Skeleton loading + error banners con retry en 18 vistas del sistema
+7. Rendimiento web: ~1.55MB JS diferido, imágenes 11.5MB → 39KB (99.7% reducción)
+
+### What Worked
+
+- **Gap closure plans** permitieron iterar rápido sobre bugs encontrados en verificación (Phase 15-03/04, Phase 13 gap closure)
+- **Vertical slices** en Phase 13 (integración) — cada plan abordó un aspecto completo (audit, errores, skeletons, toasts)
+- **Dynamic imports** para librerías pesadas fue decisión correcta — FullCalendar y ExcelJS no bloquean el render inicial
+- **Image compression con sharp** redujo 11.5MB a 39KB automáticamente — mucho más eficiente que manual
+- **Sonner toasts** reemplazaron modales de notificación — feedback más limpio y no intrusivo
+
+### What Was Inefficient
+
+- TESTS-05 (60% coverage target) no alcanzable — 33% real. El target era demasiado ambicioso sin tests de NomineeService
+- Phase 13 grew to 9 plans (6 original + 3 gap closure) — scope creep from integration audit findings
+- Duplicate entries in STATE.md decisions — same decision logged 2-3 times from different phase executions
+- ROADMAP.md had duplicate Phase 14 entries and inconsistent formatting before cleanup
+
+### Patterns Established
+
+- Skeleton loading: `isLoading && data.length === 0` condition prevents flash during CRUD mutations
+- Error banners: three separate early returns (loading → error → content) instead of conditional rendering
+- Field names: frontend must match backend controller destructuring exactly (labor_event_id, not labor_event_ids)
+- Dark mode: zinc-* palette exclusively for all dark: variants — no gray-*, no duplicate dark: classes
+- Toast notifications: sonner for CRUD feedback, not modals
+- Image optimization: sharp with palette optimization + dimension resizing for LCP-critical images
+
+### Key Lessons
+
+- Coverage targets should be realistic — 60% across all services requires tests for complex modules like NomineeService
+- Integration audits naturally expand scope — budget extra plans for gap closure
+- STATE.md needs deduplication mechanism for decisions logged across multiple phase executions
+- Phase numbering should be consolidated early — Phase 17 was created then merged into Phase 16
+
+### Cost Observations
+
+- Model mix: executor=sonnet, planner=opus, checker=sonnet
+- 8 phases completed in 2 days
+- Gap closure plans were efficient — focused fixes rather than re-planning entire phases
+- Image compression (Phase 16-03) was high-value: small effort, massive impact (99.7% reduction)
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 |
-|--------|------|
-| Phases | 8 |
-| Plans | 22 |
-| Tests | 45 |
-| Duration | 3 días |
-| Failures at close | 0 |
+| Metric | v1.0 | v1.1 |
+|--------|------|------|
+| Phases | 8 | 8 |
+| Plans | 22 | 22 |
+| Tasks | — | 30 |
+| Tests | 45 | 104 |
+| Duration | 3 días | 2 días |
+| Failures at close | 0 | 0 |
+| Known gaps | 2 | 2 |
 
 ---
 
