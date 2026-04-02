@@ -103,6 +103,19 @@ export default function EmployeeDeductionsPage() {
           </p>
         </div>
 
+        {/* Error banners */}
+        {loadingDeductions && loadingEmpDeductions && (
+          <div className="mb-6 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <svg className="w-10 h-10 mb-3 text-red-500 dark:text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar datos</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">No se pudieron cargar las deducciones</p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
             <div className="flex items-center justify-between mb-4">

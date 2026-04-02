@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import EmployeeStatsCards from '@/components/EmployeeStatsCards';
 import EmployeeTable from '@/components/EmployeeTable';
 import AddEmployeeModal from '@/components/AddEmployeeModal';
@@ -23,6 +23,7 @@ const EmployeeListPage: React.FC = () => {
     stats,
     positions,
     positionsLoading,
+    positionsError,
     showAddEmployeeModal,
     showEditEmployeeModal,
     editingEmployeeData,
@@ -43,7 +44,8 @@ const EmployeeListPage: React.FC = () => {
     refreshPositions,
     openAddEmployeeModal,
     closeAddEmployeeModal,
-    closeEditEmployeeModal
+    closeEditEmployeeModal,
+    refreshEmployees
   } = useEmployeeList();
 
   return (
@@ -80,6 +82,21 @@ const EmployeeListPage: React.FC = () => {
 
         <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
+        {/* Error banner for positions */}
+        {positionsError && (
+          <div className="mb-4 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <ExclamationTriangleIcon className="w-10 h-10 mb-3 text-red-500 dark:text-red-400 mx-auto" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al cargar posiciones</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{positionsError}</p>
+              <button onClick={refreshPositions} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors mx-auto">
+                <ArrowPathIcon className="w-4 h-4" />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Employee Tabs */}
         <EmployeeTabs />
 
@@ -95,18 +112,6 @@ const EmployeeListPage: React.FC = () => {
           showFiredEmployees={showFiredEmployees}
           onToggleFiredEmployees={setShowFiredEmployees}
         />
-
-        {positionsLoading && (
-          <div className="mt-4 text-center text-sm text-zinc-400 dark:text-zinc-500 animate-pulse">
-            Cargando posiciones...
-          </div>
-        )}
-
-        {positionsLoading && (
-          <div className="mt-4 text-center text-sm text-zinc-400 dark:text-zinc-500 animate-pulse">
-            Cargando posiciones...
-          </div>
-        )}
 
       </div>
 

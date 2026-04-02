@@ -106,6 +106,8 @@ Plans:
 | 12. Tablas, Formularios y Modales | v1.1 | 3/3 | ✅ Complete | 2026-04-01 |
 | 13. Integración Frontend-Backend | v1.1 | 0/? | Not started | - |
 | 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-02 |
+| 14. Servicio de Notificaciones | v1.1 | 2/2 | Complete    | 2026-04-02 |
+| 15. UI Polish - Skeletons y Error Banners | v1.1 | 2/2 | ✅ Complete | 2026-04-02 |
 
 ### Phase 14: Servicio de Notificaciones
 **Goal**: El sistema cuenta con un servicio de notificaciones funcional que informa a los usuarios sobre eventos relevantes del sistema (planillas generadas, pagos procesados, etc.)
@@ -127,11 +129,11 @@ Plans:
 **Goal:** Todas las vistas del sistema muestran estados de carga (skeletons) y banners de error con reintento consistentes — ninguna vista queda en blanco indefinidamente
 **Requirements**: UI-POLISH-01, UI-POLISH-02, UI-POLISH-03
 **Depends on:** Phase 14
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed ✅
 
 Plans:
 - [x] 15-01-PLAN.md — Skeleton loading + error banners en 6 list pages (deductions, vacations, branches, payroll-types, events, users)
-- [ ] 15-02-PLAN.md — Skeleton loading + error banners en 12 complex pages (payroll, attendance, audit-logs, employee edit, notifications)
+- [x] 15-02-PLAN.md — Skeleton loading + error banners en 12 complex pages (payroll, attendance, audit-logs, employee edit, notifications)
 
 ### Phase 16: Mejorar rendimiento web — reducir LCP de 5.86s a <2.5s y mejorar CLS
 
