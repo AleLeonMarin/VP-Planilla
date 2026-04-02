@@ -13,9 +13,9 @@ export interface EmployeeIncidenceCardProps {
 // Client Component
 const EmployeeIncidenceCard: React.FC<EmployeeIncidenceCardProps> = ({ faltaTiempo, llegadaTardia, sobraTiempo, sinMarcas }) => {
   return (
-    <div className="bg-[#FCF1D5] dark:bg-[#2d2d2d] p-4 rounded-lg min-w-[220px]">
-      <div className="mb-2 text-sm font-semibold text-black dark:text-[#E5E5E5]">Días con incidencia</div>
-      <ul className="text-xs text-zinc-600 dark:text-[#A3A3A3]">
+    <div className="bg-[#FCF1D5] dark:bg-zinc-800 p-4 rounded-lg min-w-[220px]">
+      <div className="mb-2 text-sm font-semibold text-[#4A5D3A] dark:text-zinc-100">Días con incidencia</div>
+      <ul className="text-xs text-zinc-600 dark:text-zinc-400">
         <li className="flex justify-between mb-1"><span><Image src="/images/layout/timeLeft.png" alt="Falta tiempo" width={26} height={25} loading="lazy" /></span><span className="">Falta tiempo</span> <span>{faltaTiempo}</span></li>
         <li className="flex justify-between mb-1"><span><Image src="/images/layout/lateArrival.png" alt="Llegada tardía" width={26} height={25} loading="lazy" /></span><span className="">Llegada tardía</span> <span>{llegadaTardia}</span></li>
         <li className="flex justify-between mb-1"><span><Image src="/images/layout/overtime.png" alt="Sobra tiempo" width={26} height={25} loading="lazy" /></span><span className="">Sobra tiempo</span> <span>{sobraTiempo}</span></li>

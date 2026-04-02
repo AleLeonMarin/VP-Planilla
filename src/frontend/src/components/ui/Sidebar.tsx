@@ -62,7 +62,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
   ];
 
   return (
-    <aside className="w-56 lg:w-60 bg-[#FCF1D5] dark:bg-zinc-900 text-white flex flex-col shadow-sm border-r border-[#E0D6B7] dark:border-zinc-800 h-screen overflow-hidden">
+    <aside className="w-56 lg:w-60 bg-[#FCF1D5] dark:bg-zinc-900 text-[#4A5D3A] dark:text-zinc-100 flex flex-col shadow-sm border-r border-[#E0D6B7] dark:border-zinc-800 h-screen overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 md:hidden">
         <Image src="/images/Logo.png" alt="Verde Gestión Logo" width={35} height={35} className="mr-2 rounded-full" loading="eager" />
         <button

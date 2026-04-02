@@ -121,7 +121,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               >
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                  <p className="mt-4 text-zinc-700 dark:text-zinc-700 dark:text-zinc-300">Cargando empleado...</p>
+                  <p className="mt-4 text-zinc-700 dark:text-zinc-300">Cargando empleado...</p>
                 </div>
               </MotionDiv>
             </div>
@@ -174,21 +174,21 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                 <div className="max-h-[70vh] overflow-y-auto p-6">
                   <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
                     <div>
-                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-300 dark:border-zinc-700">
+                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-700">
                         Datos Personales
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Primer nombre *</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Primer nombre *</label>
                           <input {...register('employee_first_name')} className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                           {errors.employee_first_name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_first_name?.message)}</p>}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Segundo nombre</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Segundo nombre</label>
                           <input {...register('employee_middle_name')} className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Apellidos *</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Apellidos *</label>
                           <input {...register('employee_last_name')} className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                           {errors.employee_last_name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_last_name?.message)}</p>}
                         </div>
@@ -196,46 +196,46 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                     </div>
 
                     <div>
-                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-300 dark:border-zinc-700">
+                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-700">
                         Identificación
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Cédula de identidad *</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cédula de identidad *</label>
                           <input {...register('employee_national_id')} placeholder="1-2345-6789" className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                           {errors.employee_national_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_national_id?.message)}</p>}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Código de la CCSS</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Código de la CCSS</label>
                           <input {...register('employee_social_code')} placeholder="123456789012" className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-300 dark:border-zinc-700">
+                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-700">
                         Información de Contacto
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Correo electrónico *</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Correo electrónico *</label>
                           <input {...register('employee_email')} type="email" placeholder="juan.rodriguez@empresa.com" className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                           {errors.employee_email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_email?.message)}</p>}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Número telefónico</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Número telefónico</label>
                           <input {...register('employee_phone')} placeholder="8888-1234" className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 placeholder-zinc-500" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-300 dark:border-zinc-700">
+                      <h3 className="text-base font-medium text-zinc-700 dark:text-zinc-100 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-700">
                         Información Laboral
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Posición *</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Posición *</label>
                           <Controller
                             name="employee_position_id"
                             control={control}
@@ -259,12 +259,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Fecha de contratación</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Fecha de contratación</label>
                           <input {...register('employee_hire_date')} type="date" className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100" />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-700 dark:text-zinc-300 mb-1">Horas requeridas por quincena</label>
+                          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Horas requeridas por quincena</label>
                           <input 
                             {...register('employee_required_hours_biweekly')} 
                             type="number"
