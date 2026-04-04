@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 import { LaborEventsService } from '@/services/laborEventsService';
+import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
+
+const CACHE_KEY = 'vp_labor_events_cache';
 
 type ApiLaborEvent = EmployeeLaborEvent & {
   employee_labor_event_employee_id?: number;
@@ -19,12 +22,14 @@ export const useLaborEvents = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = async () => {
+    const cached = readCache<EmployeeLaborEvent[]>(CACHE_KEY);
+    if (cached) { setEvents(cached); return; }
     setIsLoading(true);
     setError(null);
     try {
       const data = await LaborEventsService.getAllLaborEvents();
       const employeeEvents = data.employeeEvents || [];
-      
+
       const mapped = (employeeEvents as ApiLaborEvent[]).map(ev => ({
         id: ev.id,
         employee_id: ev.employee_labor_event_employee_id || ev.employee_id,
@@ -36,8 +41,9 @@ export const useLaborEvents = () => {
         labor_event_name: ev.labor_event_name,
         labor_event_description: ev.labor_event_description,
       } as EmployeeLaborEvent));
-      
+
       setEvents(mapped);
+      writeCache(CACHE_KEY, mapped);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -70,6 +76,7 @@ export const useLaborEvents = () => {
       };
 
       const assignedEvent = await LaborEventsService.assignLaborEventToEmployee(assignPayload);
+      invalidateCache(CACHE_KEY);
       await fetchEvents();
       
       return {
@@ -170,6 +177,7 @@ export const useLaborEvents = () => {
   const deleteEvent = async (id: number): Promise<void> => {
     try {
       await LaborEventsService.deleteLaborEvent(id);
+      invalidateCache(CACHE_KEY);
       setEvents(prev => prev.filter(event => event.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar evento');
@@ -180,6 +188,7 @@ export const useLaborEvents = () => {
   const deleteAssignment = async (id: number): Promise<void> => {
     try {
       await LaborEventsService.deleteEmployeeLaborEvent(id);
+      invalidateCache(CACHE_KEY);
       await fetchEvents();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar asignación');
@@ -192,12 +201,13 @@ export const useLaborEvents = () => {
       const assignedEvent = await LaborEventsService.assignLaborEventToEmployee({
         employee_id: eventData.employee_id,
         labor_event_id: eventData.labor_event_id,
-        start_date: eventData.start_date instanceof Date ? 
+        start_date: eventData.start_date instanceof Date ?
           eventData.start_date.toISOString() : eventData.start_date as string,
-        end_date: eventData.end_date ? 
+        end_date: eventData.end_date ?
           (eventData.end_date instanceof Date ? eventData.end_date.toISOString() : eventData.end_date as string) : null,
         status: eventData.status
       });
+      invalidateCache(CACHE_KEY);
       await fetchEvents();
       return assignedEvent;
     } catch (err) {

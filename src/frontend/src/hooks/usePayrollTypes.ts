@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { PayrollTypesService, PayrollType, PayrollTypePayload } from '@/services/payrollTypesService';
+import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
+
+const CACHE_KEY = 'vp_payroll_types_cache';
 
 /**
  * Hook personalizado para manejar operaciones CRUD de tipos de planilla
@@ -15,11 +18,14 @@ export const usePayrollTypes = () => {
    * Obtiene todos los tipos de planilla del backend
    */
   const fetchAll = useCallback(async () => {
+    const cached = readCache<PayrollType[]>(CACHE_KEY);
+    if (cached) { setData(cached); return; }
     setIsLoading(true);
     setError(null);
     try {
       const res = await PayrollTypesService.getAllPayrollTypes();
       setData(res);
+      writeCache(CACHE_KEY, res);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cargando tipos de planilla');
     } finally {
@@ -41,6 +47,7 @@ export const usePayrollTypes = () => {
     setIsLoading(true);
     try {
       const created = await PayrollTypesService.createPayrollType(payload);
+      invalidateCache(CACHE_KEY);
       setData(prev => prev ? [created, ...prev] : [created]);
       return created;
     } finally { 
@@ -58,6 +65,7 @@ export const usePayrollTypes = () => {
     setIsLoading(true);
     try {
       const updated = await PayrollTypesService.updatePayrollType(id, payload);
+      invalidateCache(CACHE_KEY);
       setData(prev => prev ? prev.map(p => p.id === id ? updated : p) : [updated]);
       return updated;
     } finally { 
