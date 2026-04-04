@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { PositionsService, Position } from '@/services/positionsService';
+import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
+
+const CACHE_KEY = 'vp_positions_cache';
 
 export const usePositions = () => {
   const [data, setData] = useState<Position[] | null>(null);
@@ -9,10 +12,16 @@ export const usePositions = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
+    const cached = readCache<Position[]>(CACHE_KEY);
+    if (cached) {
+      setData(cached);
+      return;
+    }
     setIsFetching(true);
     setError(null);
     try {
       const res = await PositionsService.getAllPositions();
+      writeCache(CACHE_KEY, res);
       setData(res);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cargando posiciones');
@@ -26,6 +35,7 @@ export const usePositions = () => {
   const create = async (payload: Partial<Position>) => {
     setIsMutating(true);
     try {
+      invalidateCache(CACHE_KEY);
       const created = await PositionsService.createPosition(payload);
       setData(prev => prev ? [created, ...prev] : [created]);
       return created;
@@ -35,6 +45,7 @@ export const usePositions = () => {
   const update = async (id: number, payload: Partial<Position>) => {
     setIsMutating(true);
     try {
+      invalidateCache(CACHE_KEY);
       const updated = await PositionsService.updatePosition(id, payload);
       setData(prev => prev ? prev.map(p => p.id === id ? updated : p) : [updated]);
       return updated;
@@ -44,6 +55,7 @@ export const usePositions = () => {
   const remove = async (id: number) => {
     setIsMutating(true);
     try {
+      invalidateCache(CACHE_KEY);
       await PositionsService.deletePosition(id);
       setData(prev => prev ? prev.filter(p => p.id !== id) : null);
     } finally { setIsMutating(false); }
