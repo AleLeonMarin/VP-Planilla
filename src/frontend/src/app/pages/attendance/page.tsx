@@ -664,7 +664,7 @@ export default function AttendancePage() {
       try {
         const saveResult = await ClockLogsService.bulkSave(result.logs);
         console.log('✅ Marcas guardadas en BD:', saveResult);
-        const skippedCount = saveResult.skipped_count ?? saveResult.skipped?.length ?? 0;
+        const skippedCount = saveResult.skipped?.length ?? 0;
         const skippedMsg = skippedCount > 0
           ? ` ${skippedCount} marcas ignoradas por empleado no encontrado.`
           : '';
