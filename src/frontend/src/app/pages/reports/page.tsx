@@ -135,7 +135,6 @@ export default function ReportsPage() {
     if (selectedPayrollId) {
       refreshDataset(selectedPayrollId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPayrollId]);
 
   const currentPayroll = useMemo<ReportablePayrollSummary | undefined>(() => {

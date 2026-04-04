@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { toast } from 'sonner';
 import { PositionsService, Position } from '@/services/positionsService';
 import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
 

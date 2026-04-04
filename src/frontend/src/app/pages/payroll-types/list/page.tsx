@@ -62,7 +62,7 @@ export default function PayrollTypesPage() {
         await update(editing.id, values);
         toast.success('Tipo de planilla actualizado correctamente');
       } else {
-        await create({ name: values.name!, description: values.description!, frequency: (values as any).frequency || 'mensual' });
+        await create({ name: values.name!, description: values.description!, frequency: (values as Record<string, unknown>).frequency as string || 'mensual' });
         toast.success('Tipo de planilla creado correctamente');
       }
       refetch();

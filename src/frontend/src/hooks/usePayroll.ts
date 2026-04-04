@@ -15,7 +15,6 @@ export const usePayroll = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error getting payrolls';
       setError(err instanceof Error ? err.message : 'Error getting payrolls');
       throw err;
     } finally {
@@ -48,7 +47,6 @@ export const usePayroll = () => {
       setData(res);
       return res;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error getting payroll';
       setError(err instanceof Error ? err.message : 'Error getting payroll');
       throw err;
     } finally {

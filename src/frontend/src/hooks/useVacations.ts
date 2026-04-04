@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { toast } from 'sonner';
 import { VacationsService, Vacation } from '@/services/vacationsService';
 import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
 

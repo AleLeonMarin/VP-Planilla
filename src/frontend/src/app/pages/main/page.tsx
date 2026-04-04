@@ -12,7 +12,6 @@ import {
   ChartBarIcon,
   ClockIcon,
   UserGroupIcon,
-  DocumentTextIcon,
   CalculatorIcon,
   ClipboardDocumentCheckIcon,
   ChevronLeftIcon,

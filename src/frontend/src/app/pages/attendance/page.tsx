@@ -6,7 +6,6 @@ import { ClockLogsService, ClockLog } from '@/services/clockLogsService';
 import { getEmployees } from '@/services/employeeService';
 import {
   ClockIcon,
-  CalendarIcon,
   ArrowPathIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -947,7 +946,7 @@ export default function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {data.map((entry, idx) => {
+                  {data.map((entry) => {
                     const key = `${entry.employee_id}_${entry.date}`;
                     const isExpanded = expandedRows.has(key);
                     const balance = entry.hours_worked - 8;
