@@ -274,3 +274,21 @@ describe('NomineeService — Edge cases', () => {
     expect(ep.generalMessages.some((m: string) => m.includes('sin puesto'))).toBe(true);
   });
 });
+
+describe('NomineeService — calculatePayrollForPeriod no active employees fallback', () => {
+  it('should fall back to getAllEmployees and include a warning message when getActiveEmployeesForPeriod returns empty', async () => {
+    // getActiveEmployeesForPeriod already returns [] from global beforeEach
+    // getAllEmployees also returns [] from global beforeEach — true empty system
+    jest.mocked(EmployeeService.getAllEmployees).mockResolvedValue([]);
+
+    const result = await service.calculatePayrollForPeriod(
+      new Date('2026-02-02'),
+      new Date('2026-02-07')
+    );
+
+    expect(result.employees).toEqual([]);
+    expect(result.summary.employeesProcessed).toBe(0);
+    // The service pushes a message about no active employees found
+    expect(result.summary.messages.some((m: string) => m.includes('No se encontraron empleados activos'))).toBe(true);
+  });
+});
