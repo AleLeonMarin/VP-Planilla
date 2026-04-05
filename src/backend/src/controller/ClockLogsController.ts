@@ -1,22 +1,7 @@
 import { Request, Response } from "express";
-import { ClockLogsService } from "../service/ClockLogsService";
+import { ClockLogsService, ClockLogSource } from "../service/ClockLogsService";
 import { prisma } from "../lib/prisma";
-
-/**
- * Normalizes clock log type to IN or OUT for payroll calculation compatibility.
- * Handles Spanish/English variants from Excel imports.
- */
-function normalizeLogType(value: string): string {
-    const v = value.toLowerCase().trim();
-    const inTypes = ['in', 'entrada', 'entry', 'start', 'check_in', 'checkin'];
-    const outTypes = ['out', 'salida', 'exit', 'end', 'check_out', 'checkout', 'salida final', 'fin turno'];
-    if (inTypes.includes(v)) return 'IN';
-    if (outTypes.includes(v)) return 'OUT';
-    // For lunch/break: treat LUNCH_OUT as OUT and LUNCH_IN as IN (paired calculation)
-    if (['almuerzo', 'almuerzo_salida', 'lunch_out', 'break_out', 'salida almuerzo'].includes(v)) return 'OUT';
-    if (['almuerzo_entrada', 'lunch_in', 'break_in', 'entrada almuerzo'].includes(v)) return 'IN';
-    return value.toUpperCase();
-}
+import { normalizeLogType } from "../utils/clockLogNormalization";
 
 function normalizeName(value: string) {
     return (value || '')
@@ -28,8 +13,8 @@ function normalizeName(value: string) {
 }
 
 async function resolveEmployeeId(
-    employee_id: any,
-    employee_name: any
+    employee_id: unknown,
+    employee_name: unknown
 ): Promise<number | null> {
     if (employee_id != null) {
         const n = Number(employee_id);
@@ -76,7 +61,6 @@ export class ClockLogsController {
      */
     async getClockLogs(req: Request, res: Response): Promise<Response> {
         const { initDate, endDate } = req.query;
-        let nomineeLogs;
 
         if (!initDate || !endDate) {
             return res.status(400).json({ error: "initDate and endDate are required" });
@@ -89,8 +73,46 @@ export class ClockLogsController {
                 endDate: new Date(endDate as string)
             });
             return res.json(logs);
-            nomineeLogs = logs;
+        } catch (error) {
+            return res.status(500).json({ error: "Internal server error" });
+        }
+    }
 
+    /**
+     * Get aggregated stats grouped by status and source for a date range
+     * GET /clock-logs/stats?initDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+     * @param req - Express request object containing initDate and endDate query parameters
+     * @param res - Express response object
+     * @returns Promise<Response> - HTTP response with stats data or error
+     */
+    async getStats(req: Request, res: Response): Promise<Response> {
+        const { initDate, endDate } = req.query;
+
+        if (!initDate || !endDate) {
+            return res.status(400).json({ error: "initDate and endDate are required" });
+        }
+
+        const service = new ClockLogsService();
+        try {
+            const stats = await service.getStats(
+                new Date(initDate as string),
+                new Date(endDate as string)
+            );
+
+            const byStatus: Record<string, number> = {};
+            const bySource: Record<string, number> = {};
+            let total = 0;
+
+            for (const s of stats) {
+                byStatus[s.status] = (byStatus[s.status] || 0) + s.count;
+                bySource[s.source] = (bySource[s.source] || 0) + s.count;
+                total += s.count;
+            }
+
+            return res.json({
+                success: true,
+                data: { byStatus, bySource, total }
+            });
         } catch (error) {
             return res.status(500).json({ error: "Internal server error" });
         }
@@ -129,12 +151,18 @@ export class ClockLogsController {
                 continue;
             }
 
-            resolved.push({
-                employee_id: employeeId,
-                timestamp,
-                log_type: normalizeLogType(String(l.log_type)),
-                remarks: l.remarks ?? null
-            });
+            try {
+                const normalizedType = normalizeLogType(String(l.log_type));
+                resolved.push({
+                    employee_id: employeeId,
+                    timestamp,
+                    log_type: normalizedType,
+                    remarks: l.remarks ?? null
+                });
+            } catch (error) {
+                skipped.push(`Tipo de marca desconocido: "${l.log_type}"`);
+                continue;
+            }
         }
 
         if (!resolved.length) {
@@ -146,7 +174,8 @@ export class ClockLogsController {
 
         const service = new ClockLogsService();
         try {
-            const result = await service.bulkCreate(resolved);
+            const source: ClockLogSource = 'manual';
+            const result = await service.bulkCreate(resolved, source);
             return res.status(201).json({
                 success: true,
                 created: result.created,
