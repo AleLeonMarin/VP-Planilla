@@ -16,12 +16,15 @@ const mockPrismaClockLog = {
   clock_logs_log_type: 'IN',
   clock_logs_remarks: 'On time',
   clock_logs_version: 1,
+  clock_logs_status: 'pending',
+  clock_logs_source: 'manual',
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
   prisma.vpg_clock_logs.createMany.mockResolvedValue({ count: 0 });
+  prisma.vpg_clock_logs.groupBy.mockResolvedValue([]);
 });
 
 describe('ClockLogsService', () => {
@@ -61,7 +64,7 @@ describe('ClockLogsService', () => {
       expect(result).toEqual([]);
     });
 
-    it('should map snake_case DB fields to camelCase output', async () => {
+    it('should map snake_case DB fields to camelCase output including status and source', async () => {
       prisma.vpg_clock_logs.findMany.mockResolvedValue([mockPrismaClockLog]);
 
       const result = await service.getClockLogs({
@@ -76,6 +79,8 @@ describe('ClockLogsService', () => {
         log_type: 'IN',
         remarks: 'On time',
         version: 1,
+        status: 'pending',
+        source: 'manual',
       });
     });
 
@@ -147,6 +152,95 @@ describe('ClockLogsService', () => {
 
       await expect(
         service.bulkCreate([{ employee_id: 1, timestamp: new Date(), log_type: 'IN' }]),
+      ).rejects.toThrow('DB error');
+    });
+
+    // NOTE: TRACK-01 requires bulkCreate to explicitly set clock_logs_status: 'pending'.
+    // Current implementation relies on DB DEFAULT(pending) instead of setting it explicitly.
+    // This is an implementation bug — the test below documents the expected behavior.
+    // Once the implementation is fixed, this test should pass.
+    it('should set clock_logs_status to pending in createMany data (TRACK-01) — ESCALATED: impl relies on DB default', async () => {
+      prisma.vpg_clock_logs.createMany.mockResolvedValue({ count: 1 });
+
+      await service.bulkCreate([
+        { employee_id: 1, timestamp: new Date('2026-02-02T08:00:00Z'), log_type: 'IN' },
+      ]);
+
+      const call = prisma.vpg_clock_logs.createMany.mock.lastCall;
+      const data = call[0].data;
+      expect(data).toHaveLength(1);
+      // ESCALATED: Implementation does not set clock_logs_status explicitly.
+      // Expected: data[0].clock_logs_status === 'pending'
+      // Actual: data[0].clock_logs_status === undefined (relies on DB DEFAULT)
+      // Fix needed in ClockLogsService.ts bulkCreate: add clock_logs_status: 'pending'
+      expect(data[0].clock_logs_status).toBe('pending');
+    });
+
+    it('should set clock_logs_source from parameter in createMany data (TRACK-02)', async () => {
+      prisma.vpg_clock_logs.createMany.mockResolvedValue({ count: 2 });
+
+      await service.bulkCreate(
+        [
+          { employee_id: 1, timestamp: new Date('2026-02-02T08:00:00Z'), log_type: 'IN' },
+          { employee_id: 2, timestamp: new Date('2026-02-02T09:00:00Z'), log_type: 'OUT' },
+        ],
+        'java_import',
+      );
+
+      const call = prisma.vpg_clock_logs.createMany.mock.lastCall;
+      const data = call[0].data;
+      expect(data[0].clock_logs_source).toBe('java_import');
+      expect(data[1].clock_logs_source).toBe('java_import');
+    });
+
+    it('should default clock_logs_source to manual when not provided (TRACK-02)', async () => {
+      prisma.vpg_clock_logs.createMany.mockResolvedValue({ count: 1 });
+
+      await service.bulkCreate([
+        { employee_id: 1, timestamp: new Date('2026-02-02T08:00:00Z'), log_type: 'IN' },
+      ]);
+
+      const call = prisma.vpg_clock_logs.createMany.mock.lastCall;
+      const data = call[0].data;
+      expect(data[0].clock_logs_source).toBe('manual');
+    });
+  });
+
+  describe('getStats', () => {
+    it('should return grouped results by status and source', async () => {
+      prisma.vpg_clock_logs.groupBy.mockResolvedValue([
+        { clock_logs_status: 'pending', clock_logs_source: 'manual', _count: 5 },
+        { clock_logs_status: 'valid', clock_logs_source: 'java_import', _count: 10 },
+        { clock_logs_status: 'valid', clock_logs_source: 'manual', _count: 3 },
+      ]);
+
+      const result = await service.getStats(
+        new Date('2026-02-01'),
+        new Date('2026-02-28'),
+      );
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toEqual({ status: 'pending', source: 'manual', count: 5 });
+      expect(result[1]).toEqual({ status: 'valid', source: 'java_import', count: 10 });
+      expect(result[2]).toEqual({ status: 'valid', source: 'manual', count: 3 });
+    });
+
+    it('should return empty array for no matching records', async () => {
+      prisma.vpg_clock_logs.groupBy.mockResolvedValue([]);
+
+      const result = await service.getStats(
+        new Date('2026-03-01'),
+        new Date('2026-03-31'),
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw if database fails', async () => {
+      prisma.vpg_clock_logs.groupBy.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.getStats(new Date('2026-02-01'), new Date('2026-02-28')),
       ).rejects.toThrow('DB error');
     });
   });
