@@ -7,4 +7,5 @@ export interface ClockLogs {
   version: number;
   status: 'pending' | 'valid' | 'anomaly' | 'corrected' | 'orphan';
   source: 'java_import' | 'excel_import' | 'manual';
+  import_session_id?: number;
 }
