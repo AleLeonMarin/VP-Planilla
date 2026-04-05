@@ -66,16 +66,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems })
               <Link
                 key={subItem.href}
                 href={subItem.href}
-                className={`flex items-center gap-2 pl-5 pr-2 py-1.5 rounded-md transition-all duration-200 text-xs relative ${
+                className={`flex items-center pl-3 pr-2 py-1.5 rounded-md transition-all duration-200 text-xs ${
                   subActive
                     ? 'text-green-700 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-900/20'
                     : 'text-[#6B7556] dark:text-zinc-500 hover:text-[#3A4D2A] dark:hover:text-zinc-200 hover:bg-[#E7DCC1] dark:hover:bg-zinc-800'
                 }`}
               >
-                {/* Dot conector */}
-                <span className={`absolute left-[14px] w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  subActive ? 'bg-green-600' : 'bg-[#C0B898] dark:bg-zinc-600'
-                }`} />
                 {subItem.text}
               </Link>
             );
