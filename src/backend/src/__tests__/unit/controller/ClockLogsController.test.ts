@@ -165,4 +165,366 @@ describe('ClockLogsController', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
   });
+
+  describe('getOrphans', () => {
+    it('should return paginated orphan logs with proper response shape', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        bulkCreate: jest.fn().mockResolvedValue({ created: 0 }),
+        getStats: jest.fn().mockResolvedValue([]),
+        getClockLogs: jest.fn().mockResolvedValue([]),
+        getOrphans: jest.fn().mockResolvedValue({
+          data: [
+            {
+              id: 1,
+              employee_id: 101,
+              employee_name: 'Juan Pérez',
+              employee_social_code: '123',
+              timestamp: new Date('2026-02-02T08:00:00Z'),
+              log_type: 'IN',
+              remarks: 'Missing OUT',
+              status: 'orphan',
+              source: 'java_import',
+              import_session_id: undefined
+            }
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 20
+        }),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { page: '1', pageSize: '20' },
+      });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: expect.any(Array),
+        total: 1,
+        page: 1,
+        pageSize: 20
+      });
+    });
+
+    it('should return 400 for invalid initDate', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: 'invalid-date', endDate: '2026-02-28' },
+      });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('should return 400 for invalid endDate', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: '2026-02-01', endDate: 'invalid' },
+      });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('should handle internal server errors', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        getOrphans: jest.fn().mockRejectedValue(new Error('DB error')),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: {} });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('getAnomalies', () => {
+    it('should return paginated anomaly logs with proper response shape', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        bulkCreate: jest.fn().mockResolvedValue({ created: 0 }),
+        getStats: jest.fn().mockResolvedValue([]),
+        getClockLogs: jest.fn().mockResolvedValue([]),
+        getAnomalies: jest.fn().mockResolvedValue({
+          data: [
+            {
+              id: 10,
+              employee_id: 201,
+              employee_name: 'Carlos Ramírez',
+              employee_social_code: '987',
+              timestamp: new Date('2026-02-05T12:00:00Z'),
+              log_type: 'IN',
+              remarks: 'Outside normal hours',
+              status: 'anomaly',
+              source: 'manual',
+              import_session_id: undefined
+            }
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10
+        }),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { page: '1', pageSize: '10' },
+      });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: expect.any(Array),
+        total: 1,
+        page: 1,
+        pageSize: 10
+      });
+    });
+
+    it('should return 400 for invalid initDate', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: 'invalid', endDate: '2026-02-28' },
+      });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('should return 400 for invalid endDate', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: '2026-02-01', endDate: 'invalid' },
+      });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('should handle internal server errors', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        getAnomalies: jest.fn().mockRejectedValue(new Error('DB error')),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: {} });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('resolveOrphan', () => {
+    it('should return 400 for invalid orphan ID', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: 'abc' },
+        body: { action: 'discard', justification: 'Test' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'ID de marca inválido' });
+    });
+
+    it('should return 404 when orphan not found', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        resolveOrphan: jest.fn().mockRejectedValue(new Error('Marca no encontrada')),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+        getOrphans: jest.fn(),
+        getAnomalies: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '999' },
+        body: { action: 'discard', justification: 'Test' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Marca no encontrada' });
+    });
+
+    it('should return 400 when log is not an orphan', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        resolveOrphan: jest.fn().mockRejectedValue(new Error('La marca no tiene status orphan')),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+        getOrphans: jest.fn(),
+        getAnomalies: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: { action: 'discard', justification: 'Test' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'La marca no tiene status orphan' });
+    });
+
+    it('should return 400 when complement data missing for assign_complement', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: { action: 'assign_complement', justification: 'Test' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'complementTimestamp y complementLogType son requeridos para assign_complement'
+      });
+    });
+
+    it('should return 400 for invalid complement timestamp', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: {
+          action: 'assign_complement',
+          justification: 'Test',
+          complementTimestamp: 'invalid',
+          complementLogType: 'OUT'
+        },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Timestamp de complemento inválido' });
+    });
+
+    it('should successfully discard orphan', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        resolveOrphan: jest.fn().mockResolvedValue({
+          success: true,
+          message: 'Huérfana descartada exitosamente'
+        }),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+        getOrphans: jest.fn(),
+        getAnomalies: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: { action: 'discard', justification: 'Duplicate' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Huérfana descartada exitosamente'
+      });
+    });
+
+    it('should successfully assign complement', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        resolveOrphan: jest.fn().mockResolvedValue({
+          success: true,
+          message: 'Huérfana resuelta con complemento exitosamente'
+        }),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+        getOrphans: jest.fn(),
+        getAnomalies: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: {
+          action: 'assign_complement',
+          justification: 'Missing OUT',
+          complementTimestamp: '2026-02-10T17:00:00Z',
+          complementLogType: 'OUT'
+        },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Huérfana resuelta con complemento exitosamente'
+      });
+    });
+
+    it('should propagate internal server errors', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      MockService.mockImplementation(() => ({
+        resolveOrphan: jest.fn().mockRejectedValue(new Error('Unexpected error')),
+        bulkCreate: jest.fn(),
+        getStats: jest.fn(),
+        getClockLogs: jest.fn(),
+        getOrphans: jest.fn(),
+        getAnomalies: jest.fn(),
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        params: { id: '500' },
+        body: { action: 'discard', justification: 'Test' },
+      });
+      const res = createMockResponse();
+
+      await controller.resolveOrphan(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Error interno del servidor' });
+    });
+  });
 });

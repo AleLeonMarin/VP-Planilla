@@ -244,4 +244,280 @@ describe('ClockLogsService', () => {
       ).rejects.toThrow('DB error');
     });
   });
+
+  describe('getOrphans', () => {
+    const mockOrphanLogs = [
+      {
+        clock_logs_id: 1,
+        clock_logs_employee_id: 101,
+        clock_logs_timestamp: new Date('2026-02-02T08:00:00.000Z'),
+        clock_logs_log_type: 'IN',
+        clock_logs_remarks: 'Missing OUT',
+        clock_logs_status: 'orphan',
+        clock_logs_source: 'java_import',
+        vpg_employees: {
+          employee_id: 101,
+          employee_first_name: 'Juan',
+          employee_last_name: 'Pérez',
+          employee_social_code: '123456789'
+        }
+      },
+      {
+        clock_logs_id: 2,
+        clock_logs_employee_id: 102,
+        clock_logs_timestamp: new Date('2026-02-03T09:00:00.000Z'),
+        clock_logs_log_type: 'OUT',
+        clock_logs_remarks: null,
+        clock_logs_status: 'orphan',
+        clock_logs_source: 'excel_import',
+        vpg_employees: {
+          employee_id: 102,
+          employee_first_name: 'María',
+          employee_last_name: 'Gómez',
+          employee_social_code: '987654321'
+        }
+      }
+    ];
+
+    it('should return paginated orphan logs with employee information', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(mockOrphanLogs);
+      prisma.vpg_clock_logs.count.mockResolvedValue(2);
+
+      const result = await service.getOrphans({ page: 1, pageSize: 20 });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]).toEqual({
+        id: 1,
+        employee_id: 101,
+        employee_name: 'Juan Pérez',
+        employee_social_code: '123456789',
+        timestamp: mockOrphanLogs[0].clock_logs_timestamp,
+        log_type: 'IN',
+        remarks: 'Missing OUT',
+        status: 'orphan',
+        source: 'java_import',
+        import_session_id: undefined
+      });
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(20);
+    });
+
+    it('should apply date filters when provided', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(mockOrphanLogs);
+      prisma.vpg_clock_logs.count.mockResolvedValue(2);
+
+      const initDate = new Date('2026-02-01');
+      const endDate = new Date('2026-02-28');
+
+      await service.getOrphans({ page: 1, pageSize: 20, initDate, endDate });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clock_logs_status: 'orphan',
+            clock_logs_timestamp: { gte: initDate, lte: endDate }
+          })
+        })
+      );
+    });
+
+    it('should return empty data array when no orphans exist', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(0);
+
+      const result = await service.getOrphans({});
+
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should throw if database fails', async () => {
+      prisma.vpg_clock_logs.findMany.mockRejectedValue(new Error('DB error'));
+
+      await expect(service.getOrphans({})).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('getAnomalies', () => {
+    const mockAnomalyLogs = [
+      {
+        clock_logs_id: 10,
+        clock_logs_employee_id: 201,
+        clock_logs_timestamp: new Date('2026-02-05T12:00:00.000Z'),
+        clock_logs_log_type: 'IN',
+        clock_logs_remarks: 'Outside normal hours',
+        clock_logs_status: 'anomaly',
+        clock_logs_source: 'manual',
+        vpg_employees: {
+          employee_id: 201,
+          employee_first_name: 'Carlos',
+          employee_last_name: 'Ramírez',
+          employee_social_code: '111222333'
+        }
+      }
+    ];
+
+    it('should return paginated anomaly logs with employee information', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(mockAnomalyLogs);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      const result = await service.getAnomalies({ page: 1, pageSize: 10 });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].id).toBe(10);
+      expect(result.data[0].employee_name).toBe('Carlos Ramírez');
+      expect(result.total).toBe(1);
+    });
+
+    it('should apply date filters when provided', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(mockAnomalyLogs);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      const initDate = new Date('2026-02-01');
+      const endDate = new Date('2026-02-28');
+
+      await service.getAnomalies({ page: 1, pageSize: 10, initDate, endDate });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clock_logs_status: 'anomaly',
+            clock_logs_timestamp: { gte: initDate, lte: endDate }
+          })
+        })
+      );
+    });
+
+    it('should return empty data array when no anomalies exist', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(0);
+
+      const result = await service.getAnomalies({});
+
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should throw if database fails', async () => {
+      prisma.vpg_clock_logs.findMany.mockRejectedValue(new Error('DB error'));
+
+      await expect(service.getAnomalies({})).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('resolveOrphan', () => {
+    const mockOrphan = {
+      clock_logs_id: 500,
+      clock_logs_employee_id: 50,
+      clock_logs_timestamp: new Date('2026-02-10T08:00:00.000Z'),
+      clock_logs_log_type: 'IN',
+      clock_logs_remarks: null,
+      clock_logs_status: 'orphan',
+      clock_logs_source: 'java_import',
+      clock_logs_import_session_id: null
+    };
+
+    beforeEach(() => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(null);
+      prisma.vpg_clock_logs.update.mockResolvedValue({});
+      prisma.vpg_clock_logs.create.mockResolvedValue({});
+    });
+
+    it('should throw if orphan not found', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.resolveOrphan(999, 'discard', 'Not found')
+      ).rejects.toThrow('Marca no encontrada');
+    });
+
+    it('should throw if log is not an orphan', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue({
+        ...mockOrphan,
+        clock_logs_status: 'valid'
+      });
+
+      await expect(
+        service.resolveOrphan(500, 'discard', 'Not orphan')
+      ).rejects.toThrow('La marca no tiene status orphan');
+    });
+
+    it('should discard orphan successfully', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(mockOrphan);
+      prisma.vpg_clock_logs.update.mockResolvedValue({});
+
+      const result = await service.resolveOrphan(500, 'discard', 'Duplicate entry');
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Huérfana descartada exitosamente');
+      expect(prisma.vpg_clock_logs.update).toHaveBeenCalledWith({
+        where: { clock_logs_id: 500 },
+        data: {
+          clock_logs_status: 'corrected',
+          clock_logs_remarks: 'Duplicate entry'
+        }
+      });
+    });
+
+    it('should assign complement successfully', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(mockOrphan);
+      prisma.vpg_clock_logs.create.mockResolvedValue({});
+      prisma.vpg_clock_logs.update.mockResolvedValue({});
+
+      const complementData = {
+        timestamp: new Date('2026-02-10T17:00:00.000Z'),
+        logType: 'OUT' as const
+      };
+
+      const result = await service.resolveOrphan(
+        500,
+        'assign_complement',
+        'Missing clock-out',
+        complementData
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Huérfana resuelta con complemento exitosamente');
+      
+      // Verify create called for complementary log
+      expect(prisma.vpg_clock_logs.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            clock_logs_employee_id: 50,
+            clock_logs_timestamp: complementData.timestamp,
+            clock_logs_log_type: 'OUT',
+            clock_logs_remarks: 'Complemento asignado: Missing clock-out',
+            clock_logs_status: 'valid',
+            clock_logs_source: 'manual'
+          })
+        })
+      );
+      
+      // Verify update called on original orphan
+      expect(prisma.vpg_clock_logs.update).toHaveBeenCalledWith({
+        where: { clock_logs_id: 500 },
+        data: {
+          clock_logs_status: 'valid',
+          clock_logs_remarks: 'Resuelto: Missing clock-out'
+        }
+      });
+    });
+
+    it('should throw if complement data missing for assign_complement', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(mockOrphan);
+
+      await expect(
+        service.resolveOrphan(500, 'assign_complement', 'Missing complement')
+      ).rejects.toThrow('Datos de complemento incompletos');
+    });
+
+    it('should throw for invalid action', async () => {
+      prisma.vpg_clock_logs.findUnique.mockResolvedValue(mockOrphan);
+
+      await expect(
+        service.resolveOrphan(500, 'invalid_action' as any, 'Test')
+      ).rejects.toThrow('Acción no válida');
+    });
+  });
 });

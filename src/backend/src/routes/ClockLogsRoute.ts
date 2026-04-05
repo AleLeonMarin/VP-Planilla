@@ -114,10 +114,26 @@ router.get("/clock-logs/stats", asyncHandler((req, res) => controller.getStats(r
  *     summary: Get orphan clock logs
  *     description: Returns paginated list of clock logs with status 'orphan' (IN without matching OUT or vice versa)
  *     parameters:
- *       - in: query, name: page, schema: { type: integer, default: 1 }
- *       - in: query, name: pageSize, schema: { type: integer, default: 20 }
- *       - in: query, name: initDate, schema: { type: string, format: date }
- *       - in: query, name: endDate, schema: { type: string, format: date }
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: initDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
  *     responses:
  *       '200': { description: Orphan logs retrieved successfully }
  */
@@ -131,11 +147,30 @@ router.get("/clock-logs/orphans", asyncHandler((req, res) => controller.getOrpha
  *     summary: Get anomaly clock logs
  *     description: Returns paginated list of clock logs with status 'anomaly' (double entry, double exit, or long sessions)
  *     parameters:
- *       - in: query, name: page, schema: { type: integer, default: 1 }
- *       - in: query, name: pageSize, schema: { type: integer, default: 20 }
- *       - in: query, name: initDate, schema: { type: string, format: date }
- *       - in: query, name: endDate, schema: { type: string, format: date }
- *       - in: query, name: type, schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: initDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
  *     responses:
  *       '200': { description: Anomaly logs retrieved successfully }
  */
@@ -224,14 +259,19 @@ router.post("/clock-logs/import", asyncHandler((req, res) => controller.import(r
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path, name: id, required: true, schema: { type: integer }
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [action, justification]
+ *             required:
+ *               - action
  *             properties:
  *               action:
  *                 type: string
