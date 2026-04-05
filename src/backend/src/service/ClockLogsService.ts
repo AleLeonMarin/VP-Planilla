@@ -48,6 +48,7 @@ export class ClockLogsService {
      * Create multiple clock logs in bulk
      * @param logs - Array of clock log data with raw log_type strings
      * @param source - Origin of the clock logs (java_import, excel_import, manual)
+     * @param sessionId - Optional import session ID to link logs to their import session
      * @returns Object with count of created records
      * @throws Error if database operation fails or log_type cannot be normalized
      */
@@ -58,7 +59,8 @@ export class ClockLogsService {
             log_type: string;
             remarks?: string | null;
         }>,
-        source: ClockLogSource = 'manual'
+        source: ClockLogSource = 'manual',
+        sessionId?: number
     ): Promise<{ created: number }> {
         const result = await prisma.vpg_clock_logs.createMany({
             data: logs.map(l => ({
@@ -68,7 +70,8 @@ export class ClockLogsService {
                 clock_logs_remarks: l.remarks ?? null,
                 clock_logs_version: 1,
                 clock_logs_status: 'pending',
-                clock_logs_source: source
+                clock_logs_source: source,
+                clock_logs_import_session_id: sessionId ?? null
             })),
             skipDuplicates: true
         });
