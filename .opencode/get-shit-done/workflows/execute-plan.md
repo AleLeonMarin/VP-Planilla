@@ -6,7 +6,7 @@ Execute a phase prompt (PLAN.md) and create the outcome summary (SUMMARY.md).
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/git-integration.md
+@"C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/git-integration.md"
 </required_reading>
 
 <available_agent_types>

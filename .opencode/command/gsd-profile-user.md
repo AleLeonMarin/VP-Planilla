@@ -18,8 +18,8 @@ Routes to the profile-user workflow which orchestrates the full flow: consent ga
 </objective>
 
 <execution_context>
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/profile-user.md
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/ui-brand.md
+@.opencode/get-shit-done/workflows/profile-user.md
+@.opencode/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>

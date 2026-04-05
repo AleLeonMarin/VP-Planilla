@@ -18,7 +18,7 @@ planning via /gsd-plan-phase --reviews.
 </objective>
 
 <execution_context>
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/review.md
+@.opencode/get-shit-done/workflows/review.md
 </execution_context>
 
 <context>
@@ -32,5 +32,5 @@ Phase number: extracted from $ARGUMENTS (required)
 </context>
 
 <process>
-Execute the review workflow from @C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/review.md end-to-end.
+Execute the review workflow from @.opencode/get-shit-done/workflows/review.md end-to-end.
 </process>

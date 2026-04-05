@@ -21,11 +21,11 @@ Routes to the resume-project workflow which handles:
   </objective>
 
 <execution_context>
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/resume-project.md
+@.opencode/get-shit-done/workflows/resume-project.md
 </execution_context>
 
 <process>
-**Follow the resume-project workflow** from `@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/resume-project.md`.
+**Follow the resume-project workflow** from `@.opencode/get-shit-done/workflows/resume-project.md`.
 
 The workflow handles all resumption logic including:
 

@@ -13,14 +13,14 @@ Valid GSD subagent types (use exact names — do not fall back to 'general-purpo
 
 ## Step 0: Resolve Model Profile
 
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/model-profile-resolution.md
+@"C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/model-profile-resolution.md"
 
 Resolve model for:
 - `gsd-phase-researcher`
 
 ## Step 1: Normalize and Validate Phase
 
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/phase-argument-parsing.md
+@"C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/phase-argument-parsing.md"
 
 ```bash
 PHASE_INFO=$(node "C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "${PHASE}")

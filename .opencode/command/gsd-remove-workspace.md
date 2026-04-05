@@ -16,10 +16,10 @@ Remove a workspace directory after confirmation. For worktree strategy, runs `gi
 </objective>
 
 <execution_context>
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/remove-workspace.md
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/references/ui-brand.md
+@.opencode/get-shit-done/workflows/remove-workspace.md
+@.opencode/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <process>
-Execute the remove-workspace workflow from @C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/remove-workspace.md end-to-end.
+Execute the remove-workspace workflow from @.opencode/get-shit-done/workflows/remove-workspace.md end-to-end.
 </process>

@@ -15,9 +15,9 @@ Designed for rapid multi-project workflows where remembering which phase/step yo
 </objective>
 
 <execution_context>
-@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/next.md
+@.opencode/get-shit-done/workflows/next.md
 </execution_context>
 
 <process>
-Execute the next workflow from @C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.opencode/get-shit-done/workflows/next.md end-to-end.
+Execute the next workflow from @.opencode/get-shit-done/workflows/next.md end-to-end.
 </process>
