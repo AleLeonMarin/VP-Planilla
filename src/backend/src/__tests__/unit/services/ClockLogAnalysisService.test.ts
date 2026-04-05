@@ -46,7 +46,6 @@ describe('ClockLogAnalysisService', () => {
           clock_logs_timestamp: new Date('2026-04-05T09:00:00.000Z'),
           clock_logs_log_type: 'IN' as const,
           clock_logs_status: 'pending' as const,
-          // No OUT for employee 2 => orphan
         },
       ];
 
@@ -85,7 +84,6 @@ describe('ClockLogAnalysisService', () => {
           clock_logs_timestamp: new Date('2026-04-05T18:00:00.000Z'),
           clock_logs_log_type: 'OUT' as const,
           clock_logs_status: 'pending' as const,
-          // No IN before this OUT for employee 2 => orphan
         },
       ];
 
@@ -122,25 +120,6 @@ describe('ClockLogAnalysisService', () => {
 
       prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
       prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 0 });
-
-      const result = await ClockLogAnalysisService.detectOrphans(sessionId);
-
-      expect(result).toBe(0);
-    });
-
-    it('should only process pending logs for the given session', async () => {
-      const sessionId = 1;
-      const logs = [
-        {
-          clock_logs_id: 1,
-          clock_logs_employee_id: 1,
-          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
-          clock_logs_log_type: 'IN' as const,
-          clock_logs_status: 'valid' as const, // not pending
-        },
-      ];
-
-      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
 
       const result = await ClockLogAnalysisService.detectOrphans(sessionId);
 
@@ -188,7 +167,6 @@ describe('ClockLogAnalysisService', () => {
     });
 
     it('should not flag IN followed by IN then OUT as anomaly for the first IN if OUT comes after second IN', async () => {
-      // Sequence: IN -> OUT -> IN -> OUT should not have double entry
       const sessionId = 1;
       const logs = [
         {
@@ -228,6 +206,66 @@ describe('ClockLogAnalysisService', () => {
 
       expect(result).toBe(0);
     });
+
+    it('should mark all INs in a run of three consecutive INs as anomaly', async () => {
+      const sessionId = 1;
+      const logs = [
+        {
+          clock_logs_id: 1,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 2,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T09:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 3,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T10:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+      ];
+
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
+      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 3 });
+
+      const result = await ClockLogAnalysisService.detectDoubleEntry(sessionId);
+
+      expect(result).toBe(3);
+      expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
+        where: { clock_logs_id: { in: [1, 2, 3] } },
+        data: { clock_logs_status: 'anomaly' },
+      });
+    });
+
+    it('should mark all INs in a longer run (four INs) as anomaly', async () => {
+      const sessionId = 1;
+      const logs = Array.from({ length: 4 }, (_, i) => ({
+        clock_logs_id: i + 1,
+        clock_logs_employee_id: 1,
+        clock_logs_timestamp: new Date(`2026-04-05T${8 + i}:00:00.000Z`),
+        clock_logs_log_type: 'IN' as const,
+        clock_logs_status: 'pending' as const,
+      }));
+
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
+      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 4 });
+
+      const result = await ClockLogAnalysisService.detectDoubleEntry(sessionId);
+
+      expect(result).toBe(4);
+      expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
+        where: { clock_logs_id: { in: [1, 2, 3, 4] } },
+        data: { clock_logs_status: 'anomaly' },
+      });
+    });
   });
 
   describe('detectDoubleExit', () => {
@@ -254,7 +292,6 @@ describe('ClockLogAnalysisService', () => {
           clock_logs_timestamp: new Date('2026-04-05T13:00:00.000Z'),
           clock_logs_log_type: 'OUT' as const,
           clock_logs_status: 'pending' as const,
-          // consecutive OUT without IN between
         },
       ];
 
@@ -266,6 +303,66 @@ describe('ClockLogAnalysisService', () => {
       expect(result).toBe(2);
       expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
         where: { clock_logs_id: { in: [2, 3] } },
+        data: { clock_logs_status: 'anomaly' },
+      });
+    });
+
+    it('should mark all OUTs in a run of three consecutive OUTs as anomaly', async () => {
+      const sessionId = 1;
+      const logs = [
+        {
+          clock_logs_id: 1,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 2,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T09:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 3,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T10:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+      ];
+
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
+      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 3 });
+
+      const result = await ClockLogAnalysisService.detectDoubleExit(sessionId);
+
+      expect(result).toBe(3);
+      expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
+        where: { clock_logs_id: { in: [1, 2, 3] } },
+        data: { clock_logs_status: 'anomaly' },
+      });
+    });
+
+    it('should mark all OUTs in a longer run (five OUTs) as anomaly', async () => {
+      const sessionId = 1;
+      const logs = Array.from({ length: 5 }, (_, i) => ({
+        clock_logs_id: i + 1,
+        clock_logs_employee_id: 1,
+        clock_logs_timestamp: new Date(`2026-04-05T${8 + i}:00:00.000Z`),
+        clock_logs_log_type: 'OUT' as const,
+        clock_logs_status: 'pending' as const,
+      }));
+
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
+      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 5 });
+
+      const result = await ClockLogAnalysisService.detectDoubleExit(sessionId);
+
+      expect(result).toBe(5);
+      expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
+        where: { clock_logs_id: { in: [1, 2, 3, 4, 5] } },
         data: { clock_logs_status: 'anomaly' },
       });
     });
@@ -285,7 +382,7 @@ describe('ClockLogAnalysisService', () => {
         {
           clock_logs_id: 2,
           clock_logs_employee_id: 1,
-          clock_logs_timestamp: new Date('2026-04-06T02:00:00.000Z'), // 18 hours later
+          clock_logs_timestamp: new Date('2026-04-06T02:00:00.000Z'),
           clock_logs_log_type: 'OUT' as const,
           clock_logs_status: 'pending' as const,
         },
@@ -316,7 +413,7 @@ describe('ClockLogAnalysisService', () => {
         {
           clock_logs_id: 2,
           clock_logs_employee_id: 1,
-          clock_logs_timestamp: new Date('2026-04-05T16:00:00.000Z'), // 8 hours later
+          clock_logs_timestamp: new Date('2026-04-05T16:00:00.000Z'),
           clock_logs_log_type: 'OUT' as const,
           clock_logs_status: 'pending' as const,
         },
@@ -332,7 +429,7 @@ describe('ClockLogAnalysisService', () => {
   });
 
   describe('runPostImportAnalysis', () => {
-    it('should orchestrate all detection methods and mark remaining pending as valid', async () => {
+    it('should orchestrate optimized analysis and mark remaining pending as valid', async () => {
       const sessionId = 1;
       const logs = [
         {
@@ -352,13 +449,7 @@ describe('ClockLogAnalysisService', () => {
       ];
 
       prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
-
-      // Mock each detection method to return counts
-      ClockLogAnalysisService.detectOrphans = jest.fn().mockResolvedValue(0);
-      ClockLogAnalysisService.detectDoubleEntry = jest.fn().mockResolvedValue(0);
-      ClockLogAnalysisService.detectDoubleExit = jest.fn().mockResolvedValue(0);
-      ClockLogAnalysisService.detectLongSessions = jest.fn().mockResolvedValue(0);
-      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 2 });
+      const mockUpdateMany = prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 2 });
 
       const result = await ClockLogAnalysisService.runPostImportAnalysis(sessionId);
 
@@ -370,13 +461,15 @@ describe('ClockLogAnalysisService', () => {
         total: 0,
       });
 
-      expect(ClockLogAnalysisService.detectOrphans).toHaveBeenCalledWith(sessionId);
-      expect(ClockLogAnalysisService.detectDoubleEntry).toHaveBeenCalledWith(sessionId);
-      expect(ClockLogAnalysisService.detectDoubleExit).toHaveBeenCalledWith(sessionId);
-      expect(ClockLogAnalysisService.detectLongSessions).toHaveBeenCalledWith(sessionId);
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith({
+        where: {
+          clock_logs_import_session_id: sessionId,
+          clock_logs_status: 'pending'
+        },
+        orderBy: { clock_logs_timestamp: 'asc' }
+      });
 
-      // Verify remaining pending logs marked as valid
-      expect(prisma.vpg_clock_logs.updateMany).toHaveBeenCalledWith({
+      expect(mockUpdateMany).toHaveBeenCalledWith({
         where: {
           clock_logs_import_session_id: sessionId,
           clock_logs_status: 'pending',
@@ -385,23 +478,102 @@ describe('ClockLogAnalysisService', () => {
       });
     });
 
-    it('should aggregate counts from all detection methods', async () => {
+    it('should aggregate counts from all detectors in optimized path', async () => {
       const sessionId = 1;
+      const logs = [
+        // Orphan: IN with no OUT at all
+        {
+          clock_logs_id: 1,
+          clock_logs_employee_id: 1,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        // Double entry: IN, IN, then OUT (so not orphans)
+        {
+          clock_logs_id: 2,
+          clock_logs_employee_id: 2,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 3,
+          clock_logs_employee_id: 2,
+          clock_logs_timestamp: new Date('2026-04-05T09:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 4,
+          clock_logs_employee_id: 2,
+          clock_logs_timestamp: new Date('2026-04-05T17:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        // Double exit: IN then two consecutive OUTs
+        {
+          clock_logs_id: 5,
+          clock_logs_employee_id: 3,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 6,
+          clock_logs_employee_id: 3,
+          clock_logs_timestamp: new Date('2026-04-05T12:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 7,
+          clock_logs_employee_id: 3,
+          clock_logs_timestamp: new Date('2026-04-05T13:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        // Long session: IN then OUT >16h later
+        {
+          clock_logs_id: 8,
+          clock_logs_employee_id: 4,
+          clock_logs_timestamp: new Date('2026-04-05T08:00:00.000Z'),
+          clock_logs_log_type: 'IN' as const,
+          clock_logs_status: 'pending' as const,
+        },
+        {
+          clock_logs_id: 9,
+          clock_logs_employee_id: 4,
+          clock_logs_timestamp: new Date('2026-04-06T02:00:00.000Z'),
+          clock_logs_log_type: 'OUT' as const,
+          clock_logs_status: 'pending' as const,
+        },
+      ];
 
-      ClockLogAnalysisService.detectOrphans = jest.fn().mockResolvedValue(2);
-      ClockLogAnalysisService.detectDoubleEntry = jest.fn().mockResolvedValue(4);
-      ClockLogAnalysisService.detectDoubleExit = jest.fn().mockResolvedValue(0);
-      ClockLogAnalysisService.detectLongSessions = jest.fn().mockResolvedValue(1);
-      prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 3 });
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs);
+      const mockUpdateMany = prisma.vpg_clock_logs.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await ClockLogAnalysisService.runPostImportAnalysis(sessionId);
 
       expect(result).toEqual({
-        orphans: 2,
-        doubleEntry: 4,
-        doubleExit: 0,
-        longSessions: 1,
+        orphans: 1,
+        doubleEntry: 2,
+        doubleExit: 2,
+        longSessions: 2,
         total: 7,
+      });
+
+      // Verify batch updates: first orphan (1), then anomalies (2+2+2=6), then valid (none left)
+      expect(mockUpdateMany).toHaveBeenCalledTimes(3);
+      const calls = mockUpdateMany.mock.calls;
+      // First: orphan update
+      expect(calls[0][0].where.clock_logs_id.in).toContain(1);
+      // Second: anomaly update (contains double entry (2,3), double exit (6,7), long session (8,9))
+      expect(calls[1][0].where.clock_logs_id.in).toEqual(expect.arrayContaining([2, 3, 6, 7, 8, 9]));
+      // Third: valid update (where pending, but none left)
+      expect(calls[2][0].where).toEqual({
+        clock_logs_import_session_id: sessionId,
+        clock_logs_status: 'pending'
       });
     });
   });

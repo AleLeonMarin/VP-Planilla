@@ -248,11 +248,73 @@ describe('ClockLogsController', () => {
       const req = createMockRequest({ query: {} });
       const res = createMockResponse();
 
+       await controller.getOrphans(req, res);
+
+       expect(res.status).toHaveBeenCalledWith(500);
+     });
+
+    // Pagination validation tests
+    it('should clamp page to minimum 1 when page=0', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      const mockGetOrphans = jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
+      MockService.mockImplementation(() => ({
+        bulkCreate: jest.fn().mockResolvedValue({ created: 0 }),
+        getStats: jest.fn().mockResolvedValue([]),
+        getClockLogs: jest.fn().mockResolvedValue([]),
+        getOrphans: mockGetOrphans,
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { page: '0' } });
+      const res = createMockResponse();
+
       await controller.getOrphans(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+      });
+      // Ensure service was called with page=1 (clamped)
+      expect(mockGetOrphans).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
     });
-  });
+
+    it('should return 400 when pageSize is 0', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '0' } });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize must be >= 1' });
+    });
+
+    it('should return 400 when pageSize is negative', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '-5' } });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize must be >= 1' });
+    });
+
+    it('should return 400 when pageSize exceeds maximum (200)', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '201' } });
+      const res = createMockResponse();
+
+      await controller.getOrphans(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize cannot exceed 200' });
+    });
+
+   });
 
   describe('getAnomalies', () => {
     it('should return paginated anomaly logs with proper response shape', async () => {
@@ -336,11 +398,72 @@ describe('ClockLogsController', () => {
       const req = createMockRequest({ query: {} });
       const res = createMockResponse();
 
+       await controller.getAnomalies(req, res);
+
+       expect(res.status).toHaveBeenCalledWith(500);
+     });
+
+    // Pagination validation tests
+    it('should clamp page to minimum 1 when page is negative', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      const mockGetAnomalies = jest.fn().mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
+      MockService.mockImplementation(() => ({
+        bulkCreate: jest.fn().mockResolvedValue({ created: 0 }),
+        getStats: jest.fn().mockResolvedValue([]),
+        getClockLogs: jest.fn().mockResolvedValue([]),
+        getAnomalies: mockGetAnomalies,
+      }));
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { page: '-2' } });
+      const res = createMockResponse();
+
       await controller.getAnomalies(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+      });
+      expect(mockGetAnomalies).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
     });
-  });
+
+    it('should return 400 when pageSize is 0', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '0' } });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize must be >= 1' });
+    });
+
+    it('should return 400 when pageSize is negative', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '-10' } });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize must be >= 1' });
+    });
+
+    it('should return 400 when pageSize exceeds maximum (200)', async () => {
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { pageSize: '500' } });
+      const res = createMockResponse();
+
+      await controller.getAnomalies(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'pageSize cannot exceed 200' });
+    });
+
+   });
 
   describe('resolveOrphan', () => {
     it('should return 400 for invalid orphan ID', async () => {

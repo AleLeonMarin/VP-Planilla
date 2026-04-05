@@ -385,8 +385,23 @@ export class ClockLogsController {
      */
     async getOrphans(req: Request, res: Response): Promise<Response> {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const pageSize = parseInt(req.query.pageSize as string) || 20;
+            const rawPage = parseInt(req.query.page as string);
+            const rawPageSize = parseInt(req.query.pageSize as string);
+            let page = isNaN(rawPage) ? 1 : rawPage;
+            let pageSize = isNaN(rawPageSize) ? 20 : rawPageSize;
+
+            // Clamp page to minimum 1
+            const safePage = page < 1 ? 1 : page;
+
+            // Validate pageSize bounds
+            if (pageSize < 1) {
+              return res.status(400).json({ error: 'pageSize must be >= 1' });
+            }
+            const MAX_PAGE_SIZE = 200;
+            if (pageSize > MAX_PAGE_SIZE) {
+              return res.status(400).json({ error: `pageSize cannot exceed ${MAX_PAGE_SIZE}` });
+            }
+
             const initDate = req.query.initDate ? new Date(req.query.initDate as string) : undefined;
             const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
 
@@ -398,7 +413,7 @@ export class ClockLogsController {
             }
 
             const service = new ClockLogsService();
-            const result = await service.getOrphans({ page, pageSize, initDate, endDate });
+            const result = await service.getOrphans({ page: safePage, pageSize, initDate, endDate });
 
             return res.json({
                 success: true,
@@ -421,8 +436,23 @@ export class ClockLogsController {
      */
     async getAnomalies(req: Request, res: Response): Promise<Response> {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const pageSize = parseInt(req.query.pageSize as string) || 20;
+            const rawPage = parseInt(req.query.page as string);
+            const rawPageSize = parseInt(req.query.pageSize as string);
+            let page = isNaN(rawPage) ? 1 : rawPage;
+            let pageSize = isNaN(rawPageSize) ? 20 : rawPageSize;
+
+            // Clamp page to minimum 1
+            const safePage = page < 1 ? 1 : page;
+
+            // Validate pageSize bounds
+            if (pageSize < 1) {
+              return res.status(400).json({ error: 'pageSize must be >= 1' });
+            }
+            const MAX_PAGE_SIZE = 200;
+            if (pageSize > MAX_PAGE_SIZE) {
+              return res.status(400).json({ error: `pageSize cannot exceed ${MAX_PAGE_SIZE}` });
+            }
+
             const initDate = req.query.initDate ? new Date(req.query.initDate as string) : undefined;
             const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
             const type = req.query.type as string | undefined;
@@ -435,7 +465,7 @@ export class ClockLogsController {
             }
 
             const service = new ClockLogsService();
-            const result = await service.getAnomalies({ page, pageSize, initDate, endDate, type });
+            const result = await service.getAnomalies({ page: safePage, pageSize, initDate, endDate, type });
 
             return res.json({
                 success: true,

@@ -110,7 +110,7 @@ export class ClockLogAnalysisService {
       logsByEmployee.get(employeeId)!.push(log);
     }
 
-    const anomalyIds: number[] = [];
+    const anomalyIds = new Set<number>();
 
     // Find consecutive IN/IN pairs
     for (const [, employeeLogs] of logsByEmployee) {
@@ -123,20 +123,21 @@ export class ClockLogAnalysisService {
         if (current.clock_logs_status !== 'pending' || next.clock_logs_status !== 'pending') continue;
 
         if (current.clock_logs_log_type === 'IN' && next.clock_logs_log_type === 'IN') {
-          anomalyIds.push(current.clock_logs_id, next.clock_logs_id);
-          i++; // Skip the next log to avoid overlapping pairs
+          anomalyIds.add(current.clock_logs_id);
+          anomalyIds.add(next.clock_logs_id);
+          // Do NOT increment i here — allow overlapping pairs to capture all consecutive INs
         }
       }
     }
 
-    if (anomalyIds.length > 0) {
+    if (anomalyIds.size > 0) {
       await prisma.vpg_clock_logs.updateMany({
-        where: { clock_logs_id: { in: anomalyIds } },
+        where: { clock_logs_id: { in: Array.from(anomalyIds) } },
         data: { clock_logs_status: 'anomaly' }
       });
     }
 
-    return anomalyIds.length;
+    return anomalyIds.size;
   }
 
   /**
@@ -170,7 +171,7 @@ export class ClockLogAnalysisService {
       logsByEmployee.get(employeeId)!.push(log);
     }
 
-    const anomalyIds: number[] = [];
+    const anomalyIds = new Set<number>();
 
     // Find consecutive OUT/OUT pairs
     for (const [, employeeLogs] of logsByEmployee) {
@@ -183,45 +184,64 @@ export class ClockLogAnalysisService {
         if (current.clock_logs_status !== 'pending' || next.clock_logs_status !== 'pending') continue;
 
         if (current.clock_logs_log_type === 'OUT' && next.clock_logs_log_type === 'OUT') {
-          anomalyIds.push(current.clock_logs_id, next.clock_logs_id);
-          i++; // Skip the next log to avoid overlapping pairs
+          anomalyIds.add(current.clock_logs_id);
+          anomalyIds.add(next.clock_logs_id);
+          // Do NOT increment i here — allow overlapping pairs to capture all consecutive OUTs
         }
       }
     }
 
-    if (anomalyIds.length > 0) {
+    if (anomalyIds.size > 0) {
       await prisma.vpg_clock_logs.updateMany({
-        where: { clock_logs_id: { in: anomalyIds } },
+        where: { clock_logs_id: { in: Array.from(anomalyIds) } },
         data: { clock_logs_status: 'anomaly' }
       });
     }
 
-    return anomalyIds.length;
-  }
+     return anomalyIds.size;
+   }
 
-  /**
-   * Detect long session anomalies (IN->OUT pairs with duration > 16 hours)
-   * @param sessionId - The import session ID to analyze
-   * @returns Promise<number> - Count of logs marked as anomaly
-   * @throws Error if database query fails
-   */
-  static async detectLongSessions(sessionId: number): Promise<number> {
-    const logs = await prisma.vpg_clock_logs.findMany({
-      where: {
-        clock_logs_import_session_id: sessionId,
-        clock_logs_status: 'pending'
-      },
-      orderBy: {
-        clock_logs_timestamp: 'asc'
-      }
-    });
+   /**
+    * Detect long session anomalies (IN->OUT pairs with duration > 16 hours)
+    * @param sessionId - The import session ID to analyze
+    * @returns Promise<number> - Count of logs marked as anomaly
+    * @throws Error if database query fails
+    */
+   static async detectLongSessions(sessionId: number): Promise<number> {
+     const logs = await prisma.vpg_clock_logs.findMany({
+       where: {
+         clock_logs_import_session_id: sessionId,
+         clock_logs_status: 'pending'
+       },
+       orderBy: {
+         clock_logs_timestamp: 'asc'
+       }
+     });
 
-    if (logs.length === 0) {
-      return 0;
-    }
+     if (logs.length === 0) {
+       return 0;
+     }
 
-    // Group by employee
-    const logsByEmployee = new Map<number, typeof logs>();
+     const ids = this.computeLongSessionIds(logs);
+
+     if (ids.size > 0) {
+       await prisma.vpg_clock_logs.updateMany({
+         where: { clock_logs_id: { in: Array.from(ids) } },
+         data: { clock_logs_status: 'anomaly' }
+       });
+     }
+
+     return ids.size;
+   }
+
+   /**
+    * Compute IDs of logs that are orphans (IN without matching OUT within 24h, or OUT without preceding IN within 24h)
+    * @param logs - Array of pending logs (already filtered)
+    * @returns Set of orphan log IDs
+    */
+   private static computeOrphanIds(logs: any[]): Set<number> {
+    const orphanIds = new Set<number>();
+    const logsByEmployee = new Map<number, any[]>();
     for (const log of logs) {
       const employeeId = log.clock_logs_employee_id;
       if (!logsByEmployee.has(employeeId)) {
@@ -229,49 +249,128 @@ export class ClockLogAnalysisService {
       }
       logsByEmployee.get(employeeId)!.push(log);
     }
-
-    const anomalyIds: number[] = [];
-    const SIXTEEN_HOURS_MS = 16 * 60 * 60 * 1000;
-
-    // Find IN->OUT pairs exceeding 16 hours
-    for (const [, employeeLogs] of logsByEmployee) {
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+    for (const [employeeId, employeeLogs] of logsByEmployee) {
       employeeLogs.sort((a, b) => a.clock_logs_timestamp.getTime() - b.clock_logs_timestamp.getTime());
-
-    // Find valid IN/OUT pairs
-    for (let i = 0; i < employeeLogs.length; i++) {
-      // Skip if not pending
-      if (employeeLogs[i].clock_logs_status !== 'pending') continue;
-
-      if (employeeLogs[i].clock_logs_log_type === 'IN') {
-        // Find the next OUT for this IN
-        for (let j = i + 1; j < employeeLogs.length; j++) {
-          if (employeeLogs[j].clock_logs_log_type === 'OUT') {
-            // Only consider if both are pending
-            if (employeeLogs[j].clock_logs_status === 'pending') {
-              const duration = employeeLogs[j].clock_logs_timestamp.getTime() - employeeLogs[i].clock_logs_timestamp.getTime();
-              if (duration > SIXTEEN_HOURS_MS) {
-                anomalyIds.push(employeeLogs[i].clock_logs_id, employeeLogs[j].clock_logs_id);
-              }
-            }
-            break; // Only consider the first OUT after this IN
+      for (let i = 0; i < employeeLogs.length; i++) {
+        const current = employeeLogs[i];
+        if (current.clock_logs_log_type === 'IN') {
+          const hasMatchingOut = employeeLogs.slice(i + 1).some(log =>
+            log.clock_logs_log_type === 'OUT' && (log.clock_logs_timestamp.getTime() - current.clock_logs_timestamp.getTime()) <= TWENTY_FOUR_HOURS_MS
+          );
+          if (!hasMatchingOut) {
+            orphanIds.add(current.clock_logs_id);
+          }
+        } else if (current.clock_logs_log_type === 'OUT') {
+          const hasMatchingIn = employeeLogs.slice(0, i).some(log =>
+            log.clock_logs_log_type === 'IN' && (current.clock_logs_timestamp.getTime() - log.clock_logs_timestamp.getTime()) <= TWENTY_FOUR_HOURS_MS
+          );
+          if (!hasMatchingIn) {
+            orphanIds.add(current.clock_logs_id);
           }
         }
       }
     }
-    }
+    return orphanIds;
+  }
 
-    if (anomalyIds.length > 0) {
-      await prisma.vpg_clock_logs.updateMany({
-        where: { clock_logs_id: { in: anomalyIds } },
-        data: { clock_logs_status: 'anomaly' }
-      });
+  /**
+   * Compute IDs of logs that are double entry anomalies (two consecutive INs)
+   * @param logs - Array of pending logs
+   * @returns Set of log IDs to mark as anomaly
+   */
+  private static computeDoubleEntryIds(logs: any[]): Set<number> {
+    const ids = new Set<number>();
+    const logsByEmployee = new Map<number, any[]>();
+    for (const log of logs) {
+      const employeeId = log.clock_logs_employee_id;
+      if (!logsByEmployee.has(employeeId)) {
+        logsByEmployee.set(employeeId, []);
+      }
+      logsByEmployee.get(employeeId)!.push(log);
     }
+    for (const [employeeId, employeeLogs] of logsByEmployee) {
+      employeeLogs.sort((a, b) => a.clock_logs_timestamp.getTime() - b.clock_logs_timestamp.getTime());
+      for (let i = 0; i < employeeLogs.length - 1; i++) {
+        const current = employeeLogs[i];
+        const next = employeeLogs[i + 1];
+        if (current.clock_logs_log_type === 'IN' && next.clock_logs_log_type === 'IN') {
+          ids.add(current.clock_logs_id);
+          ids.add(next.clock_logs_id);
+        }
+      }
+    }
+    return ids;
+  }
 
-    return anomalyIds.length;
+  /**
+   * Compute IDs of logs that are double exit anomalies (two consecutive OUTs)
+   * @param logs - Array of pending logs
+   * @returns Set of log IDs to mark as anomaly
+   */
+  private static computeDoubleExitIds(logs: any[]): Set<number> {
+    const ids = new Set<number>();
+    const logsByEmployee = new Map<number, any[]>();
+    for (const log of logs) {
+      const employeeId = log.clock_logs_employee_id;
+      if (!logsByEmployee.has(employeeId)) {
+        logsByEmployee.set(employeeId, []);
+      }
+      logsByEmployee.get(employeeId)!.push(log);
+    }
+    for (const [employeeId, employeeLogs] of logsByEmployee) {
+      employeeLogs.sort((a, b) => a.clock_logs_timestamp.getTime() - b.clock_logs_timestamp.getTime());
+      for (let i = 0; i < employeeLogs.length - 1; i++) {
+        const current = employeeLogs[i];
+        const next = employeeLogs[i + 1];
+        if (current.clock_logs_log_type === 'OUT' && next.clock_logs_log_type === 'OUT') {
+          ids.add(current.clock_logs_id);
+          ids.add(next.clock_logs_id);
+        }
+      }
+    }
+    return ids;
+  }
+
+  /**
+   * Compute IDs of logs that belong to long sessions (>16 hours)
+   * @param logs - Array of pending logs
+   * @returns Set of log IDs (both IN and OUT) to mark as anomaly
+   */
+  private static computeLongSessionIds(logs: any[]): Set<number> {
+    const ids = new Set<number>();
+    const logsByEmployee = new Map<number, any[]>();
+    for (const log of logs) {
+      const employeeId = log.clock_logs_employee_id;
+      if (!logsByEmployee.has(employeeId)) {
+        logsByEmployee.set(employeeId, []);
+      }
+      logsByEmployee.get(employeeId)!.push(log);
+    }
+    const SIXTEEN_HOURS_MS = 16 * 60 * 60 * 1000;
+    for (const [employeeId, employeeLogs] of logsByEmployee) {
+      employeeLogs.sort((a, b) => a.clock_logs_timestamp.getTime() - b.clock_logs_timestamp.getTime());
+      for (let i = 0; i < employeeLogs.length; i++) {
+        if (employeeLogs[i].clock_logs_log_type === 'IN') {
+          for (let j = i + 1; j < employeeLogs.length; j++) {
+            if (employeeLogs[j].clock_logs_log_type === 'OUT') {
+              const duration = employeeLogs[j].clock_logs_timestamp.getTime() - employeeLogs[i].clock_logs_timestamp.getTime();
+              if (duration > SIXTEEN_HOURS_MS) {
+                ids.add(employeeLogs[i].clock_logs_id);
+                ids.add(employeeLogs[j].clock_logs_id);
+              }
+              break; // Only consider the first OUT after this IN
+            }
+          }
+        }
+      }
+    }
+    return ids;
   }
 
   /**
    * Run all post-import analyses and mark remaining pending logs as valid
+   * Optimized: fetch pending logs once, run detectors in-memory, batch updates.
    * @param sessionId - The import session ID to analyze
    * @returns Object with counts of each anomaly type and total
    * @throws Error if any analysis fails
@@ -283,25 +382,65 @@ export class ClockLogAnalysisService {
     longSessions: number;
     total: number;
   }> {
-    const orphans = await this.detectOrphans(sessionId);
-    const doubleEntry = await this.detectDoubleEntry(sessionId);
-    const doubleExit = await this.detectDoubleExit(sessionId);
-    const longSessions = await this.detectLongSessions(sessionId);
+    // Fetch all pending logs for this session once
+    const logs = await prisma.vpg_clock_logs.findMany({
+      where: {
+        clock_logs_import_session_id: sessionId,
+        clock_logs_status: 'pending'
+      },
+      orderBy: {
+        clock_logs_timestamp: 'asc'
+      }
+    });
+
+    if (logs.length === 0) {
+      return { orphans: 0, doubleEntry: 0, doubleExit: 0, longSessions: 0, total: 0 };
+    }
+
+    // Compute IDs for each anomaly type in sequence, respecting precedence:
+    // Orphans first, then double entry, then double exit, then long sessions.
+    const orphanIds = this.computeOrphanIds(logs);
+    let pending = logs.filter(log => !orphanIds.has(log.clock_logs_id));
+
+    const doubleEntryIds = this.computeDoubleEntryIds(pending);
+    pending = pending.filter(log => !doubleEntryIds.has(log.clock_logs_id));
+
+    const doubleExitIds = this.computeDoubleExitIds(pending);
+    pending = pending.filter(log => !doubleExitIds.has(log.clock_logs_id));
+
+    const longSessionIds = this.computeLongSessionIds(pending);
+    // Remaining pending logs are valid; we'll mark them via markValid().
+
+    // Batch updates: orphan, then anomaly (doubleEntry + doubleExit + longSession), then valid.
+    if (orphanIds.size > 0) {
+      await prisma.vpg_clock_logs.updateMany({
+        where: { clock_logs_id: { in: Array.from(orphanIds) } },
+        data: { clock_logs_status: 'orphan' }
+      });
+    }
+
+    const anomalyIds = new Set<number>([...doubleEntryIds, ...doubleExitIds, ...longSessionIds]);
+    if (anomalyIds.size > 0) {
+      await prisma.vpg_clock_logs.updateMany({
+        where: { clock_logs_id: { in: Array.from(anomalyIds) } },
+        data: { clock_logs_status: 'anomaly' }
+      });
+    }
 
     // Mark remaining pending logs as valid
     await this.markValid(sessionId);
 
-    // Total anomalies = sum of all anomaly types
-    const total = orphans + doubleEntry + doubleExit + longSessions;
+    const total = orphanIds.size + doubleEntryIds.size + doubleExitIds.size + longSessionIds.size;
 
     return {
-      orphans,
-      doubleEntry,
-      doubleExit,
-      longSessions,
+      orphans: orphanIds.size,
+      doubleEntry: doubleEntryIds.size,
+      doubleExit: doubleExitIds.size,
+      longSessions: longSessionIds.size,
       total
     };
   }
+
 
   /**
    * Mark all remaining pending logs for a session as valid
