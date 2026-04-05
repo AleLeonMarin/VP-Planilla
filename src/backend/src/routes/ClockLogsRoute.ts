@@ -106,6 +106,41 @@ router.get("/clock-logs", asyncHandler((req, res) => controller.getClockLogs(req
  */
 router.get("/clock-logs/stats", asyncHandler((req, res) => controller.getStats(req, res)));
 
+/**
+ * @swagger
+ * /api/clock-logs/orphans:
+ *   get:
+ *     tags: [Clock Logs]
+ *     summary: Get orphan clock logs
+ *     description: Returns paginated list of clock logs with status 'orphan' (IN without matching OUT or vice versa)
+ *     parameters:
+ *       - in: query, name: page, schema: { type: integer, default: 1 }
+ *       - in: query, name: pageSize, schema: { type: integer, default: 20 }
+ *       - in: query, name: initDate, schema: { type: string, format: date }
+ *       - in: query, name: endDate, schema: { type: string, format: date }
+ *     responses:
+ *       '200': { description: Orphan logs retrieved successfully }
+ */
+router.get("/clock-logs/orphans", asyncHandler((req, res) => controller.getOrphans(req, res)));
+
+/**
+ * @swagger
+ * /api/clock-logs/anomalies:
+ *   get:
+ *     tags: [Clock Logs]
+ *     summary: Get anomaly clock logs
+ *     description: Returns paginated list of clock logs with status 'anomaly' (double entry, double exit, or long sessions)
+ *     parameters:
+ *       - in: query, name: page, schema: { type: integer, default: 1 }
+ *       - in: query, name: pageSize, schema: { type: integer, default: 20 }
+ *       - in: query, name: initDate, schema: { type: string, format: date }
+ *       - in: query, name: endDate, schema: { type: string, format: date }
+ *       - in: query, name: type, schema: { type: string }
+ *     responses:
+ *       '200': { description: Anomaly logs retrieved successfully }
+ */
+router.get("/clock-logs/anomalies", asyncHandler((req, res) => controller.getAnomalies(req, res)));
+
 router.post("/clock-logs/bulk", validateBody(bulkCreateClockLogSchema), asyncHandler((req, res) => controller.bulkCreate(req, res)));
 
 /**

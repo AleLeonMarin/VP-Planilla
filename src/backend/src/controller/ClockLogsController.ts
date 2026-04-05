@@ -376,4 +376,76 @@ export class ClockLogsController {
         }
     }
 
+    /**
+     * Get orphan clock logs with employee info, paginated
+     * GET /clock-logs/orphans?page=1&pageSize=20&initDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+     * @param req - Express request with query parameters
+     * @param res - Express response
+     * @returns Promise<Response>
+     */
+    async getOrphans(req: Request, res: Response): Promise<Response> {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const pageSize = parseInt(req.query.pageSize as string) || 20;
+            const initDate = req.query.initDate ? new Date(req.query.initDate as string) : undefined;
+            const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+
+            if (initDate && isNaN(initDate.getTime())) {
+                return res.status(400).json({ error: 'Invalid initDate format' });
+            }
+            if (endDate && isNaN(endDate.getTime())) {
+                return res.status(400).json({ error: 'Invalid endDate format' });
+            }
+
+            const service = new ClockLogsService();
+            const result = await service.getOrphans({ page, pageSize, initDate, endDate });
+
+            return res.json({
+                success: true,
+                data: result.data,
+                total: result.total,
+                page: result.page,
+                pageSize: result.pageSize
+            });
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    /**
+     * Get anomaly clock logs with employee info, paginated
+     * GET /clock-logs/anomalies?page=1&pageSize=20&initDate=YYYY-MM-DD&endDate=YYYY-MM-DD&type=string
+     * @param req - Express request with query parameters
+     * @param res - Express response
+     * @returns Promise<Response>
+     */
+    async getAnomalies(req: Request, res: Response): Promise<Response> {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const pageSize = parseInt(req.query.pageSize as string) || 20;
+            const initDate = req.query.initDate ? new Date(req.query.initDate as string) : undefined;
+            const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+            const type = req.query.type as string | undefined;
+
+            if (initDate && isNaN(initDate.getTime())) {
+                return res.status(400).json({ error: 'Invalid initDate format' });
+            }
+            if (endDate && isNaN(endDate.getTime())) {
+                return res.status(400).json({ error: 'Invalid endDate format' });
+            }
+
+            const service = new ClockLogsService();
+            const result = await service.getAnomalies({ page, pageSize, initDate, endDate, type });
+
+            return res.json({
+                success: true,
+                data: result.data,
+                total: result.total,
+                page: result.page,
+                pageSize: result.pageSize
+            });
+        } catch (error) {
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    }
 }
