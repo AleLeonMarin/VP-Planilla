@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: milestone
-status: executing
-stopped_at: Phase 20 complete — all 3 plans implemented and verified (338+ tests passing)
-last_updated: "2026-04-05T20:00:00.000Z"
-last_activity: 2026-04-05
+status: Executing Phase 21
+stopped_at: Phase 21-01 complete — service methods and schemas implemented, tests passing
+last_updated: "2026-04-05T23:45:00.000Z"
+last_activity: 2026-04-05 -- Phase 21-01 complete
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 10
-  completed_plans: 7
-  percent: 40
+  total_plans: 9
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State — VP-Planilla
@@ -21,15 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 20 — Huérfanas y Anomalías
+**Current focus:** Phase 21 — Corrección Manual (Plan 1 of 2 complete)
 
 ## Current Position
 
-Phase: 20 (hu-rfanas-y-anomal-as) — COMPLETE ✓
-Next: Phase 21 (Corrección Manual)
-Last activity: 2026-04-05
+Phase: 21 (Corrección Manual) — IN PROGRESS
+Plan: 1 of 2 complete (21-01: service layer methods & schemas done)
+Next: Phase 21 — Corrección Manual Plan 2 (controller/routes)
+Last activity: 2026-04-05 -- Phase 21-01 complete
 
-Progress: [███·········] 40% (2/5 phases complete)
+Progress: [████████░░] 89% (8/9 plans complete)
 
 ## v1.3 Phase Map
 
@@ -38,7 +39,7 @@ Progress: [███·········] 40% (2/5 phases complete)
 | 18 | Normalización y Trazabilidad | NORM-01..03, TRACK-01..03 | ✓ Complete |
 | 19 | Sesiones de Importación | IMPORT-01..03 | ✓ Complete |
 | 20 | Huérfanas y Anomalías | ORPHAN-01..03, ANOMALY-01..05 | ✓ Complete |
-| 21 | Corrección Manual | CORRECT-01..03 | Not started |
+| 21 | Corrección Manual | CORRECT-01..03 | Plan 1 ✓, Plan 2 ↻ |
 | 22 | Dashboard UI de Marcas | UI-01..05 | Not started |
 
 ## Milestone History
@@ -69,7 +70,8 @@ Progress: [███·········] 40% (2/5 phases complete)
   - Automatic post-import analysis sets statuses (`orphan`, `anomaly`, `valid`) per log
   - Query endpoints: `GET /api/clock-logs/orphans` and `GET /api/clock-logs/anomalies` return paginated results with employee info
   - Resolution endpoint: `POST /api/clock-logs/orphans/:id/resolve` supports `discard` (→ corrected) and `assign_complement` (→ valid + manual complement log)
-- `vpg_audit_logs` table already exists — Phase 21 will extend correction records into it
+- `vpg_audit_logs` table already exists — audit trail used for all corrections
+- **Phase 21-01 (current):** Added `ClockLogsService.createManualLog` and `ClockLogsService.updateClockLogStatus` methods with audit integration; Zod schemas `createManualLogSchema` and `updateClockLogStatusSchema`
 - Thresholds: orphan window 24h, long session > 16h
 
 ### Known Issues
@@ -90,10 +92,10 @@ Progress: [███·········] 40% (2/5 phases complete)
 
 ## Session Continuity
 
-Last session: 2026-04-05T20:00:00Z
-Stopped at: Phase 20 complete — all 3 plans implemented, 338+ tests passing
-Resume: Run `/gsd:execute-phase 21` to begin Phase 21 — Corrección Manual
+Last session: 2026-04-05T23:45:00Z
+Stopped at: Phase 21-01 complete — service methods and schemas implemented, tests passing
+Resume: Run `/gsd:execute-phase 21` to continue with Plan 2 (controller/routes layer)
 
 ---
 
-*Updated: 2026-04-05 — Phase 19 complete*
+*Updated: 2026-04-05 — Phase 21-01 complete*

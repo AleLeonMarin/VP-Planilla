@@ -76,7 +76,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Service layer methods and Zod validation schemas for manual corrections
+- [x] 21-01-PLAN.md — Service layer methods and Zod validation schemas for manual corrections
 - [ ] 21-02-PLAN.md — Controller endpoints, route registration with admin auth, and tests
 
 ### Phase 22: Dashboard UI de Marcas
@@ -101,7 +101,7 @@ Plans:
 | 18. Normalización y Trazabilidad | 2/2 | ✓ Complete | 2026-04-05 |
 | 19. Sesiones de Importación | 2/2 | ✓ Complete | 2026-04-05 |
 | 20. Huérfanas y Anomalías | 3/3 | ✓ Complete | 2026-04-05 |
-| 21. Corrección Manual | 0/2 | Not started | - |
+| 21. Corrección Manual | 1/2 | In Progress|  |
 | 22. Dashboard UI de Marcas | 0/? | Not started | - |
 
 ---
