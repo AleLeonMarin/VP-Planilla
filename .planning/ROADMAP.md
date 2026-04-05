@@ -28,7 +28,11 @@
   2. Un valor de tipo desconocido enviado a la importación retorna un error descriptivo con el valor rechazado
   3. Cada fila de vpg_clock_logs tiene columnas status y source con valores válidos según el catálogo definido
   4. El endpoint GET /api/clock-logs/stats retorna conteo agrupado por status y source para un rango de fechas
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Prisma enums (ClockLogType/Status/Source), migration with data pre-cleanup, model update, normalization utility
+- [ ] 18-02-PLAN.md — Controller refactor (shared normalization, strict rejection), stats endpoint (groupBy), route registration
 
 ### Phase 19: Sesiones de Importación
 **Goal**: Cada importación queda registrada como sesión identificable con métricas y cada marca tiene vínculo a su sesión de origen
@@ -81,7 +85,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. Normalización y Trazabilidad | 0/? | Not started | - |
+| 18. Normalización y Trazabilidad | 0/2 | Planned | - |
 | 19. Sesiones de Importación | 0/? | Not started | - |
 | 20. Huérfanas y Anomalías | 0/? | Not started | - |
 | 21. Corrección Manual | 0/? | Not started | - |
