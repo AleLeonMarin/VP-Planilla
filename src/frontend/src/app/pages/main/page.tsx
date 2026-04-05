@@ -200,7 +200,7 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
           {/* Calendar */}
-          <div className="xl:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+          <div className="xl:col-span-2 self-start bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
               <div>
                 <h2 className="text-base font-semibold text-zinc-800 dark:text-zinc-100">
