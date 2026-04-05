@@ -1,5 +1,7 @@
 {
   "sqldeveloper.logging.enable": false,
+  "python.terminal.activateEnvironment": false,
+  "python.terminal.activateEnvironment": false,
   "todo-tree.general.tags": [
     "BUG",
     "HACK",
