@@ -74,6 +74,26 @@ src/backend/
 
 **When to use:** When enum values are stable, finite, and you want type safety at the Prisma Client level.
 
+**⚠️ Critical: Existing data migration required**
+
+When changing `clock_logs_log_type` from `String @db.VarChar(10)` to `ClockLogType`, PostgreSQL needs to cast existing values. The generated migration from Prisma will include:
+```sql
+ALTER TABLE "vpg_clock_logs" ALTER COLUMN "clock_logs_log_type" TYPE "ClockLogType" USING "clock_logs_log_type"::"ClockLogType";
+```
+
+This `USING` cast will **fail** if any existing value isn't exactly `'IN'` or `'OUT'` (case-sensitive). You MUST add a pre-step to the migration SQL:
+```sql
+-- Run BEFORE the ALTER COLUMN TYPE
+UPDATE "vpg_clock_logs"
+SET "clock_logs_log_type" = CASE
+  WHEN LOWER("clock_logs_log_type") IN ('in', 'entrada', 'entry', 'start', 'check_in', 'checkin', 'almuerzo_entrada', 'lunch_in', 'break_in', 'entrada almuerzo') THEN 'IN'
+  WHEN LOWER("clock_logs_log_type") IN ('out', 'salida', 'exit', 'end', 'check_out', 'checkout', 'salida final', 'fin turno', 'almuerzo', 'almuerzo_salida', 'lunch_out', 'break_out', 'salida almuerzo') THEN 'OUT'
+  ELSE 'IN'
+END;
+```
+
+**How to do this:** Run `npx prisma migrate dev --create-only` to generate the migration without applying it, then edit the generated SQL file to insert the UPDATE statement before the ALTER COLUMN line.
+
 **Example:**
 ```prisma
 // src/backend/prisma/schema.prisma
@@ -212,16 +232,25 @@ async getStats(initDate: Date, endDate: Date): Promise<
 **How to avoid:** Run `npx prisma migrate dev` in a development environment first. For production, use `npx prisma migrate deploy` with a backup. Prisma 6 handles enum additions correctly but always test migrations.
 **Warning signs:** Migration error mentioning "cannot be executed inside a transaction block" — this is expected for enum additions, not a failure.
 
-### Pitfall 2: Existing Data Breaks on Enum Migration
-**What goes wrong:** If existing `clock_logs_log_type` values contain anything other than `IN` or `OUT` (case-sensitive), the migration to enum will fail.
-**Why it happens:** The current VARCHAR(10) field may contain legacy values like `ENTRADA`, `SALIDA`, or other variants.
-**How to avoid:** Run a data cleanup migration BEFORE the schema migration:
+### Pitfall 1b: Enum Type Cast Failure on Existing Data
+**What goes wrong:** When changing `clock_logs_log_type` from `String @db.VarChar(10)` to a Prisma enum, PostgreSQL attempts to cast existing values. Any value that isn't exactly `'IN'` or `'OUT'` (case-sensitive) causes the migration to fail with `invalid input value for enum`.
+**Why it happens:** PostgreSQL enum casts are strict — they don't do case-insensitive matching or alias resolution. The current VARCHAR(10) field may contain legacy values like `ENTRADA`, `SALIDA`, or other variants.
+**How to avoid:** Include a SQL `UPDATE` pre-step in the migration **before** the `ALTER COLUMN ... TYPE` statement. Use `prisma migrate dev --create-only` to generate the migration, then edit the SQL file to insert the data cleanup. Example:
 ```sql
-UPDATE "vpg_clock_logs" SET "clock_logs_log_type" = 'IN' WHERE LOWER("clock_logs_log_type") IN ('in', 'entrada', 'entry', 'start', 'check_in', 'checkin', 'almuerzo_entrada', 'lunch_in', 'break_in', 'entrada almuerzo');
-UPDATE "vpg_clock_logs" SET "clock_logs_log_type" = 'OUT' WHERE LOWER("clock_logs_log_type") IN ('out', 'salida', 'exit', 'end', 'check_out', 'checkout', 'salida final', 'fin turno', 'almuerzo', 'almuerzo_salida', 'lunch_out', 'break_out', 'salida almuerzo');
+UPDATE "vpg_clock_logs"
+SET "clock_logs_log_type" = CASE
+  WHEN LOWER("clock_logs_log_type") IN ('in', 'entrada', 'entry', 'start', 'check_in', 'checkin', 'almuerzo_entrada', 'lunch_in', 'break_in', 'entrada almuerzo') THEN 'IN'
+  WHEN LOWER("clock_logs_log_type") IN ('out', 'salida', 'exit', 'end', 'check_out', 'checkout', 'salida final', 'fin turno', 'almuerzo', 'almuerzo_salida', 'lunch_out', 'break_out', 'salida almuerzo') THEN 'OUT'
+  ELSE 'IN'
+END;
 ```
-Then alter the column type to the enum.
-**Warning signs:** `prisma migrate dev` fails with "invalid input value for enum".
+**Warning signs:** `npx prisma migrate dev` fails with `P3018` error (migration failed to apply) or `invalid input value for enum "ClockLogType"`.
+
+### Pitfall 2: Normalization Function Silently Passing Unknown Values
+**What goes wrong:** The current `normalizeLogType()` in `ClockLogsController.ts` (line 18) returns `value.toUpperCase()` for unknown values. This means garbage data can be stored as-is, violating NORM-03.
+**Why it happens:** The function was designed to be lenient for import compatibility, but NORM-03 requires strict rejection.
+**How to avoid:** Change the fallback to `throw new Error(...)` with the rejected value in the message. Update the controller to catch and return 400 with descriptive error.
+**Warning signs:** Database contains `log_type` values that are neither `'IN'` nor `'OUT'`.
 
 ### Pitfall 3: Frontend-Backend Normalization Mismatch
 **What goes wrong:** The frontend attendance page normalizes to `CHECK_IN/LUNCH_OUT/LUNCH_IN/CHECK_OUT` while the backend normalizes to `IN/OUT`. After Phase 18, the frontend must be updated to expect `IN/OUT` from the API.
@@ -229,13 +258,25 @@ Then alter the column type to the enum.
 **How to avoid:** The frontend normalization should remain as a DISPLAY-ONLY concern. The API contract changes from returning raw `log_type` to returning canonical `IN/OUT`. Frontend can map `IN` → `CHECK_IN` for display purposes if needed.
 **Warning signs:** Frontend TypeScript errors after schema change; `normalizeLogType` in frontend returns `null` for `IN`/`OUT` values.
 
-### Pitfall 4: Prisma groupBy Requires Indexes for Performance
+### Pitfall 4: Frontend/Backend Normalization Drift
+**What goes wrong:** The frontend `attendance/page.tsx` has its own `normalizeLogType()` function that maps to `CHECK_IN`/`LUNCH_OUT`/`LUNCH_IN`/`CHECK_OUT` — a different set of canonical values than the backend's `IN`/`OUT`.
+**Why it happens:** Frontend normalization is for display purposes (4-state), backend normalization is for storage (2-state). They serve different purposes.
+**How to avoid:** Keep them separate. Backend normalization (IN/OUT) is for persistence. Frontend normalization (CHECK_IN/etc.) is for display grouping. Document this distinction clearly. The backend should NOT adopt the 4-state model — that's a display concern.
+**Warning signs:** Backend starts storing `CHECK_IN` or `LUNCH_OUT` as `log_type` values.
+
+### Pitfall 5: Stats Query Performance on Large Tables
 **What goes wrong:** Stats query becomes slow as clock_logs table grows without proper indexes.
 **Why it happens:** `groupBy` on unindexed columns requires full table scan.
 **How to avoid:** Add composite index `@@index([clock_logs_status, clock_logs_source])` and ensure the date range filter uses the existing `clock_logs_timestamp` index.
 **Warning signs:** Query takes >100ms on tables with >10k records.
 
-### Pitfall 5: Default Values for Existing Records
+### Pitfall 6: Dead Code in Controller After Refactoring
+**What goes wrong:** The `ClockLogsController.ts` has a dead variable `nomineeLogs` (line 81-92) that's assigned after a `return` statement and never used. TypeScript `--noEmit` doesn't catch this because the variable is typed.
+**Why it happens:** Leftover from a previous refactor.
+**How to avoid:** Clean it up as part of the controller refactoring in this phase.
+**Warning signs:** Unreachable code after `return` statement.
+
+### Pitfall 7: Default Values for Existing Records
 **What goes wrong:** Adding `status` and `source` fields to existing records without defaults causes null constraint violations.
 **Why it happens:** Existing `vpg_clock_logs` records don't have these fields.
 **How to avoid:** Use `@default(pending)` for status and `@default(manual)` for source in the Prisma schema. Prisma Migrate will set these defaults for existing rows. Alternatively, use a data migration to set `source = 'java_import'` for records that came from the Java parser.
