@@ -83,7 +83,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#FCF1D5] dark:border-zinc-900" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-[#4A5D3A] dark:text-zinc-100 leading-tight" style={{ fontFamily: 'VerdeFont, Inter, sans-serif' }}>
+          <span className="text-lg font-bold text-[#4A5D3A] dark:text-zinc-100 leading-tight" style={{ fontFamily: 'VerdeFont, Inter, sans-serif' }}>
             VERDE GESTIÓN
           </span>
           <span className="text-[10px] text-[#7A8F6A] dark:text-zinc-500 font-medium tracking-wide">
