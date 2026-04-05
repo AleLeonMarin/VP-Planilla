@@ -3,7 +3,7 @@ import { ClockLogsController } from "../controller/ClockLogsController";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import { validateBody } from '../middleware/validateBody';
-import { bulkCreateClockLogSchema, resolveOrphanSchema } from '../schemas/ClockLogSchema';
+import { bulkCreateClockLogSchema, resolveOrphanSchema, createManualLogSchema, updateClockLogStatusSchema } from '../schemas/ClockLogSchema';
 
 const router = Router();
 
@@ -292,5 +292,120 @@ router.post("/clock-logs/import", asyncHandler((req, res) => controller.import(r
  *       '404': { description: Clock log not found }
  */
 router.post("/clock-logs/orphans/:id/resolve", validateBody(resolveOrphanSchema), asyncHandler((req, res) => controller.resolveOrphan(req, res)));
+
+/**
+ * @swagger
+ * /api/clock-logs/correct:
+ *   post:
+ *     tags:
+ *       - Clock Logs
+ *     summary: Create manual clock log
+ *     description: Create a manual clock log entry (source: manual) with justification
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - employee_id
+ *               - timestamp
+ *               - log_type
+ *               - justification
+ *             properties:
+ *               employee_id:
+ *                 type: integer
+ *               timestamp:
+ *                 type: string
+ *                 format: date-time
+ *               log_type:
+ *                 type: string
+ *                 enum: [IN, OUT]
+ *               remarks:
+ *                 type: string
+ *               justification:
+ *                 type: string
+ *                 maxLength: 500
+ *     responses:
+ *       '201':
+ *         description: Manual clock log created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 clockLogId:
+ *                   type: integer
+ *       '400':
+ *         description: Invalid input (validation error)
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden (non-admin)
+ *       '404':
+ *         description: Employee not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.post("/clock-logs/correct", AuthMiddleware.requireRole(['admin']), validateBody(createManualLogSchema), asyncHandler((req, res) => controller.createManualLog(req, res)));
+
+/**
+ * @swagger
+ * /api/clock-logs/:id/status:
+ *   patch:
+ *     tags:
+ *       - Clock Logs
+ *     summary: Update clock log status
+ *     description: Change status (e.g., to corrected) with justification
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *               - justification
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [corrected]
+ *               justification:
+ *                 type: string
+ *                 maxLength: 500
+ *     responses:
+ *       '200':
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       '400':
+ *         description: Invalid request (bad ID or validation error)
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden (non-admin)
+ *       '404':
+ *         description: Clock log not found
+ *       '500':
+ *         description: Internal server error
+ */
+router.patch("/clock-logs/:id/status", AuthMiddleware.requireRole(['admin']), validateBody(updateClockLogStatusSchema), asyncHandler((req, res) => controller.updateClockLogStatus(req, res)));
 
 export default router;
