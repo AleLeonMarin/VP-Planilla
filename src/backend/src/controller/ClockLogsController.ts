@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ClockLogsService, ClockLogSource } from "../service/ClockLogsService";
+import { ImportSessionService } from "../service/ImportSessionService";
 import { prisma } from "../lib/prisma";
 import { normalizeLogType } from "../utils/clockLogNormalization";
 
@@ -115,6 +116,188 @@ export class ClockLogsController {
             });
         } catch (error) {
             return res.status(500).json({ error: "Internal server error" });
+        }
+    }
+
+    /**
+     * Import clock logs with full session lifecycle tracking
+     * POST /clock-logs/import
+     * @param req - Express request containing logs array and optional source string
+     * @param res - Express response with session summary
+     * @returns Promise<Response> - HTTP 201 with { session_id, status, created, skipped, anomalies, errors[] }
+     * @swagger
+     * /api/clock-logs/import:
+     *   post:
+     *     tags:
+     *       - Clock Logs
+     *     summary: Import clock logs with session tracking
+     *     description: Creates an import session, bulk-creates clock logs with session reference, and returns session summary with created/skipped/anomaly counts
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - logs
+     *             properties:
+     *               logs:
+     *                 type: array
+     *                 description: Array of clock log records to import
+     *                 items:
+     *                   type: object
+     *                   properties:
+     *                     employee_id:
+     *                       type: integer
+     *                     employee_name:
+     *                       type: string
+     *                     timestamp:
+     *                       type: string
+     *                       format: date-time
+     *                     log_type:
+     *                       type: string
+     *                       enum: [IN, OUT, ENTRADA, SALIDA]
+     *                     remarks:
+     *                       type: string
+     *               source:
+     *                 type: string
+     *                 enum: [java_import, excel_import, manual]
+     *                 default: excel_import
+     *     responses:
+     *       '201':
+     *         description: Import completed — returns session summary
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 session_id:
+     *                   type: integer
+     *                 status:
+     *                   type: string
+     *                   enum: [completed, partial, failed]
+     *                 created:
+     *                   type: integer
+     *                 skipped:
+     *                   type: integer
+     *                 anomalies:
+     *                   type: integer
+     *                 errors:
+     *                   type: array
+     *                   items:
+     *                     type: string
+     *       '400':
+     *         description: Invalid input — logs array missing or empty
+     *       '500':
+     *         description: Internal server error
+     */
+    async import(req: Request, res: Response): Promise<Response> {
+        const { logs, source: rawSource } = req.body;
+
+        if (!Array.isArray(logs) || logs.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requiere un array de logs no vacío'
+            });
+        }
+
+        const source: ClockLogSource = (['java_import', 'excel_import', 'manual'].includes(rawSource)
+            ? rawSource
+            : 'excel_import') as ClockLogSource;
+
+        // Extract userId from JWT payload set by AuthMiddleware.verifyToken
+        const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+
+        let sessionId: number | undefined;
+
+        try {
+            // Create session
+            const session = await ImportSessionService.createSession(source, logs.length, userId);
+            sessionId = session.id;
+
+            // Mark as running
+            await ImportSessionService.updateSession(sessionId, { status: 'running' });
+
+            // Resolve employees and normalize log types
+            const resolved: Array<{
+                employee_id: number;
+                timestamp: Date;
+                log_type: string;
+                remarks: string | null;
+            }> = [];
+            const skipped: string[] = [];
+
+            for (const l of logs) {
+                if (!l.timestamp || !l.log_type) {
+                    skipped.push(`Fila sin timestamp o log_type`);
+                    continue;
+                }
+
+                const timestamp = new Date(l.timestamp);
+                if (isNaN(timestamp.getTime())) {
+                    skipped.push(`Timestamp inválido: ${l.timestamp}`);
+                    continue;
+                }
+
+                const employeeId = await resolveEmployeeId(l.employee_id, l.employee_name);
+                if (!employeeId) {
+                    skipped.push(`No se encontró empleado: id=${l.employee_id} nombre="${l.employee_name}"`);
+                    continue;
+                }
+
+                try {
+                    const normalizedType = normalizeLogType(String(l.log_type));
+                    resolved.push({
+                        employee_id: employeeId,
+                        timestamp,
+                        log_type: normalizedType,
+                        remarks: l.remarks ?? null
+                    });
+                } catch {
+                    skipped.push(`Tipo de marca desconocido: "${l.log_type}"`);
+                    continue;
+                }
+            }
+
+            // Bulk create with session reference
+            const service = new ClockLogsService();
+            const result = await service.bulkCreate(resolved, source, sessionId);
+
+            // Update session with final results
+            await ImportSessionService.updateSession(sessionId, {
+                status: 'completed',
+                createdCount: result.created,
+                skippedCount: skipped.length,
+                anomalyCount: 0
+            });
+
+            return res.status(201).json({
+                session_id: sessionId,
+                status: skipped.length > 0 ? 'partial' : 'completed',
+                created: result.created,
+                skipped: skipped.length,
+                anomalies: 0,
+                errors: skipped
+            });
+        } catch (error) {
+            console.error('Error en import de clock logs:', error);
+
+            // Mark session as failed if it was created
+            if (sessionId !== undefined) {
+                try {
+                    await ImportSessionService.updateSession(sessionId, { status: 'failed' });
+                } catch (updateError) {
+                    console.error('Error al marcar sesión como fallida:', updateError);
+                }
+            }
+
+            return res.status(500).json({
+                success: false,
+                error: 'Error interno del servidor',
+                detail: String(error)
+            });
         }
     }
 
