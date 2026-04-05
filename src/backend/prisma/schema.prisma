@@ -133,16 +133,16 @@ model vpg_employees {
   employee_status                  String                        @db.Char(1)
   employee_required_hours_biweekly Decimal?                      @db.Decimal(5, 2)
   employee_version                 Int                           @default(1)
-  vpg_bonuses                 vpg_bonuses[]
-  vpg_branch_employee         vpg_branch_employee[]         @ignore
-  vpg_clock_logs              vpg_clock_logs[]
-  vpg_deductions_per_employee vpg_deductions_per_employee[]
-  vpg_employee_deductions     vpg_employee_deductions[]
-  vpg_employee_documents      vpg_employee_documents[]
-  vpg_employee_labor_event    vpg_employee_labor_event[]
-  vpg_positions               vpg_positions                 @relation(fields: [employee_position_id], references: [position_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_employees_positions_05")
-  vpg_payroll_employee        vpg_payroll_employee[]
-  vpg_vacations               vpg_vacations[]
+  vpg_bonuses                      vpg_bonuses[]
+  vpg_branch_employee              vpg_branch_employee[]         @ignore
+  vpg_clock_logs                   vpg_clock_logs[]
+  vpg_deductions_per_employee      vpg_deductions_per_employee[]
+  vpg_employee_deductions          vpg_employee_deductions[]
+  vpg_employee_documents           vpg_employee_documents[]
+  vpg_employee_labor_event         vpg_employee_labor_event[]
+  vpg_positions                    vpg_positions                 @relation(fields: [employee_position_id], references: [position_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_employees_positions_05")
+  vpg_payroll_employee             vpg_payroll_employee[]
+  vpg_vacations                    vpg_vacations[]
 
   @@index([employee_position_id], map: "idx_vpg_employees_position_id")
   @@index([employee_email], map: "idx_vpg_employees_email")
@@ -192,21 +192,21 @@ model vpg_mail_server_settings {
 }
 
 model vpg_payroll_employee {
-  payroll_employee_id               Int           @id @default(autoincrement())
-  payroll_employee_payroll_id       Int
-  payroll_employee_employee_id      Int
-  payroll_employee_total_hours      Decimal?      @db.Decimal(10, 2)
-  payroll_employee_overtime_hours   Decimal?      @db.Decimal(10, 2)
-  payroll_employee_overtime_pay     Decimal?      @db.Decimal(10, 2)
-  payroll_employee_weekly_rest_hours Decimal?     @db.Decimal(10, 2)
-  payroll_employee_weekly_rest_pay  Decimal?      @db.Decimal(10, 2)
-  payroll_employee_bonuses          Decimal?      @db.Decimal(10, 2)
-  payroll_employee_gross_salary     Decimal       @db.Decimal(10, 2)
-  payroll_employee_total_deductions Decimal       @db.Decimal(10, 2)
-  payroll_employee_net_salary       Decimal       @db.Decimal(10, 2)
-  payroll_employee_version          Int           @default(1)
-  vpg_employees                     vpg_employees @relation(fields: [payroll_employee_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_employees_09")
-  vpg_payrolls                      vpg_payrolls  @relation(fields: [payroll_employee_payroll_id], references: [payrolls_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_payrolls_08")
+  payroll_employee_id                Int           @id @default(autoincrement())
+  payroll_employee_payroll_id        Int
+  payroll_employee_employee_id       Int
+  payroll_employee_total_hours       Decimal?      @db.Decimal(10, 2)
+  payroll_employee_overtime_hours    Decimal?      @db.Decimal(10, 2)
+  payroll_employee_overtime_pay      Decimal?      @db.Decimal(10, 2)
+  payroll_employee_weekly_rest_hours Decimal?      @db.Decimal(10, 2)
+  payroll_employee_weekly_rest_pay   Decimal?      @db.Decimal(10, 2)
+  payroll_employee_bonuses           Decimal?      @db.Decimal(10, 2)
+  payroll_employee_gross_salary      Decimal       @db.Decimal(10, 2)
+  payroll_employee_total_deductions  Decimal       @db.Decimal(10, 2)
+  payroll_employee_net_salary        Decimal       @db.Decimal(10, 2)
+  payroll_employee_version           Int           @default(1)
+  vpg_employees                      vpg_employees @relation(fields: [payroll_employee_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_employees_09")
+  vpg_payrolls                       vpg_payrolls  @relation(fields: [payroll_employee_payroll_id], references: [payrolls_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_payrolls_08")
 
   @@index([payroll_employee_employee_id], map: "idx_vpg_payroll_employee_employee_id")
   @@index([payroll_employee_payroll_id], map: "idx_vpg_payroll_employee_payroll_id")
@@ -290,37 +290,37 @@ model vpg_report_versions {
 }
 
 model vpg_users {
-  user_id          Int               @id @default(autoincrement())
-  user_first_name  String            @db.VarChar(50)
-  user_last_name   String            @db.VarChar(50)
-  user_middle_name String            @db.VarChar(50)
-  user_national_id String            @db.VarChar(30)
-  user_email       String            @db.VarChar(100)
-  user_username    String            @db.VarChar(50)
-  user_password    String            @db.VarChar(255)
-  user_role        String            @db.VarChar(20)
-  user_version     Int               @default(1)
-  user_last_login  DateTime?         @db.Timestamp(6)
-  vpg_audit_logs   vpg_audit_logs[]
-  vpg_report_logs  vpg_report_logs[]
+  user_id           Int                 @id @default(autoincrement())
+  user_first_name   String              @db.VarChar(50)
+  user_last_name    String              @db.VarChar(50)
+  user_middle_name  String              @db.VarChar(50)
+  user_national_id  String              @db.VarChar(30)
+  user_email        String              @db.VarChar(100)
+  user_username     String              @db.VarChar(50)
+  user_password     String              @db.VarChar(255)
+  user_role         String              @db.VarChar(20)
+  user_version      Int                 @default(1)
+  user_last_login   DateTime?           @db.Timestamp(6)
+  vpg_audit_logs    vpg_audit_logs[]
+  vpg_report_logs   vpg_report_logs[]
+  vpg_notifications vpg_notifications[]
 
   @@index([user_email], map: "idx_vpg_users_email")
   @@index([user_national_id], map: "idx_vpg_users_national_id")
   @@index([user_role], map: "idx_vpg_users_role")
   @@index([user_username], map: "idx_vpg_users_username")
-  vpg_notifications vpg_notifications[]
 }
 
 model vpg_notifications {
-  notifications_id          Int         @id @default(autoincrement())
-  notifications_user_id     Int
-  notifications_title       String      @db.VarChar(100)
-  notifications_message     String      @db.VarChar(500)
-  notifications_type        String      @db.VarChar(30)
-  notifications_is_read     Boolean     @default(false)
-  notifications_created_at  DateTime    @default(now()) @db.Timestamp(6)
-  notifications_version     Int         @default(1)
-  vpg_users                 vpg_users   @relation(fields: [notifications_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_vpg_notifications_users_24")
+  notifications_id         Int       @id @default(autoincrement())
+  notifications_user_id    Int
+  notifications_title      String    @db.VarChar(100)
+  notifications_message    String    @db.VarChar(500)
+  notifications_type       String    @db.VarChar(30)
+  notifications_is_read    Boolean   @default(false)
+  notifications_created_at DateTime  @default(now()) @db.Timestamp(6)
+  notifications_version    Int       @default(1)
+  vpg_users                vpg_users @relation(fields: [notifications_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_vpg_notifications_users_24")
 
   @@index([notifications_user_id], map: "idx_vpg_notifications_user_id")
   @@index([notifications_is_read], map: "idx_vpg_notifications_is_read")
@@ -375,10 +375,10 @@ model vpg_deductions_per_employee {
 }
 
 model vpg_token_blocklist {
-  blocklist_id       Int       @id @default(autoincrement())
-  blocklist_token   String    @db.VarChar(500)
-  blocklist_expires DateTime  @db.Timestamp(6)
-  blocklist_created DateTime  @default(now()) @db.Timestamp(6)
+  blocklist_id      Int      @id @default(autoincrement())
+  blocklist_token   String   @db.VarChar(500)
+  blocklist_expires DateTime @db.Timestamp(6)
+  blocklist_created DateTime @default(now()) @db.Timestamp(6)
 
   @@index([blocklist_token], map: "idx_token_blocklist_token")
 }
