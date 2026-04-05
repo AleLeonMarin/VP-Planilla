@@ -77,7 +77,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
       </div>
 
       {/* Logo desktop */}
-      <div className="hidden md:flex items-center gap-3 px-5 py-5 border-b border-[#E0D6B7] dark:border-zinc-800">
+      <div className="hidden md:flex items-center gap-3 px-5 py-3.5 border-b border-[#E0D6B7] dark:border-zinc-800">
         <div className="relative flex-shrink-0">
           <Image src="/images/Logo.png" alt="Verde Gestión Logo" width={36} height={36} className="rounded-full ring-2 ring-green-500/30" priority />
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#FCF1D5] dark:border-zinc-900" />
