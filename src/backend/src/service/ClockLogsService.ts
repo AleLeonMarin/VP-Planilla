@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { ClockLogs } from "../model/clockLog";
 import { normalizeLogType, CanonicalLogType } from '../utils/clockLogNormalization';
+import { AuditLogsService } from './AuditLogsService';
 
 /**
  * Request parameters for filtering clock logs by date range
@@ -332,5 +333,89 @@ export class ClockLogsService {
 
       // Should not reach here
       throw new Error('Acción no válida');
+    }
+
+    /**
+     * Create a manual clock log entry with audit trail
+     * @param params - Creation parameters
+     * @returns Promise with success flag and created clock log ID
+     * @throws Error if database operation fails
+     */
+    async createManualLog(params: {
+        employee_id: number;
+        timestamp: Date;
+        log_type: 'IN' | 'OUT';
+        remarks?: string | null;
+        created_by: number;
+        justification: string;
+    }): Promise<{ success: boolean; clockLogId: number }> {
+        // Create the manual clock log
+        const createdLog = await prisma.vpg_clock_logs.create({
+            data: {
+                clock_logs_employee_id: params.employee_id,
+                clock_logs_timestamp: params.timestamp,
+                clock_logs_log_type: params.log_type,
+                clock_logs_remarks: params.remarks ?? null,
+                clock_logs_status: 'valid',
+                clock_logs_source: 'manual',
+                clock_logs_version: 1,
+                clock_logs_import_session_id: null,
+            },
+        });
+
+        // Create audit log entry
+        await AuditLogsService.createAuditLog({
+            userId: params.created_by,
+            action: 'manual_correction',
+            entity: 'clock_log',
+            entityId: createdLog.clock_logs_id,
+            details: `Created manual ${params.log_type} for employee ${params.employee_id}. Justification: ${params.justification}`,
+        });
+
+        return { success: true, clockLogId: createdLog.clock_logs_id };
+    }
+
+    /**
+     * Update a clock log's status with justification and audit trail
+     * @param params - Update parameters
+     * @returns Promise with success flag
+     * @throws Error if log not found or database operation fails
+     */
+    async updateClockLogStatus(params: {
+        clockLogId: number;
+        newStatus: 'corrected' | 'valid' | 'orphan' | 'anomaly';
+        justification: string;
+        changed_by: number;
+    }): Promise<{ success: boolean }> {
+        // Fetch existing log to capture old status
+        const existing = await prisma.vpg_clock_logs.findUnique({
+            where: { clock_logs_id: params.clockLogId },
+        });
+
+        if (!existing) {
+            throw new Error('Marca no encontrada');
+        }
+
+        const oldStatus = existing.clock_logs_status;
+
+        // Update status and set remarks to justification
+        await prisma.vpg_clock_logs.update({
+            where: { clock_logs_id: params.clockLogId },
+            data: {
+                clock_logs_status: params.newStatus,
+                clock_logs_remarks: params.justification,
+            },
+        });
+
+        // Create audit log entry
+        await AuditLogsService.createAuditLog({
+            userId: params.changed_by,
+            action: 'manual_correction',
+            entity: 'clock_log',
+            entityId: params.clockLogId,
+            details: `Changed status from ${oldStatus} to ${params.newStatus}. Justification: ${params.justification}`,
+        });
+
+        return { success: true };
     }
 }
