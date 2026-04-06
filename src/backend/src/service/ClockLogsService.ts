@@ -349,27 +349,33 @@ export class ClockLogsService {
         created_by: number;
         justification: string;
     }): Promise<{ success: boolean; clockLogId: number }> {
-        // Create the manual clock log
-        const createdLog = await prisma.vpg_clock_logs.create({
-            data: {
-                clock_logs_employee_id: params.employee_id,
-                clock_logs_timestamp: params.timestamp,
-                clock_logs_log_type: params.log_type,
-                clock_logs_remarks: params.remarks ?? null,
-                clock_logs_status: 'valid',
-                clock_logs_source: 'manual',
-                clock_logs_version: 1,
-                clock_logs_import_session_id: null,
-            },
-        });
+        // Atomic: clock log creation + audit entry succeed or fail together
+        const createdLog = await prisma.$transaction(async (tx) => {
+            const log = await tx.vpg_clock_logs.create({
+                data: {
+                    clock_logs_employee_id: params.employee_id,
+                    clock_logs_timestamp: params.timestamp,
+                    clock_logs_log_type: params.log_type,
+                    clock_logs_remarks: params.remarks ?? null,
+                    clock_logs_status: 'valid',
+                    clock_logs_source: 'manual',
+                    clock_logs_version: 1,
+                    clock_logs_import_session_id: null,
+                },
+            });
 
-        // Create audit log entry
-        await AuditLogsService.createAuditLog({
-            userId: params.created_by,
-            action: 'manual_correction',
-            entity: 'clock_log',
-            entityId: createdLog.clock_logs_id,
-            details: `Created manual ${params.log_type} for employee ${params.employee_id}. Justification: ${params.justification}`,
+            await tx.vpg_audit_logs.create({
+                data: {
+                    audit_logs_user_id: params.created_by,
+                    audit_logs_action: 'manual_correction',
+                    audit_logs_entity: 'clock_log',
+                    audit_logs_entity_id: log.clock_logs_id,
+                    audit_logs_timestamp: new Date(),
+                    audit_logs_details: `Created manual ${params.log_type} for employee ${params.employee_id}. Justification: ${params.justification}`,
+                },
+            });
+
+            return log;
         });
 
         return { success: true, clockLogId: createdLog.clock_logs_id };
@@ -398,22 +404,26 @@ export class ClockLogsService {
 
         const oldStatus = existing.clock_logs_status;
 
-        // Update status and set remarks to justification
-        await prisma.vpg_clock_logs.update({
-            where: { clock_logs_id: params.clockLogId },
-            data: {
-                clock_logs_status: params.newStatus,
-                clock_logs_remarks: params.justification,
-            },
-        });
+        // Atomic: status update + audit entry succeed or fail together
+        await prisma.$transaction(async (tx) => {
+            await tx.vpg_clock_logs.update({
+                where: { clock_logs_id: params.clockLogId },
+                data: {
+                    clock_logs_status: params.newStatus,
+                    clock_logs_remarks: params.justification,
+                },
+            });
 
-        // Create audit log entry
-        await AuditLogsService.createAuditLog({
-            userId: params.changed_by,
-            action: 'manual_correction',
-            entity: 'clock_log',
-            entityId: params.clockLogId,
-            details: `Changed status from ${oldStatus} to ${params.newStatus}. Justification: ${params.justification}`,
+            await tx.vpg_audit_logs.create({
+                data: {
+                    audit_logs_user_id: params.changed_by,
+                    audit_logs_action: 'manual_correction',
+                    audit_logs_entity: 'clock_log',
+                    audit_logs_entity_id: params.clockLogId,
+                    audit_logs_timestamp: new Date(),
+                    audit_logs_details: `Changed status from ${oldStatus} to ${params.newStatus}. Justification: ${params.justification}`,
+                },
+            });
         });
 
         return { success: true };
