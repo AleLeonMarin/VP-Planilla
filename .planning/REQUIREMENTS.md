@@ -50,7 +50,7 @@
 
 - [x] **UI-01**: La página de asistencia (`/attendance`) muestra un panel de resumen con conteo de marcas por status (pending, valid, anomaly, orphan) para el período activo
 - [x] **UI-02**: La tabla de marcas permite filtrar por status y por empleado, mostrando columnas: empleado, timestamp, tipo (IN/OUT), status, source
-- [ ] **UI-03**: Las marcas con `status = 'anomaly'` u `orphan'` se distinguen visualmente (badge de color) en la tabla
+- [x] **UI-03**: Las marcas con `status = 'anomaly'` u `orphan'` se distinguen visualmente (badge de color) en la tabla
 - [ ] **UI-04**: Un modal de detalle de marca permite al administrador ver el historial de la marca y ejecutar una corrección manual directamente desde la UI
 - [x] **UI-05**: La página muestra un panel de sesiones de importación recientes con link a detalle de cada sesión
 
@@ -107,7 +107,7 @@
 | CORRECT-03 | Phase 21 | Complete |
 | UI-01 | Phase 22 | Complete |
 | UI-02 | Phase 22 | Complete |
-| UI-03 | Phase 22 | Pending |
+| UI-03 | Phase 22 | Complete |
 | UI-04 | Phase 22 | Pending |
 | UI-05 | Phase 22 | Complete |
 

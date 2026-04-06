@@ -94,7 +94,7 @@ Plans:
 
 Plans:
 - [x] 22-01-PLAN.md — Backend pagination + frontend service + attendance import fix
-- [ ] 22-02-PLAN.md — Clock-logs page with stats, filters, table, sessions panel
+- [x] 22-02-PLAN.md — Clock-logs page with stats, filters, table, sessions panel
 - [ ] 22-03-PLAN.md — Correction modal with audit history and admin actions
 
 ---
@@ -107,7 +107,7 @@ Plans:
 | 19. Sesiones de Importación | 2/2 | ✓ Complete | 2026-04-05 |
 | 20. Huérfanas y Anomalías | 3/3 | ✓ Complete | 2026-04-05 |
 | 21. Corrección Manual | 2/2 | Complete    | 2026-04-05 |
-| 22. Dashboard UI de Marcas | 1/3 | In Progress|  |
+| 22. Dashboard UI de Marcas | 2/3 | In Progress|  |
 
 ---
 
