@@ -680,4 +680,208 @@ describe('ClockLogsService', () => {
       ).rejects.toThrow('Marca no encontrada');
     });
   });
+
+  describe('getClockLogsPaginated', () => {
+    const service = new ClockLogsService();
+    const mockLog = {
+      clock_logs_id: 1,
+      clock_logs_employee_id: 101,
+      clock_logs_timestamp: new Date('2026-02-02T08:00:00.000Z'),
+      clock_logs_log_type: 'IN',
+      clock_logs_remarks: 'Test remark',
+      clock_logs_status: 'anomaly',
+      clock_logs_source: 'java_import',
+      clock_logs_import_session_id: 5,
+      vpg_employees: {
+        employee_id: 101,
+        employee_first_name: 'Ana',
+        employee_last_name: 'García'
+      }
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(0);
+    });
+
+    it('should return paginated results with defaults (page=1, pageSize=20)', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([mockLog]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      const result = await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28')
+      });
+
+      expect(result).toEqual({
+        data: [{
+          id: 1,
+          employee_id: 101,
+          employee_name: 'Ana García',
+          timestamp: mockLog.clock_logs_timestamp,
+          log_type: 'IN',
+          status: 'anomaly',
+          source: 'java_import',
+          remarks: 'Test remark',
+          import_session_id: 5
+        }],
+        total: 1,
+        page: 1,
+        pageSize: 20
+      });
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith({
+        where: {
+          clock_logs_timestamp: {
+            gte: new Date('2026-02-01'),
+            lte: new Date('2026-02-28')
+          }
+        },
+        include: { vpg_employees: { select: { employee_id: true, employee_first_name: true, employee_last_name: true } } },
+        skip: 0,
+        take: 20,
+        orderBy: { clock_logs_timestamp: 'desc' }
+      });
+      expect(prisma.vpg_clock_logs.count).toHaveBeenCalledWith({
+        where: {
+          clock_logs_timestamp: {
+            gte: new Date('2026-02-01'),
+            lte: new Date('2026-02-28')
+          }
+        }
+      });
+    });
+
+    it('should respect custom page and pageSize', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([mockLog]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        page: 2,
+        pageSize: 10
+      });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 10,
+          take: 10
+        })
+      );
+    });
+
+    it('should filter by status array', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([mockLog]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        status: ['anomaly', 'orphan']
+      });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clock_logs_status: { in: ['anomaly', 'orphan'] }
+          })
+        })
+      );
+    });
+
+    it('should filter by employee_id', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([mockLog]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        employee_id: 101
+      });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clock_logs_employee_id: 101
+          })
+        })
+      );
+    });
+
+    it('should combine multiple filters', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([mockLog]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        status: ['valid'],
+        employee_id: 101
+      });
+
+      expect(prisma.vpg_clock_logs.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            clock_logs_timestamp: {
+              gte: new Date('2026-02-01'),
+              lte: new Date('2026-02-28')
+            },
+            clock_logs_status: { in: ['valid'] },
+            clock_logs_employee_id: 101
+          })
+        })
+      );
+    });
+
+    it('should return empty data and total 0 when no matches', async () => {
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(0);
+
+      const result = await service.getClockLogsPaginated({
+        initDate: new Date('2026-03-01'),
+        endDate: new Date('2026-03-31')
+      });
+
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should throw if findMany fails', async () => {
+      prisma.vpg_clock_logs.findMany.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.getClockLogsPaginated({
+          initDate: new Date('2026-02-01'),
+          endDate: new Date('2026-02-28')
+        })
+      ).rejects.toThrow('DB error');
+    });
+
+    it('should map remarks as undefined when null', async () => {
+      const log = { ...mockLog, clock_logs_remarks: null };
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([log]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      const result = await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28')
+      });
+
+      expect(result.data[0].remarks).toBeUndefined();
+    });
+
+    it('should handle import_session_id as null -> undefined', async () => {
+      const log = { ...mockLog, clock_logs_import_session_id: null };
+      prisma.vpg_clock_logs.findMany.mockResolvedValue([log]);
+      prisma.vpg_clock_logs.count.mockResolvedValue(1);
+
+      const result = await service.getClockLogsPaginated({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28')
+      });
+
+      expect(result.data[0].import_session_id).toBeUndefined();
+    });
+  });
 });

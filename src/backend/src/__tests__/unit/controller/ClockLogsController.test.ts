@@ -1,17 +1,26 @@
 import { Request, Response } from 'express';
 import { ClockLogsController } from '../../../controller/ClockLogsController';
 import { ClockLogsService } from '../../../service/ClockLogsService';
+import { ImportSessionService } from '../../../service/ImportSessionService';
 
-// Mock the service module - define mocks inside factory to avoid hoisting issues
+// Mock the service modules
 jest.mock('../../../service/ClockLogsService', () => {
   return {
     ClockLogsService: jest.fn().mockImplementation(() => ({
       bulkCreate: jest.fn().mockResolvedValue({ created: 0 }),
       getStats: jest.fn().mockResolvedValue([]),
       getClockLogs: jest.fn().mockResolvedValue([]),
+      getClockLogsPaginated: jest.fn().mockResolvedValue({ success: true, data: [], total: 0, page: 1, pageSize: 20 }),
+      getImportSessions: jest.fn().mockResolvedValue([]),
     })),
   };
 });
+
+jest.mock('../../../service/ImportSessionService', () => ({
+  ImportSessionService: {
+    getRecentSessions: jest.fn().mockResolvedValue([]),
+  },
+}));
 
 function createMockRequest(overrides: Partial<Request> = {}): Request {
   return {
@@ -39,7 +48,11 @@ beforeEach(() => {
     mockInstance.bulkCreate.mockResolvedValue({ created: 0 });
     mockInstance.getStats.mockResolvedValue([]);
     mockInstance.getClockLogs.mockResolvedValue([]);
+    mockInstance.getClockLogsPaginated.mockResolvedValue({ success: true, data: [], total: 0, page: 1, pageSize: 20 });
+    mockInstance.getImportSessions.mockResolvedValue([]);
   }
+  // Reset ImportSessionService mock
+  (ImportSessionService.getRecentSessions as jest.Mock).mockResolvedValue([]);
 });
 
 describe('ClockLogsController', () => {
@@ -887,6 +900,105 @@ describe('ClockLogsController', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Error interno del servidor' });
+    });
+  });
+
+  describe('getClockLogsPaginated', () => {
+    it('should call service and return paginated result', async () => {
+      const mockResult = {
+        data: [{ id: 1, employee_id: 1, employee_name: 'Test', timestamp: new Date(), log_type: 'IN', status: 'valid', source: 'manual' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      };
+      const MockService = ClockLogsService as jest.Mock;
+      const instance = MockService.mock.results[0]?.value;
+      if (instance) {
+        instance.getClockLogsPaginated.mockResolvedValue(mockResult);
+      }
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: '2026-02-01', endDate: '2026-02-28', page: '1', pageSize: '20' },
+      });
+      const res = createMockResponse();
+
+      await controller.getClockLogsPaginated(req, res);
+
+      expect(instance?.getClockLogsPaginated).toHaveBeenCalledWith({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        page: 1,
+        pageSize: 20,
+        status: undefined,
+        employee_id: undefined,
+      });
+      expect(res.json).toHaveBeenCalledWith({ success: true, ...mockResult });
+    });
+
+    it('should pass through status and employee_id filters', async () => {
+      const MockService = ClockLogsService as jest.Mock;
+      const instance = MockService.mock.results[0]?.value;
+      if (instance) {
+        instance.getClockLogsPaginated.mockResolvedValue({ data: [], total: 0, page: 1, pageSize: 20 });
+      }
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({
+        query: { initDate: '2026-02-01', endDate: '2026-02-28', status: 'anomaly,orphan', employee_id: '101' },
+      });
+      const res = createMockResponse();
+
+      await controller.getClockLogsPaginated(req, res);
+
+      expect(instance?.getClockLogsPaginated).toHaveBeenCalledWith({
+        initDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-28'),
+        page: 1,
+        pageSize: 20,
+        status: ['anomaly', 'orphan'],
+        employee_id: 101,
+      });
+    });
+  });
+
+  describe('getImportSessions', () => {
+    it('should return sessions with specified limit', async () => {
+      const mockSessions = [{ id: 1, started_at: new Date(), source: 'java_import', status: 'completed', created_count: 10, skipped_count: 0, anomaly_count: 0, total_records: 10, created_by: 2 }];
+      (ImportSessionService.getRecentSessions as jest.Mock).mockResolvedValue(mockSessions);
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { limit: '3' } });
+      const res = createMockResponse();
+
+      await controller.getImportSessions(req, res);
+
+      expect(ImportSessionService.getRecentSessions).toHaveBeenCalledWith(3);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: mockSessions });
+    });
+
+    it('should use default limit 5 when not provided', async () => {
+      (ImportSessionService.getRecentSessions as jest.Mock).mockResolvedValue([]);
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: {} });
+      const res = createMockResponse();
+
+      await controller.getImportSessions(req, res);
+
+      expect(ImportSessionService.getRecentSessions).toHaveBeenCalledWith(5);
+    });
+
+    it('should handle invalid limit by falling back to default', async () => {
+      (ImportSessionService.getRecentSessions as jest.Mock).mockResolvedValue([]);
+
+      const controller = new ClockLogsController();
+      const req = createMockRequest({ query: { limit: 'abc' } });
+      const res = createMockResponse();
+
+      await controller.getImportSessions(req, res);
+
+      expect(ImportSessionService.getRecentSessions).toHaveBeenCalledWith(5);
     });
   });
 });
