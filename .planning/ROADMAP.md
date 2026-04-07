@@ -14,6 +14,8 @@
 - [x] **Phase 20: Huérfanas y Anomalías** - Cola de huérfanas + motor de detección de anomalías automático
 - [x] **Phase 21: Corrección Manual** - API de corrección con registro de auditoría completo (completed 2026-04-05)
 - [x] **Phase 22: Dashboard UI de Marcas** - Visualización, filtros, badges de estado y acciones de corrección desde la UI (completed 2026-04-06)
+- [ ] **Phase 23: Debug y Corrección de Funcionalidad de Marcas** - Diagnóstico y corrección de bugs críticos: marcas no persisten al recargar y trazabilidad de sesiones de importación no aparece
+- [ ] **Phase 24: Bug de Fechas en Componentes de Calendario** - Al seleccionar una fecha en el calendario se guarda el día anterior (UTC offset bug, Costa Rica UTC-6)
 
 ---
 
@@ -108,6 +110,36 @@ Plans:
 | 20. Huérfanas y Anomalías | 3/3 | ✓ Complete | 2026-04-05 |
 | 21. Corrección Manual | 2/2 | Complete    | 2026-04-05 |
 | 22. Dashboard UI de Marcas | 3/3 | Complete   | 2026-04-06 |
+| 23. Debug y Corrección de Marcas | 0/? | Pending    | —          |
+| 24. Bug de Fechas en Calendario  | 0/? | Pending    | —          |
+
+### Phase 24: Bug de Fechas en Componentes de Calendario
+**Goal**: Corregir el off-by-one de fechas en todos los componentes de calendario — seleccionar una fecha guarda el día correcto, no el anterior
+**Depends on**: Independent (puede ejecutarse en paralelo con Phase 23)
+**Requirements**: BUG-03
+**Root Cause**: Serialización con `.toISOString()` convierte fecha local a UTC, restando 6h (Costa Rica UTC-6) → resultado es el día anterior
+**Success Criteria** (what must be TRUE):
+  1. Seleccionar 1 de abril en cualquier date picker del sistema guarda/envía `2026-04-01` al backend
+  2. Ningún componente de calendario usa `.toISOString().split('T')[0]` para construir strings de fecha
+**Plans**: TBD
+
+Plans:
+- [ ] 24-01-PLAN.md — Auditar todos los date pickers, corregir serialización a formato local YYYY-MM-DD
+
+---
+
+### Phase 23: Debug y Corrección de Funcionalidad de Marcas
+**Goal**: Identificar y corregir bugs críticos en el pipeline de marcas: persistencia post-recarga y trazabilidad de sesiones de importación
+**Depends on**: Phase 22
+**Requirements**: BUG-01, BUG-02
+**Success Criteria** (what must be TRUE):
+  1. Las marcas importadas con `attendance_sample_valid.xlsx` persisten y se muestran correctamente al recargar la vista de marcas del 6/4/26
+  2. La sesión de importación correspondiente a esa carga aparece en el historial de trazabilidad con sus métricas correctas
+**Plans**: TBD (pendiente de diagnóstico)
+
+Plans:
+- [ ] 23-01-PLAN.md — Diagnóstico DB + backend fix (filtros, persistencia, import session)
+- [ ] 23-02-PLAN.md — Frontend fix (hook query, sessionStorage cache, visualización sesiones)
 
 ---
 
