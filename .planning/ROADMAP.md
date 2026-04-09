@@ -32,11 +32,11 @@
 
 **Requirements:** AUTH-05, AUTH-06, AUTH-07, AUTH-08
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 24-01-PLAN.md — Contrato canónico 401/403 y enforcement global de revocación en middleware backend
-- [ ] 24-02-PLAN.md — Refresh/logout backend end-to-end con invalidación real y pruebas de ciclo auth
+- [x] 24-02-PLAN.md — Refresh/logout backend end-to-end con invalidación real y pruebas de ciclo auth
 - [ ] 24-03-PLAN.md — Frontend auth lifecycle sin bypasses (http.ts central), single-flight refresh y logout determinista
 
 ## Progress
@@ -49,7 +49,7 @@ Plans:
 | 21. Corrección Manual | v1.3 | 2/2 | Complete | 2026-04-05 |
 | 22. Dashboard UI de Marcas | v1.3 | 3/3 | Complete | 2026-04-06 |
 | 23. Debug y Corrección de Marcas | v1.3 | 2/2 | Complete | 2026-04-09 |
-| 24. Auth Token Lifecycle End-to-End | v1.4 | 1/3 | In Progress|  |
+| 24. Auth Token Lifecycle End-to-End | v1.4 | 2/3 | In Progress|  |
 | 25. HTTP Client Layer Enforcement | v1.4 | 0/2 | Pending | — |
 | 26. Repository Hygiene and Build Cleanup | v1.4 | 0/2 | Pending | — |
 | 27. Monolith Decomposition and Maintainability | v1.4 | 0/3 | Pending | — |
