@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: milestone
-status: Phase complete — ready for verification
-stopped_at: Completed 22-03-PLAN.md — phase 22 complete
-last_updated: "2026-04-06T00:50:16.299Z"
-last_activity: 2026-04-06
+status: Phase 23 in progress — being executed by external agent (Open Code)
+stopped_at: Phase 22 complete (22-03-PLAN.md verified 11/11) — Phase 23 executing
+last_updated: "2026-04-09T00:00:00.000Z"
+last_activity: 2026-04-09
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 11
-  percent: 100
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 12
+  percent: 71
 ---
 
 # Project State — VP-Planilla
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 22 — dashboard-ui-de-marcas
+**Current focus:** Phase 23 — debug-y-correcion-marcas (in progress, Open Code executing)
 
 ## Current Position
 
-Phase: 22 (dashboard-ui-de-marcas) — EXECUTING
-Plan: 3 of 3
-Plans: 2/2 complete (21-01 service layer, 21-02 controller/routes/tests)
-Next: Phase 22 — Dashboard UI de Marcas
-Last activity: 2026-04-06
+Phase: 23 (debug-y-correcion-marcas) — EXECUTING (Open Code)
+Plan: TBD — diagnóstico en curso
+Plans: 23-01 (backend fix) and 23-02 (frontend fix) planned, not yet complete
+Next: Phase 24 — Bug de Fechas en Componentes de Calendario
+Last activity: 2026-04-09
 
-Progress: [██████████] 100% (9/9 plans complete)
+Progress: [████████░░] 71% (12/15 plans complete)
 
 ## v1.3 Phase Map
 
@@ -41,7 +41,9 @@ Progress: [██████████] 100% (9/9 plans complete)
 | 19 | Sesiones de Importación | IMPORT-01..03 | ✓ Complete |
 | 20 | Huérfanas y Anomalías | ORPHAN-01..03, ANOMALY-01..05 | ✓ Complete |
 | 21 | Corrección Manual | CORRECT-01..03 | ✓ Complete |
-| 22 | Dashboard UI de Marcas | UI-01..05 | Not started |
+| 22 | Dashboard UI de Marcas | UI-01..05 | ✓ Complete (verified 2026-04-05, 11/11) |
+| 23 | Debug y Corrección de Marcas | BUG-01, BUG-02 | In progress (Open Code) |
+| 24 | Bug de Fechas en Calendario | BUG-03 | Not started |
 
 ## Milestone History
 
@@ -75,6 +77,8 @@ Progress: [██████████] 100% (9/9 plans complete)
 - **Phase 21-01:** Added `ClockLogsService.createManualLog` and `ClockLogsService.updateClockLogStatus` methods with audit integration; Zod schemas `createManualLogSchema` and `updateClockLogStatusSchema`
 - **Phase 21-02:** Added controller endpoints (`createManualLog`, `updateClockLogStatus`), route registrations with admin auth and Swagger docs, and full controller unit tests
 - **Phase 21 complete:** Manual correction API fully operational with audit trail and admin protection
+- **Phase 22 complete:** Dashboard UI de Marcas at `/pages/clock-logs` — stats cards (5 statuses), paginated table with status badges, employee autocomplete filter, ImportSessionsPanel, ClockLogDetailModal with audit history and correction flow. Verified 11/11 (2026-04-05). Human UAT items pending browser confirmation.
+- **Phase 23 in progress (Open Code):** Bugs reported after testing with `attendance_sample_valid.xlsx` — (1) marcas not persisting after page reload, (2) import session not appearing in trazabilidad panel. Plans: 23-01 backend fix (filters, import session persistence), 23-02 frontend fix (hook query, sessionStorage cache)
 - Thresholds: orphan window 24h, long session > 16h
 
 ### Known Issues
@@ -95,10 +99,11 @@ Progress: [██████████] 100% (9/9 plans complete)
 
 ## Session Continuity
 
-Last session: 2026-04-06T00:50:16.294Z
-Stopped at: Completed 22-03-PLAN.md — phase 22 complete
-Resume: Run `/gsd:execute-phase 22` to start Dashboard UI de Marcas
+Last session: 2026-04-09T00:00:00.000Z
+Stopped at: Phase 22 complete (verified). Phase 23 in progress — being executed by Open Code external agent
+Resume: Check Open Code progress on Phase 23. If complete, run `/gsd:execute-phase 24` for the calendar date bug fix.
+Note: Phase 23 has CONTEXT.md at `.planning/phases/23-debug-y-correcion-marcas/23-CONTEXT.md` — plans 23-01 and 23-02 in roadmap but not yet written
 
 ---
 
-*Updated: 2026-04-05 — Phase 21-01 complete*
+*Updated: 2026-04-09 — Phase 22 complete, Phase 23 in progress (Open Code)*

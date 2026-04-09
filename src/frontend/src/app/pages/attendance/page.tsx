@@ -474,9 +474,14 @@ export default function AttendancePage() {
                dateStr = raw; // assume already ISO
              }
            }
-           const timeStr = typeof horaRaw === 'number'
-             ? `${String(Math.floor(horaRaw * 24)).padStart(2, '0')}:${String(Math.round((horaRaw * 24 % 1) * 60)).padStart(2, '0')}`
-             : String(horaRaw).trim();
+const timeStr = typeof horaRaw === 'number'
+              ? (() => {
+                  const totalMinutes = Math.round(horaRaw * 24 * 60);
+                  const hours = Math.floor(totalMinutes / 60);
+                  const minutes = totalMinutes % 60;
+                  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                })()
+              : String(horaRaw).trim();
            ts = dateStr ? new Date(`${dateStr}T${timeStr}:00`) : null;
          } else if (typeof tsRaw === 'string' && /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(tsRaw)) {
            ts = buildDateTimeFromParts(tsRaw, '');

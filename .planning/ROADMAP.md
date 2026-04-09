@@ -110,7 +110,7 @@ Plans:
 | 20. Huérfanas y Anomalías | 3/3 | ✓ Complete | 2026-04-05 |
 | 21. Corrección Manual | 2/2 | Complete    | 2026-04-05 |
 | 22. Dashboard UI de Marcas | 3/3 | Complete   | 2026-04-06 |
-| 23. Debug y Corrección de Marcas | 0/? | Pending    | —          |
+| 23. Debug y Corrección de Marcas | 2/2 | ✓ Complete | 2026-04-09 |
 | 24. Bug de Fechas en Calendario  | 0/? | Pending    | —          |
 
 ### Phase 24: Bug de Fechas en Componentes de Calendario
@@ -135,11 +135,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Las marcas importadas con `attendance_sample_valid.xlsx` persisten y se muestran correctamente al recargar la vista de marcas del 6/4/26
   2. La sesión de importación correspondiente a esa carga aparece en el historial de trazabilidad con sus métricas correctas
-**Plans**: TBD (pendiente de diagnóstico)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Diagnóstico DB + backend fix (filtros, persistencia, import session)
-- [ ] 23-02-PLAN.md — Frontend fix (hook query, sessionStorage cache, visualización sesiones)
+- [x] 23-01-PLAN.md — Diagnóstico DB + backend fix (filtros de fechas, persistencia import_session_id)
+- [x] 23-02-PLAN.md — Frontend fix (hook query, fechas por defecto, visualización sesiones)
 
 ---
 
