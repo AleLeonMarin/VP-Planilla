@@ -1,125 +1,89 @@
 # Technology Stack
 
-**Analysis Date:** 2026-03-31
+**Analysis Date:** 2026-04-09
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.8.3 (Backend) - Used in `src/backend/` for API and business logic
-- TypeScript 5.9.3 (Frontend) - Used in `src/frontend/` for Next.js pages and components
-- Java (Utility) - Clock log parser utility at `src/Java/clocklogs/` (standalone CLI tool, not integrated with Node backend)
+- TypeScript - Backend API and frontend application (`src/backend/src/**/*.ts`, `src/frontend/src/**/*.ts`, `src/frontend/src/**/*.tsx`, `src/backend/package.json`, `src/frontend/package.json`)
+- SQL (via Prisma schema) - Relational data modeling for PostgreSQL (`src/backend/prisma/schema.prisma`)
 
 **Secondary:**
-- HTML/CSS - Handlebars templates in `src/backend/src/service/PaymentReceiptService.ts` for PDF generation
-- JavaScript/JSX - React 19 components in `src/frontend/src/components/`
+- JavaScript - Runtime/config files (`src/backend/jest.config.js`, `src/frontend/jest.config.js`, `src/frontend/tailwind.config.js`)
+- Java 17 - Standalone clock-log ingestion utility (`src/Java/clocklogs/pom.xml`, `src/Java/clocklogs/src/main/java/com/verde/pradera/Main.java`)
 
 ## Runtime
 
 **Environment:**
-- Node.js 22.14.0 (backend and frontend dev server)
-- Chromium (via Puppeteer for PDF rendering) - launched dynamically by `PaymentReceiptService`
+- Node.js 22.14.0 for backend/frontend runtime and tooling (`CLAUDE.md`, `src/backend/package.json`, `src/frontend/package.json`)
+- Java 17 for standalone importer (`src/Java/clocklogs/pom.xml`)
 
 **Package Manager:**
-- npm
-- Lockfile: `package-lock.json` present in both `src/backend/` and `src/frontend/`
+- npm (backend/frontend via `package.json` scripts) (`src/backend/package.json`, `src/frontend/package.json`)
+- Lockfile: present (`src/backend/package-lock.json`, `src/frontend/package-lock.json`)
 
 ## Frameworks
 
 **Core:**
-- Express 5.1.0 - REST API framework in `src/backend/src/index.ts`
-- Next.js 15.5.6 - Full-stack frontend framework in `src/frontend/`
-- React 19.0.0 - UI component library in `src/frontend/src/components/`
-
-**ORM & Database:**
-- Prisma 6.14.0 - Database ORM for PostgreSQL migrations and queries (`src/backend/prisma/schema.prisma`)
-- PostgreSQL (configured via `DATABASE_URL` environment variable)
+- Express 5 (`express`) - HTTP API server and routing (`src/backend/package.json`, `src/backend/src/index.ts`)
+- Next.js 15 (`next`) - Frontend application framework (`src/frontend/package.json`, `src/frontend/next.config.ts`)
+- React 19 (`react`, `react-dom`) - UI rendering layer (`src/frontend/package.json`)
+- Prisma ORM (`@prisma/client`, `prisma`) - Database access and schema management (`src/backend/package.json`, `src/backend/src/lib/prisma.ts`, `src/backend/prisma/schema.prisma`)
 
 **Testing:**
-- Jest 29.7.0 - Test runner in backend (`src/backend/jest.config.js`)
-- ts-jest 29.1.2 - TypeScript support for Jest
-- Supertest 6.3.4 - HTTP assertions for API testing
-- jest-mock-extended 3.0.5 - Mock utilities for unit tests
+- Jest 29 + ts-jest - Backend unit tests (`src/backend/package.json`, `src/backend/jest.config.js`)
+- Jest + next/jest + jsdom - Frontend component/unit tests (`src/frontend/package.json`, `src/frontend/jest.config.js`)
 
 **Build/Dev:**
-- tsx 4.20.6 - TypeScript execution for dev server (`npm run dev` uses `tsx watch`)
-- Turbopack - Next.js bundler for frontend dev performance (enabled in `src/frontend/package.json`)
-- tsc - TypeScript compiler for type checking and production builds
+- TypeScript compiler (`tsc`) - Build/type checking (`src/backend/package.json`, `src/frontend/tsconfig.json`, `src/backend/tsconfig.json`)
+- tsx watch - Backend dev runtime (`src/backend/package.json`)
+- Turbopack via `next dev --turbopack` - Frontend dev bundling (`src/frontend/package.json`)
+- Tailwind CSS 4 + PostCSS - Styling pipeline (`src/frontend/package.json`, `src/frontend/tailwind.config.js`, `src/frontend/postcss.config.mjs`)
+- ESLint (Next presets) - Frontend linting (`src/frontend/eslint.config.mjs`, `src/frontend/package.json`)
 
 ## Key Dependencies
 
 **Critical:**
-- Prisma Client 6.14.0 - ORM for all database operations; imported via `import { prisma } from '../lib/prisma'` singleton pattern across services
-- Express 5.1.0 - HTTP server and routing
-- Next.js 15.5.6 - Frontend SSR/static generation
-- React 19.0.0 - UI rendering
-- react-hook-form 7.62.0 - Form state management without useState
-- Zod 4.0.17 (backend) / 4.3.6 (frontend) - Runtime type validation and schema definition
-
-**Authentication & Security:**
-- jsonwebtoken 9.0.2 - JWT token generation and verification in `src/backend/src/service/AuthService.ts`
-- bcrypt 6.0.0 - Password hashing (pre-release version; documented tech debt to upgrade to 5.1.1)
-- Helmet 8.1.0 - HTTP security headers in `src/backend/src/index.ts`
-- CORS 2.8.5 - Cross-origin resource sharing with allowlist support
+- `@prisma/client` / `prisma` - Required for all persistence operations (`src/backend/src/lib/prisma.ts`, `src/backend/prisma/schema.prisma`)
+- `jsonwebtoken` + `bcrypt` - Authentication/token + password verification (`src/backend/src/service/AuthService.ts`)
+- `zod` - Input validation across backend and frontend (`src/backend/package.json`, `src/frontend/package.json`)
+- `react-hook-form` + `@hookform/resolvers` - Form state and schema integration (`src/frontend/package.json`)
 
 **Infrastructure:**
-- express-rate-limit 8.3.1 - Rate limiting on auth routes in `src/backend/src/routes/AuthRoute.ts`
-- dotenv 16.5.0 - Environment variable management via `.env` files
-
-**PDF & Document Generation:**
-- Puppeteer 24.37.5 - Headless Chrome for HTML-to-PDF rendering in `src/backend/src/service/PaymentReceiptService.ts`
-- pdf-lib 1.17.1 - PDF manipulation after Puppeteer generation
-- Handlebars 4.7.8 - Template engine for payment receipt HTML generation
-
-**Frontend UI & Animation:**
-- Tailwind CSS 4 - Utility-first CSS framework in `src/frontend/`
-- framer-motion 12.23.12 - Animation library for modals and transitions
-- @fullcalendar/react 6.1.10 - Calendar UI component for attendance tracking
-- @heroicons/react 2.2.0 - Icon library
-- react-draggable 4.5.0 - Drag-and-drop functionality
-
-**Data Export:**
-- ExcelJS 4.4.0 - Excel file generation in `src/frontend/src/app/pages/attendance/page.tsx` and payroll pages
-- Nodemailer 8.0.1 - Email sending for report dispatch (`src/backend/src/service/ReportsService.ts`)
-
-**API Documentation:**
-- swagger-jsdoc 6.2.8 - Swagger spec generation from JSDoc comments
-- @scalar/express-api-reference 0.8.16 - Interactive API docs UI at `/api/docs`
+- `cors`, `helmet`, `express-rate-limit` - API security hardening (`src/backend/src/index.ts`, `src/backend/src/routes/AuthRoute.ts`)
+- `swagger-jsdoc` + `@scalar/express-api-reference` - API docs generation and UI (`src/backend/src/utils/docs.ts`, `src/backend/src/index.ts`)
+- `nodemailer` - SMTP email delivery for report dispatch (`src/backend/src/service/ReportsService.ts`)
+- `puppeteer` + `pdf-lib` + `handlebars` - Receipt rendering and PDF generation (`src/backend/src/service/PaymentReceiptService.ts`)
+- `exceljs` - Frontend spreadsheet export (`src/frontend/package.json`, `src/frontend/src/components/PayrollResults.tsx`)
+- `@fullcalendar/*`, `framer-motion`, `@heroicons/react`, `lucide-react` - Calendar/UI and motion stack (`src/frontend/package.json`, `src/frontend/next.config.ts`)
 
 ## Configuration
 
 **Environment:**
-- Backend: `.env` file in `src/backend/` (contains `DATABASE_URL`, `JWT_SECRET`, `ALLOWED_ORIGINS`, `REPORTS_OUTPUT_DIR`, `PORT`)
-- Frontend: `.env` file in `src/frontend/` (contains `NEXT_PUBLIC_API_URL`)
-- TypeScript: `tsconfig.json` in both `src/backend/` and `src/frontend/` with strict mode enabled
+- Backend env config is loaded through `dotenv` (`src/backend/src/index.ts`), with DB URL defined for Prisma datasource (`src/backend/prisma/schema.prisma`).
+- Frontend env usage is through `process.env.NEXT_PUBLIC_*` for API base URL and weather integration (`src/frontend/src/config/index.ts`, `src/frontend/src/utils/weather.ts`).
+- Java importer loads env via `dotenv-java` and expects DB URL from env (`src/Java/clocklogs/src/main/java/com/verde/pradera/utils/dbConnector.java`).
+- Environment files exist for backend/frontend (`src/backend/.env`, `src/frontend/.env`) but contents are not inspected.
 
-**Build Targets:**
-- Backend: ES2020 module format for Node 22.14.0
-- Frontend: ES2017 with Next.js optimization; uses `@/*` path alias for imports
-
-**Prisma:**
-- Provider: postgresql
-- Client auto-generated from schema in `src/backend/prisma/schema.prisma`
-- Migrations stored in `src/backend/prisma/migrations/`
+**Build:**
+- Backend TypeScript build config: `src/backend/tsconfig.json`
+- Frontend TypeScript/build config: `src/frontend/tsconfig.json`, `src/frontend/next.config.ts`
+- Frontend style build config: `src/frontend/tailwind.config.js`, `src/frontend/postcss.config.mjs`
+- Test config: `src/backend/jest.config.js`, `src/frontend/jest.config.js`
+- Frontend lint config: `src/frontend/eslint.config.mjs`
 
 ## Platform Requirements
 
 **Development:**
-- Node.js 22.14.0
-- npm (comes with Node)
-- PostgreSQL database (local or remote via `DATABASE_URL`)
-- Chromium/Chrome (installed by Puppeteer on demand for PDF generation)
+- Node.js + npm for backend/frontend (`src/backend/package.json`, `src/frontend/package.json`)
+- PostgreSQL reachable via `DATABASE_URL` for backend runtime (`src/backend/prisma/schema.prisma`)
+- Java 17 + Maven for standalone importer (`src/Java/clocklogs/pom.xml`)
 
 **Production:**
-- Node.js 22.14.0 runtime
-- PostgreSQL database with `vpg_` prefix schema
-- Disk space for PDF storage (default: `storage/reports/` relative to cwd)
-- Chromium available in deployment environment (Puppeteer handles sandboxing via `--no-sandbox` flag)
-- Email server accessible (SMTP configuration via `vpg_mail_server_settings` table or Nodemailer environment)
-
-**Optional (for clock log import):**
-- Java 8+ (for standalone `src/Java/clocklogs/` utility)
-- JDBC PostgreSQL driver (bundled in Java project)
+- Backend: Node.js service exposing Express API (binds to `0.0.0.0:${PORT}`) (`src/backend/src/index.ts`)
+- Database: PostgreSQL (`src/backend/prisma/schema.prisma`)
+- Frontend: Next.js deployment target not codified in repo config; backend CORS allowlist includes Vercel domain (`src/backend/src/index.ts`)
 
 ---
 
-*Stack analysis: 2026-03-31*
+*Stack analysis: 2026-04-09*

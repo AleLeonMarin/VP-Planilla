@@ -1,360 +1,183 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-31
+**Analysis Date:** 2026-04-09
 
 ## Test Framework
 
 **Runner:**
-- Jest ^29.7.0 with ts-jest preset
-- Config: `src/backend/jest.config.js`
-- Environment: Node.js (testEnvironment: 'node')
+- Jest `^29.7.0` in both backend and frontend (`src/backend/package.json`, `src/frontend/package.json`).
+- Backend config: `src/backend/jest.config.js` (Node environment, `ts-jest`).
+- Frontend config: `src/frontend/jest.config.js` (Next.js Jest wrapper, JSDOM).
 
 **Assertion Library:**
-- Jest built-in expect() API
+- Jest `expect` + `@testing-library/jest-dom` matchers (`src/frontend/jest.setup.js`, `src/frontend/src/__tests__/jest.d.ts`).
 
 **Run Commands:**
 ```bash
-# From src/backend/ directory
-npm test              # Run all tests
-npm test -- --watch  # Watch mode (inferred from jest.config.js)
-npm test -- --coverage  # Coverage report
-```
+cd src/backend && npm test              # Run backend tests
+cd src/backend && npm run test:watch    # Backend watch mode
+cd src/backend && npm run test:coverage # Backend coverage report
 
-**Coverage:**
-- No hard coverage requirements enforced
-- Collected from: `src/**/*.ts` excluding `*.d.ts` and `src/index.ts`
-- Reports: text, lcov, html formats to `coverage/` directory
+cd src/frontend && npm test             # Run frontend tests
+```
 
 ## Test File Organization
 
 **Location:**
-- `src/backend/src/__tests__/` directory (co-located at test root, not alongside source)
-- Subdirectories: `unit/` (service/utility tests), `integration/` (HTTP layer tests), `setup/` (fixtures)
+- Use separate `__tests__` directories instead of co-located tests:
+  - Backend: `src/backend/src/__tests__/unit/`, `src/backend/src/__tests__/integration/`, `src/backend/src/__tests__/setup/`
+  - Frontend: `src/frontend/src/__tests__/components/`, `src/frontend/src/__tests__/hooks/`, `src/frontend/src/__tests__/pages/`, `src/frontend/src/__tests__/services/`
 
 **Naming:**
-- `*.test.ts` suffix required by jest.config.js
-- Files match tested module names: `NomineeService.test.ts` for `NomineeService.ts`, `payrollUtils.test.ts` for `payrollUtils.ts`
+- Use `*.test.ts` and `*.test.tsx` (for example `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`, `src/frontend/src/__tests__/pages/clock-logs/page.test.tsx`).
 
 **Structure:**
 ```
 src/backend/src/__tests__/
-├── unit/
-│   ├── NomineeService.test.ts          # Service logic tests
-│   ├── payrollUtils.test.ts            # Pure utility function tests
-│   └── services/
-│       └── PayrollService.test.ts      # Complex service tests
-├── integration/
-│   └── payroll.integration.test.ts     # HTTP endpoint tests
-└── setup/
-    └── prisma-mock.ts                  # Mocking utilities
+  setup/prisma-mock.ts
+  unit/
+    services/*.test.ts
+    controller/*.test.ts
+    utils/*.test.ts
+  integration/*.integration.test.ts
+
+src/frontend/src/__tests__/
+  components/*.test.tsx
+  hooks/*.test.ts
+  pages/**/*.test.tsx
+  services/*.test.ts
 ```
 
 ## Test Structure
 
 **Suite Organization:**
 ```typescript
-describe('NomineeService — REQ 8.1 Normal 8h/day', () => {
-  it('should calculate 48 regular hours, 0 overtime for 6 days at 8h each', async () => {
-    // Arrange
-    const clockLogs = [/* test data */];
-    setUpMocks(mockEmployee, clockLogs, []);
+// Pattern used in src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+describe('EmployeeService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    // Act
-    const result = await service.calculatePayrollForPeriod(
-      new Date('2026-02-02'),
-      new Date('2026-02-07')
-    );
-
-    // Assert
-    expect(result.employees).toHaveLength(1);
-    expect(result.employees[0].regularHours).toBe(48);
-    expect(result.employees[0].overtimeHours).toBe(0);
+  describe('createEmployee', () => {
+    it('should create an employee with all fields', async () => {
+      // arrange
+      // act
+      // assert
+    });
   });
 });
 ```
 
 **Patterns:**
-- Setup: `beforeEach()` clears mocks and sets default return values
-- Teardown: No explicit teardown; Jest auto-restores via `clearMocks: true`, `resetMocks: true`, `restoreMocks: true`
-- Assertion: Expectation-driven with domain-specific matchers (`.toHaveLength()`, `.toBeCloseTo()`, `.toBe()`)
+- Setup pattern: use `beforeEach` to reset all mocks and restub defaults (`src/backend/src/__tests__/unit/services/AuthService.test.ts`, `src/frontend/src/__tests__/hooks/useClockLogs.test.ts`).
+- Teardown pattern: implicit via Jest + mock resets (`clearMocks/resetMocks/restoreMocks` enabled in `src/backend/jest.config.js`).
+- Assertion pattern: prefer response-shape assertions and call contract assertions (`toHaveBeenCalledWith`, `expect.objectContaining`) as seen in `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts` and `src/frontend/src/__tests__/services/clockLogsService.test.ts`.
 
 ## Mocking
 
-**Framework:** `jest-mock-extended` with `mockDeep()`
+**Framework:** Jest mocks (`jest.mock`, `jest.fn`) + `jest-mock-extended` for Prisma deep mocks.
 
 **Patterns:**
-
-Mocking Prisma:
 ```typescript
-import { PrismaClient } from '@prisma/client';
-import { mockDeep } from 'jest-mock-extended';
-
-jest.mock('../../lib/prisma', () => {
+// Backend Prisma module mocking pattern
+// src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+jest.mock('../../../lib/prisma', () => {
   const mock = mockDeep<PrismaClient>();
   return { prisma: mock };
 });
 
-const { prisma } = require('../../lib/prisma');
-```
-
-Mocking Services:
-```typescript
-jest.mock('../../service/EmployeeService');
-const { EmployeeService } = require('../../service/EmployeeService');
-
-beforeEach(() => {
-  jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([]);
-});
-```
-
-Mock Setup:
-```typescript
-function setUpMocks(employee: any, clockLogs: any[], deductions: any[]) {
-  jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([employee]);
-  prisma.vpg_clock_logs.findMany.mockResolvedValue(clockLogs);
-  prisma.vpg_positions.findMany.mockResolvedValue([mockPosition]);
-  prisma.vpg_deductions_per_employee.findMany.mockResolvedValue(deductions);
-}
+// Frontend service dependency mocking pattern
+// src/frontend/src/__tests__/services/clockLogsService.test.ts
+jest.mock('@/services/http', () => ({
+  http: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), raw: jest.fn() },
+}));
 ```
 
 **What to Mock:**
-- Database layer (Prisma): Always mock to isolate service logic from DB
-- External services: Mock dependent services to test in isolation
-- Keep mocks synchronized with actual return types from database
+- Mock DB/client boundaries in unit tests (Prisma client in backend service tests: `src/backend/src/__tests__/unit/services/*.test.ts`).
+- Mock service dependencies when testing controllers/hooks/pages (for example `ClockLogsService` in `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts`, `useClockLogs` in `src/frontend/src/__tests__/pages/clock-logs/page.test.tsx`).
+- Mock third-party auth/crypto utilities for deterministic auth tests (bcrypt and jsonwebtoken in `src/backend/src/__tests__/unit/services/AuthService.test.ts`).
 
 **What NOT to Mock:**
-- Pure utility functions: Test `payrollUtils.ts` functions without mocks
-- Internal domain logic: Test service methods with mocked Prisma, not the service itself
-- Helper functions within same module: No need to mock
+- Do not mock internal pure utility logic when unit-testing the utility itself (for example `normalizeLogType` behavior verified directly in `src/backend/src/__tests__/unit/utils/clockLogNormalization.test.ts`).
+- Do not mock HTTP middleware stack in integration route tests; exercise real Express app wiring with `supertest` (`src/backend/src/__tests__/integration/payroll.integration.test.ts`).
 
 ## Fixtures and Factories
 
 **Test Data:**
 ```typescript
-const BASE_HOURLY = 1680;
-
-const mockPosition = {
-  position_id: 1,
-  position_base_salary: BASE_HOURLY,
-  position_name: 'Developer',
-  position_description: 'Test position',
-  position_version: 1,
-};
-
-const mockEmployee = {
-  id: 1,
-  name: 'Test Employee',
-  national_id: '1-1234-5678',
-  position_id: 1,
-  required_hours_biweekly: null,
-};
-
-function makeClockLogPair(date: string, localInHour: number, localOutHour: number, empId = 1) {
-  const UTC_OFFSET_HOURS = 6;
-  const utcInHour = localInHour - UTC_OFFSET_HOURS;
-  const utcOutHour = localOutHour - UTC_OFFSET_HOURS;
-  const inDate = new Date(`${date}T${String(utcInHour).padStart(2, '0')}:00:00.000Z`);
-  const outDate = new Date(`${date}T${String(utcOutHour).padStart(2, '0')}:00:00.000Z`);
-  return [
-    {
-      clock_logs_id: Math.random(),
-      clock_logs_employee_id: empId,
-      clock_logs_timestamp: inDate,
-      clock_logs_log_type: 'IN',
-    },
-    {
-      clock_logs_id: Math.random(),
-      clock_logs_employee_id: empId,
-      clock_logs_timestamp: outDate,
-      clock_logs_log_type: 'OUT',
-    },
-  ];
+// Factory/helper pattern from src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+function makeEmployee(input: Partial<Employee> = {}): Employee {
+  return {
+    id: 1,
+    name: 'Juan Carlos',
+    // ...defaults
+    ...input,
+  };
 }
 ```
 
 **Location:**
-- Defined at top of test file (no separate fixtures directory)
-- Constants: shared across multiple tests
-- Factory functions: `makeClockLogPair()`, `setUpMocks()` for parameterized test data
+- Keep shared setup helpers under `src/backend/src/__tests__/setup/` (for example `prisma-mock.ts`).
+- Keep scenario-specific fixtures inside each test file as `const mock...` objects (backend and frontend test files).
 
-## Integration Tests
+## Coverage
 
-**Scope:** HTTP layer, auth middleware, route wiring, response shape
+**Requirements:** None enforced (no global thresholds detected in `src/backend/jest.config.js` or `src/frontend/jest.config.js`).
 
-**Framework:** `supertest` with Express app
-
-**Example Pattern:**
-```typescript
-import request from 'supertest';
-import app from '../../index';
-
-describe('POST /api/nominee/calculate-payroll — integration', () => {
-  it('returns 401 when no token is provided', async () => {
-    const res = await request(app)
-      .post('/api/nominee/calculate-payroll')
-      .send({ payroll_id: 1 });
-
-    expect(res.status).toBe(401);
-    expect(res.body).toHaveProperty('success', false);
-  });
-
-  it('returns 401 when an invalid token is provided', async () => {
-    const res = await request(app)
-      .post('/api/nominee/calculate-payroll')
-      .set('Authorization', 'Bearer invalid-token-xyz')
-      .send({ payroll_id: 1 });
-
-    expect(res.status).toBe(401);
-    expect(res.body).toHaveProperty('success', false);
-  });
-});
+**View Coverage:**
+```bash
+cd src/backend && npm run test:coverage
 ```
 
-Location: `src/backend/src/__tests__/integration/payroll.integration.test.ts`
+## Test Types
 
-**Coverage:** Auth middleware behavior, HTTP status codes, response shapes — NOT business logic (that's in unit tests)
+**Unit Tests:**
+- Primary testing style for backend services/controllers and frontend services/hooks/components.
+- Backend unit examples:
+  - `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`
+  - `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts`
+- Frontend unit examples:
+  - `src/frontend/src/__tests__/services/clockLogsService.test.ts`
+  - `src/frontend/src/__tests__/components/ClockLogStatusBadge.test.tsx`
 
-## Unit Test Types
+**Integration Tests:**
+- Use `supertest` against actual Express app import (`src/backend/src/__tests__/integration/payroll.integration.test.ts`).
+- Current focus is route/auth behavior and HTTP response contract.
 
-**Service Logic Tests:**
-- Location: `src/backend/src/__tests__/unit/`
-- Scope: Business logic, domain calculations
-- Approach: Mock Prisma, test service methods in isolation
-- Example: `NomineeService.test.ts` tests payroll calculation logic with mocked Prisma
+**E2E Tests:**
+- Not used (no Playwright/Cypress config detected).
 
-**Utility Function Tests:**
-- Location: `src/backend/src/__tests__/unit/`
-- Scope: Pure functions, no side effects
-- Approach: No mocking; test with real inputs/outputs
-- Example: `payrollUtils.test.ts` tests Costa Rica holiday detection, working day counting
+## Common Patterns
 
-## Test Examples
-
-**Domain Logic (Payroll Calculation):**
+**Async Testing:**
 ```typescript
-describe('NomineeService — REQ 8.2 Overtime 1.5x', () => {
-  it('should calculate 48 regular + 12 overtime hours for 6 days at 10h each', async () => {
-    const clockLogs = [
-      ...makeClockLogPair('2026-02-02', 8, 18),
-      ...makeClockLogPair('2026-02-03', 8, 18),
-      ...makeClockLogPair('2026-02-04', 8, 18),
-      ...makeClockLogPair('2026-02-05', 8, 18),
-      ...makeClockLogPair('2026-02-06', 8, 18),
-      ...makeClockLogPair('2026-02-07', 8, 18),
-    ];
-    setUpMocks(mockEmployee, clockLogs, []);
+// Backend async rejection assertion
+// src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+await expect(EmployeeService.createEmployee(input)).rejects.toThrow('DB error');
 
-    const result = await service.calculatePayrollForPeriod(
-      new Date('2026-02-02'),
-      new Date('2026-02-07')
-    );
-
-    expect(result.employees).toHaveLength(1);
-    const ep = result.employees[0];
-    expect(ep.regularHours).toBe(48);
-    expect(ep.overtimeHours).toBe(12);
-    expect(ep.overtimePay).toBeCloseTo(30240, 2);
-  });
-});
-```
-
-**Pure Utility Tests:**
-```typescript
-describe('payrollUtils - Costa Rica Holidays', () => {
-  describe('isCRHoliday', () => {
-    it('returns true for January 1 (Año Nuevo) 2026', () => {
-      expect(isCRHoliday(new Date('2026-01-01'), 2026)).toBe(true);
-    });
-
-    it('returns true for May 1 (Día del Trabajo) 2026', () => {
-      expect(isCRHoliday(new Date('2026-05-01'), 2026)).toBe(true);
-    });
-
-    it('returns false for regular day (May 2, 2026)', () => {
-      expect(isCRHoliday(new Date('2026-05-02'), 2026)).toBe(false);
-    });
-  });
-});
-```
-
-## Async Testing
-
-**Pattern:**
-```typescript
-it('should calculate payroll for period', async () => {
-  const result = await service.calculatePayrollForPeriod(
-    new Date('2026-02-02'),
-    new Date('2026-02-07')
+// Frontend async UI assertion
+// src/frontend/src/__tests__/components/ClockLogDetailModal.test.tsx
+await waitFor(() => {
+  expect(mockedClockLogsService.updateClockLogStatus).toHaveBeenCalledWith(
+    mockLog.id,
+    'corrected',
+    'Valid justification text'
   );
-
-  expect(result.employees).toHaveLength(1);
 });
 ```
 
-**Approach:**
-- Async test functions marked with `async` keyword
-- Await promises before assertions
-- Jest automatically waits for promise resolution
-
-## Error Testing
-
-**Pattern:**
+**Error Testing:**
 ```typescript
-it('throws error when required field is missing', async () => {
-  try {
-    await EmployeeService.createEmployee(invalidData);
-    fail('Should have thrown');
-  } catch (error) {
-    expect(error).toBeDefined();
-  }
-});
+// HTTP/controller error contract checks
+// src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts
+await controller.getStats(req, res);
+expect(res.status).toHaveBeenCalledWith(400);
+expect(res.json).toHaveBeenCalledWith(
+  expect.objectContaining({ error: expect.any(String) })
+);
 ```
-
-**Approach:**
-- Use try-catch or `.rejects` matcher
-- Verify error is thrown on invalid input
-- No custom error types; plain Error objects
-
-## Configuration
-
-**jest.config.js settings:**
-```javascript
-{
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/index.ts',
-  ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  verbose: true,
-  testTimeout: 10000,
-  clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
-}
-```
-
-**Key Points:**
-- `clearMocks: true` — auto-clear before each test
-- `resetMocks: true` — reset mock implementations
-- `restoreMocks: true` — restore original functions
-- `testTimeout: 10000` — 10 second timeout per test
-
-## Frontend Testing
-
-**Status:** No frontend tests detected. Frontend uses React 19, Next.js 15, react-hook-form, but no Jest/Vitest configuration found in `src/frontend/`.
-
-**Observed patterns in code structure ready for testing:**
-- Hooks: `useEmployeeList.ts` contains async data fetching and state logic — good candidate for testing
-- Services: `employeeService.ts`, `http.ts` with mocked dependencies — testable pattern
-- Components: Props-based, FSC pattern — testable with React Testing Library
 
 ---
 
-*Testing analysis: 2026-03-31*
+*Testing analysis: 2026-04-09*
