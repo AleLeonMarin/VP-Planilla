@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.3 — Sistema de Marcas de Reloj Robusto** (shipped 2026-04-09)
-- 🚧 **v1.4 — Pendiente de definición**
+- 🚧 **v1.4 — Stability and Integration Hardening**
 
 ## Phases
 
@@ -21,7 +21,10 @@
 
 ### 🚧 v1.4 (Planned)
 
-- [ ] Definir roadmap y requirements de v1.4
+- [ ] **Phase 24: Auth Token Lifecycle End-to-End** - Unificar refresh/revocation/logout y errores de autenticacion en toda la plataforma
+- [ ] **Phase 25: HTTP Client Layer Enforcement** - Eliminar bypasses a `http.ts` y estandarizar manejo de errores en servicios frontend
+- [ ] **Phase 26: Repository Hygiene and Build Artifacts Cleanup** - Limpiar artefactos versionados y reforzar `.gitignore` multi-stack
+- [ ] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion
 
 ## Progress
 
@@ -33,6 +36,10 @@
 | 21. Corrección Manual | v1.3 | 2/2 | Complete | 2026-04-05 |
 | 22. Dashboard UI de Marcas | v1.3 | 3/3 | Complete | 2026-04-06 |
 | 23. Debug y Corrección de Marcas | v1.3 | 2/2 | Complete | 2026-04-09 |
+| 24. Auth Token Lifecycle End-to-End | v1.4 | 0/3 | Pending | — |
+| 25. HTTP Client Layer Enforcement | v1.4 | 0/2 | Pending | — |
+| 26. Repository Hygiene and Build Cleanup | v1.4 | 0/2 | Pending | — |
+| 27. Monolith Decomposition and Maintainability | v1.4 | 0/3 | Pending | — |
 
 ## Archives
 
