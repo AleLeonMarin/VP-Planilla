@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.4
-milestone_name: Stability and Integration Hardening
+milestone_name: — Stability and Integration Hardening
 status: Defining requirements
-stopped_at: Milestone v1.4 initialized
-last_updated: "2026-04-09T14:05:00.000Z"
+stopped_at: Completed 24-01-PLAN.md
+last_updated: "2026-04-09T20:33:43.339Z"
 last_activity: 2026-04-09
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 10
-  completed_plans: 0
-  percent: 0
+  total_phases: 16
+  completed_phases: 13
+  total_plans: 41
+  completed_plans: 37
+  percent: 10
 ---
 
 # Project State — VP-Planilla
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-09)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Definir y ejecutar v1.4 stability/integration hardening
+**Current focus:** Ejecutar v1.4 stability/integration hardening
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Plans: 0/10 milestone plans complete
-Next: Plan Phase 24
+Phase: 24-auth-token-lifecycle-end-to-end
+Plan: 24-01 complete
+Plans: 1/10 milestone plans complete
+Next: Execute 24-02-PLAN.md
 Last activity: 2026-04-09
 
-Progress: [░░░░░░░░░░] 0% (0/10 plans complete)
+Progress: [█░░░░░░░░░] 10% (1/10 plans complete)
 
 ## v1.4 Phase Map
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 24 | Auth Token Lifecycle End-to-End | AUTH-05..08 | ○ Pending |
+| 24 | Auth Token Lifecycle End-to-End | AUTH-05..08 | ◐ In Progress (1/3 plans) |
 | 25 | HTTP Client Layer Enforcement | HTTP-01..03 | ○ Pending |
 | 26 | Repository Hygiene and Build Cleanup | HYG-01..03 | ○ Pending |
 | 27 | Monolith Decomposition and Maintainability | MOD-01..03 | ○ Pending |
@@ -95,13 +95,20 @@ Progress: [░░░░░░░░░░] 0% (0/10 plans complete)
 - Anomaly detection triggered automatically after each successful import
 - Session status "failed" only set when session starts but crashes mid-process — invalid input returns 400 without creating a session
 
+### Key v1.4 Decisions (logged as plans complete)
+
+- Auth failures now use one middleware helper (`buildAuthError`) to prevent payload drift across 401/403 branches.
+- `TokenExpiredError` is preserved in `AuthService.verifyToken` so middleware maps expired tokens to `AUTH_TOKEN_EXPIRED` instead of generic invalid token.
+
 ## Session Continuity
 
-Last session: 2026-04-09T14:05:00.000Z
-Stopped at: Milestone v1.4 initialized.
+Last session: 2026-04-09T20:33:43.331Z
+Stopped at: Completed 24-01-PLAN.md
 Resume: Run `/gsd-plan-phase 24` to start execution planning.
 Note: v1.3 artifacts archived under `.planning/milestones/`.
 
+Resume: Run `/gsd-execute-phase 24` to continue with 24-02.
+
 ---
 
-*Updated: 2026-04-09 — Milestone v1.4 initialized*
+*Updated: 2026-04-09 — Completed plan 24-01 execution*

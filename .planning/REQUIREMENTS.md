@@ -11,9 +11,9 @@
 ### Auth Lifecycle (AUTH)
 
 - [ ] **AUTH-05**: El frontend renueva access tokens de forma consistente usando refresh token sin romper sesiones activas
-- [ ] **AUTH-06**: El backend invalida tokens revocados/expirados en todos los endpoints protegidos
+- [x] **AUTH-06**: El backend invalida tokens revocados/expirados en todos los endpoints protegidos
 - [ ] **AUTH-07**: Logout invalida la sesion de forma completa (cliente + servidor) y evita reutilizacion de tokens previos
-- [ ] **AUTH-08**: Los errores de autenticacion son uniformes y manejables por el frontend (401/403 con payload consistente)
+- [x] **AUTH-08**: Los errores de autenticacion son uniformes y manejables por el frontend (401/403 con payload consistente)
 
 ### HTTP Integration Layer (HTTP)
 
@@ -59,9 +59,9 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-05 | Phase 24 | Pending |
-| AUTH-06 | Phase 24 | Pending |
+| AUTH-06 | Phase 24 | Complete |
 | AUTH-07 | Phase 24 | Pending |
-| AUTH-08 | Phase 24 | Pending |
+| AUTH-08 | Phase 24 | Complete |
 | HTTP-01 | Phase 25 | Pending |
 | HTTP-02 | Phase 25 | Pending |
 | HTTP-03 | Phase 25 | Pending |
