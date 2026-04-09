@@ -339,9 +339,9 @@ export default function AttendancePage() {
   // Conversión ISO (YYYY-MM-DD) ↔ display (DD/MM/YY) para DatePicker
   const isoToDisplay = (iso: string): string => {
     const d = new Date(iso);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = String(d.getFullYear()).slice(-2);
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = String(d.getUTCFullYear()).slice(-2);
     return `${day}/${month}/${year}`;
   };
 
@@ -786,7 +786,8 @@ const timeStr = typeof horaRaw === 'number'
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CR', {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-CR', {
       weekday: 'short',
       day: '2-digit',
       month: 'short',
