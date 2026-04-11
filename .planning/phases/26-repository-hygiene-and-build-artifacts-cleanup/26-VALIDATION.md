@@ -1,9 +1,9 @@
 ---
 phase: 26
 slug: repository-hygiene-and-build-artifacts-cleanup
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: approved
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-11
 ---
 
@@ -38,13 +38,13 @@ created: 2026-04-11
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 26-01-01 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep -E "dist/\|target/"` (empty = pass) | ✅ | ⬜ pending |
-| 26-01-02 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep "src/backend/dist/"` (empty = pass) | ✅ | ⬜ pending |
-| 26-01-03 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep "src/Java/clocklogs/target/"` (empty = pass) | ✅ | ⬜ pending |
-| 26-02-01 | 02 | 1 | HYG-02 | Grep | `grep "dist/" .gitignore` (must match) | ✅ | ⬜ pending |
-| 26-02-02 | 02 | 1 | HYG-02 | Grep | `grep "target/" .gitignore` (must match) | ✅ | ⬜ pending |
-| 26-02-03 | 02 | 1 | HYG-02 | Grep | `grep -v "^\*.json" .gitignore` (global *.json rule must be gone) | ✅ | ⬜ pending |
-| 26-02-04 | 02 | 1 | HYG-03 | Build | `npm run build --prefix src/backend` (must succeed) | ✅ | ⬜ pending |
+| 26-01-01 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep -E "dist/\|target/"` (empty = pass) | ✅ | ✅ green |
+| 26-01-02 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep "src/backend/dist/"` (empty = pass) | ✅ | ✅ green |
+| 26-01-03 | 01 | 1 | HYG-01 | Shell | `git ls-files \| grep "src/Java/clocklogs/target/"` (empty = pass) | ✅ | ✅ green |
+| 26-02-01 | 02 | 1 | HYG-02 | Grep | `grep "dist/" .gitignore` (must match) | ✅ | ✅ green |
+| 26-02-02 | 02 | 1 | HYG-02 | Grep | `grep "target/" .gitignore` (must match) | ✅ | ✅ green |
+| 26-02-03 | 02 | 1 | HYG-02 | Grep | `grep -v "^\*.json" .gitignore` (global *.json rule must be gone) | ✅ | ✅ green |
+| 26-02-04 | 02 | 1 | HYG-03 | Build | `npm run build --prefix src/backend` (must succeed) | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -62,18 +62,18 @@ No Wave 0 gaps — this is a git hygiene phase with no new code. All verificatio
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Java Maven build works without tracked target/ | HYG-03 | Requires Maven installed locally | Run `mvn clean package -f src/Java/clocklogs/pom.xml` and verify it succeeds |
+| Java Maven build works without tracked target/ | HYG-03 | Requires Maven installed locally (Not available in this env) | Run `mvn clean package -f src/Java/clocklogs/pom.xml` and verify it succeeds |
 | git status shows clean working tree after cleanup | HYG-01 | Visual inspection needed | Run `git status` — no unexpected untracked files should appear |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have shell verification commands
-- [ ] Sampling continuity: every task has an immediate git ls-files or grep check
-- [ ] No Wave 0 gaps (shell-only verification, no framework needed)
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have shell verification commands
+- [x] Sampling continuity: every task has an immediate git ls-files or grep check
+- [x] No Wave 0 gaps (shell-only verification, no framework needed)
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
