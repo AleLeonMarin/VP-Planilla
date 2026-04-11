@@ -26,7 +26,7 @@
 - [ ] **Phase 26: Repository Hygiene and Build Artifacts Cleanup** - Limpiar artefactos versionados y reforzar `.gitignore` multi-stack
 - [ ] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion
 
-#### Phase 26 Planning Snapshot
+### Phase 26: Repository Hygiene and Build Artifacts Cleanup
 
 **Goal:** Limpiar artefactos versionados y reforzar `.gitignore` multi-stack para que dist/, target/ y outputs de build no se versionen.
 
