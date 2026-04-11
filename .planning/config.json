@@ -1,6 +1,6 @@
 {
   "mode": "yolo",
-  "model_profile": "balanced",
+  "model_profile": "budget",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
