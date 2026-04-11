@@ -290,10 +290,14 @@ const ClockLogDetailModal: React.FC<ClockLogDetailModalProps> = ({
                             </span>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                            <label 
+                              htmlFor="justification"
+                              className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+                            >
                               Justificacion <span className="text-red-500">*</span>
                             </label>
                             <textarea
+                              id="justification"
                               value={justification}
                               onChange={(e) => setJustification(e.target.value)}
                               placeholder="Justificacion de la correccion..."

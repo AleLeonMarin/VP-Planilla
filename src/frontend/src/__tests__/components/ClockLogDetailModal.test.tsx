@@ -49,7 +49,7 @@ describe('ClockLogDetailModal', () => {
     expect(screen.getByText('Java')).toBeInTheDocument();
     expect(screen.getByText('Test remark')).toBeInTheDocument();
     // Status badge
-    expect(screen.getByText('anomaly')).toBeInTheDocument();
+    expect(screen.getByText('Anomalia')).toBeInTheDocument();
     // Audit history section
     expect(screen.getByText('Historial de Auditoria')).toBeInTheDocument();
   });
@@ -95,7 +95,7 @@ describe('ClockLogDetailModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /marcar como corregido/i }));
 
-    expect(screen.getByLabelText(/justificacion de la correccion/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/justificacion/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
   });
@@ -111,7 +111,7 @@ describe('ClockLogDetailModal', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /marcar como corregido/i }));
-    const textarea = screen.getByLabelText(/justificacion de la correccion/i);
+    const textarea = screen.getByLabelText(/justificacion/i);
     fireEvent.change(textarea, { target: { value: 'abc' } }); // less than 5
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
@@ -132,7 +132,7 @@ describe('ClockLogDetailModal', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /marcar como corregido/i }));
-    const textarea = screen.getByLabelText(/justificacion de la correccion/i);
+    const textarea = screen.getByLabelText(/justificacion/i);
     fireEvent.change(textarea, { target: { value: 'Valid justification text' } });
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
