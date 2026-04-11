@@ -45,11 +45,11 @@ Plans:
 
 **Requirements:** MOD-01, MOD-02, MOD-03
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 27-01-PLAN.md — Auditoria de complejidad y seleccion de candidatos para descomposicion
-- [ ] 27-02-PLAN.md — Refactor de logica de parsing e importacion de marcas (desacople de Page/Hook)
+- [x] 27-02-PLAN.md — Refactor de logica de parsing e importacion de marcas (desacople de Page/Hook)
 - [ ] 27-03-PLAN.md — Cierre de fase y validacion de no regresion con suite de pruebas
 
 #### Phase 25 Planning Snapshot
@@ -77,7 +77,7 @@ Plans:
 | 24. Auth Token Lifecycle End-to-End | v1.4 | 3/3 | Complete   | 2026-04-09 |
 | 25. HTTP Client Layer Enforcement | v1.4 | 2/2 | Complete | 2026-04-11 |
 | 26. Repository Hygiene and Build Cleanup | v1.4 | 3/3 | Complete | 2026-04-11 |
-| 27. Monolith Decomposition and Maintainability | v1.4 | 1/3 | In Progress|  |
+| 27. Monolith Decomposition and Maintainability | v1.4 | 2/3 | In Progress|  |
 
 ## Archives
 

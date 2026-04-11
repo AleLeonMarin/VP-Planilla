@@ -30,7 +30,7 @@
 ### Modularization and Maintainability (MOD)
 
 - [x] **MOD-01**: Los archivos monoliticos de alta complejidad se separan en modulos con responsabilidad clara
-- [ ] **MOD-02**: La logica de parsing/importacion de marcas queda desacoplada de componentes de pagina grandes
+- [x] **MOD-02**: La logica de parsing/importacion de marcas queda desacoplada de componentes de pagina grandes
 - [ ] **MOD-03**: Los cambios de modularizacion mantienen comportamiento funcional verificado por pruebas
 
 ---
@@ -69,7 +69,7 @@
 | HYG-02 | Phase 26 | Complete |
 | HYG-03 | Phase 26 | Complete |
 | MOD-01 | Phase 27 | Complete |
-| MOD-02 | Phase 27 | Pending |
+| MOD-02 | Phase 27 | Complete |
 | MOD-03 | Phase 27 | Pending |
 
 **Coverage:**
