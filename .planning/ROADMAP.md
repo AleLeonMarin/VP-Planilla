@@ -26,6 +26,18 @@
 - [ ] **Phase 26: Repository Hygiene and Build Artifacts Cleanup** - Limpiar artefactos versionados y reforzar `.gitignore` multi-stack
 - [ ] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion
 
+#### Phase 26 Planning Snapshot
+
+**Goal:** Limpiar artefactos versionados y reforzar `.gitignore` multi-stack para que dist/, target/ y outputs de build no se versionen.
+
+**Requirements:** HYG-01, HYG-02, HYG-03
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Auditoría y limpieza de artefactos versionados del repo
+- [ ] 26-02-PLAN.md — Refuerzo de .gitignore multi-stack (backend, frontend, Java)
+
 #### Phase 25 Planning Snapshot
 
 **Goal:** Eliminar bypasses a `http.ts` y estandarizar el manejo de errores y llamadas a APIs externas.
