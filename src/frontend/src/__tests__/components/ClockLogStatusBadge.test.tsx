@@ -17,13 +17,13 @@ describe('ClockLogStatusBadge', () => {
 
   it('renders anomaly status with amber class', () => {
     render(<ClockLogStatusBadge status="anomaly" />);
-    const badge = screen.getByText('Anomalia');
+    const badge = screen.getByText('Anomalía');
     expect(badge).toHaveClass('bg-amber-100', 'text-amber-800');
   });
 
   it('renders orphan status with red class', () => {
     render(<ClockLogStatusBadge status="orphan" />);
-    const badge = screen.getByText('Huerfana');
+    const badge = screen.getByText('Huérfana');
     expect(badge).toHaveClass('bg-red-100', 'text-red-800');
   });
 
