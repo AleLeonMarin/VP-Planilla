@@ -57,7 +57,7 @@ describe('ClockLogsService', () => {
       const result = await ClockLogsService.getClockLogsPaginated(defaultParams);
 
       expect(result).toEqual(mockResponse);
-      expect(http.raw).toHaveBeenCalledWith(`/clock-logs/paginated?initDate=${defaultParams.initDate}&endDate=${defaultParams.endDate}&page=1&pageSize=20`);
+      expect(http.raw).toHaveBeenCalledWith(`/clock-logs/paginated?initDate=${defaultParams.initDate}&endDate=${defaultParams.endDate}&page=1&pageSize=20`, { method: 'GET' });
     });
 
     it('should include status filter when provided', async () => {
@@ -70,7 +70,8 @@ describe('ClockLogsService', () => {
       });
 
       expect(http.raw).toHaveBeenCalledWith(
-        expect.stringContaining('/clock-logs/paginated?initDate=')
+        expect.stringContaining('/clock-logs/paginated?initDate='),
+        { method: 'GET' }
       );
       // Verify that the URL contains status=anomaly,orphan
       const calledUrl = (http.raw as jest.Mock).mock.calls[0][0];
