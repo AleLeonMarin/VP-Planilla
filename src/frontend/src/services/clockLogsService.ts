@@ -149,8 +149,12 @@ export const ClockLogsService = {
     // Use raw to preserve full response shape
     const raw = await http.raw(`/clock-logs/paginated?${searchParams.toString()}`, { method: 'GET' });
     if (!raw.ok) return { success: false, data: [], total: 0, page: 1, pageSize: 20 };
-    const json = await raw.json();
-    return json ?? { success: true, data: [], total: 0, page: 1, pageSize: 20 };
+    try {
+      const json = await raw.json();
+      return json ?? { success: true, data: [], total: 0, page: 1, pageSize: 20 };
+    } catch {
+      return { success: false, data: [], total: 0, page: 1, pageSize: 20 };
+    }
   },
 
   async getImportSessions(limit: number = 5): Promise<ImportSession[]> {
