@@ -1,6 +1,6 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-09
+**Analysis Date:** 2026-04-11
 
 ## Directory Layout
 
@@ -85,8 +85,8 @@ VP-Planilla/
 
 **`src/frontend/src/services/`:**
 - Purpose: HTTP-facing API adapters and transport abstraction.
-- Contains: Domain services (`*Service.ts`) and centralized client `http.ts`.
-- Key files: `src/frontend/src/services/http.ts`, `src/frontend/src/services/nomineeService.ts`, `src/frontend/src/services/reportsService.ts`.
+- Contains: Domain services (`*Service.ts`), centralized internal client `http.ts`, and external client `externalHttp.ts`.
+- Key files: `src/frontend/src/services/http.ts`, `src/frontend/src/services/externalHttp.ts`, `src/frontend/src/services/auditLogsService.ts`, `src/frontend/src/services/branchService.ts`, `src/frontend/src/services/payrollEmployeesService.ts`.
 
 **`src/frontend/src/components/`:**
 - Purpose: Reusable feature components and modal/table views.
@@ -102,6 +102,11 @@ VP-Planilla/
 - Purpose: Frontend Zod/form schemas.
 - Contains: Validation schemas by domain.
 - Key files: `src/frontend/src/schemas/vacationSchema.ts`, `src/frontend/src/schemas/employee.ts`.
+
+**`src/frontend/src/utils/`:**
+- Purpose: Frontend utility functions.
+- Contains: Date helpers, weather utility, session cache.
+- Key files: `src/frontend/src/utils/weather.ts`, `src/frontend/src/utils/sessionCache.ts`.
 
 ## Key File Locations
 
@@ -126,7 +131,9 @@ VP-Planilla/
 - `src/backend/src/service/ReportsService.ts`: Official report generation/logging/email dispatch.
 - `src/backend/src/utils/payrollUtils.ts`: Payroll math primitives.
 - `src/frontend/src/hooks/useEmployeeList.ts`: Employee list state/workflow.
-- `src/frontend/src/services/http.ts`: Auth-aware HTTP transport used by frontend services.
+- `src/frontend/src/services/http.ts`: Auth-aware HTTP transport for internal APIs.
+- `src/frontend/src/services/externalHttp.ts`: Token-safe HTTP transport for external APIs.
+- `src/frontend/src/utils/weather.ts`: Weather integration using `externalHttp.ts`.
 
 **Testing:**
 - `src/backend/src/__tests__/unit/`: Backend unit tests.
@@ -142,7 +149,7 @@ VP-Planilla/
 - Backend routes/controllers/services use PascalCase with role suffix: `PayrollRoutes.ts`, `PayrollController.ts`, `PayrollService.ts`.
 - Frontend components use PascalCase: `EmployeeTable.tsx`, `PayrollCreateModal.tsx`.
 - Frontend hooks use `use*` naming: `useNominee.ts`, `useEmployeeList.ts`.
-- Frontend services use lower camel names ending in `Service.ts` plus `http.ts`: `payrollService.ts`, `reportsService.ts`, `http.ts`.
+- Frontend services use lower camel names ending in `Service.ts` plus `http.ts`: `payrollService.ts`, `reportsService.ts`, `http.ts`, `externalHttp.ts`.
 - Page route files are always `page.tsx` under domain folders in `src/frontend/src/app/pages/`.
 
 **Directories:**
@@ -200,4 +207,4 @@ VP-Planilla/
 
 ---
 
-*Structure analysis: 2026-04-09*
+*Structure analysis: 2026-04-11*

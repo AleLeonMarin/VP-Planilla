@@ -1,6 +1,6 @@
 # Architecture
 
-**Analysis Date:** 2026-04-09
+**Analysis Date:** 2026-04-11
 
 ## Pattern Overview
 
@@ -10,6 +10,7 @@
 - Enforce backend request pipeline as `Route → Controller → Service → Prisma` using route modules in `src/backend/src/routes/` and service modules in `src/backend/src/service/`.
 - Enforce frontend request pipeline as `Page → Hook/Service → http client → Backend API` using app pages in `src/frontend/src/app/pages/`, hooks in `src/frontend/src/hooks/`, and API adapters in `src/frontend/src/services/`.
 - Keep database access centralized through Prisma singleton in `src/backend/src/lib/prisma.ts`; call Prisma only from services in `src/backend/src/service/`.
+- **Strict HTTP client enforcement:** All internal backend calls must use `src/frontend/src/services/http.ts`. All third-party/external API calls must use `src/frontend/src/services/externalHttp.ts` to prevent internal token leakage.
 
 ## Layers
 
@@ -58,7 +59,7 @@
 **Frontend API Access Layer (Services + HTTP client):**
 - Purpose: Encapsulate endpoint paths and transport details.
 - Location: `src/frontend/src/services/`
-- Contains: Domain services (`src/frontend/src/services/nomineeService.ts`, `src/frontend/src/services/reportsService.ts`, `src/frontend/src/services/payrollService.ts`) and shared client `src/frontend/src/services/http.ts`.
+- Contains: Domain services (`src/frontend/src/services/nomineeService.ts`, `src/frontend/src/services/reportsService.ts`, `src/frontend/src/services/payrollService.ts`) and shared clients `src/frontend/src/services/http.ts` (internal) and `src/frontend/src/services/externalHttp.ts` (external).
 - Depends on: Runtime config `src/frontend/src/config/index.ts` and browser storage for token lifecycle.
 - Used by: Hooks and some pages.
 
@@ -76,8 +77,8 @@
 
 1. Page in `src/frontend/src/app/pages/*/page.tsx` triggers action from a hook (example: `src/frontend/src/app/pages/payroll/calculate/page.tsx` uses `src/frontend/src/hooks/useNominee.ts`).
 2. Hook calls domain service in `src/frontend/src/services/*.ts`.
-3. Service calls shared HTTP client `src/frontend/src/services/http.ts`.
-4. HTTP client composes URL from `API_CONFIG` in `src/frontend/src/config/index.ts`, injects bearer token from localStorage keys `vp_access_token`/`vp_refresh_token`, and retries once on 401 via refresh.
+3. Service calls shared HTTP client `src/frontend/src/services/http.ts` for backend data or `src/frontend/src/services/externalHttp.ts` for third-party integrations (like OpenWeatherMap).
+4. HTTP client composes URL, injects tokens (internal only), handles refresh/retries (internal only), and returns parsed data.
 5. Parsed data returns to hook and page renders updated UI.
 
 **Payroll calculation flow (end-to-end):**
@@ -101,9 +102,14 @@
 - Pattern: Static methods in most services; `NomineeService` mixes instance methods and static preload helpers.
 
 **HTTP client abstraction (frontend):**
-- Purpose: Centralize auth headers, token refresh, and error normalization.
+- Purpose: Centralize auth headers, token refresh, and error normalization for internal API calls.
 - Examples: `src/frontend/src/services/http.ts`, used by `src/frontend/src/services/payrollService.ts` and `src/frontend/src/services/reportsService.ts`.
-- Pattern: Domain service methods should call `http.get/post/put/delete` rather than direct `fetch`.
+- Pattern: Internal domain service methods MUST call `http.get/post/put/delete`.
+
+**External HTTP client abstraction (frontend):**
+- Purpose: Securely call third-party APIs without leaking internal tokens.
+- Examples: `src/frontend/src/services/externalHttp.ts`.
+- Pattern: Used for services like `src/frontend/src/utils/weather.ts` that fetch data from public APIs.
 
 **Schema-validation abstraction (backend):**
 - Purpose: Validate request body before controller logic.
@@ -160,4 +166,4 @@
 
 ---
 
-*Architecture analysis: 2026-04-09*
+*Architecture analysis: 2026-04-11*

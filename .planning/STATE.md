@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: — Stability and Integration Hardening
-status: Defining requirements
-stopped_at: Completed 24-03-PLAN.md
-last_updated: "2026-04-09T21:18:14.652Z"
-last_activity: 2026-04-09
+status: Executing Phase 26
+stopped_at: Completed Phase 25
+last_updated: "2026-04-11T00:00:00.000Z"
+last_activity: 2026-04-11 -- Phase 25 execution completed
 progress:
-  total_phases: 16
-  completed_phases: 14
-  total_plans: 41
-  completed_plans: 39
-  percent: 95
+  total_phases: 17
+  completed_phases: 15
+  total_plans: 45
+  completed_plans: 41
+  percent: 91
 ---
 
 # Project State — VP-Planilla
@@ -21,24 +21,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-09)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Ejecutar v1.4 stability/integration hardening
+**Current focus:** Phase 26 — repository-hygiene-and-cleanup
 
 ## Current Position
 
-Phase: 24-auth-token-lifecycle-end-to-end (complete)
-Plan: 24-03 complete
-Plans: 3/10 milestone plans complete
-Next: Execute 25-01-PLAN.md
-Last activity: 2026-04-09
+Phase: 26 (repository-hygiene-and-cleanup) — PENDING
+Plan: 0 of 2
+Plans: 5/10 milestone plans complete
+Next: Execute 26-01-PLAN.md
+Last activity: 2026-04-11 -- Phase 25 execution completed
 
-Progress: [███░░░░░░░] 30% (3/10 plans complete)
+Progress: [█████░░░░░] 50% (5/10 plans complete)
 
 ## v1.4 Phase Map
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 24 | Auth Token Lifecycle End-to-End | AUTH-05..08 | ✅ Complete (3/3 plans) |
-| 25 | HTTP Client Layer Enforcement | HTTP-01..03 | ○ Pending |
+| 25 | HTTP Client Layer Enforcement | HTTP-01..03 | ✅ Complete (2/2 plans) |
 | 26 | Repository Hygiene and Build Cleanup | HYG-01..03 | ○ Pending |
 | 27 | Monolith Decomposition and Maintainability | MOD-01..03 | ○ Pending |
 
@@ -103,14 +103,15 @@ Progress: [███░░░░░░░] 30% (3/10 plans complete)
 - Logout revocation is treated as idempotent server behavior: duplicate/expired token paths are controlled (never 500) while revoked token reuse is denied.
 - Refresh orchestration is now centralized in `http.ts` with a single-flight lock, preventing concurrent refresh stampedes on parallel 401 responses.
 - Frontend auth error handling now prioritizes `error.code` for 401 flows while preserving fallback parsing for legacy payloads.
+- **Phase 25 complete:** Centralized external API calls in `externalHttp.ts` to ensure zero internal token leakage to third-party services. Refactored all frontend services (`AuditLogsService`, `BranchService`, `PayrollEmployeesService`, `ClockLogsService`) to use the unified `http.ts` client, eliminating raw `fetch` or `axios` bypasses.
 
 ## Session Continuity
 
-Last session: 2026-04-09T21:18:14.641Z
-Stopped at: Completed 24-03-PLAN.md
-Resume: Run `/gsd-execute-phase 25` to continue with v1.4.
+Last session: 2026-04-11T00:00:00.000Z
+Stopped at: Completed Phase 25
+Resume: Run `/gsd-execute-phase 26` to continue with v1.4.
 Note: v1.3 artifacts archived under `.planning/milestones/`.
 
 ---
 
-*Updated: 2026-04-09 — Completed plan 24-03 execution*
+*Updated: 2026-04-11 — Completed Phase 25 execution*
