@@ -387,10 +387,59 @@ export class AuthService {
     const emailService = new EmailService();
     await emailService.sendEmail({
       to: user.user_email,
-      subject: 'Codigo de verificacion para cambio de contrasena',
-      html: `<p>Su codigo de verificacion es: <strong>${code}</strong></p>
-             <p>Este codigo expira en 15 minutos.</p>
-             <p>Si no solicito este cambio, ignore este correo.</p>`
+      subject: 'Código de verificación - Verde Gestión',
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FCF1D5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FCF1D5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 77, 54, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #3B4D36 0%, #2D3A28 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h1 style="color: #D4BD80; margin: 0; font-size: 24px; font-weight: bold;">VERDE GESTIÓN</h1>
+              <p style="color: #8B7D5E; margin: 5px 0 0 0; font-size: 12px;">Sistema de Planilla</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px;">
+              <h2 style="color: #3B4D36; margin: 0 0 20px 0; font-size: 18px;">Código de verificación</h2>
+              <p style="color: #4A5D3A; font-size: 14px; line-height: 1.6;">
+                Has solicitado un código para cambiar tu contraseña. Utiliza el siguiente código:
+              </p>
+              <div style="background-color: #FCF1D5; border: 2px dashed #D4C89A; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; color: #3B4D36; letter-spacing: 8px;">${code}</span>
+              </div>
+              <p style="color: #8B7D5E; font-size: 12px;">
+                Este código <strong>expira en 15 minutos</strong>.
+              </p>
+              <p style="color: #8B7D5E; font-size: 12px; margin-top: 20px;">
+                Si no solicitaste este cambio, puedes ignorar este correo.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 12px 12px;">
+              <p style="color: #8B7D5E; font-size: 11px; margin: 0;">
+                © ${new Date().getFullYear()} Verde Gestión — Control de planilla
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
     });
 
     return { success: true, message: 'Code sent to email' };

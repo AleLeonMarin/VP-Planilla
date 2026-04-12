@@ -19,14 +19,14 @@
 
 </details>
 
-### 🚧 v1.4 (Planned)
+### 🚧 v1.4 (In Progress)
 
 - [x] **Phase 24: Auth Token Lifecycle End-to-End** - Unificar refresh/revocation/logout y errores de autenticacion en toda la plataforma (completed 2026-04-09)
 - [x] **Phase 25: HTTP Client Layer Enforcement** - Eliminar bypasses a `http.ts` y estandarizar manejo de errores en servicios frontend (completed 2026-04-11)
 - [x] **Phase 26: Repository Hygiene and Build Artifacts Cleanup** - Limpiar artefactos versionados y reforzar `.gitignore` multi-stack (completed 2026-04-11)
 - [x] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion (completed 2026-04-11)
 - [x] **Phase 28: Email Notification Module** - Módulo de notificaciones por email con Resend (completed 2026-04-11)
-- [x] **Phase 29: Implement `changePassword` Feature** (completed 2026-04-12)
+- [x] **Phase 29: Implement `changePassword` Feature** - Sistema de recuperación de contraseña con código de verificación (completed 2026-04-12)
 - [ ] **Phase 30: Fix Repository Hygiene**
 - [ ] **Phase 31: Improve Code Quality & Automation**
 
@@ -79,10 +79,10 @@ Plans:
 **Requirements:** AUTH-09 (TBD)
 **Gap Closure:** Closes gap from v1.4 audit: `changePassword` stub.
 
-**Plans:** 0/0 plans complete
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 29-01-PLAN.md — Secure password change with email verification code (6-digit, 15-min expiry)
+- [x] 29-01-PLAN.md — Secure password change with email verification code (6-digit, 15-min expiry)
 
 ### Phase 30: Fix Repository Hygiene
 **Goal:** Fix repository hygiene issues identified in the v1.4 audit.
@@ -109,6 +109,7 @@ Plans:
 | 26. Repository Hygiene and Build Cleanup | v1.4 | 3/3 | Complete | 2026-04-11 |
 | 27. Monolith Decomposition and Maintainability | v1.4 | 3/3 | Complete | 2026-04-11 |
 | 28. Email Notification Module | v1.4 | 2/2 | Complete | 2026-04-11 |
+| 29. Implement changePassword Feature | v1.4 | 1/1 | Complete | 2026-04-12 |
 
 ## Archives
 

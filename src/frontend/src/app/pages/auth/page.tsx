@@ -10,9 +10,12 @@ import {
 } from "@heroicons/react/24/outline";
 import { useLogin } from "@/hooks/useLogin";
 import { useModal } from "@/hooks/useModal";
+import { useState } from "react";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 const LoginScreen = () => {
   const { showError, showSuccess, ModalComponent } = useModal();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   
   const {
     username,
@@ -152,9 +155,17 @@ const LoginScreen = () => {
                     Ingresar
                     <ArrowRightIcon className="w-4 h-4" />
                   </>
-                )}
-              </button>
-            </form>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(true)}
+                  className="w-full py-2 text-sm text-[#3B4D36] dark:text-zinc-400 hover:text-[#2D3A28] dark:hover:text-zinc-300 underline decoration-dotted underline-offset-2 transition-colors"
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </form>
           </div>
 
           {/* Footer */}
@@ -165,6 +176,10 @@ const LoginScreen = () => {
       </div>
 
       <ModalComponent />
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </>
   );
 };

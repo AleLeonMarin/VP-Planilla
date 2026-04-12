@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: — Stability and Integration Hardening
-status: Ready to plan
-stopped_at: Completed 27-02-PLAN.md
-last_updated: "2026-04-12T04:33:08.972Z"
+status: In Progress
+stopped_at: Phase 29 completed
+last_updated: "2026-04-12T05:10:00.000Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 7
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 8
-  percent: 100
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State — VP-Planilla
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-09)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 29 — Implement changePassword Feature
+**Current focus:** Phase 29 — Implement changePassword Feature (COMPLETED)
 
 ## Current Position
 
 Phase: 30
 Plan: Not started
-Plans: 11/11 milestone plans complete
-Next: Milestone Transition / v1.5 Planning
+Plans: 9/11 milestone plans complete
+Next: Phase 30 - Fix Repository Hygiene
 Last activity: 2026-04-12
 
-Progress: [██████████] 100% (11/11 plans complete)
+Progress: [█████████░] 82% (9/11 plans complete)
 
 ## v1.4 Phase Map
 
@@ -41,6 +41,8 @@ Progress: [██████████] 100% (11/11 plans complete)
 | 25 | HTTP Client Layer Enforcement | HTTP-01..03 | ✅ Complete (2/2 plans) |
 | 26 | Repository Hygiene and Build Cleanup | HYG-01..03 | ✅ Complete (3/3 plans) |
 | 27 | Monolith Decomposition and Maintainability | MOD-01..03 | ✅ Complete (3/3 plans) |
+| 28 | Email Notification Module | EMAIL-01..02 | ✅ Complete (2/2 plans) |
+| 29 | Implement changePassword Feature | PASS-01..02 | ✅ Complete (2/2 plans) |
 
 ## Milestone History
 
@@ -52,11 +54,25 @@ Progress: [██████████] 100% (11/11 plans complete)
 | v1.3 | Sistema de Marcas de Reloj Robusto | Archived | 326+ tests |
 | v1.4 | Stability and Integration Hardening | Active | TBD |
 
+## Phase 29 - ChangePassword Feature (COMPLETED 2026-04-12)
+
+### Summary
+- Backend: `vpg_password_change_request` model, `/api/auth/password-request` and `/api/auth/password-confirm` endpoints
+- Frontend: `ChangePasswordModal.tsx` component with 3-step flow (request → confirm → success)
+- Email: HTML template with Verde Gestión branding
+- Integration: Modal added to both login page and users page
+
+### Changes Made
+- Added password change request flow with 6-digit verification code
+- Email verification code sent via Resend
+- Code expires in 15 minutes
+- Frontend modal integrated in `/pages/auth` and `/pages/users`
+
 ## Accumulated Context
 
 ### Tests
 
-- Backend: 338+ tests pasando (21+ suites), 0 failures, cobertura ~45% (exact count increasing with Phase 20 tests)
+- Backend: 338+ tests pasando (21+ suites), 0 failures, cobertura ~45%
 - Frontend: sin tests automatizados (pendiente milestone futuro)
 
 ### Architecture Notes for v1.4

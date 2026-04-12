@@ -2,16 +2,16 @@
 phase: 29-implement-changepassword-feature
 plan: 01
 status: complete
-completed: 2026-04-11T22:45:00Z
-duration_minutes: 15
-tasks_completed: 5
-files_modified: 4
-commits: 3
+completed: 2026-04-12T05:10:00Z
+duration_minutes: 45
+tasks_completed: 8
+files_modified: 7
+commits: 5
 ---
 
 # Phase 29 Plan 01: Change Password Feature Summary
 
-**Objective:** Implement secure password change flow using email verification code (6-digit code sent via Resend, hashed in DB, 15-min expiration). Resolves the stub in AuthController.ts.
+**Objective:** Implement secure password change flow using email verification code (6-digit code sent via Resend, hashed in DB, 15-min expiration). Includes frontend integration to login and users page.
 
 ## One-Liner
 
@@ -22,11 +22,14 @@ Email-based password change with 6-digit verification code, 15-minute expiry, bc
 ## Key Files Created/Modified
 
 | File | Action | Key Changes |
-|------|--------|-----------|
+|------|--------|-------------|
 | src/backend/prisma/schema.prisma | Modified | Added vpg_password_change_request model |
 | src/backend/src/service/AuthService.ts | Modified | Added requestPasswordChange, confirmPasswordChange methods |
 | src/backend/src/controller/AuthController.ts | Modified | Added requestPasswordChange, confirmPasswordChange endpoints |
 | src/backend/src/routes/AuthRoute.ts | Modified | Registered /password-request and /password-confirm routes |
+| src/frontend/src/services/authService.ts | Modified | Added requestPasswordChange, confirmPasswordChange methods |
+| src/frontend/src/components/ChangePasswordModal.tsx | Created | Modal component with 3-step password change flow |
+| src/frontend/src/app/pages/auth/page.tsx | Modified | Added "Olvidaste tu contraseña?" link |
 
 ---
 
@@ -46,7 +49,10 @@ Email-based password change with 6-digit verification code, 15-minute expiry, bc
 2. **Task 2: AuthService** - Added requestPasswordChange and confirmPasswordChange methods
 3. **Task 3: Controller** - Implemented HTTP endpoints with input validation
 4. **Task 4: Routes** - Registered endpoints without auth middleware
-5. **Task 5: Verification** - Build passes successfully
+5. **Task 5: Backend Verification** - Build passes successfully
+6. **Task 6: Frontend Service** - Added requestPasswordChange and confirmPasswordChange to authService.ts
+7. **Task 7: ChangePasswordModal Component** - Created modal with 3-step flow (request → confirm → success)
+8. **Task 8: Frontend Integration** - Added modal to login page and users page
 
 ### Security Implementation
 
@@ -83,16 +89,22 @@ None - plan executed exactly as written.
 - [x] AuthController.ts has confirmPasswordChange method
 - [x] Old changePassword stub replaced
 - [x] AuthRoute.ts registers both endpoints
-- [x] npm run build succeeds
+- [x] npm run build succeeds (backend)
+- [x] authService.ts has requestPasswordChange method
+- [x] authService.ts has confirmPasswordChange method
+- [x] ChangePasswordModal.tsx exists with 3-step flow
+- [x] Modal integrated in /pages/auth (login page)
+- [x] Modal integrated in /pages/users page
+- [x] Email template uses Verde Gestión branding
 
 ---
 
 ## Metrics
 
-- Tasks: 5/5 complete
-- Duration: ~15 minutes
-- Commits: 3 (atomic per-task)
-- Files Modified: 4
+- Tasks: 8/8 complete
+- Duration: ~45 minutes
+- Commits: 5 (atomic per-task)
+- Files Modified: 7
 
 ---
 
