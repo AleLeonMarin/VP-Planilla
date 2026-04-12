@@ -1,4 +1,9 @@
-import { env } from '../../../config/env';
+import * as dotenv from 'dotenv';
+
+// Mock dotenv.config() to prevent it from loading the real .env file during tests
+jest.mock('dotenv', () => ({
+  config: jest.fn(),
+}));
 
 describe('Environment Configuration', () => {
   const originalEnv = process.env;
