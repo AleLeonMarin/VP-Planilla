@@ -299,17 +299,68 @@ export class AuthController {
   }
 
   /**
-   * Cambiar contraseña
-   * POST /auth/change-password
+   * Request password change (step 1)
+   * POST /api/auth/password-request
    */
-  static async changePassword(req: Request, res: Response): Promise<Response> {
+  static async requestPasswordChange(req: Request, res: Response): Promise<Response> {
     try {
-      return res.status(200).json({
-        success: true,
-        message: 'Change password funcionando (pendiente implementar)'
-      });
+      const { email } = req.body;
+
+      // Validate email
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Email es requerido'
+        });
+      }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Formato de email invalido'
+        });
+      }
+
+      const result = await AuthService.requestPasswordChange(email);
+
+      // Always return 200 to prevent email enumeration
+      return res.status(200).json(result);
     } catch (error) {
-      console.error('Error cambiando contraseña:', error);
+      console.error('Error requesting password change:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  /**
+   * Confirm password change (step 2)
+   * POST /api/auth/password-confirm
+   */
+  static async confirmPasswordChange(req: Request, res: Response): Promise<Response> {
+    try {
+      const { code, new_password } = req.body;
+
+      // Validate inputs
+      if (!code || !new_password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Codigo y nueva contrasena son requeridos'
+        });
+      }
+
+      const result = await AuthService.confirmPasswordChange(code, new_password);
+
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error('Error confirming password change:', error);
       return res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
