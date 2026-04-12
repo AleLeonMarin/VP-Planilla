@@ -11,9 +11,11 @@ import {
   ShieldCheckIcon,
   UsersIcon,
   ExclamationTriangleIcon,
+  KeyIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from 'sonner';
 import { Select, SelectItem } from '@/components/ui/Select';
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-red-100 text-red-800",
@@ -29,6 +31,7 @@ export default function UsersPermissionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [savingUserId, setSavingUserId] = useState<number | null>(null);
   const [filter, setFilter] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -105,8 +108,19 @@ export default function UsersPermissionsPage() {
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6 space-y-6">
       <div className="mb-2">
-        <p className="text-xs text-zinc-400 uppercase tracking-widest">Seguridad / Usuarios y accesos</p>
-        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Usuarios y accesos</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400 uppercase tracking-widest">Seguridad / Usuarios y accesos</p>
+            <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Usuarios y accesos</h1>
+          </div>
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <KeyIcon className="w-4 h-4" />
+            Cambiar mi contraseña
+          </button>
+        </div>
       </div>
 
       <section className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-zinc-200 dark:border-zinc-800">
@@ -327,6 +341,11 @@ export default function UsersPermissionsPage() {
           </table>
         </div>
       </section>
+
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 }

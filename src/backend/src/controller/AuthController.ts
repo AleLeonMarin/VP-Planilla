@@ -2,6 +2,29 @@ import { Request, Response } from 'express';
 import { AuthService, LoginCredentials } from '../service/AuthService';
 
 export class AuthController {
+
+  private static buildAuthError(
+    status: 400 | 401 | 403,
+    code:
+      | 'AUTH_TOKEN_MISSING'
+      | 'AUTH_TOKEN_INVALID'
+      | 'AUTH_TOKEN_EXPIRED'
+      | 'AUTH_TOKEN_REVOKED',
+    message: string,
+  ): {
+    success: false;
+    error: { code: string; message: string; status: 400 | 401 | 403; retryable: boolean };
+  } {
+    return {
+      success: false,
+      error: {
+        code,
+        message,
+        status,
+        retryable: status === 401,
+      },
+    };
+  }
   
   /**
    * Login de usuario
@@ -129,18 +152,30 @@ export class AuthController {
   static async logout(req: Request, res: Response): Promise<Response> {
     try {
       const authHeader = req.headers.authorization;
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
 
-      if (authHeader) {
-        const token = authHeader.split(' ')[1];
+      if (!token) {
+        return res
+          .status(401)
+          .json(AuthController.buildAuthError(401, 'AUTH_TOKEN_MISSING', 'Token de acceso requerido'));
+      }
 
-        if (token) {
-          // Decode token to get expiration
-          const decoded = AuthService.verifyToken(token);
-          const expiresAt = new Date(decoded.exp * 1000);
+      try {
+        const decoded = AuthService.verifyToken(token);
+        const expiresAt = new Date(decoded.exp * 1000);
 
-          // Add token to blocklist
-          await AuthService.addTokenToBlocklist(token, expiresAt);
+        await AuthService.addTokenToBlocklist(token, expiresAt);
+      } catch (tokenError) {
+        if (tokenError instanceof Error && tokenError.name === 'TokenExpiredError') {
+          return res.status(200).json({
+            success: true,
+            message: 'Sesión cerrada exitosamente',
+          });
         }
+
+        return res
+          .status(401)
+          .json(AuthController.buildAuthError(401, 'AUTH_TOKEN_INVALID', 'Token inválido'));
       }
 
       return res.status(200).json({
@@ -212,9 +247,47 @@ export class AuthController {
    */
   static async refreshToken(req: Request, res: Response): Promise<Response> {
     try {
+      const { refresh_token } = req.body as { refresh_token?: string };
+
+      if (!refresh_token || refresh_token.trim() === '') {
+        return res
+          .status(400)
+          .json(AuthController.buildAuthError(400, 'AUTH_TOKEN_MISSING', 'refresh_token es requerido'));
+      }
+
+      let decoded: { id: number; username?: string; role?: string; exp: number; iat?: number };
+
+      try {
+        decoded = AuthService.verifyToken(refresh_token);
+      } catch (tokenError) {
+        if (tokenError instanceof Error && tokenError.name === 'TokenExpiredError') {
+          return res
+            .status(401)
+            .json(AuthController.buildAuthError(401, 'AUTH_TOKEN_EXPIRED', 'Refresh token expirado'));
+        }
+
+        return res
+          .status(401)
+          .json(AuthController.buildAuthError(401, 'AUTH_TOKEN_INVALID', 'Refresh token inválido'));
+      }
+
+      const user = await AuthService.getUserById(decoded.id);
+
+      if (!user) {
+        return res
+          .status(401)
+          .json(AuthController.buildAuthError(401, 'AUTH_TOKEN_INVALID', 'Usuario no encontrado'));
+      }
+
+      const token = AuthService.issueAccessToken({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      });
+
       return res.status(200).json({
         success: true,
-        message: 'Refresh token funcionando (pendiente implementar)'
+        token,
       });
     } catch (error) {
       console.error('Error en refresh token:', error);
@@ -226,17 +299,68 @@ export class AuthController {
   }
 
   /**
-   * Cambiar contraseña
-   * POST /auth/change-password
+   * Request password change (step 1)
+   * POST /api/auth/password-request
    */
-  static async changePassword(req: Request, res: Response): Promise<Response> {
+  static async requestPasswordChange(req: Request, res: Response): Promise<Response> {
     try {
-      return res.status(200).json({
-        success: true,
-        message: 'Change password funcionando (pendiente implementar)'
-      });
+      const { email } = req.body;
+
+      // Validate email
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Email es requerido'
+        });
+      }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Formato de email invalido'
+        });
+      }
+
+      const result = await AuthService.requestPasswordChange(email);
+
+      // Always return 200 to prevent email enumeration
+      return res.status(200).json(result);
     } catch (error) {
-      console.error('Error cambiando contraseña:', error);
+      console.error('Error requesting password change:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  /**
+   * Confirm password change (step 2)
+   * POST /api/auth/password-confirm
+   */
+  static async confirmPasswordChange(req: Request, res: Response): Promise<Response> {
+    try {
+      const { code, new_password } = req.body;
+
+      // Validate inputs
+      if (!code || !new_password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Codigo y nueva contrasena son requeridos'
+        });
+      }
+
+      const result = await AuthService.confirmPasswordChange(code, new_password);
+
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error('Error confirming password change:', error);
       return res.status(500).json({
         success: false,
         message: 'Error interno del servidor'

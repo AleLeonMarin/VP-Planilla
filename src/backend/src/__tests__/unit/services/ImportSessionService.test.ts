@@ -165,4 +165,81 @@ describe('ImportSessionService', () => {
       await expect(ImportSessionService.getSession(1)).rejects.toThrow('DB error');
     });
   });
+
+  describe('getRecentSessions', () => {
+    const service = ImportSessionService;
+    const mockSessionRow = {
+      import_sessions_id: 1,
+      import_sessions_started_at: new Date('2026-04-05T10:00:00.000Z'),
+      import_sessions_completed_at: new Date('2026-04-05T11:00:00.000Z'),
+      import_sessions_source: 'java_import',
+      import_sessions_status: 'completed',
+      import_sessions_total_records: 100,
+      import_sessions_created_count: 95,
+      import_sessions_skipped_count: 5,
+      import_sessions_anomaly_count: 3,
+      import_sessions_created_by: 2
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return recent sessions ordered by started_at desc, limited by limit', async () => {
+      prisma.vpg_clock_import_sessions.findMany.mockResolvedValue([mockSessionRow]);
+
+      const result = await service.getRecentSessions(5);
+
+      expect(result).toEqual([{
+        id: 1,
+        started_at: mockSessionRow.import_sessions_started_at,
+        completed_at: mockSessionRow.import_sessions_completed_at,
+        source: 'java_import',
+        status: 'completed',
+        total_records: 100,
+        created_count: 95,
+        skipped_count: 5,
+        anomaly_count: 3,
+        created_by: 2
+      }]);
+      expect(prisma.vpg_clock_import_sessions.findMany).toHaveBeenCalledWith({
+        take: 5,
+        orderBy: { import_sessions_started_at: 'desc' }
+      });
+    });
+
+    it('should use default limit 5 when not provided', async () => {
+      prisma.vpg_clock_import_sessions.findMany.mockResolvedValue([mockSessionRow]);
+
+      await service.getRecentSessions();
+
+      expect(prisma.vpg_clock_import_sessions.findMany).toHaveBeenCalledWith({
+        take: 5,
+        orderBy: { import_sessions_started_at: 'desc' }
+      });
+    });
+
+    it('should handle completed_at null as undefined', async () => {
+      const rowWithNullCompleted = { ...mockSessionRow, import_sessions_completed_at: null };
+      prisma.vpg_clock_import_sessions.findMany.mockResolvedValue([rowWithNullCompleted]);
+
+      const result = await service.getRecentSessions(1);
+
+      expect(result[0].completed_at).toBeUndefined();
+    });
+
+    it('should return empty array when no sessions', async () => {
+      prisma.vpg_clock_import_sessions.findMany.mockResolvedValue([]);
+
+      const result = await service.getRecentSessions(5);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw if database query fails', async () => {
+      prisma.vpg_clock_import_sessions.findMany.mockRejectedValue(new Error('DB error'));
+
+      await expect(service.getRecentSessions(5)).rejects.toThrow('DB error');
+    });
+  });
 });

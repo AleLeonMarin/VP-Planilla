@@ -1,245 +1,103 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-31
+**Analysis Date:** 2026-04-09
 
 ## Naming Patterns
 
 **Files:**
-- Backend: `PascalCase.ts` (e.g., `EmployeeService.ts`, `PayrollController.ts`, `AuthMiddleware.ts`)
-- Frontend components: `PascalCase.tsx` (e.g., `AddEmployeeModal.tsx`, `EmployeeTable.tsx`)
-- Frontend hooks: `camelCase` prefixed with `use` (e.g., `useEmployeeList.ts`, `usePositions.ts`)
-- Frontend services: `camelCase` (e.g., `employeeService.ts`, `payrollService.ts`, `http.ts`)
-- Test files: `*.test.ts` or `*.spec.ts` (e.g., `NomineeService.test.ts`, `payrollUtils.test.ts`)
+- Use `PascalCase.ts` for backend controllers/services/routes in `src/backend/src/controller/`, `src/backend/src/service/`, and `src/backend/src/routes/` (for example `src/backend/src/service/EmployeeService.ts`, `src/backend/src/controller/UserController.ts`, `src/backend/src/routes/AuthRoute.ts`).
+- Use `lowercase.ts` for backend model interfaces in `src/backend/src/model/` (for example `src/backend/src/model/employee.ts`, `src/backend/src/model/user.ts`).
+- Use `PascalCase.tsx` for frontend components in `src/frontend/src/components/` and `src/frontend/src/components/ui/` (for example `src/frontend/src/components/AddEmployeeModal.tsx`, `src/frontend/src/components/ui/FormModal.tsx`).
+- Use `camelCase` with `use` prefix for hooks in `src/frontend/src/hooks/` (for example `src/frontend/src/hooks/useVacations.ts`, `src/frontend/src/hooks/useClockLogs.ts`).
+- Use `camelCase` service filenames in `src/frontend/src/services/` (for example `src/frontend/src/services/clockLogsService.ts`, `src/frontend/src/services/authService.ts`).
 
 **Functions:**
-- camelCase: `calculatePayroll()`, `getEmployeeById()`, `validateClockLogPairs()`
-- Static methods in service classes: `static async methodName()`
-- Backend: no instance methods, only static methods
+- Use `camelCase` for functions/methods across backend and frontend (for example `createEmployee` in `src/backend/src/controller/EmployeeController.ts`, `setFilters` in `src/frontend/src/hooks/useClockLogs.ts`).
+- Use static class methods for backend service/controller entrypoints (for example `EmployeeService.updateEmployee` in `src/backend/src/service/EmployeeService.ts`, `UserController.updatePermissions` in `src/backend/src/controller/UserController.ts`).
 
 **Variables:**
-- camelCase for local variables: `employeeData`, `isLoading`, `searchTerm`
-- camelCase for function parameters: `data`, `id`, `date`, `options`
+- Use `snake_case` for domain/database-aligned fields (for example `employee_first_name`, `employee_required_hours_biweekly` in `src/backend/src/schemas/EmployeeSchema.ts`; `employee_id`, `log_type` in `src/frontend/src/services/clockLogsService.ts`).
+- Use `camelCase` for local variables and helper names (for example `mockPrismaEmployee` and `makeEmployee` in `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`).
+- Use `SCREAMING_SNAKE_CASE` for module constants (for example `STORAGE_KEYS` in `src/frontend/src/services/http.ts`, `PAGE_SIZE` in `src/frontend/src/hooks/useClockLogs.ts`).
 
-**Types/Interfaces:**
-- PascalCase: `Employee`, `EmployeeFormData`, `Payroll`, `DayWork`
-- Model interfaces: `Employee`, `Position`, `Deduction` (live in `src/backend/src/model/`)
-- Frontend schemas: Zod types exported as `EmployeeSchemaType`, `EmployeeSchemaInputType`
-
-**Database fields/table names:**
-- `snake_case` matching Prisma schema: `period_start`, `employee_first_name`, `national_id`
-- Table prefix convention: all tables start with `vpg_` (e.g., `vpg_employees`, `vpg_payrolls`, `vpg_positions`)
-- Relation fields use underscore pattern: `employee_position_id`, `payroll_type_id`
-
-**Form field names:**
-- `entity_field_name` pattern (e.g., `employee_first_name`, `employee_social_code`, `employee_hire_date`)
-- Frontend forms match backend schema with `employee_` prefix throughout
-
-**Top-level constants:**
-- `SCREAMING_SNAKE_CASE`: `REGULAR_HOURS_PER_DAY`, `OVERTIME_MULTIPLIER`, `WORKING_DAYS_PER_WEEK`, `FERIADOS_CR`
-- Constant objects use `SCREAMING_SNAKE_CASE` with nested key casing: `EMPLOYEE_STATUS`, `STATUS_BADGE_CONFIG`, `MESSAGES`
+**Types:**
+- Use `PascalCase` for interfaces/types (for example `Employee` in `src/backend/src/model/employee.ts`, `ClockLogPaginated` in `src/frontend/src/services/clockLogsService.ts`, `FormData` in `src/frontend/src/components/LaborEventModal.tsx`).
 
 ## Code Style
 
 **Formatting:**
-- No explicit formatter enforced (eslint present on frontend, none detected on backend)
-- Consistent 2-space indentation observed throughout
-- Line lengths typically 80-100 characters (no hard limit enforced)
+- Formatting tool: Not detected as enforced formatter config (`.prettierrc*` not detected in repository root).
+- TypeScript strict mode is enabled in both apps (`"strict": true` in `src/backend/tsconfig.json` and `src/frontend/tsconfig.json`).
+- Use single quotes heavily in source files (for example `src/frontend/src/hooks/useVacations.ts`, `src/backend/src/service/EmployeeService.ts`), with occasional double quotes in older backend files (for example `src/backend/src/controller/EmployeeController.ts`).
 
 **Linting:**
-- Frontend: ESLint with `next/core-web-vitals` and `next/typescript` presets
-- Backend: No linter configured; relies on TypeScript strict mode
-- Command: `npx next lint` (frontend only)
-
-**TypeScript:**
-- Strict mode enabled: `"strict": true` in both `tsconfig.json` files
-- Target: ES2020 (backend), matching Node 22 capabilities
-- Module resolution: node16 (backend)
-- No `any` types allowed in method signatures (enforced by CLAUDE.md policy)
-- Explicit type annotations on all function parameters and returns
+- Frontend linting is configured with ESLint flat config in `src/frontend/eslint.config.mjs` using `next/core-web-vitals` and `next/typescript`.
+- For test files, allow `any` and downgrade unused vars to warning in `src/frontend/eslint.config.mjs` (`files: ["src/__tests__/**/*.{ts,tsx}"]`).
+- Backend ESLint config: Not detected.
 
 ## Import Organization
 
 **Order:**
-1. External packages (`express`, `react`, `zod`, `@prisma/client`)
-2. Internal relative imports from `../` paths (backend) or `@/` aliases (frontend)
-3. Type imports grouped separately if needed
+1. Framework/external packages first (for example `express`, `zod`, `react-hook-form` in `src/backend/src/routes/AuthRoute.ts` and `src/frontend/src/components/AddEmployeeModal.tsx`).
+2. Internal modules second (backend relative imports like `../service/EmployeeService` in `src/backend/src/controller/EmployeeController.ts`; frontend alias imports like `@/services/clockLogsService` in `src/frontend/src/hooks/useClockLogs.ts`).
+3. Types/interfaces colocated with usage (for example `Employee` import in `src/backend/src/service/EmployeeService.ts`, `ClockLogPaginated` import in `src/frontend/src/app/pages/clock-logs/page.tsx`).
 
 **Path Aliases:**
-- Frontend: `@/` prefix for all imports from `src/` (e.g., `@/components`, `@/services`, `@/types`, `@/schemas`, `@/hooks`, `@/constants`)
-- Backend: relative paths only; no alias convention
-- Frontend policy: Never use `../../` relative imports beyond 1 level — always use `@/`
-
-**Example Frontend:**
-```typescript
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Employee } from '@/types';
-import { employeeService } from '@/services/employeeService';
-import useEmployeeList from '@/hooks/useEmployeeList';
-```
-
-**Example Backend:**
-```typescript
-import { Request, Response } from "express";
-import { prisma } from '../lib/prisma';
-import { EmployeeService } from "../service/EmployeeService";
-```
+- Use `@/*` alias in frontend (`src/frontend/tsconfig.json`, `paths` section).
+- Use alias imports for frontend app code (for example `@/hooks/useClockLogs` in `src/frontend/src/app/pages/clock-logs/page.tsx`, `@/types/reports` in `src/frontend/src/services/index.ts`).
+- Backend path aliases: Not detected; use relative imports from `src/backend/src/*`.
 
 ## Error Handling
 
-**Backend patterns:**
-- Services throw native JavaScript `Error` objects with descriptive messages
-- Controllers wrap try-catch and return JSON: `{ error: "message" }` with appropriate HTTP status
-- No custom error classes observed; uses plain Error
-- asyncHandler utility wraps all route handlers to catch promise rejections
-
-**Frontend patterns:**
-- Service methods throw native `Error` for API call failures
-- Hooks catch errors and expose via hook return shape: `{ data, isLoading, error, ...actions }`
-- Modal components handle submission errors with try-catch and don't re-throw
-- Error messages displayed inline in UI, not propagated up
-
-**Example Backend:**
-```typescript
-try {
-  const employee = await EmployeeService.createEmployee(data);
-  return res.status(201).json(employee);
-} catch (error) {
-  console.error("Error creating employee:", error);
-  return res.status(500).json({ error: "Failed to create employee" });
-}
-```
-
-**Example Frontend:**
-```typescript
-const [error, setError] = useState<string | null>(null);
-try {
-  await employeeService.updateEmployee(id, data);
-} catch (err) {
-  setError(err instanceof Error ? err.message : 'Failed to update');
-}
-```
+**Patterns:**
+- Wrap backend route handlers with `asyncHandler` to forward rejected promises (`src/backend/src/utils/asyncHandler.ts`, route usage in `src/backend/src/routes/EmployeeRoute.ts` and `src/backend/src/routes/AuthRoute.ts`).
+- Validate request body via Zod middleware before controller logic (`validateBody` in `src/backend/src/middleware/validateBody.ts`; usage in `src/backend/src/routes/EmployeeRoute.ts`).
+- Use controller-level `try/catch` with explicit HTTP status and JSON error payload (for example `src/backend/src/controller/UserController.ts`, `src/backend/src/controller/EmployeeController.ts`).
+- When writing new endpoints, keep response shape consistent per route family: either `{ success, data/error }` (for example `src/backend/src/controller/UserController.ts`) or plain entity/error (for example `src/backend/src/controller/EmployeeController.ts`) to avoid client parsing drift.
 
 ## Logging
 
-**Framework:** `console` (no logging library in use)
+**Framework:** console
 
 **Patterns:**
-- Development logs: `console.log()` for startup messages, route access
-- Error logs: `console.error()` when exceptions occur in controllers
-- No structured logging; informal messages like `"Ruta raíz accesada"`, `"Servidor en ejecución..."`
-- Comments in Spanish OK; infrastructure comments in English preferred
-
-**Observed locations:**
-- `src/backend/src/index.ts`: server startup messages
-- `src/backend/src/controller/`: error logging on catch blocks
-- `src/frontend/src/services/http.ts`: debug log for API_BASE URL during development
+- Use `console.error` in backend controllers/services for failures (for example `src/backend/src/controller/UserController.ts`, `src/backend/src/service/AuthService.ts`).
+- Use `console.warn`/`console.error` in frontend hooks/services for recoverable API issues (for example `src/frontend/src/hooks/useClockLogs.ts`, `src/frontend/src/services/clockLogsService.ts`).
+- Use debug `console.log` sparingly for runtime diagnostics (for example API base URL log in `src/frontend/src/services/http.ts`, auth trace logs in `src/backend/src/service/AuthService.ts`).
 
 ## Comments
 
 **When to Comment:**
-- All public methods require JSDoc with `@param`, `@returns`, `@throws`
-- Inline comments for non-obvious logic (e.g., timezone offset calculations, field mapping)
-- Business logic comments in Spanish allowed; technical/infrastructure comments in English
+- Add intent-focused inline comments for transformations and compatibility mapping (for example field mapping comments in `src/backend/src/controller/EmployeeController.ts`; API wrapper comments in `src/frontend/src/services/http.ts`).
+- Add route purpose and access comments near endpoint declarations (for example `@route/@desc/@access` blocks in `src/backend/src/routes/AuthRoute.ts`).
 
-**JSDoc/TSDoc Format:**
-```typescript
-/**
- * Brief description of what this does
- * @param fieldName - Description of parameter
- * @returns Description of return value
- * @throws Description of exceptions
- */
-static async methodName(fieldName: string): Promise<Result> {
-  // implementation
-}
-```
-
-**Example observed:**
-```typescript
-/**
- * Create a new employee in the system
- * POST /employee/create
- * @param req - Express request object containing employee data
- * @param res - Express response object
- * @returns Promise<Response> - HTTP response with created employee data or error
- */
-static async createEmployee(req: Request, res: Response): Promise<Response> {
-```
+**JSDoc/TSDoc:**
+- Backend utility and service methods frequently include JSDoc with `@param` and `@returns` (for example `src/backend/src/middleware/validateBody.ts`, `src/backend/src/service/EmployeeService.ts`).
+- Frontend uses fewer formal docblocks; prefer clear function names and targeted inline comments (`src/frontend/src/hooks/useClockLogs.ts`).
 
 ## Function Design
 
 **Size:**
-- Service methods typically 20-50 lines; larger methods break down complex payroll logic
-- Utility functions are small (5-25 lines) and pure
-- No strict length limit; follows single-responsibility principle
+- Keep backend service methods focused on one data operation plus mapping (for example `getEmployeeById` in `src/backend/src/service/EmployeeService.ts`).
+- For complex UI workflows, separate orchestration into hooks and keep page components declarative (for example `useClockLogs` in `src/frontend/src/hooks/useClockLogs.ts` consumed by `src/frontend/src/app/pages/clock-logs/page.tsx`).
 
 **Parameters:**
-- Explicit object parameters preferred over positional args
-- Optional fields use `?` suffix: `data?: string`
-- Objects destructured in function bodies when needed
+- Prefer typed input objects and explicit interfaces for service and hook boundaries (for example `LoginCredentials` in `src/backend/src/service/AuthService.ts`, filter object in `src/frontend/src/services/clockLogsService.ts#getClockLogsPaginated`).
 
 **Return Values:**
-- All async service methods return Promise-wrapped domain types
-- Controllers return Express `Response` (explicit `return res.status(...).json(...)`)
-- Frontend hooks return object shapes: `{ data, isLoading, error, ...actions }`
-- Null/undefined returned explicitly when not found (no generic fallbacks)
-
-**Example:**
-```typescript
-static async getEmployeeById(id: number): Promise<Employee | null> {
-  const prismaEmployee = await prisma.vpg_employees.findUnique({
-    where: { employee_id: id }
-  });
-  if (!prismaEmployee) return null;
-  return mapPrismaToEmployee(prismaEmployee);
-}
-```
+- Hooks should return a stable object shape with state + actions (`{ data, isLoading, error, ...actions }` pattern in `src/frontend/src/hooks/useVacations.ts`, expanded variant in `src/frontend/src/hooks/useClockLogs.ts`).
+- Service methods should return typed entities or typed envelopes, not `any` (for example `PaginatedResponse<T>` in `src/frontend/src/services/clockLogsService.ts`, `Promise<Employee | null>` in `src/backend/src/service/EmployeeService.ts`).
 
 ## Module Design
 
 **Exports:**
-- Backend: class with static methods exported as named export: `export class EmployeeService { ... }`
-- Frontend services: named function exports: `export const getEmployees = async () => ...`
-- Frontend components: default export as `React.FC<PropsInterface>`
-- Frontend hooks: default export function: `export default useEmployeeList`
+- Backend modules primarily export classes with static methods (for example `export class AuthService` in `src/backend/src/service/AuthService.ts`).
+- Frontend modules export either service objects (`ClockLogsService` in `src/frontend/src/services/clockLogsService.ts`) or default component/hook exports (for example `src/frontend/src/components/ui/FormModal.tsx`, `src/frontend/src/hooks/useVacations.ts`).
 
 **Barrel Files:**
-- `src/constants/index.ts`: exports all constants
-- No other barrel files observed; imports are direct from source files
-- Frontend hooks imported individually: `import useEmployeeList from '@/hooks/useEmployeeList'`
-
-**Example Backend Export:**
-```typescript
-export class EmployeeService {
-  static async createEmployee(data: Employee): Promise<Employee> { ... }
-  static async getEmployeeById(id: number): Promise<Employee | null> { ... }
-  static async updateEmployee(id: number, data: Partial<Employee>): Promise<Employee | null> { ... }
-}
-```
-
-**Example Frontend Export:**
-```typescript
-const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ isOpen, onClose, onSubmit }) => {
-  // component body
-};
-export default AddEmployeeModal;
-```
-
-## Prisma Integration
-
-**Pattern:**
-- Always import singleton: `import { prisma } from '../lib/prisma'`
-- Never instantiate `new PrismaClient()`
-- Prisma queries in service layer only, never in controllers
-- Direct method chaining: `prisma.vpg_employees.findUnique()`, `prisma.vpg_payrolls.create()`
-
-**Data Mapping:**
-- Services map Prisma objects to domain models: `mapPrismaToEmployee(prismaEmployee)`
-- Field names use Prisma schema names (with `vpg_` prefix)
-- Convert between frontend form names (`employee_first_name`) and DB names internally
+- Use barrel exports for frontend services in `src/frontend/src/services/index.ts`.
+- Use minimal barrel export for frontend types in `src/frontend/src/types/index.ts`.
+- Backend barrel files: Not detected; import from concrete files directly.
 
 ---
 
-*Convention analysis: 2026-03-31*
+*Convention analysis: 2026-04-09*
