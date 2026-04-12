@@ -12,8 +12,10 @@ src/backend/*.tsbuildinfo
 # Dependencies
 src/backend/node_modules/
 
-# Package manager lock files (regenerable from package.json)
-**/package-lock.json
+# Package manager lock files (tracked in apps for deterministic builds)
+# **/package-lock.json (removed general ignore)
+!src/backend/package-lock.json
+!src/frontend/package-lock.json
 
 # ===== FRONTEND (Next.js) =====
 # Next.js build output — regenerate with: cd src/frontend && npm run build
