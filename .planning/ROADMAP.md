@@ -27,7 +27,7 @@
 - [x] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion (completed 2026-04-11)
 - [x] **Phase 28: Email Notification Module** - Módulo de notificaciones por email con Resend (completed 2026-04-11)
 - [x] **Phase 29: Implement `changePassword` Feature** - Sistema de recuperación de contraseña con código de verificación (completed 2026-04-12)
-- [x] **Phase 30: Fix Repository Hygiene** (completed 2026-04-12)
+- [x] **Phase 30: Fix Repository Hygiene** (completed 2026-04-12)
 - [ ] **Phase 31: Improve Code Quality & Automation**
 
 ### Phase 26: Repository Hygiene and Build Artifacts Cleanup
@@ -90,9 +90,16 @@ Plans:
 **Gap Closure:** Closes gaps from v1.4 audit: tracked `.pyc` files and inconsistent lock file policy.
 
 ### Phase 31: Improve Code Quality & Automation
-**Goal:** Refactor code for better maintainability and improve test automation.
-**Requirements:** N/A (Code Quality)
+**Goal:** Refactor code for better maintainability and improve test automation by centralizing env vars and adding Java unit tests.
+
+**Requirements:** QUAL-01, QUAL-02
 **Gap Closure:** Closes gaps from v1.4 audit: manual test execution and direct `process.env` access.
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 31-01-PLAN.md — Centralized and validated backend environment configuration (Zod)
+- [ ] 31-02-PLAN.md — Automated unit tests for Java clocklogs utility (JUnit 5)
 
 ## Progress
 
@@ -110,6 +117,7 @@ Plans:
 | 27. Monolith Decomposition and Maintainability | v1.4 | 3/3 | Complete | 2026-04-11 |
 | 28. Email Notification Module | v1.4 | 2/2 | Complete | 2026-04-11 |
 | 29. Implement changePassword Feature | v1.4 | 1/1 | Complete | 2026-04-12 |
+| 30. Fix Repository Hygiene | v1.4 | 1/1 | Complete | 2026-04-12 |
 
 ## Archives
 
