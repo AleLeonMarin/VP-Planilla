@@ -1,122 +1,88 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-31
+**Analysis Date:** 2026-04-09
 
 ## APIs & External Services
 
-**Email Dispatch:**
-- Nodemailer - Email sending for payroll reports
-  - SDK/Client: `nodemailer` package 8.0.1
-  - Used in: `src/backend/src/service/ReportsService.ts`
-  - Configuration: SMTP settings stored in `vpg_mail_server_settings` table in PostgreSQL
-  - Fields: `mail_server_settings_host`, `mail_server_settings_port`, `mail_server_settings_username`, `mail_server_settings_password`, `mail_server_settings_use_ssl`, `mail_server_settings_use_tls`
+**Weather API:**
+- OpenWeatherMap - Fetches current weather for UI display (`src/frontend/src/utils/weather.ts`)
+  - SDK/Client: Native `fetch` (no dedicated SDK) (`src/frontend/src/utils/weather.ts`)
+  - Auth: `NEXT_PUBLIC_OPENWEATHER_API_KEY` (`src/frontend/src/utils/weather.ts`)
 
-**Report Webhooks (Future):**
-- HTTP endpoints configured in `vpg_report_targets` table
-  - Fields: `report_targets_institution`, `report_targets_endpoint_url`, `report_targets_auth_token`, `report_targets_contact_email`
-  - Currently defined but not actively integrated; infrastructure ready for CCSS and Hacienda report dispatch
+**Email/SMTP Delivery:**
+- SMTP provider (hosted mail server, provider-agnostic) - Sends payroll report emails with XML attachments (`src/backend/src/service/ReportsService.ts`)
+  - SDK/Client: `nodemailer` (`src/backend/src/service/ReportsService.ts`)
+  - Auth: `REPORTS_SMTP_USER` / `REPORTS_SMTP_PASS` (fallbacks: `SMTP_USER` / `SMTP_PASS`, `EMAIL_USER` / `EMAIL_PASS`) (`src/backend/src/service/ReportsService.ts`)
+
+**Documentation UI:**
+- Scalar API Reference UI - Serves interactive API docs (`src/backend/src/index.ts`)
+  - SDK/Client: `@scalar/express-api-reference` + `swagger-jsdoc` (`src/backend/src/index.ts`, `src/backend/src/utils/docs.ts`)
+  - Auth: Not applicable
 
 ## Data Storage
 
 **Databases:**
-- PostgreSQL (primary)
-  - Connection: `DATABASE_URL` environment variable (required at startup)
-  - Client: Prisma 6.14.0 (`@prisma/client`)
-  - Schema: `src/backend/prisma/schema.prisma`
-  - Tables use `vpg_` prefix convention throughout schema
+- PostgreSQL (application primary database)
+  - Connection: `DATABASE_URL` (`src/backend/prisma/schema.prisma`)
+  - Client: Prisma Client singleton (`src/backend/src/lib/prisma.ts`)
+- PostgreSQL (Java importer direct JDBC access)
+  - Connection: `DB_URL` (`src/Java/clocklogs/src/main/java/com/verde/pradera/utils/dbConnector.java`)
+  - Client: JDBC (`org.postgresql:postgresql`) (`src/Java/clocklogs/pom.xml`, `src/Java/clocklogs/src/main/java/com/verde/pradera/utils/QueryManager.java`)
 
 **File Storage:**
 - Local filesystem only
-  - PDF reports: `REPORTS_OUTPUT_DIR` environment variable (default: `storage/reports/`)
-  - Payment receipts: Generated in-memory via Puppeteer, returned as Base64 or file via HTTP
-  - Employee documents: File paths stored in `vpg_employee_documents.employee_documents_file_path` field; actual files stored externally or in `storage/documents/`
+  - Generated report XML files under `storage/reports` or `REPORTS_OUTPUT_DIR` (`src/backend/src/service/ReportsService.ts`)
+  - Payment receipt template/logo loaded from local paths (`src/backend/src/service/PaymentReceiptService.ts`)
 
 **Caching:**
-- None currently implemented
-- Note: Token blocklist stored in `vpg_token_blocklist` table for JWT revocation tracking
+- None
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom JWT-based authentication (no third-party OAuth)
-  - Implementation: `src/backend/src/service/AuthService.ts`
-  - Token type: Bearer token (JWT)
-  - Token storage (frontend): `localStorage` with keys `vp_access_token` (short-lived) and `vp_refresh_token` (long-lived)
-  - Token verification: `src/backend/src/middleware/AuthMiddleware.ts`
-
-**Password Management:**
-- Bcrypt hashing (version 6.0.0)
-  - Used in: `AuthService.hashPassword()` and `AuthService.verifyPassword()`
-  - Fallback: Supports plain-text password comparison for legacy credentials (documented tech debt)
-
-**JWT Configuration:**
-- Secret: `JWT_SECRET` environment variable (fatal startup check at `src/backend/src/index.ts` line 25)
-- Fallback secret: `'your-default-secret-key'` (documented tech debt - should require explicit override)
-- Expiration: Configurable in `AuthService` (needs verification in implementation)
+- Custom JWT auth
+  - Implementation: Login/refresh/validate/logout handled in backend auth routes and service (`src/backend/src/routes/AuthRoute.ts`, `src/backend/src/service/AuthService.ts`, `src/backend/src/middleware/AuthMiddleware.ts`)
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None detected
-- Console logging present in services (e.g., `console.log`, `console.error`)
+- None detected (no Sentry/Bugsnag/etc. packages or config files)
 
 **Logs:**
-- Application logs: Console output from Express server
-- Audit logs: `vpg_audit_logs` table tracks user actions with fields `audit_logs_action`, `audit_logs_entity`, `audit_logs_timestamp`
-- Report logs: `vpg_report_logs` table tracks generated reports with `report_logs_status` and version history via `vpg_report_versions`
-
-**Database Versioning:**
-- Optimistic locking via `_version` suffix on all tables (e.g., `audit_logs_version`, `employees_version`)
+- Console logging across backend services/middleware (`src/backend/src/index.ts`, `src/backend/src/service/AuthService.ts`, `src/backend/src/service/PaymentReceiptService.ts`)
+- Prisma query event logging enabled in singleton client (`src/backend/src/lib/prisma.ts`)
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Likely Vercel for frontend (hardcoded allowlist in CORS: `origin.endsWith('.vercel.app') || origin === 'https://vp-planilla.vercel.app'`)
-- Backend hosting: Not explicitly configured; could be any Node-compatible platform
+- Frontend hosting target inferred as Vercel from CORS allowlist (`src/backend/src/index.ts`)
+- Backend hosting platform not explicitly configured in repository files
 
 **CI Pipeline:**
-- None detected
-- No GitHub Actions, GitLab CI, or similar in codebase
-
-**Deployment Artifacts:**
-- Frontend: Next.js build output from `npm run build`
-- Backend: TypeScript compiled to JavaScript via `tsc` to `dist/` directory
-- Prisma: Client auto-generated on `npm install` or `npx prisma generate`
+- None detected (`.github/workflows/` not present)
 
 ## Environment Configuration
 
-**Required Backend env vars:**
-- `DATABASE_URL` - PostgreSQL connection string (fatal if missing)
-- `JWT_SECRET` - JWT signing secret (fatal if missing)
-- `PORT` - Server port (default: 3001)
-- `ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins (parsed in `src/backend/src/index.ts`)
-- `REPORTS_OUTPUT_DIR` - Directory for PDF report storage (default: `storage/reports/`)
-
-**Required Frontend env vars:**
-- `NEXT_PUBLIC_API_URL` - Backend API base URL (default: `http://localhost:3001`)
-
-**Optional Backend env vars:**
-- Mail server configuration (can be read from `vpg_mail_server_settings` table instead of env)
-- Any custom report output paths or caching strategies
-
-**Optional Frontend env vars:**
-- None currently used beyond `NEXT_PUBLIC_API_URL`
+**Required env vars:**
+- Backend core: `DATABASE_URL`, `JWT_SECRET`, `PORT`, `ALLOWED_ORIGINS` (`src/backend/prisma/schema.prisma`, `src/backend/src/index.ts`, `README.md`)
+- Backend auth: `JWT_EXPIRES_IN` (`src/backend/src/service/AuthService.ts`)
+- Backend reports/mail: `REPORTS_OUTPUT_DIR`, `REPORTS_SMTP_HOST`, `REPORTS_SMTP_PORT`, `REPORTS_SMTP_USER`, `REPORTS_SMTP_PASS`, `REPORTS_FROM`, `REPORTS_SMTP_SECURE`, `REPORTS_SMTP_TLS` (fallback families `SMTP_*`, `EMAIL_*`) (`src/backend/src/service/ReportsService.ts`)
+- Backend enterprise report metadata: `REPORTS_ENTERPRISE_NAME`, `REPORTS_ENTERPRISE_TAX_ID` (`src/backend/src/service/ReportsService.ts`)
+- Frontend public env: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_OPENWEATHER_API_KEY`, `NEXT_PUBLIC_DEFAULT_LATITUDE`, `NEXT_PUBLIC_DEFAULT_LONGITUDE`, `NEXT_PUBLIC_DEFAULT_CITY` (`src/frontend/src/config/index.ts`, `src/frontend/src/utils/weather.ts`)
+- Java importer: `DB_URL` (`src/Java/clocklogs/src/main/java/com/verde/pradera/utils/dbConnector.java`)
 
 **Secrets location:**
-- Backend: `.env` file (plaintext, source control ignored via `.gitignore`)
-- Frontend: `.env` file (plaintext; only `NEXT_PUBLIC_*` variables are safe)
-- Production: Environment variables injected by deployment platform (Vercel, etc.)
+- Local `.env` files detected at `src/backend/.env` and `src/frontend/.env` (contents not inspected)
+- Additional secret-capable storage in DB table `vpg_mail_server_settings` (`src/backend/prisma/schema.prisma`, `src/backend/src/service/ReportsService.ts`)
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- Payment receipt generation endpoint: `POST /api/payment-receipts` (route in `src/backend/src/routes/PaymentReceiptRoute.ts`)
-- Report dispatch webhook targets: Infrastructure in `vpg_report_targets` but no active webhook receiver (one-way HTTP POST to external endpoints)
+- None (no webhook endpoints detected in backend routes under `src/backend/src/routes/`)
 
 **Outgoing:**
-- Email notifications via Nodemailer (SMTP)
-- Report webhook dispatch: `ReportsService` sends HTTP POST to endpoints configured in `vpg_report_targets` table (not yet implemented in service)
+- SMTP email delivery to employee recipients and optional CC list (not HTTP webhook callbacks) (`src/backend/src/service/ReportsService.ts`)
 
 ---
 
-*Integration audit: 2026-03-31*
+*Integration audit: 2026-04-09*

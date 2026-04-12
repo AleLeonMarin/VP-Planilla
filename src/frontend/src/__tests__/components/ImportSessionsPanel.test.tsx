@@ -44,15 +44,15 @@ describe('ImportSessionsPanel', () => {
     render(<ImportSessionsPanel sessions={mockSessions} isLoading={false} />);
 
     // Check dates formatted (locale es-CR) — we just check that the date strings are present in some form
-    expect(screen.getByText(/05\/04\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/5\/4\/2026/)).toBeInTheDocument();
 
     // Check source labels
     expect(screen.getByText('Java')).toBeInTheDocument();
     expect(screen.getByText('Excel')).toBeInTheDocument();
 
     // Check status badges
-    expect(screen.getByText('completed')).toBeInTheDocument();
-    expect(screen.getByText('failed')).toBeInTheDocument();
+    expect(screen.getByText('Completada')).toBeInTheDocument();
+    expect(screen.getByText('Fallida')).toBeInTheDocument();
 
     // Check counts
     expect(screen.getByText('95')).toBeInTheDocument(); // created_count first session

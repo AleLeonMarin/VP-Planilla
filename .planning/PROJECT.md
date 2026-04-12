@@ -27,18 +27,15 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - **Tests:** 104 backend tests (8 suites), 0 failures
 - **Performance:** ~1.55MB JS diferido, imágenes comprimidas 99.7%, Next.js compress habilitado
 
-## Current Milestone: v1.4 — TBD (Planning)
+## Current Milestone: v1.4 — Stability and Integration Hardening (Planning)
 
-**Goal:** Definir siguiente iteracion del producto a partir de roadmap v1.4.
+**Goal:** Resolver concerns criticos transversales (auth lifecycle, capa HTTP, higiene de repositorio y modularidad) para estabilizar la base antes de nuevas features.
 
 **Target features:**
-- Normalización de tipos (ENTRADA/SALIDA ↔ IN/OUT → valor canónico único)
-- Campos `status` y `source` en `vpg_clock_logs` para trazabilidad
-- Tabla de sesiones de importación (`vpg_clock_import_sessions`) con historial
-- Cola de huérfanas — marcas sin par procesadas en flujo dedicado
-- Motor de detección de anomalías (doble entrada, doble salida, gaps > umbral)
-- API de corrección manual con registro de auditoría
-- Dashboard UI — visualización de marcas, anomalías y acciones de corrección
+- Auth token lifecycle consistente entre backend y frontend (refresh, expiry, revocation, logout)
+- Eliminacion de bypasses a `http.ts` y estandarizacion de llamadas API
+- Limpieza de artefactos generados versionados (`dist`, `target`, temporales) y hardening de `.gitignore`
+- Descomposicion de archivos monoliticos de alta complejidad con cobertura de pruebas de regresion
 
 **Previous:** v1.3 shipped 2026-04-09 — phases 18-23 completadas.
 
@@ -99,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after v1.3 milestone completion*
+*Last updated: 2026-04-09 after v1.4 milestone initialization*

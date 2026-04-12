@@ -1,8 +1,71 @@
-# Archivos auxiliares de LaTeX
+# ============================================================================
+# VP-Planilla Repository — .gitignore
+# Organized per stack: Backend (Node/TypeScript), Frontend (Next.js), Java
+# utility, General (OS/IDE/temp). Generated files are never tracked.
+# ============================================================================
+
+# ===== BACKEND (Node.js / TypeScript) =====
+# Compiled TypeScript output — regenerate with: cd src/backend && npm run build
+src/backend/dist/
+src/backend/*.tsbuildinfo
+
+# Dependencies
+src/backend/node_modules/
+
+# Package manager lock files (tracked in apps for deterministic builds)
+# **/package-lock.json (removed general ignore)
+!src/backend/package-lock.json
+!src/frontend/package-lock.json
+
+# ===== FRONTEND (Next.js) =====
+# Next.js build output — regenerate with: cd src/frontend && npm run build
+src/frontend/.next/
+src/frontend/out/
+
+# Dependencies
+src/frontend/node_modules/
+
+# ===== JAVA UTILITY (Maven) =====
+# Maven build output — regenerate with: mvn clean package -f src/Java/clocklogs/pom.xml
+src/Java/clocklogs/target/
+
+# Compiled classes and archives
+src/Java/clocklogs/*.class
+src/Java/clocklogs/*.jar
+
+# Maven metadata
+src/Java/clocklogs/pom.xml.tag
+src/Java/clocklogs/pom.xml.releaseBackup
+src/Java/clocklogs/pom.xml.versionsBackup
+src/Java/clocklogs/pom.xml.next
+src/Java/clocklogs/release.properties
+src/Java/clocklogs/dependency-reduced-pom.xml
+
+# ===== GENERAL (IDE, OS, Temp Files) =====
+# IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python artifacts
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Log files
+*.log
+logs/
+
+# LaTeX auxiliary files
 *.aux
 *.bbl
 *.blg
-*.log
 *.lof
 *.lot
 *.out
@@ -10,30 +73,10 @@
 *.synctex.gz
 *.fls
 *.fdb_latexmk
-/docs/Formal/TFM.pdf
-*.txt
 *.synctex(busy)
-*.DS_Store
-.DS_Store
-*.vscode
-*.vscode/*
-*.json
+*.txt
+/docs/Formal/TFM.pdf
 /docs/Formal/out/
-
-# Ignorar .json globalmente
-*.json
-
-# Mantener .claude completo (excepto local settings)
-!.claude/
-!.claude/**
-!.claude/**/*.json
-.claude/settings.local.json
-.claude/worktrees/
-
-# Mantener .planning completo
-!.planning/
-!.planning/**
-!.planning/**/*.json
 
 # Test coverage reports — generated, do not commit
 coverage/
@@ -47,3 +90,16 @@ check_employee.ts
 query_emp.mjs
 *.tmp.js
 *.tmp.ts
+
+# ===== TRACKED CONFIGURATION DIRECTORIES =====
+# .claude/ directory is tracked (project configuration)
+!.claude/
+!.claude/**
+
+# Except local/personal settings
+.claude/settings.local.json
+.claude/worktrees/
+
+# .planning/ directory is tracked (milestone & phase planning)
+!.planning/
+!.planning/**

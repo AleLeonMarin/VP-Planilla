@@ -3,9 +3,10 @@ import nodemailer from "nodemailer";
 import path from "path";
 import { promises as fs } from "fs";
 import { roundToMoney } from "../utils/payrollUtils";
+import { env } from '../config/env';
+
 const REPORT_TYPES = ["CCSS", "HACIENDA"] as const;
-const STORAGE_ROOT =
-  process.env.REPORTS_OUTPUT_DIR || path.join(process.cwd(), "storage", "reports");
+const STORAGE_ROOT = env.REPORTS_OUTPUT_DIR;
 
 export type OfficialReportType = (typeof REPORT_TYPES)[number];
 
@@ -726,40 +727,18 @@ export class ReportsService {
   }
 
   private static async resolveMailSettings(): Promise<MailSettings> {
-    const host =
-      process.env.REPORTS_SMTP_HOST ||
-      process.env.SMTP_HOST ||
-      process.env.EMAIL_HOST;
-    const portString =
-      process.env.REPORTS_SMTP_PORT ||
-      process.env.SMTP_PORT ||
-      process.env.EMAIL_PORT;
-    const user =
-      process.env.REPORTS_SMTP_USER ||
-      process.env.SMTP_USER ||
-      process.env.EMAIL_USER;
-    const pass =
-      process.env.REPORTS_SMTP_PASS ||
-      process.env.SMTP_PASS ||
-      process.env.EMAIL_PASS;
-    const from =
-      process.env.REPORTS_FROM ||
-      process.env.SMTP_FROM ||
-      process.env.EMAIL_FROM ||
-      user;
-    const secure =
-      (process.env.REPORTS_SMTP_SECURE || process.env.SMTP_SECURE || "false")
-        .toLowerCase()
-        .trim() === "true";
-    const requireTLS =
-      (process.env.REPORTS_SMTP_TLS || process.env.SMTP_TLS || "false")
-        .toLowerCase()
-        .trim() === "true";
+    const host = env.SMTP_HOST;
+    const port = env.SMTP_PORT;
+    const user = env.SMTP_USER;
+    const pass = env.SMTP_PASS;
+    const from = env.SMTP_FROM || user;
+    const secure = env.SMTP_SECURE;
+    const requireTLS = env.SMTP_TLS;
 
-    if (host && portString && user && pass && from) {
+    if (host && port && user && pass && from) {
       return {
         host,
-        port: Number(portString),
+        port,
         user,
         pass,
         from,
@@ -859,9 +838,9 @@ export class ReportsService {
         id: enterprise?.enterprise_id ?? null,
         name:
           enterprise?.enterprise_name ||
-          process.env.REPORTS_ENTERPRISE_NAME ||
+          env.REPORTS_ENTERPRISE_NAME ||
           "VP-Planillas",
-        taxId: process.env.REPORTS_ENTERPRISE_TAX_ID || "DESCONOCIDO",
+        taxId: env.REPORTS_ENTERPRISE_TAX_ID || "DESCONOCIDO",
       };
     } catch (error) {
       console.warn(
@@ -870,8 +849,8 @@ export class ReportsService {
       );
       return {
         id: null,
-        name: process.env.REPORTS_ENTERPRISE_NAME || "VP-Planillas",
-        taxId: process.env.REPORTS_ENTERPRISE_TAX_ID || "DESCONOCIDO",
+        name: env.REPORTS_ENTERPRISE_NAME || "VP-Planillas",
+        taxId: env.REPORTS_ENTERPRISE_TAX_ID || "DESCONOCIDO",
       };
     }
   }
