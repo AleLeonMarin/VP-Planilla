@@ -25,9 +25,10 @@
 - [x] **Phase 25: HTTP Client Layer Enforcement** - Eliminar bypasses a `http.ts` y estandarizar manejo de errores en servicios frontend (completed 2026-04-11)
 - [x] **Phase 26: Repository Hygiene and Build Artifacts Cleanup** - Limpiar artefactos versionados y reforzar `.gitignore` multi-stack (completed 2026-04-11)
 - [x] **Phase 27: Monolith Decomposition and Maintainability** - Refactor de archivos monoliticos con pruebas de regresion (completed 2026-04-11)
-- [ ] **Phase 28: Implement `changePassword` Feature**
-- [ ] **Phase 29: Fix Repository Hygiene**
-- [ ] **Phase 30: Improve Code Quality & Automation**
+- [x] **Phase 28: Email Notification Module** - Módulo de notificaciones por email con Resend (completed 2026-04-11)
+- [ ] **Phase 29: Implement `changePassword` Feature**
+- [ ] **Phase 30: Fix Repository Hygiene**
+- [ ] **Phase 31: Improve Code Quality & Automation**
 
 ### Phase 26: Repository Hygiene and Build Artifacts Cleanup
 
@@ -67,17 +68,23 @@ Plans:
 - [x] 25-01-PLAN.md — Refactor de servicios internos (auditLogs, branch, payrollEmployees) a http.ts
 - [x] 25-02-PLAN.md — Capa de API externa para clima y verificación final de cumplimiento
 
-### Phase 28: Implement `changePassword` Feature
+### Phase 28: Email Notification Module
+**Goal:** Implementar un módulo de notificaciones por email usando Gmail API con OAuth2 para enviar emails sin ser marcado como spam.
+
+**Requirements:** EMAIL-01, EMAIL-02, EMAIL-03 (TBD)
+**Gap Closure:** Nuevo módulo - sistema de notificaciones por email para la planilla.
+
+### Phase 29: Implement `changePassword` Feature
 **Goal:** Implement the full `changePassword` functionality, resolving the stub in `AuthController.ts`.
 **Requirements:** AUTH-09 (TBD)
 **Gap Closure:** Closes gap from v1.4 audit: `changePassword` stub.
 
-### Phase 29: Fix Repository Hygiene
+### Phase 30: Fix Repository Hygiene
 **Goal:** Fix repository hygiene issues identified in the v1.4 audit.
 **Requirements:** HYG-01, HYG-02
 **Gap Closure:** Closes gaps from v1.4 audit: tracked `.pyc` files and inconsistent lock file policy.
 
-### Phase 30: Improve Code Quality & Automation
+### Phase 31: Improve Code Quality & Automation
 **Goal:** Refactor code for better maintainability and improve test automation.
 **Requirements:** N/A (Code Quality)
 **Gap Closure:** Closes gaps from v1.4 audit: manual test execution and direct `process.env` access.
@@ -96,6 +103,7 @@ Plans:
 | 25. HTTP Client Layer Enforcement | v1.4 | 2/2 | Complete | 2026-04-11 |
 | 26. Repository Hygiene and Build Cleanup | v1.4 | 3/3 | Complete | 2026-04-11 |
 | 27. Monolith Decomposition and Maintainability | v1.4 | 3/3 | Complete | 2026-04-11 |
+| 28. Email Notification Module | v1.4 | 2/2 | Complete | 2026-04-11 |
 
 ## Archives
 

@@ -28,6 +28,12 @@
 - [ ] **HYG-02**: `.gitignore` cubre artefactos de backend, frontend y Java utility de forma consistente
 - [x] **HYG-03**: Flujo de build local no depende de archivos generados ya presentes en git
 
+### Email Notifications (EMAIL)
+
+- [x] **EMAIL-01**: El sistema puede enviar emails usando Resend API
+- [x] **EMAIL-02**: Los emails enviados no son marcados como spam
+- [x] **EMAIL-03**: El sistema puede enviar emails de notificacion de planilla a empleados
+
 ### Modularization and Maintainability (MOD)
 
 - [x] **MOD-01**: Los archivos monoliticos de alta complejidad se separan en modulos con responsabilidad clara
@@ -63,20 +69,23 @@
 | AUTH-06 | Phase 24 | Complete |
 | AUTH-07 | Phase 24 | Complete |
 | AUTH-08 | Phase 24 | Complete |
-| AUTH-09 | Phase 28 | Pending |
+| AUTH-09 | Phase 29 | Pending |
 | HTTP-01 | Phase 25 | Complete |
 | HTTP-02 | Phase 25 | Complete |
 | HTTP-03 | Phase 25 | Complete |
-| HYG-01 | Phase 29 | Pending |
-| HYG-02 | Phase 29 | Pending |
+| HYG-01 | Phase 30 | Pending |
+| HYG-02 | Phase 30 | Pending |
 | HYG-03 | Phase 26 | Complete |
 | MOD-01 | Phase 27 | Complete |
 | MOD-02 | Phase 27 | Complete |
 | MOD-03 | Phase 27 | Complete |
+| EMAIL-01 | Phase 28 | Complete |
+| EMAIL-02 | Phase 28 | Complete |
+| EMAIL-03 | Phase 28 | Complete |
 
 **Coverage:**
-- v1.4 requirements: 14 total
-- Mapped to phases: 14
+- v1.4 requirements: 17 total
+- Mapped to phases: 17
 - Unmapped: 0 ✓
 
 ---

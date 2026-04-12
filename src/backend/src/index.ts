@@ -19,6 +19,7 @@ import auditLogsRoutes from "./routes/AuditLogsRoute";
 import userRoutes from "./routes/UserRoute";
 import paymentReceiptRoutes from "./routes/PaymentReceiptRoute";
 import { notificationRouter } from "./routes/NotificationRoute";
+import emailRoutes from "./routes/EmailRoute";
 import { swaggerSpec } from "./utils/docs";
 
 dotenv.config();
@@ -82,6 +83,7 @@ app.use("/api", auditLogsRoutes);
 app.use("/api", userRoutes);
 app.use("/api/payment-receipts", paymentReceiptRoutes);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/email", emailRoutes);
 
 // Servir la especificación de Swagger en formato JSON
 app.get("/api/docs/swagger.json", (req, res) => {
