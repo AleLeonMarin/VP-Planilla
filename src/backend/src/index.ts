@@ -1,5 +1,4 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/AuthRoute";
@@ -21,19 +20,13 @@ import paymentReceiptRoutes from "./routes/PaymentReceiptRoute";
 import { notificationRouter } from "./routes/NotificationRoute";
 import emailRoutes from "./routes/EmailRoute";
 import { swaggerSpec } from "./utils/docs";
-
-dotenv.config();
-
-if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is not set. Server will not start.');
-  process.exit(1);
-}
+import { env } from "./config/env";
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const PORT = env.PORT;
 
 // Middlewares básicos
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
+const allowedOrigins = env.ALLOWED_ORIGINS;
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
