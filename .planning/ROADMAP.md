@@ -79,6 +79,11 @@ Plans:
 **Requirements:** AUTH-09 (TBD)
 **Gap Closure:** Closes gap from v1.4 audit: `changePassword` stub.
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] 29-01-PLAN.md — Secure password change with email verification code (6-digit, 15-min expiry)
+
 ### Phase 30: Fix Repository Hygiene
 **Goal:** Fix repository hygiene issues identified in the v1.4 audit.
 **Requirements:** HYG-01, HYG-02
