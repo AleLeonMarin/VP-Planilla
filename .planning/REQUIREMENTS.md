@@ -24,8 +24,8 @@
 
 ### Repository Hygiene (HYG)
 
-- [ ] **HYG-01**: Artefactos generados (`dist/`, `target/`, lock temporales, outputs de build) no se versionan
-- [ ] **HYG-02**: `.gitignore` cubre artefactos de backend, frontend y Java utility de forma consistente
+- [x] **HYG-01**: Artefactos generados (`dist/`, `target/`, lock temporales, outputs de build) no se versionan
+- [x] **HYG-02**: `.gitignore` cubre artefactos de backend, frontend y Java utility de forma consistente
 - [x] **HYG-03**: Flujo de build local no depende de archivos generados ya presentes en git
 
 ### Email Notifications (EMAIL)
@@ -73,8 +73,8 @@
 | HTTP-01 | Phase 25 | Complete |
 | HTTP-02 | Phase 25 | Complete |
 | HTTP-03 | Phase 25 | Complete |
-| HYG-01 | Phase 30 | Pending |
-| HYG-02 | Phase 30 | Pending |
+| HYG-01 | Phase 30 | Complete |
+| HYG-02 | Phase 30 | Complete |
 | HYG-03 | Phase 26 | Complete |
 | MOD-01 | Phase 27 | Complete |
 | MOD-02 | Phase 27 | Complete |
