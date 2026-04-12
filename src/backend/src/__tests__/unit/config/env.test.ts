@@ -27,6 +27,7 @@ describe('Environment Configuration', () => {
   });
 
   it('should throw an error if DATABASE_URL is missing', () => {
+    process.env.NODE_ENV = 'production';
     delete process.env.DATABASE_URL;
     process.env.JWT_SECRET = 'test-secret';
     expect(() => {
@@ -35,6 +36,7 @@ describe('Environment Configuration', () => {
   });
 
   it('should throw an error if JWT_SECRET is missing', () => {
+    process.env.NODE_ENV = 'production';
     delete process.env.JWT_SECRET;
     process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
     expect(() => {

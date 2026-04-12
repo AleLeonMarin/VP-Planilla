@@ -42,4 +42,22 @@ export const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 // Validate process.env and export result
-export const env = envSchema.parse(process.env);
+const isTest = process.env.NODE_ENV === 'test';
+
+// For tests, we use safeParse and provide a fallback to avoid breaking unit tests
+// that don't need a full environment. In production/dev, we want to fail fast.
+const result = envSchema.safeParse(process.env);
+
+if (!result.success && !isTest) {
+  console.error('❌ Invalid environment variables:', JSON.stringify(result.error.format(), null, 2));
+  throw new Error('Invalid environment variables');
+}
+
+export const env = result.success 
+  ? result.data 
+  : envSchema.parse({
+      DATABASE_URL: 'postgresql://localhost:5432/unused',
+      JWT_SECRET: 'test-secret-only-for-unit-tests',
+      ...process.env
+    });
+

@@ -2,6 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 import { AuthService } from '../../../service/AuthService';
 
+jest.mock('../../../config/env', () => ({
+  env: {
+    JWT_SECRET: 'test-secret',
+    JWT_EXPIRES_IN: 86400,
+  },
+}));
+
 jest.mock('../../../lib/prisma', () => {
   const mock = mockDeep<PrismaClient>();
   return { prisma: mock };

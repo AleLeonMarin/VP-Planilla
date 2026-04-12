@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../model/user';
 import { EmailService } from './EmailService';
+import { env } from '../config/env';
 
 export interface LoginCredentials {
   username: string;
@@ -147,9 +148,9 @@ export class AuthService {
       role: user.role
     };
 
-    const secret = process.env.JWT_SECRET || 'your-default-secret-key';
+    const secret = env.JWT_SECRET;
     const options: jwt.SignOptions = {
-      expiresIn: process.env.JWT_EXPIRES_IN ? Number(process.env.JWT_EXPIRES_IN) : 24 * 60 * 60 // 24 horas por defecto
+      expiresIn: env.JWT_EXPIRES_IN
     };
 
     return jwt.sign(payload, secret, options) as string;
@@ -160,7 +161,7 @@ export class AuthService {
    */
   static verifyToken(token: string): { id: number; username?: string; role?: string; exp: number; iat?: number } {
     try {
-      const secret = process.env.JWT_SECRET || 'your-default-secret-key';
+      const secret = env.JWT_SECRET;
       return jwt.verify(token, secret) as { id: number; username?: string; role?: string; exp: number; iat?: number };
     } catch (error) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
