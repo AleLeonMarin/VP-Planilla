@@ -8,7 +8,15 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.4 — 2026-04-12)
+## Current State (v1.5 — 2026-04-13, Phase 32 complete)
+
+**v1.5 IN PROGRESS** — Gestión de Marcas y Planilla para Producción:
+- ✅ **Phase 32 complete:** Adjustment Layer schema + Payroll State Machine DB foundation.
+  - `vpg_clock_log_adjustments` table with ADD/EDIT/VOID types, optimistic locking, nullable FK for ADD type.
+  - `vpg_payroll_recalculations` audit trail table with JSONB snapshots.
+  - `vpg_payrolls.payrolls_status` migrated from String → `PayrollStatus` enum (BORRADOR/APROBADA/PAGADA).
+  - Approval/reopen audit fields on `vpg_payrolls`.
+  - Zod validation schemas: `AdjustmentSchema` (discriminatedUnion), `RecalculationSchema`, updated `PayrollSchema` + `ClockLogSchema`.
 
 **v1.4 SHIPPED** — Stability and Integration Hardening:
 - ✅ **Auth Lifecycle:** Unified refresh/revocation/logout flow with consistent error mapping.
