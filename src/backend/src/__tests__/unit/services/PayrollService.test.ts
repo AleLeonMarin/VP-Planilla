@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PayrollStatus } from '@prisma/client';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Payroll } from '../../../model/payroll';
 
@@ -8,10 +8,24 @@ const prismaMock = mockDeep<PrismaClient>();
 // Mock the PrismaClient module
 jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn(() => prismaMock),
+  PayrollStatus: {
+    BORRADOR: 'BORRADOR',
+    APROBADA: 'APROBADA',
+    PAGADA: 'PAGADA',
+  },
 }));
 
 // Import PayrollService after mocking
 import { PayrollService } from '../../../service/PayrollService';
+
+// Helper: base nullable approval fields for vpg_payrolls mocks
+const nullablePayrollFields = {
+  payrolls_approved_by: null,
+  payrolls_approved_at: null,
+  payrolls_notes: null,
+  payrolls_reopened_at: null,
+  payrolls_reopen_reason: null,
+};
 
 describe('PayrollService', () => {
   beforeEach(() => {
@@ -27,7 +41,7 @@ describe('PayrollService', () => {
         period_start: new Date('2026-02-01'),
         period_end: new Date('2026-02-28'),
         payment_date: new Date('2026-03-05'),
-        status: 'PENDIENTE',
+        status: PayrollStatus.BORRADOR,
         version: 1,
       };
 
@@ -37,8 +51,9 @@ describe('PayrollService', () => {
         payrolls_period_start: new Date('2026-02-01'),
         payrolls_period_end: new Date('2026-02-28'),
         payrolls_payment_date: new Date('2026-03-05'),
-        payrolls_status: 'PENDIENTE',
+        payrolls_status: PayrollStatus.BORRADOR,
         payrolls_version: 1,
+        ...nullablePayrollFields,
       };
 
       prismaMock.vpg_payrolls.create.mockResolvedValue(mockCreatedPayroll);
@@ -53,7 +68,7 @@ describe('PayrollService', () => {
         period_start: new Date('2026-02-01'),
         period_end: new Date('2026-02-28'),
         payment_date: new Date('2026-03-05'),
-        status: 'PENDIENTE',
+        status: PayrollStatus.BORRADOR,
         version: 1,
       });
 
@@ -63,7 +78,7 @@ describe('PayrollService', () => {
           payrolls_period_start: new Date('2026-02-01'),
           payrolls_period_end: new Date('2026-02-28'),
           payrolls_payment_date: new Date('2026-03-05'),
-          payrolls_status: 'PENDIENTE',
+          payrolls_status: PayrollStatus.BORRADOR,
           payrolls_version: 1,
         },
       });
@@ -78,7 +93,7 @@ describe('PayrollService', () => {
         period_start: new Date('2026-02-01'),
         period_end: new Date('2026-02-28'),
         payment_date: new Date('2026-03-05'),
-        status: 'PENDIENTE',
+        status: PayrollStatus.BORRADOR,
         version: 1,
       };
 
@@ -98,7 +113,7 @@ describe('PayrollService', () => {
         period_start: new Date('2026-01-01'),
         period_end: new Date('2026-01-15'),
         payment_date: new Date('2026-01-20'),
-        status: 'PROCESANDO',
+        status: PayrollStatus.APROBADA,
         version: 1,
       };
 
@@ -108,8 +123,9 @@ describe('PayrollService', () => {
         payrolls_period_start: new Date('2026-01-01'),
         payrolls_period_end: new Date('2026-01-15'),
         payrolls_payment_date: new Date('2026-01-20'),
-        payrolls_status: 'PROCESANDO',
+        payrolls_status: PayrollStatus.APROBADA,
         payrolls_version: 1,
+        ...nullablePayrollFields,
       };
 
       prismaMock.vpg_payrolls.create.mockResolvedValue(mockCreatedPayroll);
@@ -139,9 +155,10 @@ describe('PayrollService', () => {
           payrolls_period_start: new Date('2026-03-01'),
           payrolls_period_end: new Date('2026-03-31'),
           payrolls_payment_date: new Date('2026-04-05'),
-          payrolls_status: 'PENDIENTE',
+          payrolls_status: PayrollStatus.BORRADOR,
           payrolls_version: 1,
           vpg_payroll_employee: [],
+          ...nullablePayrollFields,
         },
         {
           payrolls_id: 2,
@@ -149,9 +166,10 @@ describe('PayrollService', () => {
           payrolls_period_start: new Date('2026-02-01'),
           payrolls_period_end: new Date('2026-02-28'),
           payrolls_payment_date: new Date('2026-03-05'),
-          payrolls_status: 'COMPLETADO',
+          payrolls_status: PayrollStatus.PAGADA,
           payrolls_version: 1,
           vpg_payroll_employee: [],
+          ...nullablePayrollFields,
         },
         {
           payrolls_id: 1,
@@ -159,9 +177,10 @@ describe('PayrollService', () => {
           payrolls_period_start: new Date('2026-01-01'),
           payrolls_period_end: new Date('2026-01-31'),
           payrolls_payment_date: new Date('2026-02-05'),
-          payrolls_status: 'COMPLETADO',
+          payrolls_status: PayrollStatus.PAGADA,
           payrolls_version: 1,
           vpg_payroll_employee: [],
+          ...nullablePayrollFields,
         },
       ];
 
@@ -175,7 +194,7 @@ describe('PayrollService', () => {
       expect(result[0].id).toBe(3);
       expect(result[1].id).toBe(2);
       expect(result[2].id).toBe(1);
-      
+
       expect(prismaMock.vpg_payrolls.findMany).toHaveBeenCalledWith({
         include: {
           vpg_payroll_employee: true,
@@ -208,9 +227,10 @@ describe('PayrollService', () => {
         payrolls_period_start: new Date('2026-02-15'),
         payrolls_period_end: new Date('2026-02-28'),
         payrolls_payment_date: new Date('2026-03-01'),
-        payrolls_status: 'PROCESANDO',
+        payrolls_status: PayrollStatus.APROBADA,
         payrolls_version: 2,
         vpg_payroll_employee: [],
+        ...nullablePayrollFields,
       };
 
       prismaMock.vpg_payrolls.findMany.mockResolvedValue([mockPayroll]);
@@ -225,7 +245,7 @@ describe('PayrollService', () => {
         period_start: new Date('2026-02-15'),
         period_end: new Date('2026-02-28'),
         payment_date: new Date('2026-03-01'),
-        status: 'PROCESANDO',
+        status: PayrollStatus.APROBADA,
         version: 2,
         total_employees: 0,
         total_gross: 0,
@@ -253,9 +273,9 @@ describe('PayrollService', () => {
 
   describe('Edge Cases and Validation', () => {
     it('should handle different payroll statuses', async () => {
-      // Arrange
-      const statuses = ['PENDIENTE', 'PROCESANDO', 'COMPLETADO', 'CANCELADO'];
-      
+      // Arrange — all valid PayrollStatus enum values
+      const statuses = [PayrollStatus.BORRADOR, PayrollStatus.APROBADA, PayrollStatus.PAGADA];
+
       for (const status of statuses) {
         const payrollData: Payroll = {
           id: 0,
@@ -263,7 +283,7 @@ describe('PayrollService', () => {
           period_start: new Date('2026-02-01'),
           period_end: new Date('2026-02-28'),
           payment_date: new Date('2026-03-05'),
-          status: status,
+          status,
           version: 1,
         };
 
@@ -275,6 +295,7 @@ describe('PayrollService', () => {
           payrolls_payment_date: new Date('2026-03-05'),
           payrolls_status: status,
           payrolls_version: 1,
+          ...nullablePayrollFields,
         };
 
         prismaMock.vpg_payrolls.create.mockResolvedValue(mockCreatedPayroll);
@@ -296,7 +317,7 @@ describe('PayrollService', () => {
         period_start: sameDate,
         period_end: sameDate,
         payment_date: new Date('2026-02-20'),
-        status: 'PENDIENTE',
+        status: PayrollStatus.BORRADOR,
         version: 1,
       };
 
@@ -306,8 +327,9 @@ describe('PayrollService', () => {
         payrolls_period_start: sameDate,
         payrolls_period_end: sameDate,
         payrolls_payment_date: new Date('2026-02-20'),
-        payrolls_status: 'PENDIENTE',
+        payrolls_status: PayrollStatus.BORRADOR,
         payrolls_version: 1,
+        ...nullablePayrollFields,
       };
 
       prismaMock.vpg_payrolls.create.mockResolvedValue(mockCreatedPayroll);
