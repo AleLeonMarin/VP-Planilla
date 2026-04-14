@@ -21,6 +21,11 @@
   - [x] 32-01-PLAN.md — Define models and enums in Prisma schema and apply migration.
   - [x] 32-02-PLAN.md — Create Zod schemas for the new models and update existing ones.
 - [ ] Phase 33: Backend — Motor de Marcas Efectivas + API de Ajustes
+  **Goal:** Implementar la lógica de negocio y endpoints para gestionar ajustes (EDIT/VOID) y calcular marcas efectivas emparejadas.
+  **Plans:** 3 plans
+  - [ ] 33-01-PLAN.md — Adjustment Service & Validation (Payroll Lock + Auditing).
+  - [ ] 33-02-PLAN.md — Effective Marks Engine (Prisma.distinct + Fallback Logic).
+  - [ ] 33-03-PLAN.md — Pairing Engine & API Endpoints (Paired IN/OUT + Controller).
 - [ ] Phase 34: Frontend — Rediseño Clock Logs (Vista Agrupada)
 - [ ] Phase 35: Frontend — Corrección de Marcas (Agregar/Editar/Anular)
 - [ ] Phase 36: Backend — State Machine de Planilla + Aguinaldo
