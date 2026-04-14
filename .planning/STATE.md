@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
 status: Milestone complete
-last_updated: "2026-04-14T06:07:03.639Z"
+last_updated: "2026-04-14T10:00:00.000Z"
 last_activity: 2026-04-14
 progress:
-  total_phases: 25
-  completed_phases: 22
-  total_plans: 60
-  completed_plans: 57
-  percent: 95
+  total_phases: 38
+  completed_phases: 33
+  total_plans: 63
+  completed_plans: 60
+  percent: 86
 ---
 
 # Project State — VP-Planilla
@@ -20,17 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 32 — schema-ajustes-aprobacion
+**Current focus:** Phase 34 — Rediseño Clock Logs (Vista Agrupada)
 
 ## Current Position
 
-Phase: 33
+Phase: 34
 Plan: Not started
-Plans: 15/15 milestone plans complete
-Next: Milestone v1.5 Initialization
+Next: Phase 34 Planning
 Last activity: 2026-04-14
 
-Progress: [██████████] 100% (15/15 plans complete)
+Progress: [████████░░] 86%
 
 ## v1.4 Phase Map
 
@@ -54,6 +53,14 @@ Progress: [██████████] 100% (15/15 plans complete)
 | v1.2 | Cobertura de Tests y Mejoras UI | Archived | 287 tests |
 | v1.3 | Sistema de Marcas de Reloj Robusto | Archived | 326+ tests |
 | v1.4 | Stability and Integration Hardening | Archived | 441+ tests |
+
+## Phase 33 - Backend: Motor de Marcas Efectivas + API de Ajustes (COMPLETED 2026-04-14)
+
+### Summary
+- **Logic**: Implemented `ClockLogAdjustmentService` for non-destructive EDIT/VOID operations.
+- **Engine**: Developed `ClockLogEffectiveService` to provide paired IN/OUT entries with calculated durations.
+- **API**: Exposed `GET /api/clock-logs/effective` and `POST /api/clock-logs/adjust`.
+- **Integration**: Updated `NomineeService` to use effective marks instead of raw logs.
 
 ## Phase 32 - Schema Ajustes y Aprobacion (Plan 01 COMPLETED 2026-04-13)
 
