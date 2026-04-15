@@ -3,6 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ClockLogsPage from '@/app/pages/clock-logs/page';
 import { useClockLogs } from '@/hooks/useClockLogs';
 
+const JAVA_IMPORT = 'java_import';
+const EXCEL_IMPORT = 'excel_import';
+const ANA_GARCIA = 'Ana García';
+const TOTAL_COUNT = 18;
+
 jest.mock('@/hooks/useClockLogs');
 
 const mockedUseClockLogs = useClockLogs as jest.MockedFunction<typeof useClockLogs>;
@@ -12,29 +17,29 @@ const mockHookReturn = (
 ): ReturnType<typeof useClockLogs> => ({
   stats: {
     byStatus: { pending: 5, valid: 10, anomaly: 2, orphan: 1, corrected: 0 },
-    bySource: { java_import: 10, excel_import: 5, manual: 3 },
-    total: 18,
+    bySource: { [JAVA_IMPORT]: 10, [EXCEL_IMPORT]: 5, manual: 3 },
+    total: TOTAL_COUNT,
   },
   logs: [
     {
       id: 1,
       employee_id: 101,
-      employee_name: 'Ana García',
+      employee_name: ANA_GARCIA,
       timestamp: '2026-02-02T08:00:00.000Z',
       log_type: 'IN',
       status: 'anomaly',
-      source: 'java_import',
+      source: JAVA_IMPORT,
       remarks: 'Test',
     },
   ],
-  totalLogs: 18,
+  totalLogs: TOTAL_COUNT,
   page: 1,
   pageSize: 20,
   importSessions: [
     {
       id: 1,
       started_at: '2026-04-05T10:00:00.000Z',
-      source: 'java_import',
+      source: JAVA_IMPORT,
       status: 'completed',
       created_count: 95,
       skipped_count: 5,
@@ -54,7 +59,7 @@ const mockHookReturn = (
     employee_id: undefined,
   },
   employees: [
-    { id: 101, name: 'Ana García' },
+    { id: 101, name: ANA_GARCIA },
     { id: 102, name: 'Luis Pérez' },
   ],
   setPage: jest.fn(),
@@ -63,6 +68,12 @@ const mockHookReturn = (
   refresh: jest.fn(),
   ...partial,
 });
+
+const PENDIENTE = 'Pendiente';
+const VALIDA = 'Valida';
+const ANOMALIA = 'Anomalia';
+const HUERFANA = 'Huerfana';
+const CORREGIDA = 'Corregida';
 
 describe('/pages/clock-logs/page', () => {
   beforeEach(() => {
@@ -94,13 +105,13 @@ describe('/pages/clock-logs/page', () => {
 
     // Check that cards for statuses with count > 0 are visible
     // We filter by tagName 'P' to ensure we are matching the card title and not the filter button
-    expect(screen.getAllByText('Pendiente').find(el => el.tagName === 'P')).toBeInTheDocument();
-    expect(screen.getAllByText('Valida').find(el => el.tagName === 'P')).toBeInTheDocument();
-    expect(screen.getAllByText('Anomalia').find(el => el.tagName === 'P')).toBeInTheDocument();
-    expect(screen.getAllByText('Huerfana').find(el => el.tagName === 'P')).toBeInTheDocument();
+    expect(screen.getAllByText(PENDIENTE).find(el => el.tagName === 'P')).toBeInTheDocument();
+    expect(screen.getAllByText(VALIDA).find(el => el.tagName === 'P')).toBeInTheDocument();
+    expect(screen.getAllByText(ANOMALIA).find(el => el.tagName === 'P')).toBeInTheDocument();
+    expect(screen.getAllByText(HUERFANA).find(el => el.tagName === 'P')).toBeInTheDocument();
     
     // corrected count is 0 -> card should be absent (only the filter button should exist)
-    const correctedElements = screen.queryAllByText('Corregida');
+    const correctedElements = screen.queryAllByText(CORREGIDA);
     expect(correctedElements.find(el => el.tagName === 'P')).toBeUndefined();
     expect(correctedElements.find(el => el.tagName === 'BUTTON')).toBeDefined();
   });
@@ -135,7 +146,7 @@ describe('/pages/clock-logs/page', () => {
     // Check options: the datalist should have options for employees
     const options = datalistElement?.querySelectorAll('option');
     expect(options?.length).toBe(2);
-    expect(options?.[0]).toHaveValue('Ana García');
+    expect(options?.[0]).toHaveValue(ANA_GARCIA);
   });
 
   it('renders import sessions panel', () => {
@@ -163,7 +174,7 @@ describe('/pages/clock-logs/page', () => {
     expect(screen.getByRole('columnheader', { name: /acciones/i })).toBeInTheDocument();
 
     // Row data
-    expect(screen.getByText('Ana García')).toBeInTheDocument();
+    expect(screen.getByText(ANA_GARCIA)).toBeInTheDocument();
     expect(screen.getByText('IN')).toBeInTheDocument();
     // Buttons: Ver or Corregir depending on status. For anomaly, should be Corregir.
     expect(screen.getByRole('button', { name: /corregir/i })).toBeInTheDocument();
@@ -196,7 +207,7 @@ describe('/pages/clock-logs/page', () => {
 
     const input = screen.getByPlaceholderText(/buscar empleado/i);
     fireEvent.change(input, { target: { value: 'Ana' } });
-    fireEvent.change(input, { target: { value: 'Ana García' } }); // selection from datalist would set value
+    fireEvent.change(input, { target: { value: ANA_GARCIA } }); // selection from datalist would set value
 
     // Actually selecting from datalist triggers change event as well.
     expect(setFilters).toHaveBeenCalledWith(expect.objectContaining({ employee_id: 101 }));

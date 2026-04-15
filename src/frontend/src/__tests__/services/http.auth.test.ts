@@ -1,5 +1,8 @@
 import { ApiError, http, setOnAuthFailure } from '@/services/http';
 
+const VP_ACCESS_TOKEN = 'vp_access_token';
+const VP_REFRESH_TOKEN = 'vp_refresh_token';
+
 function createMockResponse(status: number, body: unknown) {
   return {
     status,
@@ -25,8 +28,8 @@ describe('http auth lifecycle', () => {
   });
 
   it('single-flight: concurrent 401 responses trigger only one refresh request', async () => {
-    localStorage.setItem('vp_access_token', 'old-access-token');
-    localStorage.setItem('vp_refresh_token', 'refresh-token');
+    localStorage.setItem(VP_ACCESS_TOKEN, 'old-access-token');
+    localStorage.setItem(VP_REFRESH_TOKEN, 'refresh-token');
 
     const fetchMock = jest
       .fn()
@@ -47,8 +50,8 @@ describe('http auth lifecycle', () => {
   });
 
   it('retries original request once after successful refresh and returns data', async () => {
-    localStorage.setItem('vp_access_token', 'old-access-token');
-    localStorage.setItem('vp_refresh_token', 'refresh-token');
+    localStorage.setItem(VP_ACCESS_TOKEN, 'old-access-token');
+    localStorage.setItem(VP_REFRESH_TOKEN, 'refresh-token');
 
     const fetchMock = jest
       .fn()
@@ -67,8 +70,8 @@ describe('http auth lifecycle', () => {
   });
 
   it('failed refresh clears vp_access_token/vp_refresh_token and triggers auth-failure callback', async () => {
-    localStorage.setItem('vp_access_token', 'old-access-token');
-    localStorage.setItem('vp_refresh_token', 'refresh-token');
+    localStorage.setItem(VP_ACCESS_TOKEN, 'old-access-token');
+    localStorage.setItem(VP_REFRESH_TOKEN, 'refresh-token');
 
     const onAuthFailure = jest.fn();
     setOnAuthFailure(onAuthFailure);
@@ -81,8 +84,8 @@ describe('http auth lifecycle', () => {
     setFetchMock(fetchMock);
 
     await expect(http.get('/secure-resource')).rejects.toBeInstanceOf(ApiError);
-    expect(localStorage.getItem('vp_access_token')).toBeNull();
-    expect(localStorage.getItem('vp_refresh_token')).toBeNull();
+    expect(localStorage.getItem(VP_ACCESS_TOKEN)).toBeNull();
+    expect(localStorage.getItem(VP_REFRESH_TOKEN)).toBeNull();
     expect(onAuthFailure).toHaveBeenCalledTimes(1);
   });
 
