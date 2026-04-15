@@ -48,11 +48,11 @@ Exceptions: none
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 | 1.5 |
-| Label | 14px | 500 | 1.4 |
+| Label | 14px | 400 | 1.4 |
 | Heading | 20px | 600 | 1.2 |
-| Display | 28px | 700 | 1.1 |
+| Display | 28px | 600 | 1.1 |
 
-Source: Reused from existing Phase 34 patterns.
+Source: Reused from existing Phase 34 patterns. Reduced to 2 weights (400 regular, 600 semibold) per UI safety gate.
 
 ---
 
@@ -133,13 +133,19 @@ Source: From CONTEXT.md D-05 (preview text), D-07 (type ANULAR), UX-01 requireme
 
 ---
 
+## Focal Point
+
+**Primary screen:** Correction modal (add/edit/void) centered on screen with blue accent (#3b82f6) on primary CTA button.
+
+---
+
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (FLAG for focal point added)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (fixed to 2 weights)
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** VERIFIED
