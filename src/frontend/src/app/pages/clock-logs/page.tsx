@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useClockLogs } from '@/hooks/useClockLogs';
-import ClockLogStatusBadge from '@/components/ClockLogStatusBadge';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffectiveMarks } from '@/hooks/useEffectiveMarks';
 import ImportSessionsPanel from '@/components/ImportSessionsPanel';
-import ClockLogDetailModal from '@/components/ClockLogDetailModal';
-import { ClockLogPaginated } from '@/services/clockLogsService';
+import BranchGroup from '@/components/BranchGroup';
+import EmployeeCard from '@/components/EmployeeCard';
 import DatePicker from '@/components/DatePicker';
+import type { EffectiveClockLog } from '@/services/effectiveMarksService';
 import {
   STATUS_OPTIONS,
   STATUS_CARD_COLORS,
@@ -14,342 +14,279 @@ import {
   STATUS_TOGGLE_COLORS,
   isoToDisplay,
   parseDisplayToISO,
-  getClockLogViewModel,
 } from '@/features/clock-logs/presenters/clockLogPresenter';
+
+interface EmployeeGroup {
+  employee_id: string;
+  employee_name: string;
+  logs: EffectiveClockLog[];
+  total_hours: number;
+  worked_days: number;
+  anomaly_count: number;
+}
+
+interface BranchData {
+  name: string;
+  employees: EmployeeGroup[];
+}
+
+function groupDataByBranch(logs: EffectiveClockLog[]): BranchData[] {
+  const branchMap = new Map<string, Map<string, EffectiveClockLog[]>>();
+
+  logs.forEach((log) => {
+    const branch = log.branch_name || 'Sin sucursal';
+    const emp = log.employee_id;
+    if (!branchMap.has(branch)) branchMap.set(branch, new Map());
+    const empMap = branchMap.get(branch)!;
+    if (!empMap.has(emp)) empMap.set(emp, []);
+    empMap.get(emp)!.push(log);
+  });
+
+  const branches: BranchData[] = Array.from(branchMap.entries()).map(([branchName, empMap]) => {
+    const employees: EmployeeGroup[] = Array.from(empMap.entries()).map(([empId, empLogs]) => {
+      const anomalyCount = empLogs.filter(
+        (l) => l.original.status !== 'valid'
+      ).length;
+      const totalHours = empLogs.reduce((sum, l) => sum + (l.calculated_hours ?? 0), 0);
+      const workedDays = new Set(empLogs.map((l) => l.log_date)).size;
+      return {
+        employee_id: empId,
+        employee_name: empLogs[0]?.employee_name ?? `Empleado ${empId}`,
+        logs: empLogs,
+        total_hours: totalHours,
+        worked_days: workedDays,
+        anomaly_count: anomalyCount,
+      };
+    });
+
+    // Sort: anomaly count DESC, then name ASC (D-03)
+    employees.sort((a, b) => {
+      if (b.anomaly_count !== a.anomaly_count) return b.anomaly_count - a.anomaly_count;
+      return a.employee_name.localeCompare(b.employee_name, 'es');
+    });
+
+    return { name: branchName, employees };
+  });
+
+  branches.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  return branches;
+}
 
 export default function ClockLogsDashboardPage() {
   const {
-    stats,
-    logs,
-    totalLogs,
-    page,
-    pageSize,
-    importSessions,
+    data,
+    totalCount,
+    hasMore,
     isLoading,
-    isStatsLoading,
+    isLoadingMore,
     error,
     filters,
-    employees,
-    setPage,
+    importSessions,
     setFilters,
     applyDatePreset,
+    loadMore,
     refresh,
-  } = useClockLogs();
+  } = useEffectiveMarks();
 
-  const [selectedLog, setSelectedLog] = useState<ClockLogPaginated | null>(null);
-  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [showImportPanel, setShowImportPanel] = useState(false);  // D-12: collapsed by default
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalLogs);
-  const totalPages = Math.ceil(totalLogs / pageSize);
+  // IntersectionObserver for infinite scroll (D-05)
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-  const toggleStatus = (status: string) => {
-    const current = filters.status;
-    if (current.includes(status)) {
-      setFilters({ status: current.filter((s) => s !== status) });
-    } else {
-      setFilters({ status: [...current, status] });
-    }
-  };
-
-  const handleEmployeeSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmployeeSearch(value);
-    const match = employees.find(
-      (emp) => emp.name.toLowerCase() === value.toLowerCase()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
     );
-    setFilters({ employee_id: match ? match.id : undefined });
-  };
 
-  const clearEmployeeFilter = () => {
-    setEmployeeSearch('');
-    setFilters({ employee_id: undefined });
-  };
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMore]);
+
+  const toggleStatus = useCallback(
+    (status: string) => {
+      const current = filters.status ?? [];
+      setFilters({
+        status: current.includes(status)
+          ? current.filter((s) => s !== status)
+          : [...current, status],
+      });
+    },
+    [filters.status, setFilters]
+  );
+
+  const groupedBranches = groupDataByBranch(data);
+
+  const statsMap = data.reduce<Record<string, number>>((acc, log) => {
+    const s = log.original.status;
+    acc[s] = (acc[s] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
       <div className="p-6 max-w-7xl mx-auto">
-
-        {/* A. Page header */}
+        
+        {/* B. Page header (UX-03 — contextual guide subtitle) */}
         <div className="mb-6">
-          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">
-            Marcas / Dashboard
-          </p>
-          <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
-            Dashboard de Marcas
-          </h1>
+          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Marcas / Dashboard</p>
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Panel de Control de Marcas</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Monitoreo centralizado de marcas de reloj: estados, anomalias, huerfanas e importaciones
+            Revise y corrija marcas de reloj antes de calcular planilla. Grupos por sucursal, empleado y día.
           </p>
         </div>
 
-        {/* B. Date preset buttons + date range inputs */}
+        {/* C. Biweekly preset buttons + date range (D-01) */}
         <div className="flex flex-wrap gap-2 items-center mb-4">
-          <button
-            onClick={() => applyDatePreset('today')}
-            className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium"
-          >
-            Hoy
-          </button>
-          <button
-            onClick={() => applyDatePreset('last7days')}
-            className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium"
-          >
-            Ultimos 7 dias
-          </button>
-          <button
-            onClick={() => applyDatePreset('thisMonth')}
-            className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium"
-          >
-            Este mes
-          </button>
-          <button
-            onClick={() => applyDatePreset('threeMonths')}
-            className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium"
-          >
-            Ultimos 3 meses
-          </button>
-
+          {(['first_half', 'second_half', 'this_month'] as const).map((preset) => {
+            const labels = {
+              first_half: '1ra Quincena (1-15)',
+              second_half: '2da Quincena (16-31)',
+              this_month: 'Mes Actual',
+            };
+            return (
+              <button
+                key={preset}
+                onClick={() => applyDatePreset(preset)}
+                className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors font-medium"
+              >
+                {labels[preset]}
+              </button>
+            );
+          })}
           <div className="flex items-center gap-2 ml-2">
             <label className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Desde</label>
             <DatePicker
               value={isoToDisplay(filters.initDate)}
-              onChange={(display) => {
-                const iso = parseDisplayToISO(display);
-                if (iso) setFilters({ initDate: iso });
-              }}
+              onChange={(display) => { const iso = parseDisplayToISO(display); if (iso) setFilters({ initDate: iso }); }}
               placeholder="dd/mm/yy"
-              className="w-[120px] border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-50"
+              className="w-[120px] border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-green-600"
             />
             <label className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Hasta</label>
             <DatePicker
               value={isoToDisplay(filters.endDate)}
-              onChange={(display) => {
-                const iso = parseDisplayToISO(display);
-                if (iso) setFilters({ endDate: iso });
-              }}
+              onChange={(display) => { const iso = parseDisplayToISO(display); if (iso) setFilters({ endDate: iso }); }}
               placeholder="dd/mm/yy"
-              className="w-[120px] border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-50"
+              className="w-[120px] border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-green-600"
             />
           </div>
         </div>
 
-        {/* C. Summary stats cards */}
-        {isStatsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            {STATUS_OPTIONS.map((status) => {
-              const count = stats?.byStatus?.[status] ?? 0;
-              if (count === 0) return null;
+        {/* D. Status filter toggles */}
+        <div className="flex flex-wrap gap-3 items-center mb-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Estado:</span>
+          {STATUS_OPTIONS.map((status) => {
+            const isActive = (filters.status ?? []).includes(status);
+            const colors = STATUS_TOGGLE_COLORS[status];
+            return (
+              <button key={status} onClick={() => toggleStatus(status)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${isActive ? colors.active : colors.inactive}`}>
+                {STATUS_NAMES[status]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* E. Summary stats bar */}
+        {data.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {STATUS_OPTIONS.filter((s) => (statsMap[s] ?? 0) > 0).map((status) => {
               const colors = STATUS_CARD_COLORS[status];
               return (
-                <div
-                  key={status}
-                  className={`rounded-lg border border-l-4 p-4 ${colors.bg} ${colors.border} border-zinc-200 dark:border-zinc-700`}
-                >
-                  <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${colors.text}`}>
-                    {STATUS_NAMES[status]}
-                  </p>
-                  <p className={`text-2xl font-bold ${colors.count}`}>{count}</p>
+                <div key={status} className={`rounded-lg border border-l-4 p-3 ${colors.bg} ${colors.border} border-zinc-200 dark:border-zinc-700`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide mb-0.5 ${colors.text}`}>{STATUS_NAMES[status]}</p>
+                  <p className={`text-xl font-bold ${colors.count}`}>{statsMap[status]}</p>
                 </div>
               );
             })}
           </div>
         )}
 
-        {/* D. Filters toolbar */}
-        <div className="flex flex-wrap gap-3 items-center mb-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4">
-          {/* Status multi-select toggles */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mr-1">
-              Estado:
-            </span>
-            {STATUS_OPTIONS.map((status) => {
-              const isActive = filters.status.includes(status);
-              const colors = STATUS_TOGGLE_COLORS[status];
-              return (
-                <button
-                  key={status}
-                  onClick={() => toggleStatus(status)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    isActive ? colors.active : colors.inactive
-                  }`}
-                >
-                  {STATUS_NAMES[status]}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Employee autocomplete */}
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
-              Empleado:
-            </span>
-            <div className="relative">
-              <input
-                type="text"
-                list="employees-datalist"
-                value={employeeSearch}
-                onChange={handleEmployeeSelect}
-                placeholder="Buscar empleado..."
-                className="border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
-              />
-              <datalist id="employees-datalist">
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.name} />
-                ))}
-              </datalist>
-            </div>
-            {filters.employee_id && (
-              <button
-                onClick={clearEmployeeFilter}
-                className="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* E. Import sessions panel */}
-        <ImportSessionsPanel sessions={importSessions} isLoading={isLoading} />
-
-        {/* Error banner */}
-        {error && (
-          <div className="mb-4 p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
-
-        {/* F. Clock logs table */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          {isLoading && logs.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="w-8 h-8 border-2 border-zinc-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">Cargando marcas...</p>
-            </div>
-          ) : !isLoading && logs.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="text-base font-semibold text-zinc-600 dark:text-zinc-400">
-                No hay marcas para el periodo seleccionado
-              </p>
-              <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
-                Ajusta el rango de fechas o los filtros de estado
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Empleado
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Tipo
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Source
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {logs.map((log) => {
-                    const vm = getClockLogViewModel(log);
-                    return (
-                      <tr
-                        key={vm.id}
-                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
-                      >
-                        <td className="px-4 py-3 text-zinc-800 dark:text-zinc-200 font-medium">
-                          {vm.employee_name}
-                        </td>
-                        <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
-                          {vm.displayTimestamp}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={vm.typeBadgeClasses}>
-                            {vm.log_type}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <ClockLogStatusBadge status={vm.status} />
-                        </td>
-                        <td className="px-4 py-3 text-center text-zinc-500 dark:text-zinc-400">
-                          {vm.displaySource}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => setSelectedLog(log)}
-                            className={vm.actionButtonClasses}
-                          >
-                            {vm.actionButtonLabel}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        {/* F. ImportSessionsPanel — collapsed by default (D-12) */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowImportPanel((v) => !v)}
+            className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-2"
+            aria-expanded={showImportPanel}
+          >
+            <span>{showImportPanel ? '▲' : '▼'}</span>
+            Sesiones de Importación
+          </button>
+          {showImportPanel && (
+            <ImportSessionsPanel sessions={importSessions} isLoading={isLoading} />
           )}
         </div>
 
-        {/* G. Pagination controls */}
-        {totalLogs > 0 && (
-          <div className="flex items-center justify-between mt-4 text-sm text-zinc-500 dark:text-zinc-400">
-            <span>
-              Mostrando {start}–{end} de {totalLogs} marcas
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage(page - 1)}
-                disabled={page <= 1}
-                className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-              >
-                Anterior
-              </button>
-              <span className="px-3 py-1.5 font-medium text-zinc-700 dark:text-zinc-300">
-                Pagina {page} de {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
+        {/* G. Error banner */}
+        {error && (
+          <div className="mb-4 p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40">
+            <p className="text-sm text-red-700 dark:text-red-300">Error al cargar las marcas. {error}</p>
+            <button onClick={refresh} className="text-sm text-red-600 dark:text-red-400 underline hover:no-underline mt-2">Reintentar</button>
           </div>
         )}
 
-        <ClockLogDetailModal
-          isOpen={selectedLog !== null}
-          log={selectedLog}
-          onClose={() => setSelectedLog(null)}
-          onCorrected={() => {
-            setSelectedLog(null);
-            refresh();
-          }}
-        />
+        {/* H. Main content — loading / empty / grouped list */}
+        {isLoading && data.length === 0 ? (
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-16 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+            ))}
+          </div>
+        ) : !isLoading && data.length === 0 ? (
+          <div className="p-12 text-center border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-900">
+            <p className="text-base font-semibold text-zinc-600 dark:text-zinc-400">No hay marcas en este período</p>
+            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1 max-w-md mx-auto">
+              Ajuste el rango de fechas o los filtros para ver datos. Si no hay marcas, verifique que se hayan importado sesiones.
+            </p>
+            <button
+              onClick={() => setShowImportPanel(true)}
+              className="mt-4 text-sm text-blue-600 dark:text-blue-400 underline hover:no-underline"
+            >
+              Ver importaciones
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groupedBranches.map((branch) => (
+              <BranchGroup key={branch.name} branchName={branch.name} employeeCount={branch.employees.length}>
+                {branch.employees.map((emp) => (
+                  <EmployeeCard
+                    key={emp.employee_id}
+                    employee_id={emp.employee_id}
+                    employee_name={emp.employee_name}
+                    daily_logs={emp.logs}
+                    total_hours={emp.total_hours}
+                    worked_days={emp.worked_days}
+                    anomaly_count={emp.anomaly_count}
+                  />
+                ))}
+              </BranchGroup>
+            ))}
+          </div>
+        )}
+
+        {/* I. Infinite scroll sentinel + loading-more indicator */}
+        <div ref={sentinelRef} className="h-4" aria-hidden="true" />
+
+        {isLoadingMore && (
+          <div className="flex items-center justify-center gap-2 py-4 text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="w-4 h-4 border-2 border-zinc-300 border-t-green-600 rounded-full animate-spin" />
+            Cargando más marcas...
+          </div>
+        )}
+
+        {!hasMore && data.length > 0 && (
+          <p className="text-center text-xs text-zinc-400 dark:text-zinc-500 py-4">
+            {totalCount} marcas cargadas — fin de la lista
+          </p>
+        )}
+
       </div>
     </div>
   );

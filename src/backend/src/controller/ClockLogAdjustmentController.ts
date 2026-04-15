@@ -61,28 +61,43 @@ export class ClockLogAdjustmentController {
 
   /**
    * Get effective marks with pairing logic
-   * GET /api/clock-logs/effective?employee_id=X&initDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   * GET /api/clock-logs/effective?employee_id=X&initDate=YYYY-MM-DD&endDate=YYYY-MM-DD&branch_id=Y&page=1&pageSize=20
    */
   async getEffectiveMarks(req: Request, res: Response): Promise<Response> {
-    const { employee_id, initDate, endDate } = req.query;
+    const { employee_id, initDate, endDate, branch_id, page, pageSize } = req.query;
 
-    if (!employee_id || !initDate || !endDate) {
-      return res.status(400).json({ success: false, error: 'employee_id, initDate and endDate are required' });
+    if (!initDate || !endDate) {
+      return res.status(400).json({ success: false, error: 'initDate and endDate are required' });
     }
 
     try {
-      const employeeId = parseInt(employee_id as string, 10);
       const start = parseLocalDate(initDate as string);
       const end = parseLocalDateEnd(endDate as string);
 
-      if (isNaN(employeeId) || !start || !end) {
-        return res.status(400).json({ success: false, error: 'Invalid parameters' });
+      if (!start || !end) {
+        return res.status(400).json({ success: false, error: 'Invalid date parameters' });
       }
 
-      const pairedMarks = await ClockLogEffectiveService.getPairedEffectiveMarks(employeeId, start, end);
+      const employeeId = employee_id ? parseInt(employee_id as string, 10) : undefined;
+      const branchId = branch_id ? parseInt(branch_id as string, 10) : undefined;
+      const pageNum = page ? Math.max(1, parseInt(page as string, 10)) : 1;
+      const pageSizeNum = pageSize ? Math.max(1, parseInt(pageSize as string, 10)) : 20;
+
+      const { data, total } = await ClockLogEffectiveService.getPaginatedEffectiveMarks({
+        initDate: start,
+        endDate: end,
+        employeeId: isNaN(employeeId as any) ? undefined : employeeId,
+        branchId: isNaN(branchId as any) ? undefined : branchId,
+        page: isNaN(pageNum) ? 1 : pageNum,
+        pageSize: isNaN(pageSizeNum) ? 20 : pageSizeNum,
+      });
+
       return res.json({
         success: true,
-        data: pairedMarks
+        data,
+        total,
+        page: isNaN(pageNum) ? 1 : pageNum,
+        pageSize: isNaN(pageSizeNum) ? 20 : pageSizeNum
       });
     } catch (error: any) {
       return res.status(500).json({ success: false, error: error.message });
