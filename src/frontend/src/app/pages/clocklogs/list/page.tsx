@@ -18,6 +18,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Select, SelectItem } from '@/components/ui/Select';
 
+const CR_TIMEZONE = 'America/Costa_Rica';
+
 export default function AttendancePage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -43,7 +45,7 @@ export default function AttendancePage() {
     const grouped: Record<string, AttendanceSummary> = {};
 
     for (const log of logs) {
-      const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(log.timestamp));
+      const date = new Intl.DateTimeFormat('en-CA', { timeZone: CR_TIMEZONE }).format(new Date(log.timestamp));
       const empId = log.employee_id ?? 'unknown';
       const key = `${empId}_${date}`;
       const emp = empList.find(e => String(e.id) === String(empId));
@@ -114,7 +116,7 @@ export default function AttendancePage() {
   // Convert UTC ISO → "YYYY-MM-DDTHH:MM" in Costa Rica time (for datetime-local input)
   const toLocalInputValue = (isoString: string): string => {
     const parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Costa_Rica',
+      timeZone: CR_TIMEZONE,
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit',
       hour12: false
@@ -162,7 +164,7 @@ export default function AttendancePage() {
     return new Date(dateString).toLocaleTimeString('es-CR', {
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'America/Costa_Rica'
+      timeZone: CR_TIMEZONE
     });
   };
 
@@ -172,7 +174,7 @@ export default function AttendancePage() {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-      timeZone: 'America/Costa_Rica'
+      timeZone: CR_TIMEZONE
     });
   };
 
@@ -490,7 +492,7 @@ export default function AttendancePage() {
                                         <div>
                                           <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Hora</p>
                                           <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                                            {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: 'America/Costa_Rica' })}
+                                            {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: CR_TIMEZONE })}
                                           </p>
                                         </div>
                                         {log.remarks && (

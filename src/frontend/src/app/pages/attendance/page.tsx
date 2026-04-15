@@ -16,6 +16,8 @@ import {
   ArrowUpTrayIcon
 } from '@heroicons/react/24/outline';
 
+const CR_TIMEZONE = 'America/Costa_Rica';
+
 type NormalizedLogType = 'CHECK_IN' | 'LUNCH_OUT' | 'LUNCH_IN' | 'CHECK_OUT' | 'EXTRA';
 
 interface NormalizedClockLog extends ClockLog {
@@ -40,7 +42,7 @@ const normalizeLogType = (value?: string, timestamp?: string): NormalizedLogType
    if (timestamp) {
      try {
        hour = parseInt(
-         new Intl.DateTimeFormat('en-US', { timeZone: 'America/Costa_Rica', hour: 'numeric', hour12: false }).format(new Date(timestamp)),
+         new Intl.DateTimeFormat('en-US', { timeZone: CR_TIMEZONE, hour: 'numeric', hour12: false }).format(new Date(timestamp)),
          10
        );
      } catch {}
@@ -578,7 +580,7 @@ const timeStr = typeof horaRaw === 'number'
     const grouped = logs.reduce((acc: Record<string, AttendanceData>, log) => {
       const resolvedEmployee = resolveEmployeeForLog(log, empList);
       const employeeId = resolvedEmployee.id;
-      const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(log.timestamp));
+      const date = new Intl.DateTimeFormat('en-CA', { timeZone: CR_TIMEZONE }).format(new Date(log.timestamp));
       const key = `${employeeId}_${date}`;
 
       if (!acc[key]) {
@@ -803,7 +805,7 @@ const timeStr = typeof horaRaw === 'number'
     return new Date(date).toLocaleTimeString('es-CR', {
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'America/Costa_Rica'
+      timeZone: CR_TIMEZONE
     });
   };
 
@@ -1161,7 +1163,7 @@ const timeStr = typeof horaRaw === 'number'
                                       <div>
                                         <p className="text-[10px] text-zinc-400 mb-0.5">Hora</p>
                                         <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                                          {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: 'America/Costa_Rica' })}
+                                          {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: CR_TIMEZONE })}
                                         </p>
                                       </div>
                                       {log.remarks && (
