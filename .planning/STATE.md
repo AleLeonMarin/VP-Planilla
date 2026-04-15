@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 34 — Rediseño Clock Logs (Vista Agrupada)
+**Current focus:** Phase 35 — Frontend Clock Log Corrections
 
 ## Current Position
 
 Phase: 35
-Plan: 01
-Next: Phase 35 Plan 01 - Adjustment UI components
+Plan: -
+Next: /gsd-plan-phase 35 --auto
 Last activity: 2026-04-15
 
-Progress: [██████████] 100% (of Phase 34)
+Progress: [..........] 0% (of Phase 35)
 
 ## v1.5 Phase Map
 
@@ -39,6 +39,7 @@ Progress: [██████████] 100% (of Phase 34)
 | 32 | Schema Ajustes y Aprobacion | AJUS-01..03 | ✅ Complete (2/2 plans) |
 | 33 | Motor de Marcas Efectivas + API | MARCAS-01..05 | ✅ Complete (3/3 plans) |
 | 34 | Rediseño Clock Logs (Vista Agrupada) | MARCAS-06..10 | ✅ Complete (5/5 plans) |
+| 35 | Frontend Clock Log Corrections | MARCAS-02..05, UX-02 | 🚧 In Progress |
 
 ## Milestone History
 
