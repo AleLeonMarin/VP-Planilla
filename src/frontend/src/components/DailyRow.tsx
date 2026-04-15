@@ -36,6 +36,15 @@ const SourceTraceabilityIcon: React.FC<{ source: string; status: string }> = ({ 
   }
 };
 
+const formatCRTime = (iso: string | null): string | null => {
+  if (!iso) return null;
+  return new Date(iso).toLocaleTimeString('es-CR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Costa_Rica',
+  });
+};
+
 const DailyRow: React.FC<DailyRowProps> = ({ log, onAddMissing }) => {
   const dateLabel = new Date(log.log_date + 'T00:00:00').toLocaleDateString('es-CR', {
     weekday: 'long',
@@ -44,8 +53,8 @@ const DailyRow: React.FC<DailyRowProps> = ({ log, onAddMissing }) => {
     day: 'numeric',
   });
 
-  const inTime = log.adjusted?.in_time ?? log.original.in_time;
-  const outTime = log.adjusted?.out_time ?? log.original.out_time;
+  const inTime = formatCRTime(log.adjusted?.in_time ?? log.original.in_time);
+  const outTime = formatCRTime(log.adjusted?.out_time ?? log.original.out_time);
   const source = log.original.source;
   const status = log.original.status;
   const displayHours = log.calculated_hours != null ? log.calculated_hours.toFixed(1) : null;

@@ -38,7 +38,12 @@ const normalizeLogType = (value?: string, timestamp?: string): NormalizedLogType
    // Si tiene timestamp, intentar inferir por hora cuando el tipo es genérico
    let hour: number | undefined;
    if (timestamp) {
-     try { hour = new Date(timestamp).getHours(); } catch {}
+     try {
+       hour = parseInt(
+         new Intl.DateTimeFormat('en-US', { timeZone: 'America/Costa_Rica', hour: 'numeric', hour12: false }).format(new Date(timestamp)),
+         10
+       );
+     } catch {}
    }
    
    if (['in', 'entrada', 'entry', 'start'].includes(normalized)) {
@@ -573,7 +578,7 @@ const timeStr = typeof horaRaw === 'number'
     const grouped = logs.reduce((acc: Record<string, AttendanceData>, log) => {
       const resolvedEmployee = resolveEmployeeForLog(log, empList);
       const employeeId = resolvedEmployee.id;
-      const date = new Date(log.timestamp).toISOString().split('T')[0];
+      const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(log.timestamp));
       const key = `${employeeId}_${date}`;
 
       if (!acc[key]) {
@@ -797,7 +802,8 @@ const timeStr = typeof horaRaw === 'number'
     if (!date) return '—';
     return new Date(date).toLocaleTimeString('es-CR', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Costa_Rica'
     });
   };
 
@@ -1155,7 +1161,7 @@ const timeStr = typeof horaRaw === 'number'
                                       <div>
                                         <p className="text-[10px] text-zinc-400 mb-0.5">Hora</p>
                                         <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                                          {new Date(log.timestamp).toLocaleTimeString('es-CR')}
+                                          {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: 'America/Costa_Rica' })}
                                         </p>
                                       </div>
                                       {log.remarks && (
