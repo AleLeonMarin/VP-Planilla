@@ -202,8 +202,9 @@ export class ClockLogEffectiveService {
     pageSize: number;
     branchId?: number;
     employeeId?: number;
+    status?: string[];
   }): Promise<{ data: EffectiveClockLog[]; total: number }> {
-    let { initDate, endDate, page, pageSize, branchId, employeeId } = params;
+    let { initDate, endDate, page, pageSize, branchId, employeeId, status: statusFilter } = params;
     
     // Mitigate DoS: Enforce maximum pageSize
     if (pageSize > 100) pageSize = 100;
@@ -414,6 +415,11 @@ export class ClockLogEffectiveService {
               adjustment_id: String(anyAdj.adjustment_id),
               reason: anyAdj.adjustment_justification,
             };
+          }
+
+          // Apply status filter if provided
+          if (statusFilter && statusFilter.length > 0) {
+            if (!statusFilter.includes(status)) continue;
           }
 
           allEffectiveLogs.push(effectiveLog);

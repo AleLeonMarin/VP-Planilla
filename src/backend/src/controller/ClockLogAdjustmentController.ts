@@ -64,7 +64,7 @@ export class ClockLogAdjustmentController {
    * GET /api/clock-logs/effective?employee_id=X&initDate=YYYY-MM-DD&endDate=YYYY-MM-DD&branch_id=Y&page=1&pageSize=20
    */
   async getEffectiveMarks(req: Request, res: Response): Promise<Response> {
-    const { employee_id, initDate, endDate, branch_id, page, pageSize } = req.query;
+    const { employee_id, initDate, endDate, branch_id, page, pageSize, status } = req.query;
 
     if (!initDate || !endDate) {
       return res.status(400).json({ success: false, error: 'initDate and endDate are required' });
@@ -83,6 +83,14 @@ export class ClockLogAdjustmentController {
       const pageNum = page ? Math.max(1, parseInt(page as string, 10)) : 1;
       const pageSizeNum = pageSize ? Math.max(1, parseInt(pageSize as string, 10)) : 20;
 
+      // Parse status if provided (comma separated)
+      let statusArray: string[] | undefined = undefined;
+      if (typeof status === 'string' && status.length > 0) {
+        statusArray = status.split(',').map(s => s.trim());
+      } else if (Array.isArray(status)) {
+        statusArray = status.map(s => String(s));
+      }
+
       const { data, total } = await ClockLogEffectiveService.getPaginatedEffectiveMarks({
         initDate: start,
         endDate: end,
@@ -90,6 +98,7 @@ export class ClockLogAdjustmentController {
         branchId: branchId !== undefined && !isNaN(branchId) ? branchId : undefined,
         page: isNaN(pageNum) ? 1 : pageNum,
         pageSize: isNaN(pageSizeNum) ? 20 : pageSizeNum,
+        status: statusArray,
       });
 
       return res.json({
