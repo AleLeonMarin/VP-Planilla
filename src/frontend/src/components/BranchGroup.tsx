@@ -1,4 +1,5 @@
 import React from 'react';
+import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 interface BranchGroupProps {
   branchName: string;
@@ -8,14 +9,17 @@ interface BranchGroupProps {
 
 const BranchGroup: React.FC<BranchGroupProps> = ({ branchName, employeeCount, children }) => {
   return (
-    <div className="mb-6">
-      <div className="bg-gray-50 dark:bg-zinc-800 px-4 py-3 font-semibold text-sm border-l-4 border-green-600 rounded-t-lg flex items-center gap-2">
-        <span role="img" aria-label="Sucursal" title="Sucursal">🏢</span>
-        <span className="text-zinc-700 dark:text-zinc-300">
-          Sucursal: {branchName} — {employeeCount} {employeeCount === 1 ? 'empleado' : 'empleados'}
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden mb-4">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <BuildingOfficeIcon className="w-4 h-4 text-zinc-400" />
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{branchName}</h2>
+        </div>
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          {employeeCount} {employeeCount === 1 ? 'empleado' : 'empleados'}
         </span>
       </div>
-      <div className="space-y-2 mt-1">
+      <div className="p-3 space-y-2">
         {children}
       </div>
     </div>
