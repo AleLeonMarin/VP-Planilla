@@ -27,6 +27,11 @@
   - [x] 33-02-PLAN.md — Effective Marks Engine (Prisma.distinct + Fallback Logic).
   - [x] 33-03-PLAN.md — Pairing Engine & API Endpoints (Paired IN/OUT + Controller).
 - [ ] Phase 34: Frontend — Rediseño Clock Logs (Vista Agrupada)
+  **Goal:** Reemplazar la tabla plana de marcas con una vista jerárquica agrupada (Sucursal > Empleado > Día > Par) que facilita la detección rápida de anomalías antes del cálculo de planilla.
+  **Plans:** 3 plans
+  - [ ] 34-01-PLAN.md — Service layer + Hook (effectiveMarksService.ts + useEffectiveMarks.ts).
+  - [ ] 34-02-PLAN.md — Core components (BranchGroup, EmployeeCard, DailyRow).
+  - [ ] 34-03-PLAN.md — Page redesign (page.tsx reconstruction + ImportSessionsPanel + infinite scroll).
 - [ ] Phase 35: Frontend — Corrección de Marcas (Agregar/Editar/Anular)
 - [ ] Phase 36: Backend — State Machine de Planilla + Aguinaldo
 - [ ] Phase 37: Frontend — Wizard de Planilla Quincenal
