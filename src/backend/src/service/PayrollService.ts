@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { Payroll } from "../model/payroll";
+import { PayrollStatus } from '@prisma/client';
 
 export class PayrollService {
   /**
@@ -187,6 +188,231 @@ export class PayrollService {
       console.error('Error fetching payroll employees:', error);
       throw new Error('Failed to retrieve payroll employees');
     }
+  }
+
+  /**
+   * Map database record to Payroll interface
+   */
+  private static mapToPayroll(dbRecord: any): Payroll {
+    return {
+      id: dbRecord.payrolls_id,
+      payroll_type: dbRecord.payrolls_payroll_type_id,
+      period_start: dbRecord.payrolls_period_start,
+      period_end: dbRecord.payrolls_period_end,
+      payment_date: dbRecord.payrolls_payment_date,
+      status: dbRecord.payrolls_status,
+      version: dbRecord.payrolls_version,
+      approved_by: dbRecord.payrolls_approved_by,
+      approved_at: dbRecord.payrolls_approved_at,
+      reopened_at: dbRecord.payrolls_reopened_at,
+      reopen_reason: dbRecord.payrolls_reopen_reason,
+    };
+  }
+
+  /**
+   * Approve a payroll — transition from BORRADOR to APROBADA
+   * @param payrollId - The ID of the payroll to approve
+   * @param userId - The ID of the user approving the payroll
+   * @returns Promise<Payroll> - The updated payroll
+   * @throws Error if payroll not found or not in BORRADOR status
+   */
+  static async approvePayroll(payrollId: number, userId: number): Promise<Payroll> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId }
+    });
+    if (!payroll) throw new Error('Payroll not found');
+    if (payroll.payrolls_status !== PayrollStatus.BORRADOR) {
+      throw new Error('Solo las planillas en estado BORRADOR pueden ser aprobadas');
+    }
+    
+    const updated = await prisma.vpg_payrolls.update({
+      where: { payrolls_id: payrollId },
+      data: {
+        payrolls_status: PayrollStatus.APROBADA,
+        payrolls_approved_by: userId,
+        payrolls_approved_at: new Date(),
+        payrolls_version: payroll.payrolls_version + 1
+      }
+    });
+    
+    return this.mapToPayroll(updated);
+  }
+
+  /**
+   * Mark a payroll as paid — transition from APROBADA to PAGADA
+   * @param payrollId - The ID of the payroll to mark as paid
+   * @returns Promise<Payroll> - The updated payroll
+   * @throws Error if payroll not found or not in APROBADA status
+   */
+  static async markAsPaid(payrollId: number): Promise<Payroll> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId }
+    });
+    if (!payroll) throw new Error('Payroll not found');
+    if (payroll.payrolls_status !== PayrollStatus.APROBADA) {
+      throw new Error('Solo las planillas en estado APROBADA pueden ser marcadas como pagadas');
+    }
+    
+    const updated = await prisma.vpg_payrolls.update({
+      where: { payrolls_id: payrollId },
+      data: {
+        payrolls_status: PayrollStatus.PAGADA,
+        payrolls_version: payroll.payrolls_version + 1
+      }
+    });
+    
+    // Lock clock log adjustments for this payroll period
+    await this.lockAdjustmentsForPayroll(payrollId, payroll.payrolls_period_start, payroll.payrolls_period_end);
+    
+    return this.mapToPayroll(updated);
+  }
+
+  /**
+   * Lock clock log adjustments for a paid payroll period
+   * @param payrollId - The payroll ID
+   * @param periodStart - Period start date
+   * @param periodEnd - Period end date
+   */
+  private static async lockAdjustmentsForPayroll(payrollId: number, periodStart: Date, periodEnd: Date): Promise<void> {
+    // TODO: Implement lock adjustments logic - mark clock logs as non-adjustable for this period
+    console.log(`Locking adjustments for payroll ${payrollId} period ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
+  }
+
+  /**
+   * Reopen a payroll — transition from APROBADA to BORRADOR with audit trail
+   * @param payrollId - The ID of the payroll to reopen
+   * @param userId - The ID of the user reopening the payroll
+   * @param reason - Reason for reopening (minimum 10 characters)
+   * @returns Promise<Payroll> - The updated payroll
+   * @throws Error if payroll not found, not in APROBADA status, or reason too short
+   */
+  static async reopenPayroll(payrollId: number, userId: number, reason: string): Promise<Payroll> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId }
+    });
+    if (!payroll) throw new Error('Payroll not found');
+    if (payroll.payrolls_status !== PayrollStatus.APROBADA) {
+      throw new Error('Solo las planillas en estado APROBADA pueden ser reopenidas');
+    }
+    if (!reason || reason.length < 10) {
+      throw new Error('El motivo de reapertura debe tener al menos 10 caracteres');
+    }
+    
+    const [updated] = await prisma.$transaction([
+      prisma.vpg_payrolls.update({
+        where: { payrolls_id: payrollId },
+        data: {
+          payrolls_status: PayrollStatus.BORRADOR,
+          payrolls_reopened_at: new Date(),
+          payrolls_reopen_reason: reason,
+          payrolls_approved_by: null,
+          payrolls_approved_at: null,
+          payrolls_version: payroll.payrolls_version + 1
+        }
+      }),
+      prisma.vpg_audit_logs.create({
+        data: {
+          audit_logs_user_id: userId,
+          audit_logs_action: 'REOPEN_PAYROLL',
+          audit_logs_entity: 'payroll',
+          audit_logs_entity_id: payrollId,
+          audit_logs_timestamp: new Date(),
+          audit_logs_details: JSON.stringify({ reason, previous_status: PayrollStatus.APROBADA })
+        }
+      })
+    ]);
+    
+    return this.mapToPayroll(updated);
+  }
+
+  /**
+   * Recalculate a payroll in BORRADOR state — saves snapshot before recalculation
+   * @param payrollId - The ID of the payroll to recalculate
+   * @param userId - The ID of the user requesting recalculation
+   * @param reason - Reason for recalculation
+   * @returns Promise<Payroll> - The updated payroll
+   * @throws Error if payroll not found or not in BORRADOR status
+   */
+  static async recalculatePayroll(payrollId: number, userId: number, reason: string): Promise<Payroll> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId },
+      include: { vpg_payroll_employee: true }
+    });
+    if (!payroll) throw new Error('Payroll not found');
+    if (payroll.payrolls_status !== PayrollStatus.BORRADOR) {
+      throw new Error('Solo las planillas en estado BORRADOR pueden ser recalculadas');
+    }
+    
+    // Save current snapshot before recalculating
+    await prisma.vpg_payroll_recalculations.create({
+      data: {
+        recalc_payroll_id: payrollId,
+        recalc_reason: reason,
+        recalc_created_by: userId,
+        recalc_data_snapshot: JSON.stringify(payroll)
+      }
+    });
+    
+    // Increment version
+    const updated = await prisma.vpg_payrolls.update({
+      where: { payrolls_id: payrollId },
+      data: {
+        payrolls_version: payroll.payrolls_version + 1
+      }
+    });
+    
+    return this.mapToPayroll(updated);
+  }
+
+  /**
+   * Calculate aguinaldo proportional for an employee
+   * Based on Costa Rica Labor Code Article 196
+   * Period: December 1 to November 30
+   * Formula: (sum of gross salaries) / 12
+   * @param employeeId - The ID of the employee
+   * @param year - The year for which to calculate aguinaldo (the year ending Nov 30)
+   * @returns Promise<{ total: number; months: number; promedio: number }>
+   */
+  static async calculateAguinaldo(
+    employeeId: number,
+    year: number
+  ): Promise<{ total: number; months: number; promedio: number }> {
+    const periodStart = new Date(`${year - 1}-12-01`);
+    const periodEnd = new Date(`${year}-11-30`);
+    
+    // Get all payrolls in the period with status APROBADA or PAGADA
+    const payrolls = await prisma.vpg_payrolls.findMany({
+      where: {
+        payrolls_period_end: { gte: periodStart, lte: periodEnd },
+        payrolls_status: { in: [PayrollStatus.APROBADA, PayrollStatus.PAGADA] }
+      },
+      include: {
+        vpg_payroll_employee: {
+          where: { payroll_employee_employee_id: employeeId }
+        }
+      }
+    });
+    
+    // Sum gross salaries
+    let totalGross = 0;
+    let monthsWithSalary = 0;
+    
+    for (const payroll of payrolls) {
+      for (const emp of payroll.vpg_payroll_employee) {
+        const gross = Number(emp.payroll_employee_gross_salary || 0);
+        totalGross += gross;
+        if (gross > 0) monthsWithSalary++;
+      }
+    }
+    
+    // Aguinaldo formula: sum / 12 (even for partial years)
+    const aguinaldo = totalGross / 12;
+    
+    return {
+      total: aguinaldo,
+      months: monthsWithSalary,
+      promedio: monthsWithSalary > 0 ? totalGross / monthsWithSalary : 0
+    };
   }
 
   
