@@ -43,6 +43,10 @@
   - [x] 35-04-PLAN.md — Audit Timeline component.
   - [x] 35-05-PLAN.md — Integration into attendance page.
 - [ ] Phase 36: Backend — State Machine de Planilla + Aguinaldo
+  **Goal:** Implementar el ciclo de vida de la planilla (BORRADOR → APROBADA → PAGADA) y cálculo de aguinaldo según ley laboral costarricense.
+  **Plans:** 2 plans
+  - [x] 36-01-PLAN.md — State machine service methods (approvePayroll, markAsPaid, reopenPayroll, recalculatePayroll) + aguinaldo calculation + tests.
+  - [x] 36-02-PLAN.md — REST API endpoints for state transitions and aguinaldo.
 - [ ] Phase 37: Frontend — Wizard de Planilla Quincenal
 - [ ] Phase 38: Tests Unitarios + Verificación de Integración
 
