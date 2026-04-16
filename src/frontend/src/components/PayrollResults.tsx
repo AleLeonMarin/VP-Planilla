@@ -265,86 +265,86 @@ export default function PayrollResults({ data, onCreate }: PayrollResultsProps) 
   }, 0) || 0;
 
   const renderSummaryCards = () => (
-    <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 mb-4 md:grid-cols-5">
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <UserGroupIcon className="w-5 h-5 text-green-700" />
+        <div className="flex items-center gap-2 mb-1">
+          <UserGroupIcon className="w-4 h-4 text-green-700" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Empleados</p>
         </div>
         <p className="text-2xl font-bold text-zinc-700 dark:text-white">{employees!.length}</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <ClockIcon className="w-5 h-5 text-zinc-400" />
+        <div className="flex items-center gap-2 mb-1">
+          <ClockIcon className="w-4 h-4 text-zinc-400" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Horas Trabajadas</p>
         </div>
         <p className="text-2xl font-bold text-zinc-700 dark:text-white">{totalHours.toFixed(0)}h</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <ClockIcon className="w-5 h-5 text-orange-600" />
+        <div className="flex items-center gap-2 mb-1">
+          <ClockIcon className="w-4 h-4 text-orange-600" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Horas Extras</p>
         </div>
         <p className="text-2xl font-bold text-orange-600">{totalOvertimeHours.toFixed(1)}h</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <ClockIcon className="w-5 h-5 text-blue-600" />
+        <div className="flex items-center gap-2 mb-1">
+          <ClockIcon className="w-4 h-4 text-blue-600" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Horas Descanso</p>
         </div>
         <p className="text-2xl font-bold text-blue-600">{totalWeeklyRestHours.toFixed(1)}h</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <CurrencyDollarIcon className="w-5 h-5 text-zinc-500" />
+        <div className="flex items-center gap-2 mb-1">
+          <CurrencyDollarIcon className="w-4 h-4 text-zinc-500" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Salario Bruto</p>
         </div>
-        <p className="text-lg font-bold text-zinc-700 dark:text-white">{formatCRC(totalGross)}</p>
+        <p className="text-base font-bold text-zinc-700 dark:text-white">{formatCRC(totalGross)}</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <CurrencyDollarIcon className="w-5 h-5 text-orange-600" />
+        <div className="flex items-center gap-2 mb-1">
+          <CurrencyDollarIcon className="w-4 h-4 text-orange-600" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Pago Horas Extras</p>
         </div>
-        <p className="text-lg font-bold text-orange-600">{formatCRC(totalOvertimePay)}</p>
+        <p className="text-base font-bold text-orange-600">{formatCRC(totalOvertimePay)}</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
+        <div className="flex items-center gap-2 mb-1">
+          <CurrencyDollarIcon className="w-4 h-4 text-blue-600" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Pago Descanso</p>
         </div>
-        <p className="text-lg font-bold text-blue-600">{formatCRC(totalWeeklyRestPay)}</p>
+        <p className="text-base font-bold text-blue-600">{formatCRC(totalWeeklyRestPay)}</p>
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2 mb-2">
-          <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
+        <div className="flex items-center gap-2 mb-1">
+          <CurrencyDollarIcon className="w-4 h-4 text-green-600" />
           <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Bonificaciones</p>
         </div>
-        <p className="text-lg font-bold text-green-600">{formatCRC(totalBonuses)}</p>
+        <p className="text-base font-bold text-green-600">{formatCRC(totalBonuses)}</p>
       </div>
 
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <CurrencyDollarIcon className="w-5 h-5 text-red-600" />
+      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <CurrencyDollarIcon className="w-4 h-4 text-red-600" />
           <p className="text-xs font-medium text-red-700 dark:text-red-400">Total Deducciones</p>
         </div>
-        <p className="text-lg font-bold text-red-600">{formatCRC(totalDeductions)}</p>
+        <p className="text-base font-bold text-red-600">{formatCRC(totalDeductions)}</p>
       </div>
 
-      <div className="bg-green-700 rounded-lg p-4 border border-green-800 shadow-sm lg:col-span-3">
-        <div className="flex items-center justify-between">
+      <div className="bg-green-700 rounded-lg p-3 border border-green-800 shadow-sm col-span-full md:col-span-1">
+        <div className="flex items-center justify-between md:flex-col md:items-start md:gap-1">
           <div className="flex items-center gap-2">
-            <CurrencyDollarIcon className="w-6 h-6 text-white" />
-            <p className="text-sm font-medium text-zinc-200">TOTAL NETO A PAGAR</p>
+            <CurrencyDollarIcon className="w-4 h-4 text-white" />
+            <p className="text-xs font-medium text-zinc-200">TOTAL NETO</p>
           </div>
-          <p className="text-3xl font-bold text-white">{formatCRC(total || 0)}</p>
+          <p className="text-xl font-bold text-white">{formatCRC(total || 0)}</p>
         </div>
       </div>
     </div>
