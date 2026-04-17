@@ -57,8 +57,10 @@ export interface EmployeeUpdateData {
   national_id?: string | null;
   social_code?: string | null;
   email?: string;
+  phone?: string | null;
   hire_date?: string;
   position_id?: number | null;
+  gender?: string | null;
   required_hours_biweekly?: number | null;
   status?: string;
   fired?: boolean;
@@ -116,7 +118,22 @@ export const updateEmployee = async (id: string | number, employeeData: Partial<
       payload.employee_required_hours_biweekly = requiredHours;
     }
   }
-  
+
+  // Handle both prefixed (modal: employee_phone) and non-prefixed (edit page: phone)
+  const phoneVal = 'employee_phone' in employeeData
+    ? (employeeData as Record<string, unknown>).employee_phone
+    : (employeeData as Record<string, unknown>).phone;
+  if (phoneVal !== undefined) {
+    payload.employee_phone = (phoneVal as string) || null;
+  }
+
+  const genderVal = 'employee_gender' in employeeData
+    ? (employeeData as Record<string, unknown>).employee_gender
+    : (employeeData as Record<string, unknown>).gender;
+  if (genderVal !== undefined) {
+    payload.employee_gender = (genderVal as string) || null;
+  }
+
   if (employeeData.status) {
     payload.employee_status = employeeData.status;
   }

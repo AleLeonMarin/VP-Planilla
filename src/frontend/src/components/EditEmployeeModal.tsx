@@ -239,12 +239,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                           <Controller
                             name="employee_position_id"
                             control={control}
-                            render={({ field }) => {
-                              const selectedPosition = positionOptions.find(p => p.id === field.value);
-                              return (
+                            render={({ field }) => (
                               <Select
                                 value={field.value || ''}
-                                displayValue={selectedPosition?.name}
+                                selectedLabel={positionOptions.find(p => p.id === field.value)?.name}
                                 onValueChange={field.onChange}
                                 disabled={positionsLoading}
                                 placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
@@ -256,8 +254,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                                   </SelectItem>
                                 ))}
                               </Select>
-                              );
-                            }}
+                            )}
                           />
                           {errors.employee_position_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_position_id?.message)}</p>}
                         </div>

@@ -38,6 +38,11 @@ export const updateEmployeeSchema = z.object({
   employee_hire_date: z.string().optional().nullable(),
   employee_required_hours_biweekly: z.coerce.number().optional().nullable(),
   employee_status: z.string().max(25).optional().nullable(),
+  // Phone and gender
+  employee_phone: z.string().max(20).optional().nullable(),
+  employee_gender: z.string().max(20).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  gender: z.string().max(20).optional().nullable(),
   // Dismiss fields
   employee_exit_date: z.string().optional().nullable(),
   employee_fired: z.boolean().optional(),

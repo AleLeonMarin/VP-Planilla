@@ -219,6 +219,8 @@ model vpg_employees {
   employee_fired                   Boolean                       @default(false)
   employee_status                  String                        @db.Char(1)
   employee_required_hours_biweekly Decimal?                      @db.Decimal(5, 2)
+  employee_gender                  String?                       @db.VarChar(20)
+  employee_phone                   String?                       @db.VarChar(20)
   employee_version                 Int                           @default(1)
   vpg_bonuses                      vpg_bonuses[]
   vpg_branch_employee              vpg_branch_employee[]         @ignore

@@ -64,8 +64,10 @@ export class EmployeeService {
             national_id: prismaEmployee.employee_national_id,
             social_code: prismaEmployee.employee_social_code,
             email: prismaEmployee.employee_email,
+            phone: prismaEmployee.employee_phone ?? null,
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
+            gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
@@ -98,8 +100,10 @@ export class EmployeeService {
             national_id: prismaEmployee.employee_national_id,
             social_code: prismaEmployee.employee_social_code,
             email: prismaEmployee.employee_email,
+            phone: prismaEmployee.employee_phone ?? null,
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
+            gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
@@ -130,23 +134,30 @@ export class EmployeeService {
                 : statusMap[data.status as string] ?? data.status)
             : undefined;
 
+        // Build update payload dynamically — only include fields present in the request.
+        // This prevents omitted fields from overwriting existing DB values with defaults.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: any = {
+            employee_version: (data.version || 1) + 1,
+        };
+        if (data.name !== undefined)          updateData.employee_first_name = data.name;
+        if (data.last_name !== undefined)     updateData.employee_last_name = data.last_name;
+        if (data.middle_name !== undefined)   updateData.employee_middle_name = data.middle_name ?? '';
+        if (data.national_id !== undefined)   updateData.employee_national_id = data.national_id ?? '';
+        if (data.social_code !== undefined)   updateData.employee_social_code = data.social_code ?? '';
+        if (data.email !== undefined)         updateData.employee_email = data.email;
+        if (data.phone !== undefined)         updateData.employee_phone = data.phone || null;
+        if (data.hire_date !== undefined)     updateData.employee_hire_date = data.hire_date;
+        if (data.exit_date !== undefined)     updateData.employee_exit_date = data.exit_date || null;
+        if (data.fired !== undefined)         updateData.employee_fired = data.fired;
+        if (data.gender !== undefined)        updateData.employee_gender = data.gender || null;
+        if (statusChar !== undefined)         updateData.employee_status = statusChar;
+        if (data.required_hours_biweekly !== undefined) updateData.employee_required_hours_biweekly = data.required_hours_biweekly || null;
+        if (data.position_id !== undefined)   updateData.employee_position_id = data.position_id;
+
         const prismaEmployee = await prisma.vpg_employees.update({
             where: { employee_id: id },
-            data: {
-                employee_first_name: data.name,
-                employee_last_name: data.last_name,
-                employee_middle_name: data.middle_name || '',
-                employee_national_id: data.national_id || '',
-                employee_social_code: data.social_code || '',
-                employee_email: data.email,
-                employee_hire_date: data.hire_date,
-                employee_exit_date: data.exit_date || null,
-                employee_fired: data.fired || false,
-                employee_status: statusChar,
-                employee_required_hours_biweekly: data.required_hours_biweekly || null,
-                employee_version: (data.version || 1) + 1, // Increment version
-                employee_position_id: data.position_id
-            }
+            data: updateData,
         });
 
         if (!prismaEmployee) {
@@ -163,8 +174,10 @@ export class EmployeeService {
             national_id: prismaEmployee.employee_national_id,
             social_code: prismaEmployee.employee_social_code,
             email: prismaEmployee.employee_email,
+            phone: prismaEmployee.employee_phone ?? null,
             hire_date: prismaEmployee.employee_hire_date,
             fired: prismaEmployee.employee_fired,
+            gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
@@ -191,8 +204,10 @@ export class EmployeeService {
                 national_id: prismaEmployee.employee_national_id,
                 social_code: prismaEmployee.employee_social_code,
                 email: prismaEmployee.employee_email,
+                phone: prismaEmployee.employee_phone ?? null,
                 hire_date: prismaEmployee.employee_hire_date,
                 fired: prismaEmployee.employee_fired,
+                gender: prismaEmployee.employee_gender ?? null,
                 status: prismaEmployee.employee_status,
                 required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
