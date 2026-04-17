@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
-status: Phase complete — ready for verification
-last_updated: "2026-04-17T23:30:00.000Z"
+status: Phase complete — v1.5 milestone done
+last_updated: "2026-04-17T23:50:00.000Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 31
-  completed_phases: 27
-  total_plans: 79
-  completed_plans: 72
-  percent: 91
+  completed_phases: 29
+  total_plans: 80
+  completed_plans: 80
+  percent: 100
 ---
 
 # Project State — VP-Planilla
@@ -20,30 +20,30 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 38 — tests-unitarios-verificacion-integracion
+**Current focus:** v1.5 Milestone Complete
 
 ## Current Position
 
-Phase: 38 (tests-unitarios-verificacion-integracion) — EXECUTING
-Plan: 2 of 2
-Next: /gsd-plan-phase 35 --auto
+Milestone: v1.5 COMPLETE (Phases 32-39)
+Phase: 39 of 39
+Status: All phases complete
 Last activity: 2026-04-17
 
-Progress: [..........] 0% (of Phase 35)
+Progress: [██████████████████] 100% (39/39 phases)
 
 ## v1.5 Phase Map
 
 | Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
+|------|------|--------------|--------|
 | 31 | Improve Code Quality & Automation | QUAL-01..02 | ✅ Complete (2/2 plans) |
 | 32 | Schema Ajustes y Aprobacion | AJUS-01..03 | ✅ Complete (2/2 plans) |
 | 33 | Motor de Marcas Efectivas + API | MARCAS-01..05 | ✅ Complete (3/3 plans) |
 | 34 | Rediseño Clock Logs (Vista Agrupada) | MARCAS-06..10 | ✅ Complete (5/5 plans) |
-| 35 | Frontend Clock Log Corrections | MARCAS-02..05, UX-02 | 🚧 In Progress |
-| 36 | Backend: State Machine de Planilla + Aguinaldo | PAY-01..04 | [ ] Planned |
-| 37 | Frontend: Wizard de Planilla Quincenal | PAY-05..10 | [ ] Planned |
+| 35 | Frontend Clock Log Corrections | MARCAS-02..05, UX-02 | ✅ Complete (5/5 plans) |
+| 36 | Backend: State Machine de Planilla + Aguinaldo | PAY-01..04 | ✅ Complete (2/2 plans) |
+| 37 | Frontend: Wizard de Planilla Quincenal | PAY-05..10 | ✅ Complete (5/5 plans) |
 | 38 | Tests Unitarios + Verificación de Integración | QUAL-03 | ✅ Complete (2/2 plans) |
-| 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | 🚧 In Progress (0/2 plans) |
+| 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | ✅ Complete (2/2 plans) |
 
 ## Milestone History
 

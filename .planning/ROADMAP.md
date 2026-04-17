@@ -34,7 +34,7 @@
   - [x] 34-03-PLAN.md — Page redesign (page.tsx reconstruction + ImportSessionsPanel + infinite scroll).
   - [x] 34-04-PLAN.md — Backend pagination and branch metadata for effective marks.
   - [x] 34-05-PLAN.md — Update ClockLogAdjustmentController with pagination.
-- [ ] Phase 35: Frontend — Corrección de Marcas (Agregar/Editar/Anular)
+- [x] Phase 35: Frontend — Corrección de Marcas (Agregar/Editar/Anular)
   **Goal:** Implementar los modales de corrección de marcas (agregar/editar/anular) con justificación obligatoria y vista de auditoría.
   **Plans:** 5 plans
   - [x] 35-01-PLAN.md — Add Clock Log Modal with service layer.
@@ -55,7 +55,7 @@
   - [x] 37-03-PLAN.md — Step 3 executive summary + Phase 36 state machine integration
   - [x] 37-04-PLAN.md — Payroll list with status badges and contextual actions
   - [x] 37-05-PLAN.md — Gap closure: fix status badges, contextual buttons, wizard data integration
-- [ ] Phase 38: Tests Unitarios + Verificación de Integración
+- [x] Phase 38: Tests Unitarios + Verificación de Integración
   **Goal:** Ejecutar y verificar la suite de pruebas unitarias y de integración para asegurar la estabilidad de las nuevas funcionalidades de la v1.5.
   **Plans:** 2 plans
   - [x] 38-01-PLAN.md — Run test suite and categorize failures
