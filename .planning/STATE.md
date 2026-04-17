@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-04-16T05:39:59.713Z"
-last_activity: 2026-04-16
+status: Phase complete — ready for verification
+last_updated: "2026-04-17T21:20:22.293Z"
+last_activity: 2026-04-17
 progress:
-  total_phases: 30
-  completed_phases: 25
-  total_plans: 74
-  completed_plans: 67
+  total_phases: 31
+  completed_phases: 26
+  total_plans: 77
+  completed_plans: 70
   percent: 0
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 37 — frontend-payroll-wizard
+**Current focus:** Phase 39 — frontend-fix-employee-edit-position-selector
 
 ## Current Position
 
-Phase: 37
-Plan: Not started
+Phase: 39 (frontend-fix-employee-edit-position-selector) — EXECUTING
+Plan: 2 of 2
 Next: /gsd-plan-phase 35 --auto
-Last activity: 2026-04-16
+Last activity: 2026-04-17
 
 Progress: [..........] 0% (of Phase 35)
 
