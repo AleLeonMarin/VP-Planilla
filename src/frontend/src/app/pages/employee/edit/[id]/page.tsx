@@ -40,6 +40,16 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
   useEffect(() => {
     if (employee) {
+      const positionIdValue = employee.position_id != null ? String(employee.position_id) : '';
+      console.log('[DEBUG] EditEmployeePage - reset employee_position_id:', {
+        name: employee.name,
+        position_id: employee.position_id,
+        positionIdValue: positionIdValue,
+        typeof_position_id: typeof employee.position_id,
+        positionsLoaded: !!positions,
+        positionsCount: positions?.length,
+        positionOptionsLength: positionOptions.length
+      });
       reset({
         employee_first_name: employee.name || '',
         employee_middle_name: employee.middle_name || '',
@@ -48,13 +58,13 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
         employee_social_code: employee.social_code || '',
         employee_email: employee.email || '',
         employee_phone: employee.phone || '',
-        employee_position_id: String(employee.position_id || ''),
+        employee_position_id: positionIdValue,
         employee_hire_date: employee.hire_date ? new Date(employee.hire_date).toISOString().split('T')[0] : '',
         employee_gender: employee.gender || '',
         employee_schedule: employee.schedule || 'Horario Diurno',
       });
     }
-  }, [employee, reset]);
+  }, [employee, reset, positions]);
 
   const onSubmit = async (data: EmployeeSchemaType) => {
     try {
@@ -361,25 +371,40 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                     <label className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-1">
                       Posición <span className="text-red-500">*</span>
                     </label>
-                    <Controller
+<Controller
                       name="employee_position_id"
                       control={control}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value || ''}
-                          selectedLabel={positionOptions.find(p => String(p.id) === String(field.value))?.name}
-                          onValueChange={field.onChange}
-                          disabled={positionsLoading}
-                          placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
-                          className="border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
-                        >
-                          {positionOptions.map((position) => (
-                            <SelectItem key={position.id} value={position.id}>
-                              {position.name} - ₡{position.salary.toLocaleString()}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      )}
+                      render={({ field }) => {
+                        const selectedPosition = positionOptions.find(p => String(p.id) === String(field.value));
+                        const displayLabel = selectedPosition?.name || (field.value ? `Posición ID: ${field.value}` : '');
+                        
+                        // DEBUG: Log what Controller actually receives
+                        console.log('[DEBUG] Select Controller render:', {
+                          fieldValue: field.value,
+                          fieldValueType: typeof field.value,
+                          selectedPosition: selectedPosition?.name,
+                          displayLabel: displayLabel,
+                          positionOptionsLength: positionOptions.length,
+                          positionsLoaded: !!positions
+                        });
+                        
+                        return (
+                          <Select
+                            value={field.value || ''}
+                            selectedLabel={displayLabel}
+                            onValueChange={field.onChange}
+                            disabled={positionsLoading}
+                            placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
+                            className="border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-white"
+                          >
+                            {positionOptions.map((position) => (
+                              <SelectItem key={position.id} value={position.id}>
+                                {position.name} - ₡{position.salary.toLocaleString()}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        );
+                      }}
                     />
                     {errors.employee_position_id && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
