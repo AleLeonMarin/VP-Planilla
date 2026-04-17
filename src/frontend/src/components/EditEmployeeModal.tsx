@@ -24,6 +24,7 @@ interface RawEmployeeData {
   email?: string;
   phone?: string;
   position_id?: string | number | null;
+  employee_position_id?: string | number | null;
   hire_date?: string;
   gender?: string;
   required_hours_biweekly?: string;
@@ -55,28 +56,61 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     salary: typeof position.base_salary === 'number' ? position.base_salary : Number(position.base_salary) || 0
   }));
 
-  const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
+const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
     resolver: zodResolver(employeeSchema),
+    defaultValues: {
+      employee_first_name: '',
+      employee_middle_name: '',
+      employee_last_name: '',
+      employee_national_id: '',
+      employee_social_code: '',
+      employee_email: '',
+      employee_phone: '',
+      employee_position_id: '',
+      employee_hire_date: '',
+      employee_gender: '',
+      employee_required_hours_biweekly: '',
+    }
   });
 
+  // Track if we've initialized form for current employee
+  const initializedRef = useRef<string>('');
+  
+  // Initialize form when modal opens with employee data
   useEffect(() => {
-    if (isOpen && employeeData) {
-      reset({
-        employee_first_name: employeeData.employee_first_name ?? employeeData.name ?? '',
-        employee_middle_name: employeeData.employee_middle_name ?? employeeData.middle_name ?? '',
-        employee_last_name: employeeData.employee_last_name ?? employeeData.last_name ?? '',
-        employee_national_id: employeeData.national_id || '',
-        employee_social_code: employeeData.social_code || '',
-        employee_email: employeeData.email || '',
-        employee_phone: employeeData.phone || '',
-        employee_position_id: String(employeeData.position_id || ''),
-        employee_hire_date: employeeData.hire_date ? new Date(employeeData.hire_date).toISOString().split('T')[0] : '',
-        employee_gender: employeeData.gender || '',
-        employee_required_hours_biweekly: employeeData.required_hours_biweekly || '',
-      });
-    }
-  }, [isOpen, employeeData, reset]);
-
+    if (!isOpen || !employeeData) return;
+    
+    const empKey = `${employeeData.name || ''}-${employeeData.position_id || ''}`;
+    
+    // Skip if already initialized for this employee
+    if (initializedRef.current === empKey) return;
+    initializedRef.current = empKey;
+    
+    const targetPos = employeeData.position_id != null && employeeData.position_id !== undefined 
+      ? String(employeeData.position_id) 
+      : '';
+    
+    // Full reset with target position
+    reset({
+      employee_first_name: employeeData.employee_first_name ?? employeeData.name ?? '',
+      employee_middle_name: employeeData.employee_middle_name ?? employeeData.middle_name ?? '',
+      employee_last_name: employeeData.employee_last_name ?? employeeData.last_name ?? '',
+      employee_national_id: employeeData.national_id || '',
+      employee_social_code: employeeData.social_code || '',
+      employee_email: employeeData.email || '',
+      employee_phone: employeeData.phone || '',
+      employee_position_id: targetPos,
+      employee_hire_date: employeeData.hire_date ? new Date(employeeData.hire_date).toISOString().split('T')[0] : '',
+      employee_gender: employeeData.gender || '',
+      employee_required_hours_biweekly: employeeData.required_hours_biweekly || '',
+    });
+    
+    // Force-set position after reset to ensure it survives validation
+    setTimeout(() => {
+      setValue('employee_position_id', targetPos, { shouldValidate: false });
+    }, 0);
+  }, [isOpen, employeeData, reset, setValue]);
+  
   useEffect(() => {
     if (!isOpen) return;
     if (modalRef.current) {
@@ -239,22 +273,26 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                           <Controller
                             name="employee_position_id"
                             control={control}
-                            render={({ field }) => (
-                              <Select
-                                value={field.value || ''}
-                                selectedLabel={positionOptions.find(p => String(p.id) === String(field.value))?.name}
-                                onValueChange={field.onChange}
-                                disabled={positionsLoading}
-                                placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
-                                className="border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
-                              >
-                                {positionOptions.map((position) => (
-                                  <SelectItem key={position.id} value={position.id}>
-                                    {position.name} - ₡{position.salary.toLocaleString()} | HExtra: ₡{(position.salary * 1.5).toLocaleString()}
-                                  </SelectItem>
-                                ))}
-                              </Select>
-                            )}
+                            render={({ field }) => {
+                              const selectedPosition = positionOptions.find(p => String(p.id) === String(field.value));
+                              const displayLabel = selectedPosition?.name || (field.value ? `Posición ID: ${field.value}` : '');
+                              return (
+                                <Select
+                                  value={field.value || ''}
+                                  selectedLabel={displayLabel}
+                                  onValueChange={field.onChange}
+                                  disabled={positionsLoading}
+                                  placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
+                                  className="border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100"
+                                >
+                                  {positionOptions.map((position) => (
+                                    <SelectItem key={position.id} value={position.id}>
+                                      {position.name} - ₡{position.salary.toLocaleString()} | HExtra: ₡{(position.salary * 1.5).toLocaleString()}
+                                    </SelectItem>
+                                  ))}
+                                </Select>
+                              );
+                            }}
                           />
                           {errors.employee_position_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{String(errors.employee_position_id?.message)}</p>}
                         </div>
