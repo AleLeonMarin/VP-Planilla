@@ -242,7 +242,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                             render={({ field }) => (
                               <Select
                                 value={field.value || ''}
-                                selectedLabel={positionOptions.find(p => p.id === field.value)?.name}
+                                selectedLabel={positionOptions.find(p => String(p.id) === String(field.value))?.name}
                                 onValueChange={field.onChange}
                                 disabled={positionsLoading}
                                 placeholder={positionsLoading ? 'Cargando posiciones...' : 'Seleccionar posición'}
