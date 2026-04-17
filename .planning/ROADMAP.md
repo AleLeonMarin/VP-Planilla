@@ -59,7 +59,7 @@
   **Goal:** Ejecutar y verificar la suite de pruebas unitarias y de integración para asegurar la estabilidad de las nuevas funcionalidades de la v1.5.
   **Plans:** 2 plans
   - [x] 38-01-PLAN.md — Run test suite and categorize failures
-  - [ ] 38-02-PLAN.md — Fix identified test failures
+  - [x] 38-02-PLAN.md — Fix identified test failures
 - [x] Phase 39: Frontend — Corregir Selector de Posición en Edición de Empleado
   **Goal:** Corregir el selector de posiciones en el formulario de edición de empleados para que muestre las posiciones correctamente, sincronizado con la tabla de empleados.
   **Plans:** 2 plans (COMPLETE)
