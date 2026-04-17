@@ -5,7 +5,7 @@ Use after /gsd-execute-phase to verify that the evaluation strategy from AI-SPEC
 </purpose>
 
 <required_reading>
-@C:/Users/Administrador/Desktop/U-Local/Vp-Planilla/.claude/get-shit-done/references/ai-evals.md
+@C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.claude/get-shit-done/references/ai-evals.md
 </required_reading>
 
 <process>
@@ -13,14 +13,14 @@ Use after /gsd-execute-phase to verify that the evaluation strategy from AI-SPEC
 ## 0. Initialize
 
 ```bash
-INIT=$(node "C:/Users/Administrador/Desktop/U-Local/Vp-Planilla/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(gsd-sdk query init.phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `commit_docs`.
 
 ```bash
-AUDITOR_MODEL=$(node "C:/Users/Administrador/Desktop/U-Local/Vp-Planilla/.claude/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-eval-auditor --raw)
+AUDITOR_MODEL=$(gsd-sdk query resolve-model gsd-eval-auditor 2>/dev/null | jq -r '.model' 2>/dev/null || true)
 ```
 
 Display banner:
@@ -78,7 +78,7 @@ Build file list for auditor:
 Build prompt:
 
 ```markdown
-Read C:/Users/Administrador/Desktop/U-Local/Vp-Planilla/.claude/agents/gsd-eval-auditor.md for instructions.
+Read C:/Users/Kendall Fonseca/Desktop/U/Ingeniria en sitemas/VP-Planilla/.claude/agents/gsd-eval-auditor.md for instructions.
 
 <objective>
 Conduct evaluation coverage audit of Phase {phase_number}: {phase_name}
