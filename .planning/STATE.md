@@ -44,6 +44,7 @@ Progress: [██████████████████] 100% (39/39 p
 | 37 | Frontend: Wizard de Planilla Quincenal | PAY-05..10 | ✅ Complete (5/5 plans) |
 | 38 | Tests Unitarios + Verificación de Integración | QUAL-03 | ✅ Complete (2/2 plans) |
 | 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | ✅ Complete (2/2 plans) |
+| 40 | Fix 15 Remaining Test Failures | QUAL-03 | [ ] Planned (0/1 plans) |
 
 ## Milestone History
 

@@ -65,6 +65,9 @@
   **Plans:** 2 plans (COMPLETE)
   - [x] 39-01-PLAN.md — Fix Selector display and consistency
   - [x] 39-02-PLAN.md — Ensure Data Synchronization
+- [ ] Phase 40: Fix 15 Remaining Test Failures from Phase 38
+  **Goal:** Corregir los 15 tests que fallan en la suite de pruebas (NomineeService.test.ts, ClockLogEffectiveService.Paginated.test.ts, clock-logs/page.test.tsx).
+  **Plans:** 0 plans
 
 <details>
 <summary>✅ v1.4 (Phases 24-31) — SHIPPED 2026-04-12</summary>
@@ -91,6 +94,26 @@
 - [x] Phase 23: Debug y Corrección de Funcionalidad de Marcas
 
 </details>
+
+### Phase 1: Fix 15 remaining test failures from Phase 38 verification
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 0
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 1 to break down)
+
+### Phase 2: Fix 15 remaining test failures from Phase 38 verification --phase 40
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 2 to break down)
 
 ---
 ## Archives
