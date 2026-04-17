@@ -396,13 +396,15 @@ const useEmployeeList = () => {
     closeAddEmployeeModal,
     closeEditEmployeeModal
     ,
-    // Provide a refresh function so pages can re-fetch employees on demand
+    // Provide a refresh function so pages can re-fetch employees and positions on demand
     refreshEmployees: async () => {
       try {
         invalidateCache('vp_employees_cache');
         const apiEmployees = await apiGetEmployees();
         writeCache('vp_employees_cache', apiEmployees as RawEmployee[]);
         setRawEmployees(apiEmployees as RawEmployee[]);
+        // Also refresh positions so both datasets stay in sync
+        await refreshPositions();
       } catch (error) {
         console.error('Error refreshing employees', error);
       }
