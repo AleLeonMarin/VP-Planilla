@@ -196,7 +196,7 @@ Follow from existing inline patterns:
 | HTTP client | Raw `fetch()` calls | `http.ts` service layer | Already handles auth, refresh, error parsing |
 | Toast notifications | Custom alert components | `sonner` toast | Already imported in project |
 | Modal framework | Custom backdrop + animation | `framer-motion` AnimatePresence + MotionDiv | Already lazy-loaded in EditEmployeeModal |
-| Animation for chips | CSS-only animations | `framer-motion` AnimatePresence | Use existing imported library for smooth add/remove |
+| Animation for chips | `framer-motion` AnimatePresence | CSS transition o sin animación | Chips son inline en EditEmployeeModal — mantener simple per CONTEXT.md |
 
 **Key insight:** The project has established patterns for all common operations. Always copy from existing components rather than building new patterns.
 
@@ -223,6 +223,10 @@ Follow from existing inline patterns:
 ### Pitfall 5: Not Using Optimistic UI
 **What goes wrong:** Wait for full re-fetch after every add/delete feels slow.
 **How to avoid:** Update local state immediately, fallback to re-fetch on error only.
+
+### Pitfall 6: POST y DELETE requieren rol `admin`
+**What goes wrong:** Un usuario sin rol `admin` recibe 403 al intentar agregar o eliminar aliases — la UI no lo maneja y queda sin feedback.
+**How to avoid:** Verificar que el usuario autenticado tenga rol `admin` antes de renderizar el input de agregar y los botones X. El hook puede exponer `canManage` basado en el rol del token.
 
 ---
 
@@ -296,7 +300,7 @@ All endpoints already implemented in Phase 41 and ready for frontend consumption
 - **Frontend (Phase 42):** IN PROGRESS - Service + hook + UI section needed
 
 ### What's Different from Previous Thinking
-The CONTEXT.md now specifies inline chips without AnimatePresence for simplicity. However, for smooth add/remove animations, optionally add AnimatePresence if time permits (not required by locked decisions).
+La sección de chips es inline en EditEmployeeModal — **no usar AnimatePresence**. Mantener simple: chips sin animación de entrada/salida. Esto es consistente con D-03/D-07 del CONTEXT.md.
 
 ---
 
@@ -333,9 +337,9 @@ The CONTEXT.md now specifies inline chips without AnimatePresence for simplicity
 ### Test Framework
 | Property | Value |
 |----------|-------|
-| Framework | Vitest + React Testing Library |
-| Config file | `vitest.config.ts` (if exists) |
-| Quick run command | `npm test -- --run` or `vitest run` |
+| Framework | Jest + React Testing Library |
+| Config file | `src/frontend/jest.config.js` |
+| Quick run command | `npm test -- --watchAll=false` |
 | Full suite command | `npm test` |
 
 ### Phase Requirements → Test Map
