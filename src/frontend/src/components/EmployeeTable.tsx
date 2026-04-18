@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const EMPLOYEE_TABLE_CELL_CLASS = 'px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none';
 const EMPLOYEE_TD_FIRED_CLASS = 'text-red-400 line-through';
@@ -54,6 +55,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!selectedEmployee) return;
+    const close = () => setSelectedEmployee(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [selectedEmployee, setSelectedEmployee]);
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -252,55 +261,67 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                     )}
                   </td>
                   <td className="px-6 py-3.5 text-sm text-zinc-500 dark:text-zinc-400">
-                    <div className="relative">
-                      <button
-                        onClick={() => setSelectedEmployee(selectedEmployee === employee.id ? null : employee.id)}
-                        className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-                        aria-label="Opciones del empleado"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedEmployee === employee.id) {
+                          setSelectedEmployee(null);
+                        } else {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setDropdownPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                          setSelectedEmployee(employee.id);
+                        }
+                      }}
+                      className="p-1 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      aria-label="Opciones del empleado"
+                    >
+                      <EllipsisVerticalIcon className="w-4 h-4" />
+                    </button>
+                    {selectedEmployee === employee.id && dropdownPos && createPortal(
+                      <div
+                        style={{ position: 'fixed', top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }}
+                        className="w-52 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <EllipsisVerticalIcon className="w-4 h-4" />
-                      </button>
-                      {selectedEmployee === employee.id && (
-                        <div className="absolute right-0 z-10 w-52 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl">
-                          <div className="py-1">
-                            <Tooltip content="Ver perfil completo">
+                        <div className="py-1">
+                          <Tooltip content="Ver perfil completo">
+                            <button
+                              onClick={() => handleViewProfile(employee)}
+                              className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                              Ver Perfil
+                            </button>
+                          </Tooltip>
+                          {!isFired && (
+                            <Tooltip content="Editar información del empleado">
                               <button
-                                onClick={() => handleViewProfile(employee)}
+                                onClick={() => handleEmployeeAction('edit', employee.id)}
                                 className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                               >
-                                <EyeIcon className="w-4 h-4" />
-                                Ver Perfil
+                                <PencilIcon className="w-4 h-4" />
+                                Editar Información
                               </button>
                             </Tooltip>
-                            {!isFired && (
-                              <Tooltip content="Editar información del empleado">
+                          )}
+                          {!isFired && (
+                            <>
+                              <div className="border-t border-zinc-200 dark:border-zinc-700 mx-2 my-1" />
+                              <Tooltip content="Despedir empleado">
                                 <button
-                                  onClick={() => handleEmployeeAction('edit', employee.id)}
-                                  className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                  onClick={() => handleEmployeeAction('dismiss', employee.id)}
+                                  className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                                 >
-                                  <PencilIcon className="w-4 h-4" />
-                                  Editar Información
+                                  <NoSymbolIcon className="w-4 h-4" />
+                                  Despedir empleado
                                 </button>
                               </Tooltip>
-                            )}
-                            {!isFired && (
-                              <>
-                                <div className="border-t border-zinc-200 dark:border-zinc-700 mx-2 my-1" />
-                                <Tooltip content="Despedir empleado">
-                                  <button
-                                    onClick={() => handleEmployeeAction('dismiss', employee.id)}
-                                    className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                                  >
-                                    <NoSymbolIcon className="w-4 h-4" />
-                                    Despedir empleado
-                                  </button>
-                                </Tooltip>
-                              </>
-                            )}
-                          </div>
+                            </>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>,
+                      document.body
+                    )}
                   </td>
                 </tr>
               );
