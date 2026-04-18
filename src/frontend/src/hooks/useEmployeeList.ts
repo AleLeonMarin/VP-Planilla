@@ -334,12 +334,13 @@ const useEmployeeList = () => {
   /**
    * Añade un nuevo empleado (persistido en backend)
    */
-  const handleAddEmployee = async (employeeData: EmployeeFormData) => {
+  const handleAddEmployee = async (employeeData: EmployeeFormData): Promise<Employee | void> => {
     try {
       const created = await apiCreateEmployee(employeeData);
       const createdObj = created as RawEmployee;
       setRawEmployees((prev) => [...prev, createdObj]);
       invalidateCache('vp_employees_cache'); // so next mount re-fetches
+      return created;
     } catch (error) {
       console.error('Error creating employee', error);
       toast.error('No se pudo guardar el empleado. Revisa la consola para más detalles.');
