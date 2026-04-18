@@ -77,11 +77,11 @@
   - [x] 41-02-PLAN.md — ClockAliasService (CRUD + resolveEmployeeByAlias) + Controller + Route
   - [x] 41-03-PLAN.md — ClockLogsImportService updates (alias lookup + type inference) + route registration
   - [ ] 41-04-PLAN.md — Unit tests: ClockAliasService + ClockLogsImportService alias/inference coverage
-- [ ] Phase 42: Frontend — Gestión de Aliases de Marcas
+- [x] Phase 42: Frontend — Gestión de Aliases de Marcas
   **Goal:** Agregar en la ficha de cada empleado una sección para administrar sus aliases de reloj (crear, ver, eliminar), con validación de duplicados y feedback visual claro.
-  **Plans:** 2 plans
+  **Plans:** 2 plans (COMPLETE)
   - [x] 42-01-PLAN.md — clockAliasService + useClockAliases hook
-  - [ ] 42-02-PLAN.md — EditEmployeeModal alias section integration
+  - [x] 42-02-PLAN.md — EditEmployeeModal alias section integration
 
 <details>
 <summary>✅ v1.4 (Phases 24-31) — SHIPPED 2026-04-12</summary>

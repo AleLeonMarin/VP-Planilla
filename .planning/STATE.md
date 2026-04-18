@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-18T08:12:13Z"
-last_activity: 2026-04-18 -- Phase 42 Plan 01 completed
+last_updated: "2026-04-18T08:15:41Z"
+last_activity: 2026-04-18 -- Phase 42 Plan 02 completed
 progress:
   total_phases: 34
-  completed_phases: 29
+  completed_phases: 30
   total_plans: 87
-  completed_plans: 78
+  completed_plans: 79
   percent: 100
 ---
 
@@ -24,11 +24,11 @@ See: .planning/PROJECT.md (updated 2026-04-12)
 
 ## Current Position
 
-Milestone: v1.5 IN PROGRESS (Phase 41)
-Phase: 42 (frontend-gestion-aliases-marcas) — EXECUTING
-Plan: 2 of 2
-Status: Executing Phase 42
-Last activity: 2026-04-18 -- Plan 42-01 complete (clockAliasService + useClockAliases)
+Milestone: v1.5 IN PROGRESS
+Phase: 42 (frontend-gestion-aliases-marcas) — COMPLETE
+Plan: 2 of 2 (all complete)
+Status: Phase 42 complete
+Last activity: 2026-04-18 -- Plan 42-02 complete (alias chips UI in EditEmployeeModal)
 
 Progress: [██████████████████] 100% (40/40 phases)
 
@@ -47,6 +47,7 @@ Progress: [██████████████████] 100% (40/40 p
 | 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | ✅ Complete (2/2 plans) |
 | 40 | Fix 15 Remaining Test Failures | QUAL-03 | ✅ Complete (2/2 plans) |
 | 41 | Aliases de Marcas e Inferencia IN/OUT | ALIAS-01..04 | ✅ Complete (3/3 plans) |
+| 42 | Frontend: Gestión de Aliases de Marcas | REQ-42-01..04 | ✅ Complete (2/2 plans) |
 
 ## Milestone History
 
@@ -58,6 +59,18 @@ Progress: [██████████████████] 100% (40/40 p
 | v1.3 | Sistema de Marcas de Reloj Robusto | Archived | 326+ tests |
 | v1.4 | Stability and Integration Hardening | Archived | 441+ tests |
 | v1.5 | Gestión de Marcas y Planilla para Producción | 🚧 In Progress | 441+ tests |
+
+## Phase 42 - Frontend: Gestión de Aliases de Marcas (COMPLETED 2026-04-18)
+
+### Summary
+
+- **Plan 01**: Implemented `clockAliasService.ts` (HTTP service with ClockAlias interface) and `useClockAliases.ts` hook with fetchAliases/addAlias/removeAlias and optimistic delete.
+- **Plan 02**: Integrated alias management section into `EditEmployeeModal.tsx` — chips display with delete buttons, inline add input, loading/empty/error states, all wired to useClockAliases hook.
+
+### Decisions
+
+- `RawEmployeeData` interface extended with `id`/`employee_id` to pass employee identifier to alias hook
+- Alias hook destructures renamed (`aliasesLoading`, `aliasError`) to avoid shadowing form state variables
 
 ## Phase 34 - Frontend: Rediseño Clock Logs (Vista Agrupada) (COMPLETED 2026-04-15)
 
@@ -95,4 +108,4 @@ Progress: [██████████████████] 100% (40/40 p
 
 ---
 
-*Updated: 2026-04-15 — Plan 34-02 completed*
+*Updated: 2026-04-18 — Plan 42-02 completed (Phase 42 complete)*
