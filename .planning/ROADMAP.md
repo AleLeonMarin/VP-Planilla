@@ -73,8 +73,8 @@
 - [ ] Phase 41: Backend — Aliases de Marcas e Inferencia IN/OUT
   **Goal:** Implementar la tabla `vpg_clock_aliases` para que cada empleado tenga pseudónimos de reloj, y adaptar el proceso de importación para inferir el tipo IN/OUT por secuencia (impar=IN, par=OUT por empleado+día) cuando el archivo no trae tipo de marca.
   **Plans:** 4 plans
-  - [ ] 41-01-PLAN.md — Prisma schema migration (vpg_clock_aliases) + ClockAlias model interface + Zod schemas
-  - [ ] 41-02-PLAN.md — ClockAliasService (CRUD + resolveEmployeeByAlias) + Controller + Route
+  - [x] 41-01-PLAN.md — Prisma schema migration (vpg_clock_aliases) + ClockAlias model interface + Zod schemas
+  - [x] 41-02-PLAN.md — ClockAliasService (CRUD + resolveEmployeeByAlias) + Controller + Route
   - [ ] 41-03-PLAN.md — ClockLogsImportService updates (alias lookup + type inference) + route registration
   - [ ] 41-04-PLAN.md — Unit tests: ClockAliasService + ClockLogsImportService alias/inference coverage
 - [ ] Phase 42: Frontend — Gestión de Aliases de Marcas

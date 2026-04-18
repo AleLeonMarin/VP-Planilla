@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-17T23:54:08.296Z"
+last_updated: "2026-04-18T04:59:31.487Z"
 last_activity: 2026-04-17
 progress:
-  total_phases: 32
+  total_phases: 34
   completed_phases: 28
-  total_plans: 81
-  completed_plans: 74
+  total_plans: 85
+  completed_plans: 75
   percent: 100
 ---
 
@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 40 — Fix 15 Remaining Test Failures
+**Current focus:** Phase 41 — Aliases de Marcas e Inferencia IN/OUT
 
 ## Current Position
 
-Milestone: v1.5 COMPLETE (Phases 32-39)
-Phase: 40
-Plan: Not started
-Status: Ready to execute
+Milestone: v1.5 IN PROGRESS (Phase 41)
+Phase: 41
+Plan: 02 (COMPLETE)
+Status: Executed - ready for 41-03
 Last activity: 2026-04-17
 
-Progress: [██████████████████] 100% (39/39 phases)
+Progress: [██████████████████] 100% (40/40 phases)
 
 ## v1.5 Phase Map
 
@@ -45,7 +45,8 @@ Progress: [██████████████████] 100% (39/39 p
 | 37 | Frontend: Wizard de Planilla Quincenal | PAY-05..10 | ✅ Complete (5/5 plans) |
 | 38 | Tests Unitarios + Verificación de Integración | QUAL-03 | ✅ Complete (2/2 plans) |
 | 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | ✅ Complete (2/2 plans) |
-| 40 | Fix 15 Remaining Test Failures | QUAL-03 | [ ] Planned (0/1 plans) |
+| 40 | Fix 15 Remaining Test Failures | QUAL-03 | ✅ Complete (2/2 plans) |
+| 41 | Aliases de Marcas e Inferencia IN/OUT | ALIAS-01..04 | 🔄 In Progress (1/4 plans) |
 
 ## Milestone History
 
