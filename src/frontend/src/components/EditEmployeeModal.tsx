@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import dynamic from 'next/dynamic';
 import { employeeSchema, EmployeeSchemaType, EmployeeSchemaInputType } from '@/schemas/employee';
 import { Position } from '@/services/positionsService';
 import { Select, SelectItem } from '@/components/ui/Select';
+import { useClockAliases } from '@/hooks/useClockAliases';
 
 // Lazy-load framer-motion animation primitives
 const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), { ssr: false });
 const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), { ssr: false });
 
 interface RawEmployeeData {
+  id?: string | number;
+  employee_id?: string | number;
   employee_first_name?: string;
   name?: string;
   employee_middle_name?: string;
@@ -72,6 +75,20 @@ const { register, control, handleSubmit, formState: { errors, isSubmitting }, re
       employee_required_hours_biweekly: '',
     }
   });
+
+  // Alias management
+  const employeeId = employeeData?.id ?? employeeData?.employee_id ?? '';
+  const [newAlias, setNewAlias] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const { aliases, isLoading: aliasesLoading, error: aliasError, addAlias, removeAlias } = useClockAliases(employeeId);
+
+  const handleAddAlias = useCallback(async () => {
+    if (!newAlias.trim()) return;
+    setIsAdding(true);
+    const success = await addAlias(newAlias);
+    setIsAdding(false);
+    if (success) setNewAlias('');
+  }, [newAlias, addAlias]);
 
   // Track if we've initialized form for current employee
   const initializedRef = useRef<string>('');
