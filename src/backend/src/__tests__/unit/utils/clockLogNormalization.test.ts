@@ -1,4 +1,4 @@
-import { normalizeLogType, isValidCanonicalType } from '../../../utils/clockLogNormalization';
+import { normalizeLogType, isValidCanonicalType, inferLogTypeBySequence } from '../../../utils/clockLogNormalization';
 
 describe('clockLogNormalization', () => {
   describe('normalizeLogType', () => {
@@ -87,6 +87,78 @@ describe('clockLogNormalization', () => {
     it('should return false for arbitrary strings', () => {
       expect(isValidCanonicalType('unknown')).toBe(false);
       expect(isValidCanonicalType('')).toBe(false);
+    });
+  });
+
+  describe('inferLogTypeBySequence', () => {
+    it('should return empty array for empty input', () => {
+      expect(inferLogTypeBySequence([])).toEqual([]);
+    });
+
+    it('should assign IN to single row per employee+day', () => {
+      const row = { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') };
+      const result = inferLogTypeBySequence([row]);
+      expect(result[0].log_type).toBe('IN');
+    });
+
+    it('should assign IN then OUT for two rows same employee+day', () => {
+      const rows = [
+        { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') },
+        { employee_id: 1, timestamp: new Date('2026-04-01T17:00:00Z') },
+      ];
+      const result = inferLogTypeBySequence(rows);
+      expect(result.find(r => r.timestamp.toISOString() === '2026-04-01T08:00:00.000Z')?.log_type).toBe('IN');
+      expect(result.find(r => r.timestamp.toISOString() === '2026-04-01T17:00:00.000Z')?.log_type).toBe('OUT');
+    });
+
+    it('should assign IN, OUT, IN for three rows same employee+day', () => {
+      const rows = [
+        { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') },
+        { employee_id: 1, timestamp: new Date('2026-04-01T12:00:00Z') },
+        { employee_id: 1, timestamp: new Date('2026-04-01T13:00:00Z') },
+      ];
+      const result = inferLogTypeBySequence(rows);
+      const sorted = result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      expect(sorted[0].log_type).toBe('IN');
+      expect(sorted[1].log_type).toBe('OUT');
+      expect(sorted[2].log_type).toBe('IN');
+    });
+
+    it('should handle two employees independently', () => {
+      const rows = [
+        { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') },
+        { employee_id: 1, timestamp: new Date('2026-04-01T17:00:00Z') },
+        { employee_id: 2, timestamp: new Date('2026-04-01T09:00:00Z') },
+        { employee_id: 2, timestamp: new Date('2026-04-01T18:00:00Z') },
+      ];
+      const result = inferLogTypeBySequence(rows);
+      const emp1 = result.filter(r => r.employee_id === 1).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      const emp2 = result.filter(r => r.employee_id === 2).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      expect(emp1[0].log_type).toBe('IN');
+      expect(emp1[1].log_type).toBe('OUT');
+      expect(emp2[0].log_type).toBe('IN');
+      expect(emp2[1].log_type).toBe('OUT');
+    });
+
+    it('should treat different dates for same employee independently', () => {
+      const rows = [
+        { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') },
+        { employee_id: 1, timestamp: new Date('2026-04-02T08:00:00Z') },
+      ];
+      const result = inferLogTypeBySequence(rows);
+      expect(result.every(r => r.log_type === 'IN')).toBe(true);
+    });
+
+    it('should sort by timestamp before assigning (handles reverse input)', () => {
+      const rows = [
+        { employee_id: 1, timestamp: new Date('2026-04-01T17:00:00Z') }, // arrives first but later time
+        { employee_id: 1, timestamp: new Date('2026-04-01T08:00:00Z') }, // earlier time → should be IN
+      ];
+      const result = inferLogTypeBySequence(rows);
+      const early = result.find(r => r.timestamp.toISOString() === '2026-04-01T08:00:00.000Z');
+      const late = result.find(r => r.timestamp.toISOString() === '2026-04-01T17:00:00.000Z');
+      expect(early?.log_type).toBe('IN');
+      expect(late?.log_type).toBe('OUT');
     });
   });
 });

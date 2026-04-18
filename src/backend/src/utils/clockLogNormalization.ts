@@ -44,3 +44,65 @@ export function normalizeLogType(value: string): CanonicalLogType {
 export function isValidCanonicalType(value: string): value is CanonicalLogType {
   return value === 'IN' || value === 'OUT';
 }
+
+/**
+ * InferLogTypeRow - Input row for type inference (without log_type).
+ */
+export type InferLogTypeRow = {
+  employee_id: number;
+  timestamp: Date;
+  remarks?: string | null;
+};
+
+/**
+ * InferLogTypeResult - Row with inferred log_type.
+ */
+export type InferLogTypeResult = {
+  employee_id: number;
+  timestamp: Date;
+  log_type: CanonicalLogType;
+  remarks?: string | null;
+};
+
+/**
+ * Infers IN/OUT log type by sequence when clock file does not provide type.
+ * Groups rows by (employee_id, UTC date), sorts each group by timestamp ascending,
+ * then assigns alternately: index 0 -> IN, index 1 -> OUT, index 2 -> IN, etc.
+ *
+ * @param rows - Array of resolved rows without log_type
+ * @returns Same rows with log_type inferred as 'IN' | 'OUT'
+ */
+export function inferLogTypeBySequence(
+  rows: InferLogTypeRow[]
+): InferLogTypeResult[] {
+  if (rows.length === 0) return [];
+
+  // Group by (employee_id, YYYY-MM-DD UTC date)
+  const grouped = new Map<string, InferLogTypeRow[]>();
+
+  for (const row of rows) {
+    const dateStr = row.timestamp.toISOString().split('T')[0];
+    const key = `${row.employee_id}|${dateStr}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key)!.push(row);
+  }
+
+  const result: InferLogTypeResult[] = [];
+
+  for (const group of grouped.values()) {
+    // Sort ascending by timestamp within each group
+    group.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    for (let i = 0; i < group.length; i++) {
+      result.push({
+        employee_id: group[i].employee_id,
+        timestamp: group[i].timestamp,
+        log_type: i % 2 === 0 ? 'IN' : 'OUT',
+        remarks: group[i].remarks,
+      });
+    }
+  }
+
+  return result;
+}
