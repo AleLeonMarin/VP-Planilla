@@ -88,6 +88,12 @@
   - [x] 43-01-PLAN.md — [Wave 1] Sidebar + MiniCalendar + EventFilters + page layout rebuild
   - [x] 43-02-PLAN.md — [Wave 1] Calendar restyle + EventPopover + month-only + event type colors
   - [x] 43-03-PLAN.md — [Wave 2] Modal redesign + ghost preview + empty state + visual checkpoint
+- [ ] Phase 44: Core — Motor de Feriados Globales Configurables
+  **Goal:** Migrar el manejo de feriados a un modelo de base de datos donde el cliente configure qué días aplican pago obligatorio y pago triple de horas extra, integrándolo al motor matemático de planillas.
+  **Plans:** 3 plans (READY)
+  - [ ] 44-01-PLAN.md — Schema Prisma & Backend CRUD para CompanyHolidays
+  - [ ] 44-02-PLAN.md — Actualización del motor matemático (payrollUtils.ts) para nómina
+  - [ ] 44-03-PLAN.md — Frontend: UI Administrativa y sincronización del calendario
 
 <details>
 <summary>✅ v1.4 (Phases 24-31) — SHIPPED 2026-04-12</summary>
