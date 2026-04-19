@@ -94,6 +94,14 @@
   - [ ] 44-01-PLAN.md — Schema Prisma & Backend CRUD para CompanyHolidays
   - [ ] 44-02-PLAN.md — Actualización del motor matemático (payrollUtils.ts) para nómina
   - [ ] 44-03-PLAN.md — Frontend: UI Administrativa y sincronización del calendario
+- [ ] Phase 45: Frontend — Rediseño del Perfil de Empleado
+  **Goal:** Restructuración completa de la vista "Ver Perfil" de Empleado (/pages/employee/list) para presentar de forma consolidada estado, labor, salario, marcas, eventos y documentos.
+  **Plans:** 4 plans
+  - [ ] 45-01-PLAN.md — Enrutamiento y Base del Perfil (Tabs)
+  - [ ] 45-02-PLAN.md — Tab "Resumen" (Widgets Consolidados)
+  - [ ] 45-03-PLAN.md — Integración de Modals y Acciones Completas
+  - [ ] 45-04-PLAN.md — Conexión con Tabla Principal (EmployeeTable.tsx)
+
 
 <details>
 <summary>✅ v1.4 (Phases 24-31) — SHIPPED 2026-04-12</summary>

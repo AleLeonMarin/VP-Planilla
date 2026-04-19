@@ -85,7 +85,8 @@ export class EmployeeService {
      */
     static async getEmployeeById(id: number): Promise<Employee | null> {
         const prismaEmployee = await prisma.vpg_employees.findUnique({
-            where: { employee_id: id }
+            where: { employee_id: id },
+            include: { vpg_positions: true }
         });
         
         if (!prismaEmployee) {
@@ -97,6 +98,7 @@ export class EmployeeService {
         const employee: Employee = {
             id: prismaEmployee.employee_id,
             name: fullName,
+            first_name: prismaEmployee.employee_first_name,
             last_name: prismaEmployee.employee_last_name,
             middle_name: prismaEmployee.employee_middle_name,
             national_id: prismaEmployee.employee_national_id,
@@ -104,12 +106,15 @@ export class EmployeeService {
             email: prismaEmployee.employee_email,
             phone: prismaEmployee.employee_phone ?? null,
             hire_date: prismaEmployee.employee_hire_date,
+            exit_date: prismaEmployee.employee_exit_date ?? null,
             fired: prismaEmployee.employee_fired,
             gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
-            position_id: prismaEmployee.employee_position_id
+            position_id: prismaEmployee.employee_position_id,
+            position_name: prismaEmployee.vpg_positions?.position_name ?? null,
+            position_base_salary: prismaEmployee.vpg_positions?.position_base_salary ? Number(prismaEmployee.vpg_positions.position_base_salary) : null,
         };
 
         return employee;

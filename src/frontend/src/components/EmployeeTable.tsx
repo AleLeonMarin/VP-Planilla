@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 
 const EMPLOYEE_TABLE_CELL_CLASS = 'px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors select-none';
 const EMPLOYEE_TD_FIRED_CLASS = 'text-red-400 line-through';
@@ -16,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Employee } from '@/types';
 import { formatSalary } from '@/utils/employeeUtils';
-import EmployeeProfileModal from './EmployeeProfileModal';
+
 import useEmployeeTable from '@/hooks/useEmployeeTable';
 import { Tooltip } from '@/components/ui/Tooltip';
 
@@ -40,17 +41,13 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   showFiredEmployees,
   onToggleFiredEmployees
 }) => {
+  const router = useRouter();
   const {
     filterOpen,
     setFilterOpen,
     selectedEmployee,
     setSelectedEmployee,
-    showProfileModal,
-    selectedEmployeeData,
     getStatusBadge,
-    handleViewProfile,
-    closeProfileModal,
-    getEmployeeProfileData
   } = useEmployeeTable();
 
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
@@ -132,11 +129,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
   return (
     <>
-      <EmployeeProfileModal 
-        isOpen={showProfileModal} 
-        onClose={closeProfileModal}
-        employeeData={getEmployeeProfileData(selectedEmployeeData) as Parameters<typeof EmployeeProfileModal>[0]['employeeData']}
-      />
 
       <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
         <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
@@ -286,7 +278,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         <div className="py-1">
                           <Tooltip content="Ver perfil completo">
                             <button
-                              onClick={() => handleViewProfile(employee)}
+                              onClick={() => {
+                                setSelectedEmployee(null);
+                                router.push(`/pages/employee/${employee.id}`);
+                              }}
                               className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                             >
                               <EyeIcon className="w-4 h-4" />
