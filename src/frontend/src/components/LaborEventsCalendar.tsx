@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, EventClickArg, DateSelectArg, EventDropArg } from '@fullcalendar/core';
 import { EventResizeDoneArg } from '@fullcalendar/interaction';
@@ -20,12 +19,8 @@ const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
 import { EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 import { Employee } from '@/types/employee';
 import { useModal } from '@/hooks/useModal';
+import EventPopover from '@/components/EventPopover';
 import '@/styles/calendar.css';
-import {
-  EyeIcon,
-  PencilIcon,
-  TrashIcon
-} from '@heroicons/react/24/outline';
 
 // Helper: parse backend date strings into local Date objects
 function parseBackendDateToLocal(dateStr?: string | null): Date | undefined {
@@ -45,10 +40,22 @@ function parseBackendDateToLocal(dateStr?: string | null): Date | undefined {
   }
 }
 
-function getStatusClass(status?: string): string {
-  if (status === 'completed') return 'status-completed';
-  if (status === 'cancelled') return 'status-inactive';
-  return 'status-active';
+// Determinar clase CSS por tipo de evento
+function getEventTypeClass(eventName?: string): string {
+  const name = (eventName || '').toLowerCase();
+  if (name.includes('vacacion')) return 'event-type-vacaciones';
+  if (name.includes('incapacidad')) return 'event-type-incapacidad';
+  if (name.includes('permiso')) return 'event-type-permiso';
+  if (name.includes('libre')) return 'event-type-dia-libre';
+  if (name.includes('suspensi')) return 'event-type-suspension';
+  return 'event-type-otro';
+}
+
+// Determinar clase CSS por status (badge dot)
+function getStatusBadgeClass(status?: string): string {
+  if (status === 'completed') return 'status-badge-completed';
+  if (status === 'cancelled') return 'status-badge-cancelled';
+  return 'status-badge-active';
 }
 
 function resolveEventDate(dateValue: string | Date | null | undefined): Date | undefined {
@@ -80,7 +87,7 @@ function toCalendarEvent(event: EmployeeLaborEvent, employees: Employee[]): Even
     end: endDate || undefined,
     allDay: isAllDay,
     textColor: '#FFFFFF',
-    classNames: [getStatusClass(event.status)],
+    classNames: [getEventTypeClass(event.labor_event_name), getStatusBadgeClass(event.status)],
     extendedProps: { ...event },
   };
 }
@@ -97,6 +104,7 @@ interface Props {
   preview?: Partial<EmployeeLaborEvent> | null;
   updateEvent?: (id: number, data: Partial<LaborEventFormData>) => Promise<{ success: boolean }>;
   onPreviewChange?: (preview: Partial<EmployeeLaborEvent> | null) => void;
+  navigateToDate?: Date;
 }
 
 const LaborEventsCalendar: React.FC<Props> = ({ 
@@ -110,17 +118,21 @@ const LaborEventsCalendar: React.FC<Props> = ({
   deleteAssignment, 
   preview,
   updateEvent,
+  navigateToDate,
 }) => {
   const { showError } = useModal();
-  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | null>(null);
-  const menuOpenedAtRef = React.useRef<number | null>(null);
   const [calendarKey, setCalendarKey] = useState(0);
 
-  // Force calendar re-render when events change
-  React.useEffect(() => {
+  // Estado del popover de acciones
+  const [popoverEvent, setPopoverEvent] = useState<{
+    event: EmployeeLaborEvent;
+    anchor: { x: number; y: number };
+  } | null>(null);
+
+  // Force calendar re-render when events or navigation date change
+  useEffect(() => {
     setCalendarKey(prev => prev + 1);
-  }, [events.length, employees.length]); // Only trigger when the count changes, not the full arrays
+  }, [events.length, employees.length, navigateToDate?.getTime()]);
 
   const getPreviewEvent = (): EventInput | null => {
     if (!preview) return null;
@@ -134,14 +146,15 @@ const LaborEventsCalendar: React.FC<Props> = ({
 
     return {
       id: 'preview',
-      title: `${title} - ${empName}`,
+      title: `🔍 Vista previa: ${title} - ${empName}`,
       start,
       end: end || undefined,
       allDay: false,
       backgroundColor: '#F59E0B',
       borderColor: '#D97706',
       textColor: '#FFFFFF',
-      classNames: ['status-preview'],
+      classNames: ['status-preview', 'event-preview-ghost'],
+      editable: false,
       extendedProps: { ...preview, __isPreview: true }
     } as EventInput;
   };
@@ -153,30 +166,6 @@ const LaborEventsCalendar: React.FC<Props> = ({
     calendarEvents.push(previewEvent);
   }
 
-  const openMenuForEvent = (ev: { id: string | number }, clientX: number, clientY: number) => {
-    const eventObj = events.find(e => String(e.id) === String(ev.id));
-    setSelectedEvent(eventObj || null);
-    setAnchor({ x: clientX, y: clientY });
-    menuOpenedAtRef.current = Date.now();
-  };
-
-  const closeMenu = () => {
-    setAnchor(null);
-    setSelectedEvent(null);
-    menuOpenedAtRef.current = null;
-  };
-
-  const handleDeleteClick = async () => {
-    if (!selectedEvent) return;
-    try {
-      await deleteAssignment(selectedEvent.id);
-      await refreshEvents();
-      closeMenu();
-    } catch {
-      showError('Error', 'No se pudo eliminar la asignación');
-    }
-  };
-
   const handleEventClick = (info: EventClickArg) => {
     const jsEvent = info.jsEvent;
     if (jsEvent) {
@@ -186,26 +175,14 @@ const LaborEventsCalendar: React.FC<Props> = ({
     }
 
     const event = events.find(e => String(e.id) === info.event.id);
-    if (event && onEventClick) {
-      onEventClick(event);
+    if (event) {
+      const rect = info.el.getBoundingClientRect();
+      setPopoverEvent({
+        event,
+        anchor: { x: rect.right + 8, y: rect.top }
+      });
     }
   };
-
-  // Close menu on outside click
-  React.useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (!anchor) return;
-      if (menuOpenedAtRef.current && Date.now() - menuOpenedAtRef.current < 300) return;
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-      const menu = document.querySelector('.laborevent-options-menu');
-      if (menu && !menu.contains(target)) {
-        closeMenu();
-      }
-    };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [anchor]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     if (onDateSelect) {
@@ -253,17 +230,14 @@ const LaborEventsCalendar: React.FC<Props> = ({
     try {
       if (!onVisibleRangeChange) return;
 
-      // Use view.currentStart/currentEnd to get the logical visible range of the current view
       const view = arg.view as typeof arg.view & { currentStart?: Date; currentEnd?: Date };
       const rawStart = view?.currentStart ?? arg.start;
       const rawEnd = view?.currentEnd ?? arg.end;
 
       if (rawStart && rawEnd) {
-        // Normalize to day boundaries to avoid off-by-one month issues
         const start = new Date(rawStart);
         start.setHours(0,0,0,0);
         const end = new Date(rawEnd);
-        // FullCalendar's currentEnd is typically exclusive; subtract 1ms to make it inclusive
         end.setMilliseconds(end.getMilliseconds() - 1);
         onVisibleRangeChange(start, end);
       }
@@ -271,7 +245,7 @@ const LaborEventsCalendar: React.FC<Props> = ({
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-96 text-[#8B8B8B] dark:text-zinc-500">Cargando eventos...</div>;
+    return <div className="flex items-center justify-center h-96 text-zinc-400 dark:text-zinc-500">Cargando eventos...</div>;
   }
 
   return (
@@ -279,12 +253,13 @@ const LaborEventsCalendar: React.FC<Props> = ({
       <div className="calendar-container h-full">
         <FullCalendar
           key={calendarKey}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
+          initialDate={navigateToDate || undefined}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            right: ''
           }}
           events={calendarEvents}
           timeZone="local"
@@ -295,15 +270,13 @@ const LaborEventsCalendar: React.FC<Props> = ({
           eventResize={handleEventResize}
           eventDrop={handleEventDrop}
           eventDidMount={(info) => {
-            try {
-              info.el.addEventListener('contextmenu', (e: MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  openMenuForEvent({ id: info.event.id }, e.clientX || 0, e.clientY || 0);
-                } catch {}
-              });
-            } catch {}
+            // Agregar etiqueta "Vista previa" a eventos preview
+            if (info.event.extendedProps.__isPreview) {
+              const label = document.createElement('span');
+              label.className = 'preview-label';
+              label.textContent = 'Vista previa';
+              info.el.prepend(label);
+            }
           }}
           eventClick={handleEventClick}
           select={handleDateSelect}
@@ -318,37 +291,25 @@ const LaborEventsCalendar: React.FC<Props> = ({
           eventDisplay="block"
         />
 
-        {/* Options popover */}
-        {anchor && selectedEvent && (
-          <div
-            style={{ position: 'fixed', left: anchor.x, top: anchor.y, transform: 'translate(6px, 6px)', zIndex: 1000 }}
-            className="laborevent-options-menu w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg"
-          >
-            <div className="py-1">
-              <button
-                onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-zinc-700 transition-colors"
-              >
-                <EyeIcon className="w-4 h-4" />
-                Ver Detalles
-              </button>
-              <button
-                onClick={() => { if (selectedEvent) onEventClick?.(selectedEvent); closeMenu(); }}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-zinc-700 dark:text-white hover:bg-[#F5F1E8] dark:hover:bg-zinc-700 transition-colors"
-              >
-                <PencilIcon className="w-4 h-4" />
-                Editar Evento
-              </button>
-              <div className="border-t border-zinc-200 dark:border-zinc-700 mx-2 my-1"></div>
-              <button
-                onClick={handleDeleteClick}
-                className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <TrashIcon className="w-4 h-4" />
-                Eliminar
-              </button>
-            </div>
-          </div>
+        {/* Click popover de acciones */}
+        {popoverEvent && (
+          <EventPopover
+            event={popoverEvent.event}
+            anchor={popoverEvent.anchor}
+            employeeName={employees.find(e => String(e.id) === String(popoverEvent.event.employee_id))?.name || 'Empleado'}
+            onView={() => { onEventClick?.(popoverEvent.event); setPopoverEvent(null); }}
+            onEdit={() => { onEventClick?.(popoverEvent.event); setPopoverEvent(null); }}
+            onDelete={async () => {
+              try {
+                await deleteAssignment(popoverEvent.event.id);
+                await refreshEvents();
+                setPopoverEvent(null);
+              } catch {
+                showError('Error', 'No se pudo eliminar la asignación');
+              }
+            }}
+            onClose={() => setPopoverEvent(null)}
+          />
         )}
       </div>
     </div>
