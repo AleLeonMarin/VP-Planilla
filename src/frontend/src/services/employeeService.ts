@@ -31,6 +31,8 @@ export const createEmployee = async (employeeData: EmployeeFormData): Promise<Em
     employee_email: employeeData.employee_email,
     employee_position_id: typeof positionId === 'number' && !Number.isNaN(positionId) ? positionId : null,
     employee_hire_date: hireDate ? hireDate.toISOString() : null,
+    employee_phone: employeeData.employee_phone || null,
+    employee_gender: employeeData.employee_gender || null,
     employee_required_hours_biweekly: requiredHours && !Number.isNaN(requiredHours) ? requiredHours : null,
     employee_status: 'A'
   };

@@ -36,6 +36,8 @@ export class EmployeeService {
             employee_national_id: data.national_id,
             employee_social_code: socialCode,
             employee_email: data.email,
+            employee_phone: data.phone ?? null,
+            employee_gender: data.gender ?? null,
             employee_hire_date: hireDate,
             employee_exit_date: null,
             employee_fired: false,

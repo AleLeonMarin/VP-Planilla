@@ -23,6 +23,8 @@ export class EmployeeController {
       email: rawData.employee_email || rawData.email,
       position_id: rawData.employee_position_id || rawData.position_id,
       hire_date: rawData.employee_hire_date || rawData.hire_date,
+      phone: rawData.employee_phone ?? rawData.phone ?? null,
+      gender: rawData.employee_gender ?? rawData.gender ?? null,
       required_hours_biweekly: rawData.employee_required_hours_biweekly || rawData.required_hours_biweekly || null,
       status: rawData.employee_status || rawData.status || 'active'
     };
