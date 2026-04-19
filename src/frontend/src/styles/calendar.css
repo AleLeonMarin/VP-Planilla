@@ -208,10 +208,17 @@
   background-color: transparent !important;
   border: 1px solid #10B981 !important; /* emerald-500 */
   border-left: 4px solid #10B981 !important;
+}
+
+.calendar-container .fc-event.event-type-feriado-no-obligatorio .fc-event-title {
   color: #047857 !important; /* emerald-700 */
 }
+
 :is(.dark) .calendar-container .fc-event.event-type-feriado-no-obligatorio {
   border-color: #059669 !important;
+}
+
+:is(.dark) .calendar-container .fc-event.event-type-feriado-no-obligatorio .fc-event-title {
   color: #34D399 !important; /* emerald-400 */
 }
 

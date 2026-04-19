@@ -14,9 +14,10 @@ import { getCostaRicaHolidays } from '@/utils/holidays';
 interface HolidaysManagementModalProps {
   open: boolean;
   onClose: () => void;
+  editHoliday?: CompanyHoliday | null;
 }
 
-export default function HolidaysManagementModal({ open, onClose }: HolidaysManagementModalProps) {
+export default function HolidaysManagementModal({ open, onClose, editHoliday }: HolidaysManagementModalProps) {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const { data, isLoading, error, refetch, create, createMany, update, remove } = useHolidays(selectedYear);
@@ -25,6 +26,12 @@ export default function HolidaysManagementModal({ open, onClose }: HolidaysManag
   const [editing, setEditing] = useState<CompanyHoliday | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState<CompanyHoliday | null>(null);
+
+  React.useEffect(() => {
+    if (open && editHoliday && !formOpen) {
+      openEdit(editHoliday);
+    }
+  }, [open, editHoliday]);
 
   if (!open) return null;
 

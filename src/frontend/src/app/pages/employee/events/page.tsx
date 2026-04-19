@@ -18,6 +18,7 @@ const LaborEventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EmployeeLaborEvent | undefined>();
   const [showEventModal, setShowEventModal] = useState(false);
   const [showHolidaysModal, setShowHolidaysModal] = useState(false);
+  const [editingHoliday, setEditingHoliday] = useState<import('@/services/holidaysService').CompanyHoliday | null>(null);
   const [previewEvent, setPreviewEvent] = useState<Partial<EmployeeLaborEvent> | null>(null);
   const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
   const { events, isLoading, error, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
@@ -145,8 +146,7 @@ const LaborEventsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <StatsCards stats={eventsStatsData} />
+
 
         {/* Loading skeleton */}
         {isLoading && (
@@ -215,11 +215,18 @@ const LaborEventsPage: React.FC = () => {
                     onPreviewChange={setPreviewEvent}
                     navigateToDate={selectedDate}
                     dbHolidays={dbHolidays || []}
+                    onEditHoliday={(holiday) => {
+                      setEditingHoliday(holiday);
+                      setShowHolidaysModal(true);
+                    }}
                   />
               </div>
             </section>
           </div>
         )}
+        <div className="mt-2 mb-4">
+          <StatsCards stats={eventsStatsData} />
+        </div>
       </div>
 
       <LaborEventModal
@@ -239,8 +246,10 @@ const LaborEventsPage: React.FC = () => {
 
       <HolidaysManagementModal
         open={showHolidaysModal}
+        editHoliday={editingHoliday}
         onClose={() => {
           setShowHolidaysModal(false);
+          setEditingHoliday(null);
           refetchHolidays();
         }}
       />

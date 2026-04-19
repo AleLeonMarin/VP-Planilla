@@ -21,6 +21,8 @@ import { Employee } from '@/types/employee';
 import { useModal } from '@/hooks/useModal';
 import EventPopover from '@/components/EventPopover';
 import '@/styles/calendar.css';
+import { toast } from 'sonner';
+import { CompanyHoliday } from '@/services/holidaysService';
 
 // Helper: parse backend date strings into local Date objects
 function parseBackendDateToLocal(dateStr?: string | null): Date | undefined {
@@ -106,6 +108,7 @@ interface Props {
   onPreviewChange?: (preview: Partial<EmployeeLaborEvent> | null) => void;
   navigateToDate?: Date;
   dbHolidays?: any[]; // using any[] to avoid circular CompanyHoliday type dependency or we can import it
+  onEditHoliday?: (holiday: any) => void;
 }
 
 const LaborEventsCalendar: React.FC<Props> = ({ 
@@ -121,6 +124,7 @@ const LaborEventsCalendar: React.FC<Props> = ({
   updateEvent,
   navigateToDate,
   dbHolidays,
+  onEditHoliday,
 }) => {
   const { showError } = useModal();
   const [calendarKey, setCalendarKey] = useState(0);
@@ -193,7 +197,15 @@ const LaborEventsCalendar: React.FC<Props> = ({
       if (jsEvent.button === 2) return;
     }
 
-    if (info.event.extendedProps.isHoliday || info.event.extendedProps.__isPreview) {
+    if (info.event.extendedProps.isHoliday) {
+      const h = info.event.extendedProps.holidayDetails;
+      if (h && onEditHoliday) {
+        onEditHoliday(h);
+      }
+      return;
+    }
+
+    if (info.event.extendedProps.__isPreview) {
       return;
     }
 
@@ -293,6 +305,15 @@ const LaborEventsCalendar: React.FC<Props> = ({
           eventResize={handleEventResize}
           eventDrop={handleEventDrop}
           eventDidMount={(info) => {
+            // Tooltip nativo para feriados
+            if (info.event.extendedProps.isHoliday) {
+              const h = info.event.extendedProps.holidayDetails as CompanyHoliday | undefined;
+              if (h) {
+                const tipo = h.company_holidays_is_mandatory ? 'Pago Obligatorio' : 'No Obligatorio';
+                info.el.setAttribute('title', `${h.company_holidays_name} (${tipo}) - Clic para ver detalles`);
+              }
+            }
+
             // Agregar etiqueta "Vista previa" a eventos preview
             if (info.event.extendedProps.__isPreview) {
               const label = document.createElement('span');
