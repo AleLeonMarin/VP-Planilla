@@ -25,6 +25,7 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyHoliday | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [generateConfirmOpen, setGenerateConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState<CompanyHoliday | null>(null);
 
   React.useEffect(() => {
@@ -41,10 +42,25 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
   };
 
   const openEdit = (holiday: CompanyHoliday & { id?: string | number }) => {
+    // Prevent timezone shift by strictly rendering the YYYY-MM-DD local part of the date, 
+    // or properly parsing backend date to YYYY-MM-DD
+    let formattedDate = '';
+    try {
+      const d = new Date(holiday.company_holidays_date);
+      const isUTCMidnight = holiday.company_holidays_date.endsWith('T00:00:00.000Z') || holiday.company_holidays_date.endsWith('T00:00:00Z');
+      
+      const dd = String(isUTCMidnight ? d.getUTCDate() : d.getDate()).padStart(2, '0');
+      const mm = String((isUTCMidnight ? d.getUTCMonth() : d.getMonth()) + 1).padStart(2, '0');
+      const yy = String(isUTCMidnight ? d.getUTCFullYear() : d.getFullYear());
+      formattedDate = `${yy}-${mm}-${dd}`;
+    } catch {
+      formattedDate = new Date().toISOString().split('T')[0];
+    }
+
     setEditing({
       ...holiday,
-      company_holidays_date: new Date(holiday.company_holidays_date).toISOString().split('T')[0]
-    } as unknown as CompanyHoliday); // Format date for input type=date
+      company_holidays_date: formattedDate
+    } as unknown as CompanyHoliday);
     setFormOpen(true);
   };
 
@@ -55,9 +71,13 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
 
   const handleSubmit = async (values: Partial<CompanyHoliday>) => {
     try {
+      // Force midnight local by splitting from native YYYY-MM-DD string
+      const [y, m, d] = (values.company_holidays_date as string).split('-').map(Number);
+      const localDate = new Date(y, m - 1, d, 0, 0, 0);
+
       const payload = {
         ...values,
-        company_holidays_date: new Date(values.company_holidays_date as string).toISOString(),
+        company_holidays_date: localDate.toISOString(),
       };
       
       if (editing) {
@@ -88,11 +108,15 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
 
   const handleGenerateDefaults = async () => {
     if (data && data.length > 0) {
-      if (!window.confirm(`Ya existen ${data.length} feriados registrados para ${selectedYear}. ¿Desea generar los faltantes?`)) {
-        return;
-      }
+      setGenerateConfirmOpen(true);
+      return;
     }
     
+    await executeGenerateDefaults();
+  };
+
+  const executeGenerateDefaults = async () => {
+    setGenerateConfirmOpen(false);
     try {
       const defaultHolidays = getCostaRicaHolidays(selectedYear);
       // Construct payload skipping duplicates by exact name to avoid timezone issues
@@ -121,7 +145,17 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
     { 
       key: 'company_holidays_date', 
       title: 'Fecha', 
-      render: (r: CompanyHoliday & { id?: string | number }) => new Date(r.company_holidays_date).toLocaleDateString('es-CR', { timeZone: 'UTC' }) 
+      render: (r: CompanyHoliday & { id?: string | number }) => {
+        // Formato dd/mm/yy
+        // Extraemos partes usando timezone local por si la creación compensó mal el offset
+        const d = new Date(r.company_holidays_date);
+        // Ajuste defensivo: al ser creado con type="date" puede venir como Midnight UTC.
+        // Convertirlo forzado sumándole un offset si se lee mal, o simplemente usar UTC date
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const yy = String(d.getUTCFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
+      }
     },
     { key: 'company_holidays_name', title: 'Nombre' },
     { 
@@ -230,6 +264,7 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
               <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Fecha del Feriado</label>
               <input 
                 type="date"
+                lang="es-CR"
                 {...methods.register('company_holidays_date', { required: true })} 
                 className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 min-w-[200px]" 
               />
@@ -270,6 +305,14 @@ export default function HolidaysManagementModal({ open, onClose, editHoliday }: 
         description={`¿Confirma eliminar el feriado "${toDelete?.company_holidays_name}"? Esto afectará los cálculos de nómina en su fecha correspondiente.`} 
         onCancel={() => setConfirmOpen(false)} 
         onConfirm={handleConfirmDelete} 
+      />
+
+      <ConfirmDialog 
+        open={generateConfirmOpen} 
+        title="Generar Feriados" 
+        description={`Ya existen ${data?.length || 0} feriados registrados para ${selectedYear}. ¿Desea autogenerar los feriados de ley faltantes?`} 
+        onCancel={() => setGenerateConfirmOpen(false)} 
+        onConfirm={executeGenerateDefaults} 
       />
     </div>
   );

@@ -52,14 +52,13 @@ export function getCostaRicaHolidays(year: number): Holiday[] {
     { date: viernesSanto, name: 'Viernes Santo', isMandatoryPay: true },
     { date: new Date(year, 3, 11), name: 'Día de Juan Santamaría', isMandatoryPay: true }, // 11 Abril
     { date: new Date(year, 4, 1), name: 'Día del Trabajador', isMandatoryPay: true }, // 1 Mayo
-    { date: new Date(year, 6, 25), name: 'Anexión del Partido de Nicoya', isMandatoryPay: true }, // 25 Julio
+    { date: new Date(year, 6, 25), name: 'Día de la Anexión de Guanacaste', isMandatoryPay: true }, // 25 Julio
     { date: new Date(year, 7, 15), name: 'Día de la Madre', isMandatoryPay: true }, // 15 Agosto
     { date: new Date(year, 8, 15), name: 'Día de la Independencia', isMandatoryPay: true }, // 15 Septiembre
     { date: new Date(year, 11, 25), name: 'Navidad', isMandatoryPay: true }, // 25 Diciembre
 
     // Feriados de Pago No Obligatorio
-    { date: new Date(year, 7, 2), name: 'Día de la Virgen de los Ángeles', isMandatoryPay: false }, // 2 Agosto
-    { date: new Date(year, 7, 31), name: 'Día de la Persona Negra y Cultura Afrocostarricense', isMandatoryPay: false }, // 31 Agosto
-    { date: new Date(year, 11, 1), name: 'Día de la Abolición del Ejército', isMandatoryPay: false }, // 1 Diciembre
+    { date: new Date(year, 7, 2), name: 'Día de la Virgen de los Angeles', isMandatoryPay: false }, // 2 Agosto
+    { date: new Date(year, 9, 12), name: 'Día de las Culturas', isMandatoryPay: false }, // 12 Octubre
   ];
 }

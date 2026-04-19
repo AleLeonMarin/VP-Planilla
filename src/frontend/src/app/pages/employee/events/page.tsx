@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import EmployeeTabs from '@/components/ui/EmployeeTabs';
 import StatsCards from '@/components/ui/StatsCards';
 import LaborEventsCalendar from '@/components/LaborEventsCalendar';
@@ -37,6 +37,15 @@ const LaborEventsPage: React.FC = () => {
     eventType: null,
     status: null,
   });
+
+  // Forzar redibujo de FullCalendar tras colapsar/expandir sidebar
+  useEffect(() => {
+    // 300ms es el tiempo que suele durar la transición CSS de Tailwind
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 310);
+    return () => clearTimeout(timer);
+  }, [sidebarOpen]);
 
   // Filtrar eventos según filtros activos del sidebar
   const filteredEvents = useMemo(() => {

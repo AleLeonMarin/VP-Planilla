@@ -175,7 +175,9 @@ const LaborEventsCalendar: React.FC<Props> = ({
   // Add Dynamic Costa Rica holidays from Database
   if (dbHolidays && dbHolidays.length > 0) {
     dbHolidays.forEach(h => {
-      const hDate = new Date(h.company_holidays_date);
+      const hDate = parseBackendDateToLocal(h.company_holidays_date);
+      if (!hDate) return;
+      
       calendarEvents.push({
         id: `holiday-${h.company_holidays_id}`,
         title: `🇨🇷 ${h.company_holidays_name} (${h.company_holidays_is_mandatory ? 'Pago Obligatorio' : 'No Obligatorio'})`,
