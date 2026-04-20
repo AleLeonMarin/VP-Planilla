@@ -120,17 +120,17 @@ const ProfileSummaryTab: React.FC<ProfileSummaryTabProps> = ({
             </div>
           </div>
           <div>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">Salario Base</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">Precio por Hora</p>
             <p className="text-2xl font-bold text-zinc-700 dark:text-zinc-100">{formatSalary(baseSalary)}</p>
           </div>
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
             <div>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">Hora Regular</p>
-              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">{formatSalary(baseSalary / 240)}</p>
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">{formatSalary(baseSalary)}</p>
             </div>
             <div>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">Hora Extra (×1.5)</p>
-              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">{formatSalary((baseSalary / 240) * 1.5)}</p>
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-100">{formatSalary(baseSalary * 1.5)}</p>
             </div>
           </div>
           {employee.required_hours_biweekly && (
