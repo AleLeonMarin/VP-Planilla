@@ -13,9 +13,16 @@
   - Auth/HTTP/Hygiene/Modularization requirements fulfilled.
   - 441+ tests total across stacks.
 
-## Phases — v1.5 (Phases 32-39)
+## Phases — v1.5 (Phases 06-45)
 
-- [ ] Phase 32: Schema — Capa de Ajustes + Campos Aprobación Planilla
+- [x] Phase 06: Feriados nacionales costa rica
+- [x] Phase 08: Tests unitarios nominee service
+- [ ] Phase 18: Normalización y trazabilidad
+- [ ] Phase 28: Email notification module
+- [ ] Phase 35: Frontend clock log corrections
+- [ ] Phase 43: Frontend rediseno calendario eventos
+- [ ] Phase 44: Core motor feriados globales
+- [ ] Phase 45: Frontend rediseno perfil empleado
   **Goal:** Estructurar la base de datos para soportar ajustes no destructivos de marcas y el ciclo de vida de aprobación de planilla.
   **Plans:** 2 plans
   - [x] 32-01-PLAN.md — Define models and enums in Prisma schema and apply migration.
