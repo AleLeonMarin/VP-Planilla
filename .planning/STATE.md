@@ -93,6 +93,10 @@ Progress: [██████████████████] 100% (40/40 p
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 46 added: Rediseño Motor de Reconocimiento de Marcas
+
 ### Tests
 
 - Backend: 338+ tests (Jest).
