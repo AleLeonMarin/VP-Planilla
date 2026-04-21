@@ -217,6 +217,16 @@ export default function ClockLogsDashboardPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);  // D-12: collapsed by default
   const [showOnlyIssues, setShowOnlyIssues] = useState(false);
+  const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set());
+
+  const toggleEmployee = useCallback((id: string) => {
+    setExpandedEmployees((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Correction modal state
@@ -524,40 +534,49 @@ export default function ClockLogsDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {displayedAuditEmployees.map((emp) => (
-                  <div
-                    key={emp.employee_id}
-                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden"
-                  >
-                    {/* Employee header */}
-                    <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {emp.has_issues && (
-                          <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="Tiene marcas con problemas" />
-                        )}
-                        <span className="font-semibold text-zinc-800 dark:text-zinc-100 text-sm">
-                          {emp.employee_name}
+                {displayedAuditEmployees.map((emp) => {
+                  const isExpanded = expandedEmployees.has(emp.employee_id);
+                  return (
+                    <div
+                      key={emp.employee_id}
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden"
+                    >
+                      {/* Employee header — collapsible */}
+                      <button
+                        onClick={() => toggleEmployee(emp.employee_id)}
+                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <ChevronDownIcon className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          {emp.has_issues && (
+                            <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" title="Tiene marcas con problemas" />
+                          )}
+                          <span className="font-semibold text-zinc-800 dark:text-zinc-100 text-sm">
+                            {emp.employee_name}
+                          </span>
+                          <span className="text-xs text-zinc-400">#{emp.employee_id}</span>
+                        </div>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {emp.days.length} día{emp.days.length !== 1 ? 's' : ''}
                         </span>
-                        <span className="text-xs text-zinc-400">#{emp.employee_id}</span>
-                      </div>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {emp.days.length} día{emp.days.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
+                      </button>
 
-                    {/* Days — D-08: Empleado → Día → Marcas */}
-                    <div className="p-3 space-y-1">
-                      {emp.days.map((day) => (
-                        <AuditDayRow
-                          key={day.date}
-                          date={day.date}
-                          marks={day.marks}
-                          onConfirm={() => confirmDay(Number(emp.employee_id), day.date)}
-                        />
-                      ))}
+                      {/* Days — D-08: Empleado → Día → Marcas */}
+                      {isExpanded && (
+                        <div className="p-3 space-y-1 border-t border-zinc-100 dark:border-zinc-800">
+                          {emp.days.map((day) => (
+                            <AuditDayRow
+                              key={day.date}
+                              date={day.date}
+                              marks={day.marks}
+                              onConfirm={() => confirmDay(Number(emp.employee_id), day.date)}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
