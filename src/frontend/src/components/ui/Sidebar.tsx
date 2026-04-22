@@ -72,7 +72,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
       icon: "/images/layout/settings.png", 
       text: "Configuración",
       subItems: [
-        { href: '/pages/configuracion', text: 'Ventanas de Tiempo' },
+        { href: '/pages/configuracion/ventanas', text: 'Ventanas de Tiempo' },
         { href: '/pages/configuracion/feriados', text: 'Feriados' }
       ]
     },
