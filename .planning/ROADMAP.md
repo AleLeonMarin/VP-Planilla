@@ -153,6 +153,17 @@ Plans:
 
 ---
 
+### Phase 48: Limpieza de Archivos y Carpetas Innecesarios
+
+**Goal:** Eliminar del repositorio todos los archivos muertos: `.md` desactualizados, Excels viejos, carpetas vacías, archivos de código sin referencia, y configs obsoletas — dejando el proyecto limpio y mantenible.
+**Depends on:** Phase 47
+**Plans:** 2 plans
+
+Plans:
+- [ ] 48-01-PLAN.md — Artefactos generados, logs y MDs obsoletos del root y backend
+- [ ] 48-02-PLAN.md — Código muerto, Excel de prueba, reportes HTML y carpetas vacías
+
+
 ## Archives
 
 - **v1.5** requirements: `.planning/milestones/v1.5-REQUIREMENTS.md`

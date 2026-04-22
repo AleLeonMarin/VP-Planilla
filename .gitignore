@@ -109,3 +109,9 @@ graphify-out/
 .planning/graphs/graph.json
 .planning/graphs/graph.html
 .planning/graphs/.last-build-snapshot.json
+
+# Auto-generated file inventories (do not commit)
+tracked_files.txt
+
+# Frontend TypeScript build cache
+src/frontend/tsconfig.tsbuildinfo
