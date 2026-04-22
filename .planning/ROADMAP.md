@@ -160,8 +160,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 48-01-PLAN.md — Artefactos generados, logs y MDs obsoletos del root y backend
-- [ ] 48-02-PLAN.md — Código muerto, Excel de prueba, reportes HTML y carpetas vacías
+- [x] 48-01-PLAN.md — Artefactos generados, logs y MDs obsoletos del root y backend
+- [x] 48-02-PLAN.md — Código muerto, Excel de prueba, reportes HTML y carpetas vacías
 
 
 ## Archives
