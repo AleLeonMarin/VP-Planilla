@@ -12,7 +12,10 @@ export class DayConfirmationController {
   
   static async get(req: Request, res: Response) {
     const { employeeId, startDate, endDate } = req.query;
-    const result = await DayConfirmationService.getByEmployee(Number(employeeId), String(startDate), String(endDate));
+    const empId = employeeId ? Number(employeeId) : undefined;
+    const start = startDate ? String(startDate) : undefined;
+    const end = endDate ? String(endDate) : undefined;
+    const result = await DayConfirmationService.getByEmployee(empId, start, end);
     res.json({ success: true, data: result });
   }
 }

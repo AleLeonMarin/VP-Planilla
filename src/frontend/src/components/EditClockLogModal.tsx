@@ -69,6 +69,7 @@ const EditClockLogModal: React.FC<EditClockLogModalProps> = ({
     try {
       const result = await clockLogAdjustmentService.editClockLog(
         clockLog.id,
+        clockLog.employeeId,
         newTimestamp,
         clockLog.type,
         justificationTrimmed

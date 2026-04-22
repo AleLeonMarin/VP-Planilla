@@ -20,15 +20,16 @@ export class DayConfirmationService {
     });
   }
 
-  static async getByEmployee(employeeId: number, startDate: string, endDate: string) {
-    return await prisma.vpgDayConfirmation.findMany({
-      where: {
-        employee_id: employeeId,
-        confirmation_date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      },
-    });
+  static async getByEmployee(employeeId?: number, startDate?: string, endDate?: string) {
+    const where: any = {};
+    if (employeeId && !isNaN(employeeId)) {
+      where.employee_id = employeeId;
+    }
+    if (startDate || endDate) {
+      where.confirmation_date = {};
+      if (startDate) where.confirmation_date.gte = new Date(startDate);
+      if (endDate) where.confirmation_date.lte = new Date(endDate);
+    }
+    return await prisma.vpgDayConfirmation.findMany({ where });
   }
 }

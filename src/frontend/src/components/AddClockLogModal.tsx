@@ -21,6 +21,8 @@ interface AddClockLogModalProps {
   onClose: () => void;
   employeeId?: string; // Optional pre-filled
   employeeName?: string; // Optional for locked display
+  initialDate?: string;
+  initialType?: 'IN' | 'OUT';
   onSuccess?: (newMark: ClockLog) => void;
 }
 
@@ -41,13 +43,15 @@ const AddClockLogModal: React.FC<AddClockLogModalProps> = ({
   onClose,
   employeeId,
   employeeName,
+  initialDate,
+  initialType,
   onSuccess,
 }) => {
   // Form state
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(employeeId || '');
-  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<string>(initialDate || new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState<string>(new Date().toTimeString().slice(0, 5));
-  const [type, setType] = useState<'IN' | 'OUT'>('IN');
+  const [type, setType] = useState<'IN' | 'OUT'>(initialType || 'IN');
   const [justification, setJustification] = useState<string>('');
   
   // UI state
@@ -87,13 +91,13 @@ const AddClockLogModal: React.FC<AddClockLogModalProps> = ({
   // Reset form when closing
   useEffect(() => {
     if (!isOpen) {
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(initialDate || new Date().toISOString().split('T')[0]);
       setTime(new Date().toTimeString().slice(0, 5));
-      setType('IN');
+      setType(initialType || 'IN');
       setJustification('');
       setShowPreview(false);
     }
-  }, [isOpen]);
+  }, [isOpen, initialDate, initialType]);
 
   const handleSubmit = async () => {
     if (!selectedEmployeeId) {

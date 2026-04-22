@@ -76,11 +76,21 @@ function buildAuditMarksForLog(
 ): void {
   if (log.original.in_time && log.original.in_log_id != null) {
     const c = classifyByTimeWindow(log.original.in_time, windows);
-    dayMarks.push({ id: log.original.in_log_id, timestamp: log.original.in_time, type: 'IN', confidence: c.confidence });
+    dayMarks.push({ 
+      id: log.original.in_log_id, 
+      timestamp: log.original.in_time, 
+      type: 'IN', 
+      confidence: c.confidence 
+    });
   }
   if (log.original.out_time && log.original.out_log_id != null) {
     const c = classifyByTimeWindow(log.original.out_time, windows);
-    dayMarks.push({ id: log.original.out_log_id, timestamp: log.original.out_time, type: 'OUT', confidence: c.confidence });
+    dayMarks.push({ 
+      id: log.original.out_log_id, 
+      timestamp: log.original.out_time, 
+      type: 'OUT', 
+      confidence: c.confidence 
+    });
   }
 }
 
@@ -210,10 +220,22 @@ export default function ClockLogsDashboardPage() {
     refresh,
   } = useEffectiveMarks();
 
-  const { confirmDay } = useClockAudit();
+  const { 
+    confirmDay, 
+    fetchConfirmations, 
+    confirmedDays,
+    addMarkInline,
+    changeMarkTypeInline,
+    voidMarkInline
+  } = useClockAudit(refresh);
   const { windows: timeWindows } = useTimeWindows();
 
   const [activeTab, setActiveTab] = useState<PageTab>('dashboard');
+
+  // Load confirmations when date range changes
+  useEffect(() => {
+    fetchConfirmations(filters.initDate, filters.endDate);
+  }, [filters.initDate, filters.endDate, fetchConfirmations]);
   const [modalOpen, setModalOpen] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);  // D-12: collapsed by default
   const [showOnlyIssues, setShowOnlyIssues] = useState(false);
@@ -232,6 +254,8 @@ export default function ClockLogsDashboardPage() {
   // Correction modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedEmployeeForAdd, setSelectedEmployeeForAdd] = useState<{id: string; name: string} | null>(null);
+  const [initialDateForAdd, setInitialDateForAdd] = useState<string | undefined>(undefined);
+  const [initialTypeForAdd, setInitialTypeForAdd] = useState<'IN' | 'OUT' | undefined>(undefined);
   const [selectedEntryForEdit, setSelectedEntryForEdit] = useState<AdjustmentClockLog | null>(null);
   const [selectedEntryForVoid, setSelectedEntryForVoid] = useState<AdjustmentClockLog | null>(null);
 
@@ -567,9 +591,15 @@ export default function ClockLogsDashboardPage() {
                           {emp.days.map((day) => (
                             <AuditDayRow
                               key={day.date}
+                              employeeId={emp.employee_id}
                               date={day.date}
                               marks={day.marks}
+                              isConfirmed={confirmedDays.has(`${emp.employee_id}_${day.date}`)}
+                              calculatedHours={day.calculated_hours}
                               onConfirm={() => confirmDay(Number(emp.employee_id), day.date)}
+                              onAddInline={(time, type) => addMarkInline(emp.employee_id, day.date, time, type)}
+                              onChangeTypeInline={(eid, logId, ts, type) => changeMarkTypeInline(eid, logId, ts, type)}
+                              onVoidInline={(eid, logId, type) => voidMarkInline(eid, logId, type)}
                             />
                           ))}
                         </div>
@@ -590,9 +620,13 @@ export default function ClockLogsDashboardPage() {
         onClose={() => {
           setIsAddModalOpen(false);
           setSelectedEmployeeForAdd(null);
+          setInitialDateForAdd(undefined);
+          setInitialTypeForAdd(undefined);
         }}
         employeeId={selectedEmployeeForAdd?.id}
         employeeName={selectedEmployeeForAdd?.name}
+        initialDate={initialDateForAdd}
+        initialType={initialTypeForAdd}
         onSuccess={() => refresh()}
       />
 
