@@ -356,7 +356,7 @@ export class ClockLogEffectiveService {
                 employeeId: log.clock_logs_employee_id,
                 originalTimestamp: log.clock_logs_timestamp,
                 effectiveTimestamp: adj.adjustment_new_timestamp!,
-                logType: log.clock_logs_log_type,
+                logType: adj.adjustment_log_type || log.clock_logs_log_type,
                 adjustmentType: 'EDIT',
                 source: log.clock_logs_source,
                 _adjustment: adj
@@ -509,7 +509,7 @@ export class ClockLogEffectiveService {
             employeeId: log.clock_logs_employee_id,
             originalTimestamp: log.clock_logs_timestamp,
             effectiveTimestamp: adjustment.adjustment_new_timestamp!,
-            logType: log.clock_logs_log_type,
+            logType: adjustment.adjustment_log_type || log.clock_logs_log_type,
             adjustmentType: 'EDIT',
             source: log.clock_logs_source,
           });
@@ -597,7 +597,7 @@ export class ClockLogEffectiveService {
             employeeId: log.clock_logs_employee_id,
             originalTimestamp: log.clock_logs_timestamp,
             effectiveTimestamp: adjustment.adjustment_new_timestamp!,
-            logType: log.clock_logs_log_type,
+            logType: adjustment.adjustment_log_type || log.clock_logs_log_type,
             adjustmentType: 'EDIT',
             source: log.clock_logs_source,
           };

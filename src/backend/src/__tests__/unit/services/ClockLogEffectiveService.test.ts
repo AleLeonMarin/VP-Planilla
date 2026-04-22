@@ -82,6 +82,38 @@ describe('ClockLogEffectiveService', () => {
       expect(result[0].adjustmentType).toBe('EDIT');
     });
 
+    it('should adjust logType when adjustment_log_type is present', async () => {
+      const logs = [
+        {
+          clock_logs_id: 1,
+          clock_logs_employee_id: employeeId,
+          clock_logs_timestamp: new Date('2026-02-02T08:00:00.000Z'),
+          clock_logs_log_type: 'IN',
+          clock_logs_source: 'java_import',
+        },
+      ];
+
+      const adjustments = [
+        {
+          adjustment_id: 1,
+          adjustment_clock_log_id: 1,
+          adjustment_type: 'EDIT',
+          adjustment_new_timestamp: new Date('2026-02-02T08:00:00.000Z'),
+          adjustment_log_type: 'OUT',
+          adjustment_status: 'ACTIVE',
+          adjustment_created_at: new Date(),
+        },
+      ];
+
+      prisma.vpg_clock_logs.findMany.mockResolvedValue(logs as any);
+      prisma.vpg_clock_log_adjustments.findMany.mockResolvedValue(adjustments as any);
+
+      const result = await ClockLogEffectiveService.getEffectiveLogs(employeeId, startDate, endDate);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].logType).toBe('OUT'); // Changed from IN to OUT
+    });
+
     it('should filter out VOIDed logs', async () => {
       const logs = [
         {

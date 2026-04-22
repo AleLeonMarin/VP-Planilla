@@ -74,20 +74,24 @@ function buildAuditMarksForLog(
   windows: TimeWindow[],
   dayMarks: AuditMark[]
 ): void {
-  if (log.original.in_time && log.original.in_log_id != null) {
-    const c = classifyByTimeWindow(log.original.in_time, windows);
+  // Use adjusted time if available, otherwise original
+  const effectiveInTime = log.adjusted?.in_time || log.original.in_time;
+  const effectiveOutTime = log.adjusted?.out_time || log.original.out_time;
+
+  if (effectiveInTime && log.original.in_log_id != null) {
+    const c = classifyByTimeWindow(effectiveInTime, windows);
     dayMarks.push({ 
       id: log.original.in_log_id, 
-      timestamp: log.original.in_time, 
+      timestamp: effectiveInTime, 
       type: 'IN', 
       confidence: c.confidence 
     });
   }
-  if (log.original.out_time && log.original.out_log_id != null) {
-    const c = classifyByTimeWindow(log.original.out_time, windows);
+  if (effectiveOutTime && log.original.out_log_id != null) {
+    const c = classifyByTimeWindow(effectiveOutTime, windows);
     dayMarks.push({ 
       id: log.original.out_log_id, 
-      timestamp: log.original.out_time, 
+      timestamp: effectiveOutTime, 
       type: 'OUT', 
       confidence: c.confidence 
     });
