@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, TrashIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import { timeWindowService, TimeWindow } from '@/services/timeWindowService';
 import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -99,6 +100,10 @@ export default function ConfiguracionPage() {
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6">
       <div className="max-w-5xl mx-auto">
+        <Link href="/pages/configuracion" className="inline-flex items-center text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors mb-4">
+          <ChevronLeftIcon className="w-4 h-4 mr-1" />
+          Volver a Configuración
+        </Link>
         <div className="mb-6 flex justify-between items-end">
           <div>
             <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Configuración</p>
