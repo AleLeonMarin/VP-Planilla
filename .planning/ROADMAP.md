@@ -5,7 +5,7 @@
 | Phase | Name | Requirements | Success Criteria | Status |
 |-------|------|--------------|------------------|--------|
 | 49 | Persistencia de Vista (Caché de UI) | UX-11, UX-12 | 2 | Not Started |
-| 50 | Corrección Lógica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Not Started |
+| 50 | Corrección Lógica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Completed |
 | 51 | Edición Directa de Marcas en Auditoría | AUDIT-01 | 3 | Not Started |
 | 52 | UI de Drag and Drop para Ventanas de Tiempo por Empleado | UX-13 | 3 | Not Started |
 
@@ -27,7 +27,7 @@
 **Success Criteria:**
 1. Valid IN/OUT pairs generated without manipulation are displayed with high confidence indicators instead of "baja confianza".
 2. Resolving a problematic mark instantly updates the employee's yellow warning badge to green in the UI without requiring a full page reload.
-**Status:** Not Started
+**Status:** Completed
 
 ### Phase 51: Edición Directa de Marcas en Auditoría
 **Goal:** Allow users to edit existing entries intuitively from within the daily audit flow.

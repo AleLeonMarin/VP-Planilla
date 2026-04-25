@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export function useClockAudit(onRefresh?: () => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmedData, setConfirmedData] = useState<any[]>([]);
+  const [clearedDays, setClearedDays] = useState<Set<string>>(new Set());
 
   const fetchConfirmations = useCallback(async (startDate?: string, endDate?: string) => {
     setIsLoading(true);
@@ -52,6 +53,13 @@ export function useClockAudit(onRefresh?: () => void) {
   // --- NUEVAS FUNCIONES INLINE ---
 
   const addMarkInline = useCallback(async (employeeId: string, date: string, time: string, type: 'IN' | 'OUT') => {
+    const key = `${employeeId}_${date}`;
+    setClearedDays(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+
     setIsLoading(true);
     try {
       // Ensure strict ISO format with Z
@@ -65,6 +73,11 @@ export function useClockAudit(onRefresh?: () => void) {
       toast.success('Marca añadida');
       onRefresh?.();
     } catch (e) {
+      setClearedDays(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
       toast.error('Error al añadir marca');
     } finally {
       setIsLoading(false);
@@ -72,6 +85,14 @@ export function useClockAudit(onRefresh?: () => void) {
   }, [onRefresh]);
 
   const changeMarkTypeInline = useCallback(async (employeeId: string, logId: number, currentTimestamp: string, newType: 'IN' | 'OUT') => {
+    const date = new Date(currentTimestamp).toISOString().split('T')[0];
+    const key = `${employeeId}_${date}`;
+    setClearedDays(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+
     setIsLoading(true);
     try {
       // Normalize existing timestamp to strict ISO
@@ -86,13 +107,25 @@ export function useClockAudit(onRefresh?: () => void) {
       toast.success('Tipo actualizado');
       onRefresh?.();
     } catch (e) {
+      setClearedDays(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
       toast.error('Error al actualizar tipo');
     } finally {
       setIsLoading(false);
     }
   }, [onRefresh]);
 
-  const voidMarkInline = useCallback(async (employeeId: string, logId: number, type: 'IN' | 'OUT') => {
+  const voidMarkInline = useCallback(async (employeeId: string, logId: number, type: 'IN' | 'OUT', date: string) => {
+    const key = `${employeeId}_${date}`;
+    setClearedDays(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+
     setIsLoading(true);
     try {
       await clockLogAdjustmentService.voidClockLog(
@@ -104,6 +137,11 @@ export function useClockAudit(onRefresh?: () => void) {
       toast.success('Marca eliminada');
       onRefresh?.();
     } catch (e) {
+      setClearedDays(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
       toast.error('Error al eliminar marca');
     } finally {
       setIsLoading(false);
@@ -115,6 +153,7 @@ export function useClockAudit(onRefresh?: () => void) {
     confirmDay, 
     fetchConfirmations, 
     confirmedDays,
+    clearedDays,
     addMarkInline,
     changeMarkTypeInline,
     voidMarkInline

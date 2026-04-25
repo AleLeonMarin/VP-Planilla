@@ -8,6 +8,7 @@ interface DayMark {
   timestamp: string;
   type: 'IN' | 'OUT';
   confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  status: string;
 }
 
 interface AuditDayRowProps {
@@ -15,11 +16,12 @@ interface AuditDayRowProps {
   date: string;
   marks: DayMark[];
   isConfirmed?: boolean;
+  isOptimisticallyCleared?: boolean;
   calculatedHours?: number | null;
   onConfirm: () => void;
   onAddInline: (time: string, type: 'IN' | 'OUT') => Promise<void>;
   onChangeTypeInline: (employeeId: string, logId: number, currentTimestamp: string, newType: 'IN' | 'OUT') => Promise<void>;
-  onVoidInline: (employeeId: string, logId: number, type: 'IN' | 'OUT') => Promise<void>;
+  onVoidInline: (employeeId: string, logId: number, type: 'IN' | 'OUT', date: string) => Promise<void>;
 }
 
 export function AuditDayRow({ 
@@ -27,6 +29,7 @@ export function AuditDayRow({
   date, 
   marks, 
   isConfirmed, 
+  isOptimisticallyCleared,
   calculatedHours, 
   onConfirm,
   onAddInline,
@@ -38,7 +41,9 @@ export function AuditDayRow({
   const [newType, setNewType] = useState<'IN' | 'OUT'>('IN');
   const [isAdding, setIsAdding] = useState(false);
 
-  const hasIssues = marks.some((m) => m.confidence !== 'HIGH');
+  const hasIssues = !isOptimisticallyCleared && marks.some((m) => 
+    ['anomaly', 'orphan', 'pending'].includes(m.status)
+  );
 
   const formattedDate = (() => {
     try {
@@ -128,7 +133,7 @@ export function AuditDayRow({
                 </span>
 
                 <button
-                  onClick={() => onVoidInline(employeeId, m.id, m.type)}
+                  onClick={() => onVoidInline(employeeId, m.id, m.type, date)}
                   title="Eliminar marca"
                   className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors opacity-0 group-hover:opacity-100"
                 >

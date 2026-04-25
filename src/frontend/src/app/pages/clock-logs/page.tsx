@@ -51,6 +51,7 @@ interface AuditMark {
   timestamp: string;
   type: 'IN' | 'OUT';
   confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  status: string;
 }
 
 interface AuditDay {
@@ -85,7 +86,8 @@ function buildAuditMarksForLog(
       id: log.original.in_log_id, 
       timestamp: effectiveInTime, 
       type: 'IN', 
-      confidence: c.confidence 
+      confidence: c.confidence,
+      status: log.original.status
     });
   }
   if (effectiveOutTime && log.original.out_log_id != null) {
@@ -94,14 +96,16 @@ function buildAuditMarksForLog(
       id: log.original.out_log_id, 
       timestamp: effectiveOutTime, 
       type: 'OUT', 
-      confidence: c.confidence 
+      confidence: c.confidence,
+      status: log.original.status
     });
   }
 }
 
 function buildAuditData(
   data: EffectiveClockLog[],
-  windows: import('@/services/timeWindowService').TimeWindow[]
+  windows: import('@/services/timeWindowService').TimeWindow[],
+  clearedDays: Set<string> = new Set()
 ): AuditEmployee[] {
   const empMap = new Map<string, { name: string; dayMap: Map<string, AuditMark[]>; logs: EffectiveClockLog[] }>();
 
@@ -115,6 +119,8 @@ function buildAuditData(
     buildAuditMarksForLog(log, windows, emp.dayMap.get(log.log_date)!);
   });
 
+  const isProblematic = (s: string) => ['anomaly', 'orphan', 'pending'].includes(s);
+
   const result: AuditEmployee[] = [];
   empMap.forEach((empData, empId) => {
     const days: AuditDay[] = [];
@@ -125,9 +131,18 @@ function buildAuditData(
       days.push({ date, marks, calculated_hours: calculatedHours });
     });
     days.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Optimistic: A day is clean if any mark was added/edited, OR if it's naturally clean
     const has_issues =
-      days.some((d) => d.marks.some((m) => m.confidence !== 'HIGH')) ||
-      empData.logs.some((l) => l.original.status !== 'valid');
+      days.some((d) => {
+        if (clearedDays.has(`${empId}_${d.date}`)) return false;
+        return d.marks.some((m) => isProblematic(m.status));
+      }) ||
+      empData.logs.some((l) => {
+        if (clearedDays.has(`${empId}_${l.log_date}`)) return false;
+        return isProblematic(l.original.status);
+      });
+
     result.push({ employee_id: empId, employee_name: empData.name, days, has_issues });
   });
 
@@ -138,8 +153,10 @@ function buildAuditData(
   return result;
 }
 
-function groupDataByBranch(logs: EffectiveClockLog[]): BranchData[] {
+function groupDataByBranch(logs: EffectiveClockLog[], clearedDays: Set<string> = new Set()): BranchData[] {
   const branchMap = new Map<string, Map<string, EffectiveClockLog[]>>();
+
+  const isProblematic = (s: string) => ['anomaly', 'orphan', 'pending'].includes(s);
 
   logs.forEach((log) => {
     const branch = log.branch_name || 'Sin sucursal';
@@ -153,7 +170,10 @@ function groupDataByBranch(logs: EffectiveClockLog[]): BranchData[] {
   const branches: BranchData[] = Array.from(branchMap.entries()).map(([branchName, empMap]) => {
     const employees: EmployeeGroup[] = Array.from(empMap.entries()).map(([empId, empLogs]) => {
       const anomalyCount = empLogs.filter(
-        (l) => l.original.status !== 'valid'
+        (l) => {
+          if (clearedDays.has(`${empId}_${l.log_date}`)) return false;
+          return isProblematic(l.original.status);
+        }
       ).length;
       const totalHours = empLogs.reduce((sum, l) => sum + (l.calculated_hours ?? 0), 0);
       const workedDays = new Set(empLogs.map((l) => l.log_date)).size;
@@ -229,6 +249,7 @@ export default function ClockLogsDashboardPage() {
     confirmDay, 
     fetchConfirmations, 
     confirmedDays,
+    clearedDays,
     addMarkInline,
     changeMarkTypeInline,
     voidMarkInline
@@ -324,11 +345,11 @@ export default function ClockLogsDashboardPage() {
 
   // Build audit view data — group EffectiveClockLog[] by employee then by day
   const auditEmployees = useCallback(
-    () => buildAuditData(data, timeWindows),
-    [data, timeWindows]
+    () => buildAuditData(data, timeWindows, clearedDays),
+    [data, timeWindows, clearedDays]
   );
 
-  const groupedBranches = groupDataByBranch(data);
+  const groupedBranches = groupDataByBranch(data, clearedDays);
 
   const statsMap = data.reduce<Record<string, number>>((acc, log) => {
     const s = log.original.status;
@@ -628,11 +649,12 @@ export default function ClockLogsDashboardPage() {
                               date={day.date}
                               marks={day.marks}
                               isConfirmed={confirmedDays.has(`${emp.employee_id}_${day.date}`)}
+                              isOptimisticallyCleared={clearedDays.has(`${emp.employee_id}_${day.date}`)}
                               calculatedHours={day.calculated_hours}
                               onConfirm={() => confirmDay(Number(emp.employee_id), day.date)}
                               onAddInline={(time, type) => addMarkInline(emp.employee_id, day.date, time, type)}
                               onChangeTypeInline={(eid, logId, ts, type) => changeMarkTypeInline(eid, logId, ts, type)}
-                              onVoidInline={(eid, logId, type) => voidMarkInline(eid, logId, type)}
+                              onVoidInline={(eid, logId, type) => voidMarkInline(eid, logId, type, day.date)}
                             />
                           ))}
                         </div>
