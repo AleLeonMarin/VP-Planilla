@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { ChevronDownIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import { useEffectiveMarks } from '@/hooks/useEffectiveMarks';
 import { useClockAudit } from '@/hooks/useClockAudit';
@@ -234,25 +235,53 @@ export default function ClockLogsDashboardPage() {
   } = useClockAudit(refresh);
   const { windows: timeWindows } = useTimeWindows();
 
-  const [activeTab, setActiveTab] = useState<PageTab>('dashboard');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const activeTab = (searchParams.get('tab') as PageTab) || 'dashboard';
+  const expandedParam = searchParams.get('expanded');
+  const expandedEmployees = new Set(expandedParam ? expandedParam.split(',') : []);
+
+  const changeTab = useCallback((tab: PageTab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  const toggleEmployee = useCallback((id: string) => {
+    const next = new Set(expandedEmployees);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (next.size > 0) {
+      params.set('expanded', Array.from(next).join(','));
+    } else {
+      params.delete('expanded');
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [expandedEmployees, searchParams, pathname, router]);
 
   // Load confirmations when date range changes
   useEffect(() => {
     fetchConfirmations(filters.initDate, filters.endDate);
   }, [filters.initDate, filters.endDate, fetchConfirmations]);
+
+  // Reset expanded employees when filters or active tab change
+  useEffect(() => {
+    if (expandedEmployees.size > 0) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('expanded');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.initDate, filters.endDate, activeTab]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);  // D-12: collapsed by default
   const [showOnlyIssues, setShowOnlyIssues] = useState(false);
-  const [expandedEmployees, setExpandedEmployees] = useState<Set<string>>(new Set());
 
-  const toggleEmployee = useCallback((id: string) => {
-    setExpandedEmployees((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Correction modal state
@@ -333,7 +362,7 @@ export default function ClockLogsDashboardPage() {
         {/* TAB BAR */}
         <div className="flex gap-1 mb-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 w-fit">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => changeTab('dashboard')}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'dashboard'
                 ? 'bg-green-600 text-white shadow-sm'
@@ -343,7 +372,7 @@ export default function ClockLogsDashboardPage() {
             Vista General
           </button>
           <button
-            onClick={() => setActiveTab('audit')}
+            onClick={() => changeTab('audit')}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'audit'
                 ? 'bg-green-600 text-white shadow-sm'
