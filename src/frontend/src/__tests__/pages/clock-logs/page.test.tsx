@@ -6,7 +6,28 @@ import { useEffectiveMarks } from '@/hooks/useEffectiveMarks';
 const JAVA_IMPORT = 'java_import';
 const TOTAL_COUNT = 18;
 
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn().mockReturnValue({
+    replace: jest.fn(),
+    push: jest.fn(),
+  }),
+  usePathname: jest.fn().mockReturnValue('/clock-logs'),
+  useSearchParams: jest.fn().mockReturnValue({
+    get: jest.fn(),
+    toString: jest.fn().mockReturnValue(''),
+  }),
+}));
 jest.mock('@/hooks/useEffectiveMarks');
+jest.mock('@/hooks/useClockAudit', () => ({
+  useClockAudit: jest.fn().mockReturnValue({
+    confirmDay: jest.fn(),
+    fetchConfirmations: jest.fn(),
+    confirmedDays: new Set(),
+    addMarkInline: jest.fn(),
+    changeMarkTypeInline: jest.fn(),
+    voidMarkInline: jest.fn(),
+  }),
+}));
 
 const mockedUseEffectiveMarks = useEffectiveMarks as jest.MockedFunction<typeof useEffectiveMarks>;
 
