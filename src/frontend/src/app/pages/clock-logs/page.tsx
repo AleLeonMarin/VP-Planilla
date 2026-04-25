@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { ChevronDownIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
-import { useEffectiveMarks } from '@/hooks/useEffectiveMarks';
-import { useClockAudit } from '@/hooks/useClockAudit';
+import { useClockLogsContext } from '@/hooks/useClockLogsContext';
 import { useTimeWindows } from '@/hooks/useTimeWindows';
 import ImportSessionsPanel from '@/components/ImportSessionsPanel';
 import BranchGroup from '@/components/BranchGroup';
@@ -246,17 +245,15 @@ export default function ClockLogsDashboardPage() {
     applyDatePreset,
     loadMore,
     refresh,
-  } = useEffectiveMarks();
-
-  const { 
-    confirmDay, 
-    fetchConfirmations, 
+    confirmDay,
+    fetchConfirmations,
     confirmedDays,
     clearedDays,
     addMarkInline,
     changeMarkTypeInline,
     voidMarkInline
-  } = useClockAudit(refresh);
+  } = useClockLogsContext();
+
   const { windows: timeWindows } = useTimeWindows();
 
   const searchParams = useSearchParams();
@@ -300,11 +297,6 @@ export default function ClockLogsDashboardPage() {
     }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [expandedEmployees, searchParams, pathname, router]);
-
-  // Load confirmations when date range changes
-  useEffect(() => {
-    fetchConfirmations(filters.initDate, filters.endDate);
-  }, [filters.initDate, filters.endDate, fetchConfirmations]);
 
   // Reset expanded employees when filters or active tab change
   useEffect(() => {
