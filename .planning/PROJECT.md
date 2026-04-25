@@ -8,9 +8,16 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.5 — 2026-04-18, Phase 41 complete)
+## Current State (v1.5 — 2026-04-24, ALL 17 phases complete)
 
-**v1.5 IN PROGRESS** — Gestión de Marcas y Planilla para Producción:
+**v1.5 COMPLETE** — Gestión de Marcas y Planilla para Producción:
+- ✅ **All 17 phases complete** (Phases 32–48). Milestone ready for audit/ship.
+- ✅ **Phase 48 complete:** Repo cleanup — dead code removed (holidays.ts), .gitignore verified clean.
+- ✅ **Phase 47 complete:** Completitud y Refinamiento de Auditoría de Marcas.
+- ✅ **Phase 46 complete:** Rediseño Motor de Reconocimiento de Marcas — Excel parser con detección automática de columnas, ventanas de tiempo configurables con indicadores de confianza, UI de auditoría por jornada.
+- ✅ **Phase 45 complete:** Rediseño del Perfil de Empleado — tabs consolidados con resumen, labor, salario, marcas, eventos y documentos.
+- ✅ **Phase 44 complete:** Motor de Feriados Globales Configurables — feriados en BD, integración al motor matemático de planillas.
+- ✅ **Phase 43 complete:** Rediseño Completo del Calendario de Eventos Laborales.
 - ✅ **Phase 41 complete:** Clock Aliases + IN/OUT Type Inference by Sequence.
   - `vpg_clock_aliases` table with FK to employees, unique constraint on (employee_id, name).
   - `ClockAliasService` with CRUD + `resolveEmployeeByAlias()` for import pipeline.
@@ -18,7 +25,7 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
   - `inferLogTypeBySequence()` — groups by (employee_id, date), alternates IN/OUT by timestamp.
   - Import pipeline now checks aliases after numeric ID, before full name scan.
   - Type inference enables Excel files without log_type column to import correctly.
-  - 492 backend tests, all passing.
+  - 492+ backend tests, all passing.
 - ✅ **Phase 32 complete:** Adjustment Layer schema + Payroll State Machine DB foundation.
   - `vpg_clock_log_adjustments` table with ADD/EDIT/VOID types, optimistic locking, nullable FK for ADD type.
   - `vpg_payroll_recalculations` audit trail table with JSONB snapshots.
@@ -39,7 +46,7 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - **Stack:** Express 5 + TypeScript 5.8 (backend) · Next.js 15 + React 19 (frontend) · Prisma 6 + PostgreSQL · Tailwind 4
 - **Arquitectura:** Route → Controller → Service → Prisma (backend) / Page → Hook → Service → http.ts (frontend)
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
-- **Tests:** 338 backend tests (Jest) + 5 Java tests (JUnit 5). Total: 343+ passing.
+- **Tests:** 492+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 497+ passing.
 - **Performance:** JS diferido, imágenes comprimidas, Next.js compress habilitado.
 
 ## History
@@ -73,4 +80,4 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - Eliminar empleados permanentemente — solo desactivar (status: inactivo)
 
 ---
-*Last updated: 2026-04-18 after Phase 41 completion*
+*Last updated: 2026-04-24 after Phase 47 completion (Phase 48 pending)*

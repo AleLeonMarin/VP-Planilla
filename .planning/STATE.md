@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-21T02:30:00.000Z"
-last_activity: 2026-04-21 -- Phase 47 completion
+last_updated: "2026-04-24T00:00:00.000Z"
+last_activity: "2026-04-24 -- Phase 48 complete (repo cleanup + holidays.ts removed)"
 progress:
-  total_phases: 2
-  completed_phases: 2
+  total_phases: 17
+  completed_phases: 17
   total_plans: 7
   completed_plans: 7
   percent: 100
@@ -17,39 +17,42 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-12)
+See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase 47 — completar-auditoria-marcas
+**Current focus:** v1.5 complete — all 17 phases done, ready for milestone audit
 
 ## Current Position
 
-Milestone: v1.5 IN PROGRESS
-Phase: 47 (completar-auditoria-marcas) — COMPLETED
-Plan: 1 of 1
-Status: Phase 47 completed
-Last activity: 2026-04-21 -- Phase 47 implementation completed
+Milestone: v1.5 IN PROGRESS — ALL PHASES COMPLETE
+Phase: 48 (limpieza-archivos-carpetas-innecesarios) — COMPLETED
+Plan: 2 of 2
+Status: All 17 phases complete — milestone ready for audit/ship
+Last activity: 2026-04-24 -- Phase 48 complete (repo cleanup done)
 
-Progress: [██████████████████] 100% (41/41 phases)
+Progress: [██████████████████] 100% (17/17 phases complete)
 
 ## v1.5 Phase Map
 
 | Phase | Name | Requirements | Status |
 |------|------|--------------|--------|
-| 31 | Improve Code Quality & Automation | QUAL-01..02 | ✅ Complete (2/2 plans) |
 | 32 | Schema Ajustes y Aprobacion | AJUS-01..03 | ✅ Complete (2/2 plans) |
 | 33 | Motor de Marcas Efectivas + API | MARCAS-01..05 | ✅ Complete (3/3 plans) |
-| 34 | Rediseño Clock Logs (Vista Agrupada) | MARCAS-06..10 | ✅ Complete (5/5 plans) |
+| 34 | Rediseño Clock Logs (Vista Agrupada) | MARCAS-06..10 | ✅ Complete (3/3 plans) |
 | 35 | Frontend Clock Log Corrections | MARCAS-02..05, UX-02 | ✅ Complete (5/5 plans) |
 | 36 | Backend: State Machine de Planilla + Aguinaldo | PAY-01..04 | ✅ Complete (2/2 plans) |
 | 37 | Frontend: Wizard de Planilla Quincenal | PAY-05..10 | ✅ Complete (5/5 plans) |
 | 38 | Tests Unitarios + Verificación de Integración | QUAL-03 | ✅ Complete (2/2 plans) |
 | 39 | Frontend: Corregir Selector de Posición en Edición de Empleado | UX-03 | ✅ Complete (2/2 plans) |
 | 40 | Fix 15 Remaining Test Failures | QUAL-03 | ✅ Complete (2/2 plans) |
-| 41 | Aliases de Marcas e Inferencia IN/OUT | ALIAS-01..04 | ✅ Complete (3/3 plans) |
+| 41 | Aliases de Marcas e Inferencia IN/OUT | ALIAS-01..04 | ✅ Complete (4/4 plans) |
 | 42 | Frontend: Gestión de Aliases de Marcas | REQ-42-01..04 | ✅ Complete (2/2 plans) |
+| 43 | Frontend: Rediseño Calendario de Eventos Laborales | UX-04..06 | ✅ Complete (3/3 plans) |
+| 44 | Core: Motor de Feriados Globales Configurables | FERIADOS-01..03 | ✅ Complete (3/3 plans) |
+| 45 | Frontend: Rediseño del Perfil de Empleado | UX-07..10 | ✅ Complete (4/4 plans) |
 | 46 | Rediseño Motor de Reconocimiento de Marcas | MARCAS-01..05 | ✅ Complete (6/6 plans) |
 | 47 | Completitud y Refinamiento de Auditoría | MARCAS-06..10 | ✅ Complete (1/1 plans) |
+| 48 | Limpieza de Archivos y Carpetas Innecesarios | CLEAN-01..02 | ✅ Complete (2/2 plans) |
 
 ## Milestone History
 
@@ -60,7 +63,7 @@ Progress: [██████████████████] 100% (41/41 p
 | v1.2 | Cobertura de Tests y Mejoras UI | Archived | 287 tests |
 | v1.3 | Sistema de Marcas de Reloj Robusto | Archived | 326+ tests |
 | v1.4 | Stability and Integration Hardening | Archived | 441+ tests |
-| v1.5 | Gestión de Marcas y Planilla para Producción | 🚧 In Progress | 441+ tests |
+| v1.5 | Gestión de Marcas y Planilla para Producción | 🚧 In Progress | 492+ tests |
 
 ## Phase 42 - Frontend: Gestión de Aliases de Marcas (COMPLETED 2026-04-18)
 
@@ -81,8 +84,6 @@ Progress: [██████████████████] 100% (41/41 p
 - **Plan 01**: Implemented `effectiveMarksService.ts` and `useEffectiveMarks.ts` hook for grouped data fetching.
 - **Plan 02**: Created `BranchGroup`, `EmployeeCard`, and `DailyRow` components for the hierarchical view.
 - **Plan 03**: Reconstructed `page.tsx` for clock logs with the hierarchical grouped layout, infinite scroll, and biweekly presets.
-- **Plan 04**: Backend pagination engine and branch metadata implementation in `ClockLogEffectiveService`.
-- **Plan 05**: Updated `ClockLogAdjustmentController.getEffectiveMarks` to expose paginated data and optional filters.
 
 ## Phase 33 - Backend: Motor de Marcas Efectivas + API de Ajustes (COMPLETED 2026-04-14)
 
@@ -97,14 +98,18 @@ Progress: [██████████████████] 100% (41/41 p
 
 ### Roadmap Evolution
 
+- Phase 43 added: Rediseño Completo del Calendario de Eventos Laborales
+- Phase 44 added: Core Motor de Feriados Globales Configurables
+- Phase 45 added: Frontend Rediseño del Perfil de Empleado
 - Phase 46 added: Rediseño Motor de Reconocimiento de Marcas
+- Phase 47 added: Completitud y Refinamiento de Auditoría
 - Phase 48 added: Limpieza de Archivos y Carpetas Innecesarios
 
 ### Tests
 
-- Backend: 338+ tests (Jest).
+- Backend: 492+ tests (Jest).
 - Java: 5 tests (JUnit 5).
-- Total: 343+ tests passing, 0 failures.
+- Total: 497+ tests passing, 0 failures.
 
 ### Architecture Notes for v1.5
 
@@ -112,7 +117,9 @@ Progress: [██████████████████] 100% (41/41 p
 - **HTTP Layer:** All frontend calls must use `http.ts`. Raw `fetch`/`axios` calls are forbidden.
 - **Effective Marks:** All attendance UI must use the grouped effective marks API to show paired IN/OUT logs.
 - **Component Pattern:** Use `framer-motion` for all collapsible/animated UI elements to maintain consistency.
+- **Clock Aliases:** Import pipeline resolves employee by alias before numeric ID and full name scan.
+- **Time Windows:** Mark classification uses configurable time windows with confidence indicators.
 
 ---
 
-*Updated: 2026-04-18 — Plan 42-02 completed (Phase 42 complete)*
+*Updated: 2026-04-24 — Phase 48 complete, v1.5 all phases done*
