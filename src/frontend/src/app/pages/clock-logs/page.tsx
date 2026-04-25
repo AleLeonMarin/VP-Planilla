@@ -228,6 +228,9 @@ function toAdjustmentClockLog(entry: EffectiveClockLog): AdjustmentClockLog {
 
 type PageTab = 'dashboard' | 'audit';
 
+const STORAGE_KEY_TAB = 'clock_logs_active_tab';
+const STORAGE_KEY_SHOW_ISSUES = 'clock_logs_show_issues';
+
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default function ClockLogsDashboardPage() {
   const {
@@ -260,11 +263,25 @@ export default function ClockLogsDashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Initial hydration of tab from localStorage if not in URL
+  useEffect(() => {
+    const tabInUrl = searchParams.get('tab');
+    if (!tabInUrl) {
+      const savedTab = localStorage.getItem(STORAGE_KEY_TAB) as PageTab | null;
+      if (savedTab && ['dashboard', 'audit'].includes(savedTab)) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', savedTab);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      }
+    }
+  }, [searchParams, pathname, router]);
+
   const activeTab = (searchParams.get('tab') as PageTab) || 'dashboard';
   const expandedParam = searchParams.get('expanded');
   const expandedEmployees = new Set(expandedParam ? expandedParam.split(',') : []);
 
   const changeTab = useCallback((tab: PageTab) => {
+    localStorage.setItem(STORAGE_KEY_TAB, tab);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -301,7 +318,15 @@ export default function ClockLogsDashboardPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);  // D-12: collapsed by default
-  const [showOnlyIssues, setShowOnlyIssues] = useState(false);
+  const [showOnlyIssues, setShowOnlyIssues] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(STORAGE_KEY_SHOW_ISSUES) === 'true';
+  });
+
+  // Save showOnlyIssues to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SHOW_ISSUES, String(showOnlyIssues));
+  }, [showOnlyIssues]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
