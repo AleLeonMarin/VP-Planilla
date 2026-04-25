@@ -7,6 +7,7 @@
 | 49 | Persistencia de Vista (Caché de UI) | UX-11, UX-12 | 2 | Not Started |
 | 50 | Corrección Lógica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Not Started |
 | 51 | Edición Directa de Marcas en Auditoría | AUDIT-01 | 3 | Not Started |
+| 52 | UI de Drag and Drop para Ventanas de Tiempo por Empleado | UX-13 | 3 | Not Started |
 
 ---
 
@@ -35,4 +36,12 @@
 1. Users can click on an existing mark row in the audit view to open an inline or modal editor.
 2. Saving changes to a mark sends the correction to the backend (`/api/clock-logs/adjust` or similar) and shows a success toast.
 3. The UI row is immediately updated with the new time and status, reflecting the database state without a hard refresh.
+**Status:** Not Started
+
+### Phase 52: UI de Drag and Drop para Ventanas de Tiempo por Empleado
+**Goal:** Allow administrators to intuitively manage, assign, and visualize time windows per employee through a drag-and-drop interface within the sidebar views.
+**Requirements:** UX-13
+**Success Criteria:**
+1. Administrators can interact with graphical time blocks mapped to employees.
+2. Interface updates sync to backend settings reliably.
 **Status:** Not Started

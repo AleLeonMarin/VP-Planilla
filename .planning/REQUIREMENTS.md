@@ -5,9 +5,10 @@
 - [ ] **AUDIT-02**: System evaluates valid IN/OUT clock pairs appropriately without incorrectly flagging them as "baja confianza" (low confidence).
 - [ ] **AUDIT-03**: System recalculates the employee's audit status (yellow warning state) in real-time immediately after the user corrects or validates a mark.
 
-## 2. Experiencia de Usuario (UX)
-- [ ] **UX-11**: System remembers the user's active tab (e.g., audit tab) in the validation/audit view upon navigation (via URL params or client state).
-- [ ] **UX-12**: System remembers the expanded/collapsed state of individual employee cards in the audit view to prevent state reset when returning to the page.
+### User Experience & Quality of Life
+- **UX-11:** State Persistence – User's active tab selection must be restored after navigating across routes.
+- **UX-12:** Expanded UI Persistence – Specifically clicked employee detail rows inside grouped views must maintain their expanded state despite navigation or modal closures, increasing auditor agility.
+- **UX-13:** Drag & Drop Time Windows – Add visual interface to manage and assign time windows to employees effectively preventing 'no-window' confidence issues.
 
 ## Future Requirements (Deferred)
 - (No aplican para este milestone)
@@ -24,3 +25,4 @@
 | AUDIT-03 | Recálculo de estatus en real-time | Phase 50 |
 | UX-11 | Persistencia pestaña activa | Phase 49 |
 | UX-12 | Persistencia estado expandido | Phase 49 |
+| UX-13 | Gestión de ventanas de tiempo | Phase 52 |
