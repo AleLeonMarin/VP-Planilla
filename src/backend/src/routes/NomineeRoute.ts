@@ -2,6 +2,8 @@ import { Router } from "express";
 import { NomineeController } from "../controller/NomineeController";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
+import { validateBody } from "../middleware/validateBody";
+import { calculatePayrollSchema } from "../schemas/PayrollSchema";
 
 const router = Router();
 
@@ -134,7 +136,7 @@ router.get("/nominee/employee-deductions/:employeeId", asyncHandler(NomineeContr
  *       '500':
  *         description: Internal server error
  */
-router.post("/nominee/calculate-payroll", asyncHandler(NomineeController.calculatePayrollForPeriod));
+router.post("/nominee/calculate-payroll", validateBody(calculatePayrollSchema), asyncHandler(NomineeController.calculatePayrollForPeriod));
 
 
 

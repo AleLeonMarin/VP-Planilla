@@ -269,4 +269,34 @@ export class PayrollController {
       });
     }
   }
+  /**
+   * Save per-employee hours/deduction override for a payroll
+   * PATCH /payroll/:id/employee/:empId/override
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with updated payroll_employee or error
+   */
+  static async saveEmployeeOverride(req: Request, res: Response): Promise<Response> {
+    const payrollId = parseInt(String(req.params.id), 10);
+    const employeeId = parseInt(String(req.params.empId), 10);
+
+    if (isNaN(payrollId) || isNaN(employeeId)) {
+      return res.status(400).json({ success: false, error: 'IDs de planilla o empleado inválidos' });
+    }
+
+    const { regularHours, overtimeHours, weeklyRestHours, totalDeductions } = req.body;
+
+    try {
+      const result = await PayrollService.saveEmployeeOverride(payrollId, employeeId, {
+        regularHours: regularHours !== undefined ? Number(regularHours) : undefined,
+        overtimeHours: overtimeHours !== undefined ? Number(overtimeHours) : undefined,
+        weeklyRestHours: weeklyRestHours !== undefined ? Number(weeklyRestHours) : undefined,
+        totalDeductions: totalDeductions !== undefined ? Number(totalDeductions) : undefined,
+      });
+      return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al guardar ajuste de empleado';
+      return res.status(400).json({ success: false, error: message });
+    }
+  }
 }

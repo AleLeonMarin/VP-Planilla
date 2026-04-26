@@ -486,5 +486,89 @@ export class PayrollService {
     };
   }
 
+  /**
+   * Save per-employee hour/deduction overrides for a payroll in BORRADOR state.
+   * Persists override values into vpg_payroll_employee and sets is_manually_adjusted = true.
+   * Recalculates net_salary as gross_salary - new_total_deductions.
+   * @param payrollId - ID of the payroll record
+   * @param employeeId - ID of the employee to override
+   * @param override - Override values (all optional; only provided fields are updated)
+   * @returns Updated payroll_employee record
+   * @throws Error if payroll not in BORRADOR state, or employee not in payroll
+   */
+  static async saveEmployeeOverride(
+    payrollId: number,
+    employeeId: number,
+    override: {
+      regularHours?: number;
+      overtimeHours?: number;
+      weeklyRestHours?: number;
+      totalDeductions?: number;
+    }
+  ): Promise<any> {
+    // Validar que la planilla está en BORRADOR
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId },
+      select: { payrolls_status: true },
+    });
+    if (!payroll) {
+      throw new Error(`Planilla ${payrollId} no encontrada`);
+    }
+    if (payroll.payrolls_status !== 'BORRADOR') {
+      throw new Error(`Solo se pueden ajustar planillas en estado BORRADOR. Estado actual: ${payroll.payrolls_status}`);
+    }
+
+    // Buscar el registro del empleado en la planilla
+    const payrollEmp = await prisma.vpg_payroll_employee.findFirst({
+      where: {
+        payroll_employee_payroll_id: payrollId,
+        payroll_employee_employee_id: employeeId,
+      },
+    });
+    if (!payrollEmp) {
+      throw new Error(`Empleado ${employeeId} no encontrado en planilla ${payrollId}`);
+    }
+
+    // Validar que la suma de horas no exceda 24
+    const newRegular = override.regularHours ?? Number(payrollEmp.payroll_employee_total_hours ?? 0);
+    const newOvertime = override.overtimeHours ?? Number(payrollEmp.payroll_employee_overtime_hours ?? 0);
+    if (newRegular + newOvertime > 24) {
+      throw new Error('La suma de horas regulares y horas extra no puede exceder 24 horas');
+    }
+
+    // Recalcular salario neto con nuevas deducciones
+    const newDeductions = override.totalDeductions ?? Number(payrollEmp.payroll_employee_total_deductions);
+    const grossSalary = Number(payrollEmp.payroll_employee_gross_salary);
+    const newNetSalary = Math.max(0, grossSalary - newDeductions);
+
+    // Construir payload — solo actualizar columnas de override para los valores proporcionados
+    const updateData: Record<string, unknown> = {
+      payroll_employee_is_manually_adjusted: true,
+      payroll_employee_version: payrollEmp.payroll_employee_version + 1,
+      payroll_employee_total_deductions: newDeductions,
+      payroll_employee_net_salary: newNetSalary,
+    };
+    if (override.regularHours !== undefined) {
+      updateData.payroll_employee_hours_override = override.regularHours;
+      updateData.payroll_employee_total_hours = override.regularHours;
+    }
+    if (override.overtimeHours !== undefined) {
+      updateData.payroll_employee_overtime_override = override.overtimeHours;
+      updateData.payroll_employee_overtime_hours = override.overtimeHours;
+    }
+    if (override.weeklyRestHours !== undefined) {
+      updateData.payroll_employee_weekly_rest_override = override.weeklyRestHours;
+      updateData.payroll_employee_weekly_rest_hours = override.weeklyRestHours;
+    }
+    if (override.totalDeductions !== undefined) {
+      updateData.payroll_employee_deductions_override = override.totalDeductions;
+    }
+
+    return await prisma.vpg_payroll_employee.update({
+      where: { payroll_employee_id: payrollEmp.payroll_employee_id },
+      data: updateData,
+    });
+  }
+
   
 }

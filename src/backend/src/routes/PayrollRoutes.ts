@@ -3,7 +3,7 @@ import { PayrollController } from "../controller/PayrollController";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import { validateBody } from '../middleware/validateBody';
-import { createPayrollSchema, updatePayrollSchema } from '../schemas/PayrollSchema';
+import { createPayrollSchema, updatePayrollSchema, employeeOverrideSchema } from '../schemas/PayrollSchema';
 
 const router = Router();
 
@@ -227,5 +227,16 @@ router.post("/payroll/:id/recalculate", asyncHandler(PayrollController.recalcula
  * @access  Private
  */
 router.get("/payroll/aguinaldo/:employeeId/:year", asyncHandler(PayrollController.calculateAguinaldo));
+
+/**
+ * @route   PATCH /payroll/:id/employee/:empId/override
+ * @desc    Save per-employee hour/deduction override (BORRADOR only)
+ * @access  Private
+ */
+router.patch(
+  "/payroll/:id/employee/:empId/override",
+  validateBody(employeeOverrideSchema),
+  asyncHandler(PayrollController.saveEmployeeOverride)
+);
 
 export default router;

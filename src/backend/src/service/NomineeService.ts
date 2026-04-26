@@ -245,6 +245,7 @@ export class NomineeService {
     startDate: Date,
     endDate: Date,
     payrollId?: number,
+    selectedEmployeeIds?: number[],
   ): Promise<PayrollCalculationResult> {
     const result: PayrollCalculationResult = {
       period: {
@@ -260,14 +261,14 @@ export class NomineeService {
     };
 
     try {
-      // Try to get employees eligible for payroll in the given period
-      let employees = await EmployeeService.getActiveEmployeesForPeriod(
-        startDate,
-        endDate,
-      );
+      // Filtrar empleados por IDs seleccionados si se proporcionan
+      let employees = selectedEmployeeIds && selectedEmployeeIds.length > 0
+        ? (await EmployeeService.getAllEmployees()).filter(e =>
+            selectedEmployeeIds.includes(Number(e.id)))
+        : await EmployeeService.getActiveEmployeesForPeriod(startDate, endDate);
 
-      // If none found, fallback to all employees to aid troubleshooting and avoid returning an empty result silently
-      if (employees.length === 0) {
+      // Fallback solo cuando no hay filtro activo
+      if (employees.length === 0 && !(selectedEmployeeIds && selectedEmployeeIds.length > 0)) {
         const allEmployees = await EmployeeService.getAllEmployees();
         result.summary.messages.push(
           `No se encontraron empleados activos para el periodo. Total en sistema: ${allEmployees.length}.` +
