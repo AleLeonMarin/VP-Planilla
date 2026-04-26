@@ -309,7 +309,13 @@ model vpg_payroll_employee {
   payroll_employee_gross_salary      Decimal       @db.Decimal(10, 2)
   payroll_employee_total_deductions  Decimal       @db.Decimal(10, 2)
   payroll_employee_net_salary        Decimal       @db.Decimal(10, 2)
-  payroll_employee_version           Int           @default(1)
+  payroll_employee_version              Int           @default(1)
+  // Columnas de ajuste manual por el jefe antes de aprobar la planilla
+  payroll_employee_hours_override       Decimal?      @db.Decimal(10, 2)
+  payroll_employee_overtime_override    Decimal?      @db.Decimal(10, 2)
+  payroll_employee_weekly_rest_override Decimal?      @db.Decimal(10, 2)
+  payroll_employee_deductions_override  Decimal?      @db.Decimal(10, 2)
+  payroll_employee_is_manually_adjusted Boolean       @default(false)
   vpg_employees                      vpg_employees @relation(fields: [payroll_employee_employee_id], references: [employee_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_employees_09")
   vpg_payrolls                       vpg_payrolls  @relation(fields: [payroll_employee_payroll_id], references: [payrolls_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payroll_employee_payrolls_08")
 
@@ -333,6 +339,8 @@ model vpg_payrolls {
   payrolls_period_end           DateTime                      @db.Date
   payrolls_payment_date         DateTime                      @db.Date
   payrolls_status               PayrollStatus
+  // Tipo de período: quincenal, mensual, rango_libre
+  payrolls_period_type          String        @default("quincenal") @db.VarChar(20)
   payrolls_approved_by          Int?
   payrolls_approved_at          DateTime?                     @db.Timestamp(6)
   payrolls_notes                String?
