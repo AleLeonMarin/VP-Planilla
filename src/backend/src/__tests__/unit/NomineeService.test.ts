@@ -14,6 +14,26 @@ const { EmployeeService } = require('../../service/EmployeeService');
 const { ClockLogEffectiveService } = require('../../service/ClockLogEffectiveService');
 const { prisma } = require('../../lib/prisma');
 
+// Provide real implementation for pairLogs even if service is mocked
+jest.mocked(ClockLogEffectiveService.pairLogs).mockImplementation((marks: any[]) => {
+  const sorted = [...marks].sort((a, b) => new Date(a.effectiveTimestamp).getTime() - new Date(b.effectiveTimestamp).getTime());
+  const pairs = [];
+  for (let i = 0; i < sorted.length; i += 2) {
+    const inMark = sorted[i];
+    const outMark = sorted[i+1];
+    if (inMark && outMark && inMark.logType === 'IN' && outMark.logType === 'OUT') {
+      const duration = (new Date(outMark.effectiveTimestamp).getTime() - new Date(inMark.effectiveTimestamp).getTime()) / (1000 * 60 * 60);
+      pairs.push({
+        in: inMark,
+        out: outMark,
+        status: 'valid',
+        durationHours: duration
+      });
+    }
+  }
+  return pairs;
+});
+
 const BASE_HOURLY = 1680;
 
 const mockPosition = {
@@ -39,6 +59,27 @@ beforeEach(() => {
   jest.mocked(EmployeeService.getActiveEmployeesForPeriod).mockResolvedValue([]);
   jest.mocked(EmployeeService.getAllEmployees).mockResolvedValue([]);
   jest.mocked(ClockLogEffectiveService.getEffectiveMarksForAllEmployees).mockResolvedValue(new Map());
+  
+  // Provide a functional mock for pairLogs
+  jest.mocked(ClockLogEffectiveService.pairLogs).mockImplementation((marks: any[]) => {
+    const sorted = [...marks].sort((a, b) => new Date(a.effectiveTimestamp).getTime() - new Date(b.effectiveTimestamp).getTime());
+    const pairs = [];
+    for (let i = 0; i < sorted.length; i += 2) {
+      const inMark = sorted[i];
+      const outMark = sorted[i+1];
+      if (inMark && outMark && inMark.logType === 'IN' && outMark.logType === 'OUT') {
+        const duration = (new Date(outMark.effectiveTimestamp).getTime() - new Date(inMark.effectiveTimestamp).getTime()) / (1000 * 60 * 60);
+        pairs.push({
+          in: inMark,
+          out: outMark,
+          status: 'valid',
+          durationHours: duration
+        });
+      }
+    }
+    return pairs;
+  });
+
   prisma.vpg_clock_logs.findMany.mockResolvedValue([]);
   prisma.vpg_vacations.findMany.mockResolvedValue([]);
   prisma.vpg_employee_labor_event.findMany.mockResolvedValue([]);

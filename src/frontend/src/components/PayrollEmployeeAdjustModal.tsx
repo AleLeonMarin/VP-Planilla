@@ -14,14 +14,7 @@ const overrideSchema = z.object({
   overtimeHours: z.coerce.number().min(0).optional(),
   weeklyRestHours: z.coerce.number().min(0).optional(),
   totalDeductions: z.coerce.number().min(0).optional(),
-}).refine(
-  (data) => {
-    const regular = data.regularHours ?? 0;
-    const overtime = data.overtimeHours ?? 0;
-    return regular + overtime <= 24;
-  },
-  { message: 'La suma de horas regulares y horas extra no puede exceder 24 horas' }
-);
+});
 
 type OverrideFormData = z.infer<typeof overrideSchema>;
 type OverrideFormInput = z.input<typeof overrideSchema>;

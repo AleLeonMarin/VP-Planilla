@@ -147,28 +147,35 @@ export class NomineeService {
         });
 
         if (existing) {
-          // Update existing record
-          await prisma.vpg_payroll_employee.update({
-            where: {
-              payroll_employee_id: existing.payroll_employee_id,
-            },
-            data: {
-              payroll_employee_total_hours:
-                employee.regularHours + employee.overtimeHours,
-              payroll_employee_overtime_hours: employee.overtimeHours,
-              payroll_employee_overtime_pay: employee.overtimePay,
-              payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
-              payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
-              payroll_employee_bonuses: employee.bonuses,
-              payroll_employee_gross_salary: employee.grossSalary,
-              payroll_employee_total_deductions: employee.totalDeductions,
-              payroll_employee_net_salary: employee.netSalary,
-              payroll_employee_version: existing.payroll_employee_version + 1,
-            },
-          });
-          console.log(
-            `Updated payroll employee record for employee ${employee.employeeId}`,
-          );
+          // Si el registro fue ajustado manualmente, NO sobrescribimos las horas ni los salarios
+          // calculados, ya que el usuario ya definió valores específicos.
+          if (existing.payroll_employee_is_manually_adjusted) {
+            console.log(`Skipping auto-calculation update for manually adjusted employee ${employee.employeeId}`);
+            // Podríamos actualizar deducciones si no están bloqueadas, pero por ahora respetamos todo el ajuste manual
+          } else {
+            // Update existing record with auto-calculated data
+            await prisma.vpg_payroll_employee.update({
+              where: {
+                payroll_employee_id: existing.payroll_employee_id,
+              },
+              data: {
+                payroll_employee_total_hours:
+                  employee.regularHours + employee.overtimeHours,
+                payroll_employee_overtime_hours: employee.overtimeHours,
+                payroll_employee_overtime_pay: employee.overtimePay,
+                payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
+                payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
+                payroll_employee_bonuses: employee.bonuses,
+                payroll_employee_gross_salary: employee.grossSalary,
+                payroll_employee_total_deductions: employee.totalDeductions,
+                payroll_employee_net_salary: employee.netSalary,
+                payroll_employee_version: existing.payroll_employee_version + 1,
+              },
+            });
+            console.log(
+              `Updated payroll employee record for employee ${employee.employeeId}`,
+            );
+          }
         } else {
           // Create new record
           await prisma.vpg_payroll_employee.create({

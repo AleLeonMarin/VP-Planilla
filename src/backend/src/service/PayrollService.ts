@@ -518,51 +518,62 @@ export class PayrollService {
       throw new Error(`Solo se pueden ajustar planillas en estado BORRADOR. Estado actual: ${payroll.payrolls_status}`);
     }
 
-    // Buscar el registro del empleado en la planilla
+    // Buscar el registro del empleado en la planilla y su salario base
     const payrollEmp = await prisma.vpg_payroll_employee.findFirst({
       where: {
         payroll_employee_payroll_id: payrollId,
         payroll_employee_employee_id: employeeId,
       },
+      include: {
+        vpg_employees: {
+          include: {
+            vpg_positions: true
+          }
+        }
+      }
     });
+
     if (!payrollEmp) {
       throw new Error(`Empleado ${employeeId} no encontrado en planilla ${payrollId}`);
     }
 
-    // Validar que la suma de horas no exceda 24
-    const newRegular = override.regularHours ?? Number(payrollEmp.payroll_employee_total_hours ?? 0);
-    const newOvertime = override.overtimeHours ?? Number(payrollEmp.payroll_employee_overtime_hours ?? 0);
-    if (newRegular + newOvertime > 24) {
-      throw new Error('La suma de horas regulares y horas extra no puede exceder 24 horas');
-    }
+    // Obtener salario base por hora (Costa Rica: Salario Mensual / 30 / 8)
+    const baseSalary = Number(payrollEmp.vpg_employees.vpg_positions.position_base_salary);
+    const hourlyRate = baseSalary / 30 / 8;
 
-    // Recalcular salario neto con nuevas deducciones
-    const newDeductions = override.totalDeductions ?? Number(payrollEmp.payroll_employee_total_deductions);
-    const grossSalary = Number(payrollEmp.payroll_employee_gross_salary);
-    const newNetSalary = Math.max(0, grossSalary - newDeductions);
+    // Determinar nuevos valores (usar override o valor actual)
+    const regularHours = override.regularHours ?? Number(payrollEmp.payroll_employee_hours_override ?? payrollEmp.payroll_employee_total_hours ?? 0);
+    const overtimeHours = override.overtimeHours ?? Number(payrollEmp.payroll_employee_overtime_override ?? payrollEmp.payroll_employee_overtime_hours ?? 0);
+    const weeklyRestHours = override.weeklyRestHours ?? Number(payrollEmp.payroll_employee_weekly_rest_override ?? payrollEmp.payroll_employee_weekly_rest_hours ?? 0);
+    const totalDeductions = override.totalDeductions ?? Number(payrollEmp.payroll_employee_deductions_override ?? payrollEmp.payroll_employee_total_deductions ?? 0);
+    const bonuses = Number(payrollEmp.payroll_employee_bonuses ?? 0);
 
-    // Construir payload — solo actualizar columnas de override para los valores proporcionados
-    const updateData: Record<string, unknown> = {
+    // Calcular componentes salariales
+    const regularPay = regularHours * hourlyRate;
+    const overtimePay = overtimeHours * hourlyRate * 1.5;
+    const weeklyRestPay = weeklyRestHours * hourlyRate;
+    const grossSalary = regularPay + overtimePay + weeklyRestPay + bonuses;
+    const netSalary = Math.max(0, grossSalary - totalDeductions);
+
+    // Construir payload
+    const updateData: any = {
       payroll_employee_is_manually_adjusted: true,
       payroll_employee_version: payrollEmp.payroll_employee_version + 1,
-      payroll_employee_total_deductions: newDeductions,
-      payroll_employee_net_salary: newNetSalary,
+      payroll_employee_total_hours: regularHours + overtimeHours,
+      payroll_employee_overtime_hours: overtimeHours,
+      payroll_employee_overtime_pay: overtimePay,
+      payroll_employee_weekly_rest_hours: weeklyRestHours,
+      payroll_employee_weekly_rest_pay: weeklyRestPay,
+      payroll_employee_gross_salary: grossSalary,
+      payroll_employee_total_deductions: totalDeductions,
+      payroll_employee_net_salary: netSalary,
     };
-    if (override.regularHours !== undefined) {
-      updateData.payroll_employee_hours_override = override.regularHours;
-      updateData.payroll_employee_total_hours = override.regularHours;
-    }
-    if (override.overtimeHours !== undefined) {
-      updateData.payroll_employee_overtime_override = override.overtimeHours;
-      updateData.payroll_employee_overtime_hours = override.overtimeHours;
-    }
-    if (override.weeklyRestHours !== undefined) {
-      updateData.payroll_employee_weekly_rest_override = override.weeklyRestHours;
-      updateData.payroll_employee_weekly_rest_hours = override.weeklyRestHours;
-    }
-    if (override.totalDeductions !== undefined) {
-      updateData.payroll_employee_deductions_override = override.totalDeductions;
-    }
+
+    // Persistir los overrides específicos para que se mantengan en futuros recálculos
+    if (override.regularHours !== undefined) updateData.payroll_employee_hours_override = override.regularHours;
+    if (override.overtimeHours !== undefined) updateData.payroll_employee_overtime_override = override.overtimeHours;
+    if (override.weeklyRestHours !== undefined) updateData.payroll_employee_weekly_rest_override = override.weeklyRestHours;
+    if (override.totalDeductions !== undefined) updateData.payroll_employee_deductions_override = override.totalDeductions;
 
     return await prisma.vpg_payroll_employee.update({
       where: { payroll_employee_id: payrollEmp.payroll_employee_id },

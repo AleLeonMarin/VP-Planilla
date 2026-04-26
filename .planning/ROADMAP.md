@@ -4,7 +4,7 @@
 
 | Phase | Name | Requirements | Success Criteria | Status |
 |-------|------|--------------|------------------|--------|
-| 49 | Persistencia de Vista (CachÃ© de UI) | UX-11, UX-12 | 2 | Completed |
+| 49 | Persistencia de Vista (CachÃ© de UI) | UX-11, UX-12 | Complete    | 2026-04-26 |
 | 50 | CorrecciÃ³n LÃ³gica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Completed |
 | 52 | Persistencia Robusta (LocalStorage) | UX-11, UX-12 | 2 | Completed |
 | 51 | EdiciÃ³n Directa de Marcas en AuditorÃ­a | AUDIT-01 | 3 | Not Started |
@@ -52,7 +52,7 @@
 **Status:** Planning Complete (5 plans ready — execute waves 1→2→3→4)
 
 **Plans:**
-- 54-01 (Wave 1): DB Migration — payrolls_period_type + employee override columns
+1/1 plans complete
 - 54-02 (Wave 2): Backend API — selectedEmployeeIds filter + PATCH override endpoint
 - 54-03 (Wave 3): Frontend — /pages/payroll/wizard 4-step page + usePayrollWizard extension
 - 54-04 (Wave 3): Frontend — PayrollEmployeeAdjustModal + payrollService.saveEmployeeOverride()
