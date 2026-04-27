@@ -13,6 +13,11 @@ jest.mock('@prisma/client', () => ({
     APROBADA: 'APROBADA',
     PAGADA: 'PAGADA',
   },
+  MinuteRoundingPolicy: {
+    EXACT: 'EXACT',
+    ALWAYS_UP: 'ALWAYS_UP',
+    NEAREST_QUARTER: 'NEAREST_QUARTER',
+  },
 }));
 
 // Mock the lib/prisma module

@@ -9,10 +9,14 @@ jest.mock('../../lib/prisma', () => {
 
 jest.mock('../../service/EmployeeService');
 jest.mock('../../service/ClockLogEffectiveService');
+jest.mock('../../service/LegalParamService');
 
 const { EmployeeService } = require('../../service/EmployeeService');
 const { ClockLogEffectiveService } = require('../../service/ClockLogEffectiveService');
+const { LegalParamService } = require('../../service/LegalParamService');
 const { prisma } = require('../../lib/prisma');
+import * as PayrollUtils from '../../utils/payrollUtils';
+import { MinuteRoundingPolicy } from '@prisma/client';
 
 const service = new NomineeService();
 
@@ -31,6 +35,10 @@ describe('NomineeService Phase 54 — PAY-11 & PAY-13', () => {
       { id: 1, name: 'Employee 1', national_id: '1', position_id: 1 },
     ]);
     jest.mocked(ClockLogEffectiveService.getEffectiveMarksForAllEmployees).mockResolvedValue(new Map());
+    jest.mocked(LegalParamService.getParamSetAtDate).mockResolvedValue({
+      ...PayrollUtils.DEFAULT_LEGAL_PARAMS,
+      minuteRoundingPolicy: MinuteRoundingPolicy.EXACT,
+    });
     prisma.vpg_vacations.findMany.mockResolvedValue([]);
     prisma.vpg_employee_labor_event.findMany.mockResolvedValue([]);
     prisma.vpg_bonuses.findMany.mockResolvedValue([]);
