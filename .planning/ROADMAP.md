@@ -13,8 +13,8 @@
 | 56 | Motor de Cálculo Desacoplado | PAY-21 | 4 | Not Started |
 | 57 | Enterprise Config — Campos Faltantes | PAY-22 | 3 | Complete | 2026-04-26 |
 | 58 | Redondeo de Minutos en Motor | PAY-23 | 3 | Complete | 2026-04-26 |
-| 59 | Categoría Ocupacional y Salarios Mínimos | PAY-24 | 5 | Not Started |
-| 60 | Validación Salario Mínimo al Aprobar | PAY-25 | 4 | Not Started |
+| 59 | Tarifa Mínima Global (Opcional) | PAY-24 | 2 | Planning Complete |
+| 60 | Advertencia de Tarifa Mínima en Planilla | PAY-25 | 3 | Not Started |
 | 61 | Alertas Persistentes Parámetros Legales | PAY-26 | 5 | Not Started |
 | 62 | Confirmación Contraseña Params Críticos | PAY-27 | 2 | Not Started |
 | 63 | Panel Admin Parámetros Legales UI | PAY-28 | 5 | Not Started |
@@ -120,14 +120,17 @@
 - [x] 58-01-PLAN.md — Technical base & LegalParamService (Wave 1)
 - [x] 58-02-PLAN.md — Engine integration & Unit Tests (Wave 2)
 
-### Phase 59: Categoría Ocupacional y Salarios Mínimos
-**Goal:** Los puestos adquieren categoria_ocupacional y los salarios mínimos del Decreto MTSS entran a vpg_legal_params con fecha de vigencia real.
+### Phase 59: Tarifa Mínima Global (Opcional)
+**Goal:** Añadir un parámetro global en vpg_legal_params para definir una tarifa mínima por hora de referencia. Esto simplifica la administración para el cliente, evitando el uso de un catálogo complejo de categorías ocupacionales del MTSS.
 **Requirements:** PAY-24
 **Success Criteria:**
-1. vpg_positions tiene campo categoria_ocupacional con migración.
-2. Registros MIN_WAGE_* existen en vpg_legal_params con valores del decreto MTSS julio 2025.
-3. LegalParamService.getMinWageForPosition(positionId, date) retorna el valor correcto.
-**Status:** Not Started
+1. vpg_legal_params incluye el parámetro GLOBAL_MIN_WAGE_RATE con los valores del decreto MTSS (2024, 2025).
+2. LegalParamService.getGlobalMinWageRate(date) retorna el valor correcto.
+**Status:** Planning Complete (2 plans ready — execute waves 1→2)
+
+**Plans:** 2 plans
+- [ ] 59-01-PLAN.md — Seed del parámetro GLOBAL_MIN_WAGE_RATE en vpg_legal_params (Wave 1)
+- [ ] 59-02-PLAN.md — getGlobalMinWageRate en LegalParamService (Wave 2)
 
 ### Phase 60: Validación Salario Mínimo al Aprobar
 **Goal:** Bloquear BORRADOR→APROBADA si algún empleado recibe menos del salario mínimo legal. Incluye toggle MIN_WAGE_CHECK_ENABLED y permiso payroll.override_legal_check.
@@ -195,6 +198,12 @@
 
 ### Phase 52: UI de Drag and Drop para Ventanas de Tiempo por Empleado
 **Goal:** Allow administrators to intuitively manage, assign, and visualize time windows per employee through a drag-and-drop interface within the sidebar views.
+**Requirements:** UX-13
+**Success Criteria:**
+1. Administrators can interact with graphical time blocks mapped to employees.
+2. Interface updates sync to backend settings reliably.
+**Status:** Not Started
+through a drag-and-drop interface within the sidebar views.
 **Requirements:** UX-13
 **Success Criteria:**
 1. Administrators can interact with graphical time blocks mapped to employees.
