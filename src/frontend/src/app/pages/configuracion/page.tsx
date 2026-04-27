@@ -1,9 +1,15 @@
 'use client';
 import Link from 'next/link';
-import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 
 export default function ConfiguracionDashboard() {
   const settingsCards = [
+    {
+      title: 'Configuración Laboral',
+      description: 'Gestione las reglas de cálculo, políticas de redondeo y jornadas de la empresa.',
+      href: '/pages/configuracion/empresa',
+      icon: <BriefcaseIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+    },
     {
       title: 'Ventanas de Tiempo',
       description: 'Configure los rangos horarios para la inferencia automática de entradas y salidas.',
