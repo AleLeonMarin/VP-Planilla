@@ -77,7 +77,12 @@
 1. Modelo VpgLegalParam existe en schema.prisma con todos los campos requeridos y migración generada.
 2. Seed ejecutado: 20+ parámetros iniciales en BD incluyendo jornadas, multiplicadores OT, tasas CCSS y MIN_WAGE_CHECK_ENABLED.
 3. LegalParamService.getParamAtDate('OT_FACTOR', new Date()) retorna 1.5.
-**Status:** Not Started
+**Status:** Planning Complete (3 plans ready — execute waves 1→2→3)
+
+**Plans:** 3 plans
+- [ ] 55-01-PLAN.md — Schema + migration + seed (Wave 1)
+- [ ] 55-02-PLAN.md — LegalParamService + unit tests (Wave 2)
+- [ ] 55-03-PLAN.md — LegalParamController + LegalParamRoute + index.ts registration (Wave 3)
 
 ### Phase 56: Motor de Cálculo Desacoplado
 **Goal:** Eliminar literales numéricos de payrollUtils.ts y hacer que NomineeService cargue parámetros desde vpg_legal_params. Los resultados de planilla no cambian — solo el origen de los valores.
