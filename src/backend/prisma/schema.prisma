@@ -101,6 +101,18 @@ enum PayrollStatus {
   PAGADA
 }
 
+enum MinuteRoundingPolicy {
+  EXACT
+  ALWAYS_UP
+  NEAREST_QUARTER
+}
+
+enum ShiftType {
+  DIURNA
+  MIXTA
+  NOCTURNA
+}
+
 model vpg_clock_logs {
   clock_logs_id                Int                       @id @default(autoincrement())
   clock_logs_employee_id       Int
@@ -256,12 +268,16 @@ model vpg_employees {
 }
 
 model vpg_enterprise {
-  enterprise_id            Int                     @id @default(autoincrement())
-  enterprise_name          String                  @db.VarChar(50)
-  enterprise_image         Bytes
-  enterprise_creation_date DateTime                @db.Date
-  enterpise_version        Int                     @default(1)
-  vpg_enterprise_branch    vpg_enterprise_branch[] @ignore
+  enterprise_id                        Int                     @id @default(autoincrement())
+  enterprise_name                      String                  @db.VarChar(50)
+  enterprise_image                     Bytes
+  enterprise_creation_date             DateTime                @db.Date
+  enterpise_version                    Int                     @default(1)
+  enterprise_minute_rounding_policy    MinuteRoundingPolicy    @default(EXACT)
+  enterprise_rounding_policy_acknowledged Boolean              @default(false)
+  enterprise_is_commercial_activity    Boolean                 @default(true)
+  enterprise_ordinary_shift_type       ShiftType               @default(DIURNA)
+  vpg_enterprise_branch                vpg_enterprise_branch[] @ignore
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
