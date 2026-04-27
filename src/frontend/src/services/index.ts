@@ -44,6 +44,10 @@ export type { PayrollType, PayrollTypePayload } from './payrollTypesService';
 export { NomineeService } from './nomineeService';
 export type { ClockLog, EmployeeDeduction } from './nomineeService';
 
+// Enterprise
+export { EnterpriseService, MinuteRoundingPolicy, ShiftType } from './enterpriseService';
+export type { EnterpriseConfig } from './enterpriseService';
+
 // Reports
 export { ReportsService } from './reportsService';
 export type {
