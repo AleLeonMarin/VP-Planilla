@@ -1,3 +1,5 @@
+import { MinuteRoundingPolicy } from '@prisma/client';
+
 /**
  * Payroll domain types
  * Central place for all payroll-related interfaces used across services.
@@ -85,5 +87,5 @@ export interface LegalParamSet {
   ccssObreroSalud: number;
   ccssObrerosPension: number;
   ccssObreroBP: number;
-  minuteRoundingPolicy?: string; // TODO: Phase 58
+  minuteRoundingPolicy: MinuteRoundingPolicy;
 }
