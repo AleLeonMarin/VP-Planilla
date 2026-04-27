@@ -569,3 +569,22 @@ model VpgDayConfirmation {
   @@unique([employee_id, confirmation_date])
   @@map("vpg_day_confirmations")
 }
+
+model VpgLegalParam {
+  id             String    @id @default(cuid())
+  key            String
+  value          Decimal
+  description    String
+  category       String
+  validFrom      DateTime
+  validUntil     DateTime?
+  isActive       Boolean   @default(true)
+  isCritical     Boolean   @default(false)
+  source_decree  String?
+  createdBy      String
+  updatedBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("vpg_legal_params")
+}

@@ -30,6 +30,7 @@ const nullablePayrollFields = {
   payrolls_notes: null,
   payrolls_reopened_at: null,
   payrolls_reopen_reason: null,
+  payrolls_period_type: 'quincenal',
 };
 
 describe('PayrollService', () => {

@@ -24,6 +24,7 @@ import companyHolidayRoutes from "./routes/companyHolidayRoutes";
 import timeWindowRoutes from "./routes/TimeWindowRoute";
 import dayConfirmationRoutes from "./routes/DayConfirmationRoute";
 import markSuggestionRoutes from "./routes/MarkSuggestionRoute";
+import legalParamRoutes from "./routes/LegalParamRoute";
 import { swaggerSpec } from "./utils/docs";
 import { env } from "./config/env";
 
@@ -87,6 +88,7 @@ app.use("/api/company-holidays", companyHolidayRoutes);
 app.use("/api/time-windows", timeWindowRoutes);
 app.use("/api/day-confirmations", dayConfirmationRoutes);
 app.use("/api/suggestions", markSuggestionRoutes);
+app.use("/api", legalParamRoutes);
 
 // Servir la especificación de Swagger en formato JSON
 app.get("/api/docs/swagger.json", (req, res) => {
