@@ -28,10 +28,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   // Mock transaction to just execute the callback
   prisma.$transaction.mockImplementation(async (callback: any) => {
-    if (typeof callback === 'function') {
-      return await callback(prisma);
-    }
-    return callback;
+    return await callback(prisma);
   });
   prisma.vpg_enterprise.findFirst.mockResolvedValue(mockEnterprise);
   prisma.vpg_enterprise.update.mockResolvedValue(mockEnterprise);
@@ -119,7 +116,7 @@ describe('EnterpriseService', () => {
           entity: 'enterprise_config',
           entityId: 1,
         }),
-        expect.anything()
+        prisma // Should be prisma because of our $transaction mock
       );
     });
 
@@ -134,7 +131,7 @@ describe('EnterpriseService', () => {
           entity: 'enterprise_config',
           entityId: 1,
         }),
-        expect.anything()
+        prisma
       );
     });
 
