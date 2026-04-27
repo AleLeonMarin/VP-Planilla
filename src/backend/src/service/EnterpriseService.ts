@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { AuditLogsService } from './AuditLogsService';
+import { UpdateEnterpriseInput } from '../schemas/EnterpriseSchema';
 
 export class EnterpriseService {
   /**
@@ -18,7 +19,7 @@ export class EnterpriseService {
    * @returns Promise<any>
    * @throws Error if enterprise config is not found
    */
-  static async updateConfig(data: any, userId: number) {
+  static async updateConfig(data: UpdateEnterpriseInput, userId: number) {
     return await prisma.$transaction(async (tx) => {
       const current = await tx.vpg_enterprise.findFirst();
       if (!current) {

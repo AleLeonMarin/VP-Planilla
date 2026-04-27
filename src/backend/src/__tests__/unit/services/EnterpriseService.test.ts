@@ -17,7 +17,7 @@ const mockEnterprise = {
   enterprise_name: 'VP-Planilla',
   enterprise_image: Buffer.from('test-image'),
   enterprise_creation_date: new Date('2026-01-01'),
-  enterpise_version: 1,
+  enterprise_version: 1,
   enterprise_minute_rounding_policy: 'EXACT',
   enterprise_rounding_policy_acknowledged: false,
   enterprise_is_commercial_activity: true,

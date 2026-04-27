@@ -17,7 +17,7 @@ export interface EnterpriseConfig {
   enterprise_name: string;
   enterprise_image?: string;
   enterprise_creation_date: string;
-  enterpise_version: number;
+  enterprise_version: number;
   enterprise_minute_rounding_policy: MinuteRoundingPolicy;
   enterprise_rounding_policy_acknowledged: boolean;
   enterprise_is_commercial_activity: boolean;
