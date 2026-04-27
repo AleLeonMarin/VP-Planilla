@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: milestone
-status: Completed Phase 57
-last_updated: "2026-04-26T21:45:19.306Z"
+status: Completed Phase 58
+last_updated: "2026-04-26T22:55:00.000Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 10
-  completed_phases: 5
-  total_plans: 11
-  completed_plans: 11
-  percent: 50
+  completed_phases: 6
+  total_plans: 13
+  completed_plans: 13
+  percent: 60
 ---
 
 # Project State — VP-Planilla
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-24)
 ## Current Position
 
 Milestone: v1.7 IN PROGRESS
-Phase: 57
-Plan: Completed 57-03
-Status: Completed Phase 57 - Enterprise Configuration
+Phase: 58
+Plan: Completed 58-02
+Status: Completed Phase 58 - Redondeo de Minutos en Motor
 Last activity: 2026-04-26
 
-Progress: [##########..........] 50% (5/10 phases in roadmap v1.7 range complete)
+Progress: [############........] 60% (6/10 phases in roadmap v1.7 range complete)
 
 ## v1.7 Phase Map
 
@@ -40,7 +40,7 @@ Progress: [##########..........] 50% (5/10 phases in roadmap v1.7 range complete
 | 55 | Fundación vpg_legal_params | PAY-20 | ⏳ Not Started |
 | 56 | Motor de Cálculo Desacoplado | PAY-21 | ⏳ Not Started |
 | 57 | Enterprise Config — Campos Faltantes | PAY-22 | ✅ Complete |
-| 58 | Redondeo de Minutos en Motor | PAY-23 | ⏳ Not Started |
+| 58 | Redondeo de Minutos en Motor | PAY-23 | ✅ Complete |
 
 ## v1.6 Phase Map (Audit Refinement)
 
@@ -58,33 +58,31 @@ Progress: [##########..........] 50% (5/10 phases in roadmap v1.7 range complete
 |-----------|-------|--------|-------|
 | v1.5 | Gestión de Marcas y Planilla para Producción | Archived | 497+ tests |
 | v1.6 | Mejoras en Auditoría de Marcas y UX | 🚧 In Progress | -- |
-| v1.7 | Robustez y Parámetros Legales | 🚧 In Progress | 505+ tests |
+| v1.7 | Robustez y Parámetros Legales | 🚧 In Progress | 512+ tests |
 
-## Phase 57 - Enterprise Config — Campos Faltantes (COMPLETED 2026-04-26)
+## Phase 58 - Redondeo de Minutos en Motor (COMPLETED 2026-04-26)
 
 ### Summary
 
-- **Plan 01**: Extended `vpg_enterprise` with `enterprise_minute_rounding_policy`, `enterprise_rounding_policy_acknowledged`, `enterprise_is_commercial_activity` (default true), and `enterprise_ordinary_shift_type`.
-- **Plan 02**: Implemented Backend API and Service with TDD (8 new tests). Enforced `enterprise_config` audit entity and `NEAREST_QUARTER_ACKNOWLEDGED` action.
-- **Plan 03**: Developed "Configuración Laboral" UI with verbatim legal disclaimer modal for bidirectional rounding.
+- **Plan 01**: Implemented `applyMinuteRounding` utility and updated `LegalParamService` to load rounding policy from Enterprise config.
+- **Plan 02**: Integrated rounding into `NomineeService` calculation engine, ensuring it applies to daily totals before hours conversion.
 
 ### Decisions
 
-- Used `enterprise_` prefix for all new fields to match existing schema patterns.
-- Mandatory legal disclaimer for `NEAREST_QUARTER` policy triggers a high-stakes confirmation flow.
+- Switched from floating-point accumulation to integer minute accumulation to prevent IEEE 754 precision drift.
+- Rounding is applied to the daily total of worked minutes, as per Costa Rican labor law requirements.
 
 ## Accumulated Context
 
 ### Tests
 
-- Backend: 500+ tests (Jest).
+- Backend: 507+ tests (Jest).
 - Java: 5 tests (JUnit 5).
-- Total: 505+ tests passing, 0 failures.
+- Total: 512+ tests passing, 0 failures.
 
 ### Architecture Notes for v1.7
 
-- **Enterprise Config:** Centralized business rules now reside in the database instead of hardcoded constants.
-- **Audit Compliance:** Configuration changes are systematically tracked in `vpg_audit_logs`.
-- **Rounding Logic:** UI prevents activation of risky rounding policies without explicit legal acknowledgment.
+- **Precision:** The payroll engine now uses integer math (minutes) for internal calculations, converting to decimal hours only at the final step after rounding.
+- **Enterprise Integration:** The calculation engine is now dynamic and respects the specific rounding policy of the enterprise.
 
 ---

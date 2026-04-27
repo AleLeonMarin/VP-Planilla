@@ -12,7 +12,7 @@
 | 55 | Fundación vpg_legal_params | PAY-20 | 3 | Not Started |
 | 56 | Motor de Cálculo Desacoplado | PAY-21 | 4 | Not Started |
 | 57 | Enterprise Config — Campos Faltantes | PAY-22 | 3 | Complete | 2026-04-26 |
-| 58 | Redondeo de Minutos en Motor | PAY-23 | 3 | Not Started |
+| 58 | Redondeo de Minutos en Motor | PAY-23 | 3 | Complete | 2026-04-26 |
 | 59 | Categoría Ocupacional y Salarios Mínimos | PAY-24 | 5 | Not Started |
 | 60 | Validación Salario Mínimo al Aprobar | PAY-25 | 4 | Not Started |
 | 61 | Alertas Persistentes Parámetros Legales | PAY-26 | 5 | Not Started |
@@ -114,7 +114,11 @@
 1. applyMinuteRounding(431, 'ALWAYS_UP') retorna 7.25.
 2. applyMinuteRounding(424, 'NEAREST_QUARTER') retorna 7.00 (4 min descartados).
 3. npm test pasa con todos los casos del Payroll.md §4.
-**Status:** Not Started
+**Status:** Complete (2026-04-26)
+
+**Plans:**
+- [x] 58-01-PLAN.md — Technical base & LegalParamService (Wave 1)
+- [x] 58-02-PLAN.md — Engine integration & Unit Tests (Wave 2)
 
 ### Phase 59: Categoría Ocupacional y Salarios Mínimos
 **Goal:** Los puestos adquieren categoria_ocupacional y los salarios mínimos del Decreto MTSS entran a vpg_legal_params con fecha de vigencia real.
