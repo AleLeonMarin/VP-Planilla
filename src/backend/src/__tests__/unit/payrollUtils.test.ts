@@ -27,8 +27,9 @@ import {
   hasOverlappingPairs,
   getSundaysInPeriod,
   getWeeklyRestDays,
+  DEFAULT_LEGAL_PARAMS,
 } from '../../utils/payrollUtils';
-import { DayWork } from '../../types/payroll.types';
+import { DayWork, LegalParamSet } from '../../types/payroll.types';
 
 const mockHolidays: PayrollHoliday[] = [
   { company_holidays_date: new Date('2026-01-01'), company_holidays_is_mandatory: true, company_holidays_is_triple: false },
@@ -756,5 +757,43 @@ describe('payrollUtils - getWeeklyRestDays (DayWork[])', () => {
     ];
     // Only 5 qualifying days: 5/6 = 0 full rest days
     expect(getWeeklyRestDays(days)).toBe(0);
+  });
+});
+
+// ── Group 7: Dynamic Legal Parameters Variance ────────────────────────────────
+
+describe('payrollUtils - Dynamic Legal Parameters Variance', () => {
+  const customParams: LegalParamSet = {
+    ...DEFAULT_LEGAL_PARAMS,
+    regularHoursPerDay: 7, // Custom shift
+    otFactor: 2.0, // Double time for all overtime
+    holidayMandatoryFactor: 2.5,
+  };
+
+  it('calculateRegularHours uses custom regularHoursPerDay', () => {
+    const days: DayWork[] = [{ date: '2026-03-15', hoursWorked: 10, isVacation: false, messages: [] }];
+    expect(calculateRegularHours(days, customParams)).toBe(7);
+    expect(calculateRegularHours(days)).toBe(8); // Default fallback
+  });
+
+  it('calculateOvertimeHours uses custom regularHoursPerDay', () => {
+    const days: DayWork[] = [{ date: '2026-03-15', hoursWorked: 10, isVacation: false, messages: [] }];
+    expect(calculateOvertimeHours(days, customParams)).toBe(3); // 10 - 7 = 3
+    expect(calculateOvertimeHours(days)).toBe(2); // Default fallback
+  });
+
+  it('calculateScheduledHours uses custom regularHoursPerDay', () => {
+    const start = new Date('2026-01-05');
+    const end = new Date('2026-01-10'); // 6 days
+    expect(calculateScheduledHours(start, end, [], customParams)).toBe(42); // 6 * 7
+    expect(calculateScheduledHours(start, end)).toBe(48); // Default fallback
+  });
+
+  it('calculateOvertimePay uses custom otFactor and regularHoursPerDay', () => {
+    const days: DayWork[] = [{ date: '2026-03-15', hoursWorked: 10, isVacation: false, messages: [] }];
+    // Default: 2 OT * 1000 * 1.5 = 3000
+    // Custom: 3 OT * 1000 * 2.0 = 6000
+    expect(calculateOvertimePay(days, 1000, [], customParams)).toBe(6000);
+    expect(calculateOvertimePay(days, 1000)).toBe(3000);
   });
 });

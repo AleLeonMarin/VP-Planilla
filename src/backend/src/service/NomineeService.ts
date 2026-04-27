@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import { DeductionsService } from "./DeductionsService";
 import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
+import { LegalParamService } from "./LegalParamService";
 import * as PayrollUtils from "../utils/payrollUtils";
 import {
   PayrollPeriod,
@@ -14,6 +15,7 @@ import {
   EmployeePayroll,
   PayrollSummary,
   PayrollCalculationResult,
+  LegalParamSet,
 } from "../types/payroll.types";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -26,6 +28,7 @@ export type {
   EmployeePayroll,
   PayrollSummary,
   PayrollCalculationResult,
+  LegalParamSet,
 };
 
 export class NomineeService {
@@ -306,6 +309,8 @@ export class NomineeService {
         }
       });
 
+      const legalParams = await LegalParamService.getParamSetAtDate(startDate);
+
       for (const employee of employees) {
         try {
           const employeePayroll = await this.calculateEmployeePayroll(
@@ -318,7 +323,8 @@ export class NomineeService {
             bonusesMap.get(Number(employee.id)) || [],
             deductionsMap.get(Number(employee.id)) || [],
             positionsMap,
-            holidays
+            holidays,
+            legalParams
           );
 
           result.employees.push(employeePayroll);
@@ -421,7 +427,8 @@ export class NomineeService {
     employeeBonuses: any[],
     employeeDeductions: any[],
     positionsMap: Map<number, any>,
-    holidays: any[]
+    holidays: any[],
+    params: LegalParamSet
   ): Promise<EmployeePayroll> {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
@@ -511,7 +518,8 @@ export class NomineeService {
         employeePayroll.scheduledHours = PayrollUtils.calculateScheduledHours(
           startDate,
           endDate,
-          holidays
+          holidays,
+          params
         );
       }
 
@@ -540,9 +548,11 @@ export class NomineeService {
         // Fallback to per-day calculation if no biweekly requirement set
         employeePayroll.regularHours = PayrollUtils.calculateRegularHours(
           dailyWork.days,
+          params
         );
         employeePayroll.overtimeHours = PayrollUtils.calculateOvertimeHours(
           dailyWork.days,
+          params
         );
       }
       employeePayroll.weeklyRestHours = PayrollUtils.calculateWeeklyRestHours(
@@ -559,7 +569,8 @@ export class NomineeService {
       employeePayroll.overtimePay = PayrollUtils.calculateOvertimePay(
         dailyWork.days,
         employeePayroll.baseHourlySalary,
-        holidays
+        holidays,
+        params
       );
 
       // Calculate bonuses from preloaded data
@@ -572,7 +583,8 @@ export class NomineeService {
         employeePayroll.bonuses,
         startDate,
         endDate,
-        holidays
+        holidays,
+        params
       );
       
       // Calculate deductions from preloaded data

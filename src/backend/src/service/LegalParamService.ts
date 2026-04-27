@@ -1,8 +1,36 @@
 import { Decimal } from '@prisma/client/runtime/library';
 import { prisma } from '../lib/prisma';
 import { CreateLegalParamDto, VpgLegalParam } from '../model/VpgLegalParam';
+import { LegalParamSet } from '../types/payroll.types';
 
 export class LegalParamService {
+  /**
+   * Get the mapped LegalParamSet at a given date.
+   * Throws an error if critical parameters are missing from the DB.
+   * @param date - Target date
+   */
+  static async getParamSetAtDate(date: Date): Promise<LegalParamSet> {
+    const rawParams = await this.getParamsAtDate(date);
+    
+    const getParamValue = (key: string): number => {
+      const val = rawParams[key];
+      if (val === undefined || val === null) {
+        throw new Error(`Critical parameter missing from database: ${key}`);
+      }
+      return Number(val);
+    };
+
+    return {
+      regularHoursPerDay: 8, // TODO: Phase 66
+      regularHoursPerWeek: 48, // TODO: Phase 66
+      otFactor: getParamValue('OT_FACTOR'),
+      holidayMandatoryFactor: getParamValue('HOLIDAY_MANDATORY_FACTOR'),
+      holidayTripleFactor: getParamValue('HOLIDAY_TRIPLE_FACTOR'),
+      ccssObreroSalud: getParamValue('CCSS_OBRERO_SALUD'),
+      ccssObrerosPension: getParamValue('CCSS_OBRERO_PENSION'),
+      ccssObreroBP: getParamValue('CCSS_OBRERO_BP'),
+    };
+  }
   /**
    * Get the effective Decimal value of a parameter at a given date.
    * @param key - Parameter key (e.g., "OT_FACTOR")

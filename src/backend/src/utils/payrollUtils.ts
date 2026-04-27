@@ -2,11 +2,20 @@
  * Payroll calculation utility functions
  * Contains pure helper functions for payroll processing
  */
-import { DayWork } from "../types/payroll.types";
+import { DayWork, LegalParamSet } from "../types/payroll.types";
+
+export const DEFAULT_LEGAL_PARAMS: LegalParamSet = {
+  regularHoursPerDay: 8,
+  regularHoursPerWeek: 48,
+  otFactor: 1.5,
+  holidayMandatoryFactor: 2.0,
+  holidayTripleFactor: 3.0,
+  ccssObreroSalud: 5.5,
+  ccssObrerosPension: 4.33,
+  ccssObreroBP: 1.0
+};
 
 // ── Costa Rica labor law constants ────────────────────────────────────────────
-const REGULAR_HOURS_PER_DAY = 8;
-const OVERTIME_MULTIPLIER = 1.5;
 const WORKING_DAYS_PER_WEEK = 6; // Monday – Saturday
 
 export interface PayrollHoliday {
@@ -293,10 +302,10 @@ export function validatePayrollPeriod(
 /**
  * Sum of regular hours per day (capped at 8h/day).
  */
-export function calculateRegularHours(days: DayWork[]): number {
+export function calculateRegularHours(days: DayWork[], params: LegalParamSet = DEFAULT_LEGAL_PARAMS): number {
   return roundToMoney(
     days.reduce(
-      (sum, day) => sum + Math.min(day.hoursWorked, REGULAR_HOURS_PER_DAY),
+      (sum, day) => sum + Math.min(day.hoursWorked, params.regularHoursPerDay),
       0,
     ),
   );
@@ -305,10 +314,10 @@ export function calculateRegularHours(days: DayWork[]): number {
 /**
  * Sum of overtime hours per day (hours beyond 8h/day).
  */
-export function calculateOvertimeHours(days: DayWork[]): number {
+export function calculateOvertimeHours(days: DayWork[], params: LegalParamSet = DEFAULT_LEGAL_PARAMS): number {
   return roundToMoney(
     days.reduce(
-      (sum, day) => sum + Math.max(0, day.hoursWorked - REGULAR_HOURS_PER_DAY),
+      (sum, day) => sum + Math.max(0, day.hoursWorked - params.regularHoursPerDay),
       0,
     ),
   );
@@ -377,9 +386,10 @@ export function countWorkingDaysInPeriod(startDate: Date, endDate: Date, holiday
 export function calculateScheduledHours(
   startDate: Date,
   endDate: Date,
-  holidays: PayrollHoliday[] = []
+  holidays: PayrollHoliday[] = [],
+  params: LegalParamSet = DEFAULT_LEGAL_PARAMS
 ): number {
-  return countWorkingDaysInPeriod(startDate, endDate, holidays) * REGULAR_HOURS_PER_DAY;
+  return countWorkingDaysInPeriod(startDate, endDate, holidays) * params.regularHoursPerDay;
 }
 
 /**
@@ -405,16 +415,17 @@ export function calculateWeeklyRestHours(
 export function calculateOvertimePay(
   days: DayWork[],
   hourlyRate: number,
-  holidays: PayrollHoliday[] = []
+  holidays: PayrollHoliday[] = [],
+  params: LegalParamSet = DEFAULT_LEGAL_PARAMS
 ): number {
   let totalOtPay = 0;
   days.forEach(day => {
-    const dayOvertime = Math.max(0, day.hoursWorked - REGULAR_HOURS_PER_DAY);
+    const dayOvertime = Math.max(0, day.hoursWorked - params.regularHoursPerDay);
     if (dayOvertime > 0) {
       const holiday = getHolidayForDate(new Date(day.date), holidays);
-      let multiplier = OVERTIME_MULTIPLIER;
+      let multiplier = params.otFactor;
       if (holiday?.company_holidays_is_mandatory) {
-        multiplier = holiday.company_holidays_is_triple ? 3.0 : 2.0;
+        multiplier = holiday.company_holidays_is_triple ? params.holidayTripleFactor : params.holidayMandatoryFactor;
       }
       totalOtPay += dayOvertime * hourlyRate * multiplier;
     }
@@ -431,8 +442,9 @@ export function calculateWeeklyRestPay(
   hourlyRate: number,
   startDate: Date,
   endDate: Date,
+  params: LegalParamSet = DEFAULT_LEGAL_PARAMS
 ): number {
-  const regularHours = calculateRegularHours(days);
+  const regularHours = calculateRegularHours(days, params);
   const restHours = calculateWeeklyRestHours(regularHours, startDate, endDate);
   return roundToMoney(restHours * hourlyRate);
 }
@@ -446,18 +458,19 @@ export function calculateGrossSalary(
   bonuses: number,
   startDate: Date,
   endDate: Date,
-  holidays: PayrollHoliday[] = []
+  holidays: PayrollHoliday[] = [],
+  params: LegalParamSet = DEFAULT_LEGAL_PARAMS
 ): number {
   let regularPay = 0;
   
   // Calculate regular pay respecting holiday multipliers
   days.forEach(day => {
-    const dayRegular = Math.min(day.hoursWorked, REGULAR_HOURS_PER_DAY);
+    const dayRegular = Math.min(day.hoursWorked, params.regularHoursPerDay);
     const holiday = getHolidayForDate(new Date(day.date), holidays);
     
     let multiplier = 1.0;
     if (holiday?.company_holidays_is_mandatory && day.hoursWorked > 0) {
-      multiplier = 2.0;
+      multiplier = params.holidayMandatoryFactor;
     }
     
     regularPay += dayRegular * hourlyRate * multiplier;
@@ -471,19 +484,20 @@ export function calculateGrossSalary(
       if (hDate >= startDate && hDate <= endDate && hDate.getDay() !== 0) {
         const workedDay = days.find(d => formatDateString(new Date(d.date)) === formatDateString(hDate));
         if (!workedDay || workedDay.hoursWorked === 0) {
-           regularPay += REGULAR_HOURS_PER_DAY * hourlyRate;
+           regularPay += params.regularHoursPerDay * hourlyRate;
         }
       }
     }
   });
 
   const regular = roundToMoney(regularPay);
-  const overtime = calculateOvertimePay(days, hourlyRate, holidays);
+  const overtime = calculateOvertimePay(days, hourlyRate, holidays, params);
   const weeklyRest = calculateWeeklyRestPay(
     days,
     hourlyRate,
     startDate,
     endDate,
+    params
   );
   return roundToMoney(regular + overtime + weeklyRest + bonuses);
 }

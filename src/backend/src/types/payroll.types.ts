@@ -75,3 +75,15 @@ export interface PayrollCalculationResult {
   employees: EmployeePayroll[];
   summary: PayrollSummary;
 }
+
+export interface LegalParamSet {
+  regularHoursPerDay: number; // TODO: Phase 66 (Jornadas)
+  regularHoursPerWeek: number; // TODO: Phase 66
+  otFactor: number;
+  holidayMandatoryFactor: number;
+  holidayTripleFactor: number;
+  ccssObreroSalud: number;
+  ccssObrerosPension: number;
+  ccssObreroBP: number;
+  minuteRoundingPolicy?: string; // TODO: Phase 58
+}
