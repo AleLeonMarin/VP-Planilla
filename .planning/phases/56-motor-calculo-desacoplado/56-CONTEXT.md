@@ -67,6 +67,15 @@ export interface LegalParamSet {
 - Test: calcular con `HOLIDAY_MANDATORY_FACTOR = 3.0` produce pago triple en feriado obligatorio
 - Test de regresión: resultado idéntico al actual cuando se usan `DEFAULT_LEGAL_PARAMS`
 
+## Gap verificado antes de ejecutar
+
+> **Verificado 2026-04-26** — `vpg_enterprise` actualmente solo tiene 5 campos (`enterprise_id`, `enterprise_name`, `enterprise_image`, `enterprise_creation_date`, `enterpise_version`). Los siguientes campos **no existen en el schema**:
+> - `isCommercialActivity` — para determinar descanso semanal según tipo de empresa
+> - `minuteRoundingPolicy` — política de redondeo de minutos (→ Fase 58)
+> - `ordinaryShiftType` — tipo de jornada por empleado (→ Fase 66)
+>
+> **Impacto en Phase 56:** `regularHoursPerDay` y `regularHoursPerWeek` en `LegalParamSet` deben resolverse con el parámetro `WORKDAY_ORDINARY_DAILY` (8h) como único valor disponible hasta que Fase 66 añada el campo de jornada al empleado. No intentar leer `ordinaryShiftType` de ningún modelo — el campo no existe. Documentar este hardcode como TODO→Fase 66 en el código.
+
 ## Dependencies
 
 - **Requiere:** Fase 55 completa (LegalParamService disponible)
