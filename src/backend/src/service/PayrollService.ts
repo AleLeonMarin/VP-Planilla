@@ -3,6 +3,8 @@ import { Payroll } from "../model/payroll";
 import { PayrollStatus } from '@prisma/client';
 import { calculateGrossSalary, countWorkingDaysInPeriod, calculateScheduledHours, PayrollHoliday, calculateRegularHours, calculateOvertimeHours, calculateWeeklyRestHours } from '../utils/payrollUtils';
 import { DayWork } from '../types/payroll.types';
+import { LegalParamService } from './LegalParamService';
+import { AuditLogsService } from './AuditLogsService';
 
 export class PayrollService {
   /**
@@ -289,11 +291,48 @@ export class PayrollService {
    */
   static async approvePayroll(payrollId: number, userId: number): Promise<Payroll> {
     const payroll = await prisma.vpg_payrolls.findUnique({
-      where: { payrolls_id: payrollId }
+      where: { payrolls_id: payrollId },
+      include: {
+        vpg_payroll_employee: {
+          include: {
+            vpg_employees: {
+              include: {
+                vpg_positions: true
+              }
+            }
+          }
+        }
+      }
     });
     if (!payroll) throw new Error('Payroll not found');
     if (payroll.payrolls_status !== PayrollStatus.BORRADOR) {
       throw new Error('Solo las planillas en estado BORRADOR pueden ser aprobadas');
+    }
+
+    // Auditoría preventiva si hay salarios bajo el mínimo global
+    const checkEnabled = await LegalParamService.getParam('MIN_WAGE_CHECK_ENABLED');
+    if (Number(checkEnabled) === 1) {
+      const minWageRate = await LegalParamService.getGlobalMinWageRate();
+      const underpaidEmployees = payroll.vpg_payroll_employee.filter(pe => 
+        Number(pe.vpg_employees.vpg_positions.position_base_salary) < minWageRate
+      );
+
+      if (underpaidEmployees.length > 0) {
+        const details = {
+          message: "Se aprobó planilla con salarios inferiores al mínimo global configurado.",
+          min_wage_rate: minWageRate,
+          affected_employees_count: underpaidEmployees.length,
+          affected_employee_ids: underpaidEmployees.map(pe => pe.payroll_employee_employee_id)
+        };
+
+        await AuditLogsService.createAuditLog({
+          userId,
+          action: "APPROVE_WITH_MIN_WAGE_WARNING",
+          entity: "vpg_payrolls",
+          entityId: payrollId,
+          details: JSON.stringify(details)
+        });
+      }
     }
     
     const updated = await prisma.vpg_payrolls.update({
