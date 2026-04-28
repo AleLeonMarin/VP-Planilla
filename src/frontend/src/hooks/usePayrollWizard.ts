@@ -53,6 +53,8 @@ export function usePayrollWizard() {
   const [payrollId, setPayrollId] = useState<number | null>(null);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
   const [periodType, setPeriodType] = useState<'quincenal' | 'mensual' | 'rango_libre'>('quincenal');
+  const [minWageCheckEnabled, setMinWageCheckEnabled] = useState<number | null>(null);
+  const [globalMinWageRate, setGlobalMinWageRate] = useState<number | null>(null);
 
   const selectPeriod = useCallback((period: {
     start: string;
@@ -87,6 +89,8 @@ export function usePayrollWizard() {
     setPayrollId(null);
     setSelectedEmployeeIds([]);
     setPeriodType('quincenal');
+    setMinWageCheckEnabled(null);
+    setGlobalMinWageRate(null);
   }, []);
 
   return {
@@ -98,6 +102,10 @@ export function usePayrollWizard() {
     setSelectedEmployeeIds,
     periodType,
     setPeriodType,
+    minWageCheckEnabled,
+    setMinWageCheckEnabled,
+    globalMinWageRate,
+    setGlobalMinWageRate,
     selectPeriod,
     goToStep,
     setCalculationData: setCalculationDataState,
