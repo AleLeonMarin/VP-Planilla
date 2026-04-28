@@ -193,20 +193,39 @@ const legalParams = [
     isCritical: true,
     source_decree: 'MTSS',
   },
+  // MIN_WAGE — Referencia Global MTSS
+  {
+    key: 'GLOBAL_MIN_WAGE_RATE',
+    value: 1494.20,
+    description: 'Tarifa mínima por hora (Referencia MTSS 2024)',
+    category: 'MIN_WAGE',
+    validFrom: new Date('2024-01-01T00:00:00.000Z'),
+    isCritical: true,
+    source_decree: 'MTSS 2024',
+  },
+  {
+    key: 'GLOBAL_MIN_WAGE_RATE',
+    value: 1529.62,
+    description: 'Tarifa mínima por hora (Referencia MTSS 2025)',
+    category: 'MIN_WAGE',
+    validFrom: new Date('2025-01-01T00:00:00.000Z'),
+    isCritical: true,
+    source_decree: 'MTSS 2025',
+  },
 ];
 
 async function main() {
   console.log('Seeding vpg_legal_params...');
 
   for (const param of legalParams) {
+    const seedId = `seed-${param.key}-${param.validFrom.toISOString().split('T')[0]}`;
     await prisma.vpgLegalParam.upsert({
       where: {
-        // Use a compound unique check: key + validFrom (no unique constraint yet; use findFirst + skip if exists)
-        id: `seed-${param.key}`, // Will not match; forces create
+        id: seedId,
       },
       update: {},
       create: {
-        id: `seed-${param.key}`,
+        id: seedId,
         key: param.key,
         value: param.value,
         description: param.description,
