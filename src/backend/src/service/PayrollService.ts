@@ -202,41 +202,8 @@ export class PayrollService {
       });
 
       return rows.map((row) => {
-        // Convert DayWork array for calculations
-        // Note: In a real implementation, we would fetch actual DayWork data from clock logs
-        // For now, we'll use placeholder data to demonstrate the holiday integration
-        const dayWork: DayWork[] = []; // This would be populated from actual clock log data
-        
-        // Calculate regular hours (capped at 8h/day)
-        const regularHours = calculateRegularHours(dayWork);
-        
-        // Calculate overtime hours
-        const overtimeHours = calculateOvertimeHours(dayWork);
-        
-        // Calculate scheduled hours (required hours for period)
-        const scheduledHours = calculateScheduledHours(
-          payroll.payrolls_period_start,
-          payroll.payrolls_period_end,
-          formattedHolidays
-        );
-        
-        // Calculate weekly rest hours
-        const weeklyRestHours = calculateWeeklyRestHours(
-          regularHours,
-          payroll.payrolls_period_start,
-          payroll.payrolls_period_end
-        );
-        
-        // Calculate gross salary with holiday considerations
-        // Note: This is a simplified version - in reality we'd need to analyze each day's work
-        const grossSalary = calculateGrossSalary(
-          dayWork,
-          0, // base hourly rate
-          0, // bonuses
-          payroll.payrolls_period_start,
-          payroll.payrolls_period_end,
-          formattedHolidays
-        );
+        const totalHours = Number(row.payroll_employee_total_hours) || 0;
+        const overtimeHours = Number(row.payroll_employee_overtime_hours) || 0;
 
         return {
           id: row.payroll_employee_id,
@@ -245,16 +212,18 @@ export class PayrollService {
           employee_name: `${row.vpg_employees.employee_first_name} ${row.vpg_employees.employee_last_name}${row.vpg_employees.employee_middle_name ? ' ' + row.vpg_employees.employee_middle_name : ''}`.trim(),
           employee_identification: row.vpg_employees.employee_national_id,
           position_name: row.vpg_employees.vpg_positions?.position_name,
-          total_hours: Number(row.payroll_employee_total_hours) || 0,
-          overtime_hours: Number(row.payroll_employee_overtime_hours) || 0,
+          total_hours: totalHours,
+          regular_hours: Math.max(0, totalHours - overtimeHours),
+          overtime_hours: overtimeHours,
           overtime_pay: Number(row.payroll_employee_overtime_pay) || 0,
           weekly_rest_hours: Number(row.payroll_employee_weekly_rest_hours) || 0,
           weekly_rest_pay: Number(row.payroll_employee_weekly_rest_pay) || 0,
           bonuses: Number(row.payroll_employee_bonuses) || 0,
-          gross_salary: grossSalary,
+          gross_salary: Number(row.payroll_employee_gross_salary) || 0,
           total_deductions: Number(row.payroll_employee_total_deductions) || 0,
           net_salary: Number(row.payroll_employee_net_salary) || 0,
           version: row.payroll_employee_version,
+          is_manually_adjusted: !!row.payroll_employee_is_manually_adjusted
         };
       });
     } catch (error) {
@@ -533,16 +502,11 @@ export class PayrollService {
   /**
    * Save per-employee hour/deduction overrides for a payroll in BORRADOR state.
    * Persists override values into vpg_payroll_employee and sets is_manually_adjusted = true.
-   * Recalculates net_salary as gross_salary - new_total_deductions.
-   * @param payrollId - ID of the payroll record
-   * @param employeeId - ID of the employee to override
-   * @param override - Override values (all optional; only provided fields are updated)
-   * @returns Updated payroll_employee record
-   * @throws Error if payroll not in BORRADOR state, or employee not in payroll
+   * Uses payrollEmployeeId as the unique identifier.
    */
   static async saveEmployeeOverride(
     payrollId: number,
-    employeeId: number,
+    payrollEmployeeId: number,
     override: {
       regularHours?: number;
       overtimeHours?: number;
@@ -555,18 +519,15 @@ export class PayrollService {
       where: { payrolls_id: payrollId },
       select: { payrolls_status: true },
     });
-    if (!payroll) {
-      throw new Error(`Planilla ${payrollId} no encontrada`);
-    }
+    if (!payroll) throw new Error(`Planilla ${payrollId} no encontrada`);
     if (payroll.payrolls_status !== 'BORRADOR') {
-      throw new Error(`Solo se pueden ajustar planillas en estado BORRADOR. Estado actual: ${payroll.payrolls_status}`);
+      throw new Error(`Solo se pueden ajustar planillas en estado BORRADOR.`);
     }
 
-    // Buscar el registro del empleado en la planilla y su salario base
-    const payrollEmp = await prisma.vpg_payroll_employee.findFirst({
+    // Buscar el registro exacto usando su ID único
+    const payrollEmp = await prisma.vpg_payroll_employee.findUnique({
       where: {
-        payroll_employee_payroll_id: payrollId,
-        payroll_employee_employee_id: employeeId,
+        payroll_employee_id: payrollEmployeeId,
       },
       include: {
         vpg_employees: {
@@ -578,31 +539,42 @@ export class PayrollService {
     });
 
     if (!payrollEmp) {
-      throw new Error(`Empleado ${employeeId} no encontrado en planilla ${payrollId}`);
+        throw new Error(`Registro de planilla ${payrollEmployeeId} no encontrado.`);
     }
 
-    // Obtener salario base por hora (Costa Rica: Salario Mensual / 30 / 8)
-    const baseSalary = Number(payrollEmp.vpg_employees.vpg_positions.position_base_salary);
-    const hourlyRate = baseSalary / 30 / 8;
+    // Obtener tarifa base horaria
+    const baseSalaryValue = payrollEmp.vpg_employees.vpg_positions?.position_base_salary;
+    const baseSalary = Number(baseSalaryValue || 0);
+    const hourlyRate = baseSalary > 5000 ? (baseSalary / 30 / 8) : baseSalary;
 
-    // Determinar nuevos valores (usar override o valor actual)
-    const regularHours = override.regularHours ?? Number(payrollEmp.payroll_employee_hours_override ?? payrollEmp.payroll_employee_total_hours ?? 0);
-    const overtimeHours = override.overtimeHours ?? Number(payrollEmp.payroll_employee_overtime_override ?? payrollEmp.payroll_employee_overtime_hours ?? 0);
-    const weeklyRestHours = override.weeklyRestHours ?? Number(payrollEmp.payroll_employee_weekly_rest_override ?? payrollEmp.payroll_employee_weekly_rest_hours ?? 0);
-    const totalDeductions = override.totalDeductions ?? Number(payrollEmp.payroll_employee_deductions_override ?? payrollEmp.payroll_employee_total_deductions ?? 0);
+    // LÓGICA DE HORAS SEGREGADA (FIX CRÍTICO):
+    const overtimeHours = Number(override.overtimeHours ?? payrollEmp.payroll_employee_overtime_override ?? payrollEmp.payroll_employee_overtime_hours ?? 0);
+    const weeklyRestHours = Number(override.weeklyRestHours ?? payrollEmp.payroll_employee_weekly_rest_override ?? payrollEmp.payroll_employee_weekly_rest_hours ?? 0);
+
+    let regularHours = 0;
+    if (override.regularHours !== undefined) {
+        regularHours = Number(override.regularHours);
+    } else if (payrollEmp.payroll_employee_hours_override !== null) {
+        regularHours = Number(payrollEmp.payroll_employee_hours_override);
+    } else {
+        const currentTotal = Number(payrollEmp.payroll_employee_total_hours || 0);
+        const currentOvertime = Number(payrollEmp.payroll_employee_overtime_hours || 0);
+        regularHours = Math.max(0, currentTotal - currentOvertime);
+    }
+
+    const totalDeductions = Number(override.totalDeductions ?? payrollEmp.payroll_employee_deductions_override ?? payrollEmp.payroll_employee_total_deductions ?? 0);
     const bonuses = Number(payrollEmp.payroll_employee_bonuses ?? 0);
 
-    // Calcular componentes salariales
     const regularPay = regularHours * hourlyRate;
     const overtimePay = overtimeHours * hourlyRate * 1.5;
-    const weeklyRestPay = weeklyRestHours * hourlyRate;
+    const weeklyRestPay = weeklyRestHours * hourlyRate; 
+    
     const grossSalary = regularPay + overtimePay + weeklyRestPay + bonuses;
     const netSalary = Math.max(0, grossSalary - totalDeductions);
 
-    // Construir payload
     const updateData: any = {
       payroll_employee_is_manually_adjusted: true,
-      payroll_employee_version: payrollEmp.payroll_employee_version + 1,
+      payroll_employee_version: (Number(payrollEmp.payroll_employee_version) || 1) + 1,
       payroll_employee_total_hours: regularHours + overtimeHours,
       payroll_employee_overtime_hours: overtimeHours,
       payroll_employee_overtime_pay: overtimePay,
@@ -611,19 +583,19 @@ export class PayrollService {
       payroll_employee_gross_salary: grossSalary,
       payroll_employee_total_deductions: totalDeductions,
       payroll_employee_net_salary: netSalary,
+      payroll_employee_hours_override: regularHours,
+      payroll_employee_overtime_override: overtimeHours,
+      payroll_employee_weekly_rest_override: weeklyRestHours,
+      payroll_employee_deductions_override: totalDeductions
     };
 
-    // Persistir los overrides específicos para que se mantengan en futuros recálculos
-    if (override.regularHours !== undefined) updateData.payroll_employee_hours_override = override.regularHours;
-    if (override.overtimeHours !== undefined) updateData.payroll_employee_overtime_override = override.overtimeHours;
-    if (override.weeklyRestHours !== undefined) updateData.payroll_employee_weekly_rest_override = override.weeklyRestHours;
-    if (override.totalDeductions !== undefined) updateData.payroll_employee_deductions_override = override.totalDeductions;
-
-    return await prisma.vpg_payroll_employee.update({
-      where: { payroll_employee_id: payrollEmp.payroll_employee_id },
-      data: updateData,
-    });
+    try {
+        return await prisma.vpg_payroll_employee.update({
+            where: { payroll_employee_id: payrollEmployeeId },
+            data: updateData,
+        });
+    } catch (prismaError: any) {
+        throw new Error(`Error de base de datos al guardar ajuste: ${prismaError.message}`);
+    }
   }
-
-  
 }

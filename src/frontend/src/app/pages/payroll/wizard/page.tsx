@@ -174,6 +174,28 @@ export default function PayrollWizardPage() {
     }
   }, [dateStart, dateEnd, selectedEmployeeIds, payrollId, setPayrollId, setCalculationData]);
 
+  const refreshPayrollData = useCallback(async () => {
+    if (payrollId === null) return;
+    try {
+      const updatedEmployees = await PayrollService.getPayrollEmployees(payrollId);
+      
+      // Forzar actualización de estado con nuevas referencias para asegurar re-renderizado
+      const newResult = {
+        ...calcResult,
+        employees: [...updatedEmployees]
+      };
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setCalcResult(newResult as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setCalculationData(newResult as any);
+      
+      toast.success('Datos actualizados');
+    } catch (err) {
+      toast.error('Error al refrescar datos de la planilla');
+    }
+  }, [payrollId, calcResult, setCalcResult, setCalculationData]);
+
   const handleApprove = useCallback(async (pid: number) => {
     await PayrollService.approvePayroll(pid);
     toast.success('Planilla aprobada exitosamente');
@@ -560,22 +582,25 @@ export default function PayrollWizardPage() {
               const emp = calcEmployees.find((e) => Number(e.id ?? e.employeeId ?? e.employee_id) === adjustingEmpId);
               if (!emp) return null;
               
+              // Normalización de datos para el modal (Soporta snake_case y camelCase)
+              const normalizedData = {
+                regularHours: Number(emp.regular_hours ?? emp.regularHours ?? 0),
+                overtimeHours: Number(emp.overtime_hours ?? emp.overtimeHours ?? 0),
+                weeklyRestHours: Number(emp.weekly_rest_hours ?? emp.weeklyRestHours ?? 0),
+                totalDeductions: Number(emp.total_deductions ?? emp.totalDeductions ?? 0),
+              };
+
               return (
                 <PayrollEmployeeAdjustModal
                   isOpen={true}
                   payrollId={payrollId}
                   employeeId={adjustingEmpId}
                   employeeName={emp.name ?? emp.employeeName ?? emp.employee_name ?? 'Empleado'}
-                  currentData={{
-                    regularHours: Number(emp.regularHours ?? emp.regular_hours ?? 0),
-                    overtimeHours: Number(emp.overtimeHours ?? emp.overtime_hours ?? 0),
-                    weeklyRestHours: Number(emp.weeklyRestHours ?? emp.weekly_rest_hours ?? 0),
-                    totalDeductions: Number(emp.totalDeductions ?? emp.total_deductions ?? 0),
-                  }}
+                  currentData={normalizedData}
                   onClose={() => setAdjustingEmpId(null)}
                   onSave={() => {
-                    // Refresh calculation to show updated values and totals
-                    handleCalculate();
+                    // Refresh calculation from DB to show updated manual adjustments
+                    refreshPayrollData();
                   }}
                 />
               );

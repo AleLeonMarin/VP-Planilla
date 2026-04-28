@@ -112,13 +112,12 @@ export const PayrollService = {
   /**
    * Save per-employee hour/deduction override for a payroll in BORRADOR state.
    * @param payrollId - ID of the payroll
-   * @param employeeId - ID of the employee to override
-   * @param override - Override values (all optional)
-   * @returns Updated payroll_employee record
+   * @param payrollEmployeeId - ID of the specific payroll_employee record (PK)
+   * @param override - Override values
    */
   async saveEmployeeOverride(
     payrollId: number,
-    employeeId: number,
+    payrollEmployeeId: number,
     override: {
       regularHours?: number;
       overtimeHours?: number;
@@ -127,7 +126,7 @@ export const PayrollService = {
     }
   ): Promise<unknown> {
     try {
-      return await http.patch(`/payroll/${payrollId}/employee/${employeeId}/override`, override);
+      return await http.patch(`/payroll/${payrollId}/employee/${payrollEmployeeId}/override`, override);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al guardar ajuste de empleado');
     }
