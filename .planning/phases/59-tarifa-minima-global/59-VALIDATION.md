@@ -1,9 +1,9 @@
 ---
 phase: 59
 slug: tarifa-minima-global
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: active
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-26
 ---
 
@@ -38,8 +38,8 @@ created: 2026-04-26
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 59-01-01 | 01 | 1 | PAY-24 | — | N/A | integration | `npx prisma db seed` | ✅ | ⬜ pending |
-| 59-02-01 | 02 | 2 | PAY-24 | — | N/A | unit | `npm test` | ✅ | ⬜ pending |
+| 59-01-01 | 01 | 1 | PAY-24 | — | N/A | integration | `npx prisma db seed` | ✅ | ✅ green |
+| 59-02-01 | 02 | 2 | PAY-24 | — | N/A | unit | `npm test` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -47,7 +47,7 @@ created: 2026-04-26
 
 ## Wave 0 Requirements
 
-- [ ] `src/backend/src/__tests__/unit/services/LegalParamService.test.ts` — tests for PAY-24
+- [x] `src/backend/src/__tests__/unit/services/LegalParamService.test.ts` — tests for PAY-24
 
 *If none: "Existing infrastructure covers all phase requirements."*
 
@@ -64,11 +64,18 @@ created: 2026-04-26
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
+
+## Validation Audit 2026-04-27
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
