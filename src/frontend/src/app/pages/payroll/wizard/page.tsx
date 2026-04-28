@@ -6,6 +6,7 @@ import { usePayrollWizard } from '@/hooks/usePayrollWizard';
 import { NomineeService } from '@/services/nomineeService';
 import { PayrollService } from '@/services/payrollService';
 import { getEmployees } from '@/services/employeeService';
+import { Tooltip } from '@/components/ui/Tooltip';
 import PayrollWizardStep3 from '@/components/PayrollWizardStep3';
 import PayrollEmployeeAdjustModal from '@/components/PayrollEmployeeAdjustModal';
 import type { Employee } from '@/types/employee';
@@ -380,12 +381,13 @@ export default function PayrollWizardPage() {
                         <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
                           {emp.name}
                           {isLowWage && (
-                            <span 
-                              title={`Salario inferior a la tarifa mínima global (₡${Number(globalMinWageRate).toLocaleString('es-CR')})`}
-                              className="text-amber-500 cursor-help"
+                            <Tooltip 
+                              content={`Salario inferior a la tarifa mínima global (₡${Number(globalMinWageRate).toLocaleString('es-CR')})`}
                             >
-                              ⚠️
-                            </span>
+                              <span className="text-amber-500 cursor-help">
+                                ⚠️
+                              </span>
+                            </Tooltip>
                           )}
                         </p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">{emp.position}</p>
