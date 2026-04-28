@@ -37,6 +37,7 @@ export class LegalParamService {
       ccssObrerosPension: getParamValue('CCSS_OBRERO_PENSION'),
       ccssObreroBP: getParamValue('CCSS_OBRERO_BP'),
       minuteRoundingPolicy: roundingPolicy,
+      globalMinWageRate: await this.getGlobalMinWageRate(date),
     };
   }
   /**
@@ -49,6 +50,20 @@ export class LegalParamService {
   static async getParam(key: string, date: Date = new Date()): Promise<Decimal | null> {
     const param = await LegalParamService.getParamAtDate(key, date);
     return param?.value ?? null;
+  }
+
+  /**
+   * Get the global minimum wage rate in effect at a given date.
+   * Defaults to 1529.62 if the parameter is not configured in the database.
+   * @param date - Target date; defaults to today
+   * @returns The reference minimum wage rate as a number
+   */
+  static async getGlobalMinWageRate(date: Date = new Date()): Promise<number> {
+    const param = await this.getParamAtDate('GLOBAL_MIN_WAGE_RATE', date);
+    if (param && param.value) {
+      return Number(param.value);
+    }
+    return 1529.62;
   }
 
   /**

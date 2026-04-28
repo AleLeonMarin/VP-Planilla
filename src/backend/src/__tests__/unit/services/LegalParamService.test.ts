@@ -79,6 +79,25 @@ describe('LegalParamService', () => {
     });
   });
 
+  describe('getGlobalMinWageRate', () => {
+    it('returns the decimal value converted to a number when param exists', async () => {
+      const param = makeParam({ key: 'GLOBAL_MIN_WAGE_RATE', value: new Decimal('1494.20') });
+      prisma.vpgLegalParam.findFirst.mockResolvedValue(param as any);
+
+      const result = await LegalParamService.getGlobalMinWageRate(new Date());
+
+      expect(result).toBe(1494.2);
+    });
+
+    it('returns the fallback value 1529.62 when param does not exist', async () => {
+      prisma.vpgLegalParam.findFirst.mockResolvedValue(null);
+
+      const result = await LegalParamService.getGlobalMinWageRate(new Date());
+
+      expect(result).toBe(1529.62);
+    });
+  });
+
   describe('getParamsAtDate', () => {
     it('returns a Record with one entry per unique key (deduplicates by key)', async () => {
       const older = makeParam({ id: '1', validFrom: new Date('2025-01-01'), value: new Decimal('1.5') });

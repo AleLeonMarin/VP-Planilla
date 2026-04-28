@@ -88,4 +88,5 @@ export interface LegalParamSet {
   ccssObrerosPension: number;
   ccssObreroBP: number;
   minuteRoundingPolicy: MinuteRoundingPolicy;
+  globalMinWageRate?: number;
 }
