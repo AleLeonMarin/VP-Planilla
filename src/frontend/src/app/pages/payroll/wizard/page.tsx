@@ -34,6 +34,8 @@ export default function PayrollWizardPage() {
     setSelectedEmployeeIds,
     periodType,
     setPeriodType,
+    minWageCheckEnabled,
+    globalMinWageRate,
     selectPeriod,
     goToStep,
     setCalculationData,
@@ -361,23 +363,41 @@ export default function PayrollWizardPage() {
               </div>
             ) : (
               <div className="max-h-96 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl mb-6">
-                {employees.map((emp) => (
-                  <label
-                    key={emp.id}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checkedIds.has(emp.id)}
-                      onChange={() => toggleEmployee(emp.id)}
-                      className="w-4 h-4 accent-zinc-700 dark:accent-zinc-300"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{emp.name}</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{emp.position}</p>
-                    </div>
-                  </label>
-                ))}
+                {employees.map((emp) => {
+                  const isLowWage = minWageCheckEnabled === 1 && Number(emp.salary) < Number(globalMinWageRate);
+                  return (
+                    <label
+                      key={emp.id}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checkedIds.has(emp.id)}
+                        onChange={() => toggleEmployee(emp.id)}
+                        className="w-4 h-4 accent-zinc-700 dark:accent-zinc-300"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
+                          {emp.name}
+                          {isLowWage && (
+                            <span 
+                              title={`Salario inferior a la tarifa mínima global (₡${Number(globalMinWageRate).toLocaleString('es-CR')})`}
+                              className="text-amber-500 cursor-help"
+                            >
+                              ⚠️
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{emp.position}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                          ₡{Number(emp.salary).toLocaleString('es-CR')}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             )}
 
