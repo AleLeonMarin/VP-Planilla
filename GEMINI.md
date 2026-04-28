@@ -106,10 +106,11 @@ Full-stack payroll management system for Costa Rica labor law compliance.
 - **Mandatory**: CCSS deductions, Hacienda formats.
 
 ---
-
 ## GSD Workflow Integration
 Use `/gsd` sub-agents for all operations:
 - **Bugs**: Use `gsd-debugger` for systematic investigation.
 - **Small Fixes**: Use `gsd-executor` for direct changes.
 - **Features**: Use `gsd-planner` → `gsd-executor` for full lifecycle.
 - **Verification**: Always run `npx tsc --noEmit` and `npm test` after changes.
+- **Atomic Planning Sync (MANDATORY)**: Every time a phase is completed, the agent MUST run `node scripts/gsd-sync-validator.js`. Do not close a task or session if this validator fails.
+---

@@ -2,8 +2,8 @@
 
 ## 1. Auditoría
 - [ ] **AUDIT-01**: User can edit existing clock-log marks and adjustments directly within the daily audit view, ensuring instantaneous UI and DB synchronization.
-- [ ] **AUDIT-02**: System evaluates valid IN/OUT clock pairs appropriately without incorrectly flagging them as "baja confianza" (low confidence).
-- [ ] **AUDIT-03**: System recalculates the employee's audit status (yellow warning state) in real-time immediately after the user corrects or validates a mark.
+- [x] **AUDIT-02**: System evaluates valid IN/OUT clock pairs appropriately without incorrectly flagging them as "baja confianza" (low confidence).
+- [x] **AUDIT-03**: System recalculates the employee's audit status (yellow warning state) in real-time immediately after the user corrects or validates a mark.
 
 ### User Experience & Quality of Life
 - [x] **UX-11:** State Persistence â€“ User's active tab selection must be restored after navigating across routes.
@@ -12,11 +12,11 @@
 
 
 ## 2. Planilla (v1.7 — Phase 54)
-- [ ] **PAY-11**: El cálculo de planilla usa marcas efectivas auditadas (`vpg_effective_clock_logs`) como única fuente de verdad, respetando ajustes ADD/EDIT/VOID.
-- [ ] **PAY-12**: El jefe puede generar planillas personalizadas: seleccionar empleados manualmente, ajustar horas/deducciones por empleado antes de aprobar, y elegir entre período quincenal, mensual o rango libre.
-- [ ] **PAY-13**: La UI del flujo de planilla es simple y sin fricción — período → empleados → revisión/ajuste → aprobación — ejecutable en menos de 5 pasos sin errores confusos.
+- [x] **PAY-11**: El cálculo de planilla usa marcas efectivas auditadas (`vpg_effective_clock_logs`) como única fuente de verdad, respetando ajustes ADD/EDIT/VOID.
+- [x] **PAY-12**: El jefe puede generar planillas personalizadas: seleccionar empleados manualmente, ajustar horas/deducciones por empleado antes de aprobar, y elegir entre período quincenal, mensual o rango libre.
+- [x] **PAY-13**: La UI del flujo de planilla es simple y sin fricción — período → empleados → revisión/ajuste → aprobación — ejecutable en menos de 5 pasos sin errores confusos.
 - [x] **PAY-24**: Definición de tarifa mínima global opcional en vpg_legal_params.
-- [ ] **PAY-25**: Advertencia visual y auditoría de salarios por debajo del mínimo global.
+- [x] **PAY-25**: Advertencia visual y auditoría de salarios por debajo del mínimo global.
 
 ## Future Requirements (Deferred)
 - (No aplican para este milestone)
