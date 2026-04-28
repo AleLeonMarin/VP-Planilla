@@ -16,6 +16,7 @@ export interface Employee {
   gender?: string | null;
   required_hours_biweekly?: number; // Horas requeridas por quincena
   version: number;
+  salary?: number;
   // Campos enriquecidos (solo en getEmployeeById)
   position_name?: string | null;
   position_base_salary?: number | null;

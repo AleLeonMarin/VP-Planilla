@@ -11,7 +11,7 @@ export const LegalParamService = {
    * @returns The parameter value.
    */
   getParam: async (key: string): Promise<{ value: number | string }> => {
-    return http.get(`/legal-params/${key}`);
+    return http.get(`/legal-params?key=${key}`);
   },
 
   /**

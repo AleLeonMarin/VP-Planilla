@@ -101,4 +101,53 @@ export class LegalParamController {
     );
     res.status(201).json({ success: true, data: newParam });
   }
+
+  /**
+   * PATCH /api/legal-params/:key
+   * Update a parameter value. This creates a new record in the history.
+   * Admin-only (enforced at route layer).
+   * @param req - Path param: key; Body: { value, ...optional fields }
+   * @param res - { success: true, data: VpgLegalParam }
+   */
+  static async patchParam(req: Request, res: Response): Promise<void> {
+    const userId = String((req as any).user?.user_id ?? '');
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Unauthorized' });
+      return;
+    }
+
+    const key = req.params.key as string;
+    const { value, description, category, validFrom, isCritical, source_decree } = req.body;
+
+    if (!key) {
+      res.status(400).json({ success: false, error: 'Missing required path parameter: key' });
+      return;
+    }
+
+    if (value === undefined) {
+      res.status(400).json({ success: false, error: 'Missing required field: value' });
+      return;
+    }
+
+    // Get the current version to inherit other fields
+    const current = await LegalParamService.getParamAtDate(key, new Date());
+    if (!current) {
+      res.status(404).json({ success: false, error: `Parameter ${key} not found` });
+      return;
+    }
+
+    const newParam = await LegalParamService.upsertParam(
+      {
+        key,
+        value,
+        description: description || current.description,
+        category: category || current.category,
+        validFrom: validFrom || new Date().toISOString(),
+        isCritical: isCritical !== undefined ? isCritical : current.isCritical,
+        source_decree: source_decree || current.source_decree || undefined,
+      },
+      userId,
+    );
+    res.status(200).json({ success: true, data: newParam });
+  }
 }

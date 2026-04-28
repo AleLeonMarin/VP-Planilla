@@ -365,7 +365,16 @@ export default function PayrollWizardPage() {
             ) : (
               <div className="max-h-96 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl mb-6">
                 {employees.map((emp) => {
-                  const isLowWage = minWageCheckEnabled === 1 && Number(emp.salary) < Number(globalMinWageRate);
+                  const rawSalary = Number(emp.salary);
+                  // Si el salario es menor a 5000, asumimos que ya es una tarifa por hora (como 1682 o 1530)
+                  // Si es mayor, es un salario mensual (como 400,000) y lo convertimos.
+                  const hourlySalary = rawSalary > 5000 ? (rawSalary / 30 / 8) : rawSalary;
+                  const threshold = Number(globalMinWageRate);
+                  
+                  // Redondear a 2 decimales para evitar falsos positivos
+                  const isLowWage = minWageCheckEnabled === 1 && 
+                    Math.round(hourlySalary * 100) / 100 < Math.round(threshold * 100) / 100;
+                  
                   return (
                     <label
                       key={emp.id}
@@ -382,7 +391,7 @@ export default function PayrollWizardPage() {
                           {emp.name}
                           {isLowWage && (
                             <Tooltip 
-                              content={`Salario inferior a la tarifa mínima global (₡${Number(globalMinWageRate).toLocaleString('es-CR')})`}
+                              content={`Salario (₡${(Math.round(hourlySalary * 100) / 100).toFixed(2)}) es inferior a la tarifa mínima (₡${(Math.round(threshold * 100) / 100).toFixed(2)})`}
                             >
                               <span className="text-amber-500 cursor-help">
                                 ⚠️

@@ -313,9 +313,14 @@ export class PayrollService {
     const checkEnabled = await LegalParamService.getParam('MIN_WAGE_CHECK_ENABLED');
     if (Number(checkEnabled) === 1) {
       const minWageRate = await LegalParamService.getGlobalMinWageRate();
-      const underpaidEmployees = payroll.vpg_payroll_employee.filter(pe => 
-        Number(pe.vpg_employees.vpg_positions.position_base_salary) < minWageRate
-      );
+      const underpaidEmployees = payroll.vpg_payroll_employee.filter(pe => {
+        const rawSalary = Number(pe.vpg_employees.vpg_positions.position_base_salary);
+        // Si el salario es > 5000, es mensual y convertimos a hora. Si no, ya es tarifa horaria.
+        const hourlyBaseSalary = rawSalary > 5000 ? (rawSalary / 30 / 8) : rawSalary;
+        
+        // Redondear a 2 decimales para evitar falsos positivos
+        return Math.round(hourlyBaseSalary * 100) / 100 < Math.round(minWageRate * 100) / 100;
+      });
 
       if (underpaidEmployees.length > 0) {
         const details = {

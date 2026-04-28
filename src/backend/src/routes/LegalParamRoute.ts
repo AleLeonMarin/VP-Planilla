@@ -197,4 +197,54 @@ router.post(
   asyncHandler(LegalParamController.upsertParam),
 );
 
+/**
+ * @swagger
+ * /api/legal-params/{key}:
+ *   patch:
+ *     tags:
+ *       - Legal Parameters
+ *     summary: Update a legal parameter (admin only)
+ *     description: >
+ *       Convenience endpoint for partial updates. Internally calls upsertParam to maintain history.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       '200':
+ *         description: Parameter updated
+ *       '404':
+ *         description: Parameter not found
+ *       '403':
+ *         description: Admin access required
+ */
+router.patch(
+  '/legal-params/:key',
+  AuthMiddleware.verifyToken,
+  adminOnly,
+  asyncHandler(LegalParamController.patchParam),
+);
+
 export default router;

@@ -199,7 +199,9 @@ export class EmployeeService {
      * @returns A list of all employees
      */
     static async getAllEmployees(): Promise<Employee[]> {
-        const prismaEmployees = await prisma.vpg_employees.findMany();
+        const prismaEmployees = await prisma.vpg_employees.findMany({
+            include: { vpg_positions: true }
+        });
 
         const employees: Employee[] = prismaEmployees.map(prismaEmployee => {
             const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
@@ -218,7 +220,9 @@ export class EmployeeService {
                 status: prismaEmployee.employee_status,
                 required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
-                position_id: prismaEmployee.employee_position_id
+                position_id: prismaEmployee.employee_position_id,
+                position_name: prismaEmployee.vpg_positions?.position_name,
+                salary: prismaEmployee.vpg_positions?.position_base_salary ? Number(prismaEmployee.vpg_positions.position_base_salary) : undefined
             };
         });
 
@@ -243,7 +247,8 @@ export class EmployeeService {
                     { employee_exit_date: null },
                     { employee_exit_date: { gte: startDate } }
                 ]
-            }
+            },
+            include: { vpg_positions: true }
         });
 
         const employees: Employee[] = prismaEmployees.map(prismaEmployee => {
@@ -261,7 +266,9 @@ export class EmployeeService {
                 status: prismaEmployee.employee_status,
                 required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
-                position_id: prismaEmployee.employee_position_id
+                position_id: prismaEmployee.employee_position_id,
+                position_name: prismaEmployee.vpg_positions?.position_name,
+                salary: prismaEmployee.vpg_positions?.position_base_salary ? Number(prismaEmployee.vpg_positions.position_base_salary) : undefined
             };
         });
 
