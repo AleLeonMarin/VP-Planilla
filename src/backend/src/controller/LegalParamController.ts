@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { LegalParamService } from '../service/LegalParamService';
 import { CreateLegalParamDto } from '../model/VpgLegalParam';
+import { AuthService } from '../service/AuthService';
 
 export class LegalParamController {
   /**
@@ -86,7 +87,7 @@ export class LegalParamController {
       return;
     }
 
-    const { key, value, description, category, validFrom, isCritical, source_decree } = req.body as CreateLegalParamDto;
+    const { key, value, description, category, validFrom, isCritical, source_decree, confirmationPassword } = req.body;
 
     if (!key || value === undefined || !description || !category || !validFrom) {
       res
@@ -95,9 +96,28 @@ export class LegalParamController {
       return;
     }
 
+    if (isCritical) {
+      if (!confirmationPassword) {
+        res.status(400).json({
+          success: false,
+          error: 'Parámetro crítico requiere confirmación de contraseña'
+        });
+        return;
+      }
+      const verified = await AuthService.verifyPasswordForUser(userId, confirmationPassword);
+      if (!verified) {
+        res.status(403).json({
+          success: false,
+          error: 'Contraseña incorrecta. El cambio no fue guardado.'
+        });
+        return;
+      }
+    }
+
     const newParam = await LegalParamService.upsertParam(
       { key, value, description, category, validFrom, isCritical, source_decree },
       userId,
+      { passwordVerified: isCritical ? true : false }
     );
     res.status(201).json({ success: true, data: newParam });
   }
@@ -117,7 +137,7 @@ export class LegalParamController {
     }
 
     const key = req.params.key as string;
-    const { value, description, category, validFrom, isCritical, source_decree } = req.body;
+    const { value, description, category, validFrom, isCritical, source_decree, confirmationPassword } = req.body;
 
     if (!key) {
       res.status(400).json({ success: false, error: 'Missing required path parameter: key' });
@@ -136,6 +156,26 @@ export class LegalParamController {
       return;
     }
 
+    const effectiveIsCritical = isCritical !== undefined ? isCritical : current.isCritical;
+
+    if (effectiveIsCritical) {
+      if (!confirmationPassword) {
+        res.status(400).json({
+          success: false,
+          error: 'Parámetro crítico requiere confirmación de contraseña'
+        });
+        return;
+      }
+      const verified = await AuthService.verifyPasswordForUser(userId, confirmationPassword);
+      if (!verified) {
+        res.status(403).json({
+          success: false,
+          error: 'Contraseña incorrecta. El cambio no fue guardado.'
+        });
+        return;
+      }
+    }
+
     const newParam = await LegalParamService.upsertParam(
       {
         key,
@@ -143,10 +183,11 @@ export class LegalParamController {
         description: description || current.description,
         category: category || current.category,
         validFrom: validFrom || new Date().toISOString(),
-        isCritical: isCritical !== undefined ? isCritical : current.isCritical,
+        isCritical: effectiveIsCritical,
         source_decree: source_decree || current.source_decree || undefined,
       },
       userId,
+      { passwordVerified: effectiveIsCritical ? true : false }
     );
     res.status(200).json({ success: true, data: newParam });
   }

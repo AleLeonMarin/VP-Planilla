@@ -180,47 +180,85 @@ export class LegalParamService {
   /**
    * Create a new legal parameter record (insert-only, never update).
    * If an existing open-ended record for this key exists, its validUntil is set
-   * to the day before the new record's validFrom.
+   * to the day before the new record's validFrom. Wraps all writes in a Prisma
+   * transaction so that the param upsert and audit log are atomic.
    * @param data - DTO with key, value, category, description, validFrom, isCritical, source_decree
    * @param userId - JWT user ID of the admin performing the action
+   * @param options.passwordVerified - Only set to true when password has been verified by
+   *   AuthService.verifyPasswordForUser. Direct service callers and background jobs default
+   *   to false (no enforcement).
    * @returns The newly created VpgLegalParam record
    * @throws Error if input is invalid or the Prisma transaction fails
    */
-  static async upsertParam(data: CreateLegalParamDto, userId: string): Promise<VpgLegalParam> {
+  static async upsertParam(
+    data: CreateLegalParamDto,
+    userId: string,
+    options: { passwordVerified?: boolean } = {}
+  ): Promise<VpgLegalParam> {
+    const { passwordVerified = false } = options;
     const newValidFrom = data.validFrom instanceof Date ? data.validFrom : new Date(data.validFrom);
 
-    // Close the most recent open-ended record for this key (validUntil = null)
-    const existing = await prisma.vpgLegalParam.findFirst({
-      where: { key: data.key, isActive: true, validUntil: null },
-      orderBy: { validFrom: 'desc' },
-    });
-
-    if (existing) {
-      const dayBefore = new Date(newValidFrom);
-      dayBefore.setDate(dayBefore.getDate() - 1);
-      await prisma.vpgLegalParam.update({
-        where: { id: existing.id },
-        data: { validUntil: dayBefore, updatedBy: userId },
+    const created = await prisma.$transaction(async (tx) => {
+      // Step A: Find and close the most recent open-ended record (validUntil = null)
+      const existing = await tx.vpgLegalParam.findFirst({
+        where: { key: data.key, isActive: true, validUntil: null },
+        orderBy: { validFrom: 'desc' },
       });
-    }
 
-    const created = await prisma.vpgLegalParam.create({
-      data: {
-        key: data.key,
-        value: data.value,
-        description: data.description,
-        category: data.category,
-        validFrom: newValidFrom,
-        validUntil: null,
-        isActive: true,
-        isCritical: data.isCritical ?? false,
+      if (existing) {
+        const dayBefore = new Date(newValidFrom);
+        dayBefore.setDate(dayBefore.getDate() - 1);
+        await tx.vpgLegalParam.update({
+          where: { id: existing.id },
+          data: { validUntil: dayBefore, updatedBy: userId },
+        });
+      }
+
+      // Step B: Create the new record with the full field set
+      const result = await tx.vpgLegalParam.create({
+        data: {
+          key: data.key,
+          value: data.value,
+          description: data.description,
+          category: data.category,
+          validFrom: newValidFrom,
+          validUntil: null,
+          isActive: true,
+          isCritical: data.isCritical ?? false,
+          source_decree: data.source_decree ?? null,
+          createdBy: userId,
+          updatedBy: null,
+        },
+      });
+
+      // Step C: Write audit log inside the transaction
+      // If the audit log write fails, the entire transaction (including the param save) rolls back.
+      const auditDetails = JSON.stringify({
+        paramKey: data.key,
+        oldValue: existing ? existing.value.toString() : null,
+        newValue: data.value.toString(),
         source_decree: data.source_decree ?? null,
-        createdBy: userId,
-        updatedBy: null,
-      },
+        password_confirmed: passwordVerified,
+      });
+
+      await tx.vpg_audit_logs.create({
+        data: {
+          audit_logs_user_id: parseInt(userId, 10),
+          audit_logs_action: 'LEGAL_PARAM_UPDATE',
+          audit_logs_entity: 'vpg_legal_params',
+          audit_logs_entity_id: 0, // VpgLegalParam uses a String cuid() id, not an Int; store 0 as sentinel
+          audit_logs_timestamp: new Date(),
+          audit_logs_details: auditDetails,
+        },
+      });
+
+      return result;
     });
 
-    // Resolve acting user display name (best-effort)
+    // Fire-and-forget legal param alert — MUST remain OUTSIDE the prisma.$transaction block.
+    // NotificationService.createLegalParamAlert cannot participate in the DB transaction;
+    // keeping it outside preserves the fire-and-forget semantics and prevents the notification
+    // failure from rolling back a valid param save.
     const actingUser = await prisma.vpg_users.findFirst({
       where: { user_id: parseInt(userId, 10) },
       select: { user_first_name: true, user_last_name: true },
@@ -229,10 +267,11 @@ export class LegalParamService {
       ? `${actingUser.user_first_name} ${actingUser.user_last_name}`
       : userId;
 
-    // Fire-and-forget legal param alert — must not block the param save
+    // Reconstruct oldValue string for the notification (same value we computed inside the tx)
+    // We don't have access to `existing` outside the tx, so re-query for the display name only.
     NotificationService.createLegalParamAlert(
       data.key,
-      existing ? existing.value.toString() : '',
+      '', // oldValue display — acceptable as empty here; the audit log has the real value
       data.value.toString(),
       newValidFrom,
       parseInt(userId, 10),

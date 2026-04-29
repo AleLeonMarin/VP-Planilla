@@ -175,6 +175,29 @@ export class AuthService {
   }
 
   /**
+   * Verifies that the supplied plain-text password matches the stored hash for the given user.
+   * Used to enforce step-up authentication before mutating critical legal parameters.
+   *
+   * @param userId - The numeric user ID whose password to verify
+   * @param plainPassword - The password supplied by the caller (never logged)
+   * @returns true if the password matches, false otherwise (including if user not found)
+   * @throws Never — all DB errors are caught and return false to avoid leaking user existence
+   */
+  static async verifyPasswordForUser(userId: string, plainPassword: string): Promise<boolean> {
+    try {
+      const user = await prisma.vpg_users.findUnique({
+        where: { user_id: parseInt(userId, 10) },
+        select: { user_password: true },
+      });
+      if (!user?.user_password) return false;
+      return await bcrypt.compare(plainPassword, user.user_password);
+    } catch {
+      // Do NOT include plainPassword in any error log
+      return false;
+    }
+  }
+
+  /**
    * Obtiene información del usuario por ID (para middleware de autenticación)
    */
   static async getUserById(id: number): Promise<AuthenticatedUser | null> {
