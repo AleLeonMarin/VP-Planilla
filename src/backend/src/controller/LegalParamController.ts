@@ -152,6 +152,19 @@ export class LegalParamController {
       return;
     }
 
+    // Validate each entry before writing
+    for (const update of updates) {
+      if (!update.key || typeof update.key !== 'string') {
+        res.status(400).json({ success: false, error: 'Each update must have a string key' });
+        return;
+      }
+      const num = Number(update.value);
+      if (!isFinite(num) || num < 0) {
+        res.status(400).json({ success: false, error: `Invalid value for key ${update.key}: must be a non-negative finite number` });
+        return;
+      }
+    }
+
     // Require password confirmation for bulk update
     if (!confirmationPassword) {
       res.status(400).json({ success: false, error: 'La actualización masiva requiere confirmación de contraseña' });
