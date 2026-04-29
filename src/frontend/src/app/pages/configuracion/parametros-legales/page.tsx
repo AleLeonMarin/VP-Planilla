@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LegalParamService } from '@/services/legalParamService';
 import { LegalParam } from '@/types/legalParam';
@@ -36,7 +36,7 @@ export default function ParametrosLegalesPage() {
 
   const readOnly = user?.role !== 'admin';
 
-  const loadParams = async () => {
+  const loadParams = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -48,7 +48,7 @@ export default function ParametrosLegalesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // no deps needed — does not close over any state
 
   useEffect(() => {
     if (!user) return; // Wait for auth init
@@ -58,7 +58,7 @@ export default function ParametrosLegalesPage() {
       return;
     }
     loadParams();
-  }, [user, router]);
+  }, [user, router, loadParams]);
 
   if (!user || loading) {
     return (
