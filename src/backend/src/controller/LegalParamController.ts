@@ -204,6 +204,11 @@ export class LegalParamController {
     const key = req.params.key as string;
     const { value, description, category, validFrom, isCritical, source_decree, confirmationPassword } = req.body;
 
+    if (key === 'min-wages') {
+      res.status(400).json({ success: false, error: 'Use the bulk endpoint for min-wage updates' });
+      return;
+    }
+
     if (!key) {
       res.status(400).json({ success: false, error: 'Missing required path parameter: key' });
       return;
