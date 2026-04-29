@@ -381,6 +381,14 @@ export default function EnterpriseConfigPage() {
                       <h3 className="font-bold text-zinc-800 dark:text-zinc-100">
                         Validación de Salario Mínimo
                       </h3>
+                      {!legalForm.watch("minWageCheckEnabled") && (
+                        <span
+                          role="status"
+                          className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold uppercase px-2 py-1 rounded-full ml-2"
+                        >
+                          DESACTIVADO — Riesgo legal
+                        </span>
+                      )}
                       <input
                         type="checkbox"
                         {...legalForm.register("minWageCheckEnabled")}

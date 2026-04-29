@@ -11,6 +11,8 @@ import PayrollWizardStep2 from '@/components/PayrollWizardStep2';
 import PayrollWizardStep3 from '@/components/PayrollWizardStep3';
 import DatePicker from '@/components/DatePicker';
 import AguinaldoResults from '@/components/AguinaldoResults';
+import { useLegalParamAlerts } from '@/hooks/useLegalParamAlerts';
+import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { Employee } from '@/types/employee';
 
 type WizardType = 'quincenal' | 'aguinaldo';
@@ -52,6 +54,8 @@ export default function PayrollWizard() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [calcError, setCalcError] = useState<string | null>(null);
   const [aguinaldoEmployees, setAguinaldoEmployees] = useState<Employee[]>([]);
+  const [wizardAlertDismissed, setWizardAlertDismissed] = useState(false);
+  const { alerts: legalParamAlerts } = useLegalParamAlerts();
 
   const defaults = getDefaultAguinaldoDates();
   const [aguinaldoStart, setAguinaldoStart] = useState(defaults.start);
@@ -192,6 +196,28 @@ export default function PayrollWizard() {
       {/* Step 1: Period Selection */}
       {currentStep === 1 && (
         <div className="space-y-6">
+          {legalParamAlerts.length > 0 && !wizardAlertDismissed && (
+            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    Parámetros legales modificados
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                    Los parámetros legales cambiaron desde que esta planilla fue creada. Se recomienda recalcular antes de aprobar.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setWizardAlertDismissed(true)}
+                  aria-label="Descartar por ahora"
+                  className="p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 transition-colors flex-shrink-0"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
           {!isAguinaldo ? (
             <>
               <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">Seleccione un período</h2>
