@@ -54,6 +54,10 @@ export interface EmployeePayroll {
   inconsistencies: Inconsistency[];
   generalMessages: string[];
 
+  // Mandatory holiday breakdown (Art. 148 CR Código de Trabajo)
+  mandatoryHolidayHours?: number;
+  mandatoryHolidayPay?: number;
+
   // Optional extended fields
   id?: number;
   employee_id?: number;
@@ -89,4 +93,5 @@ export interface LegalParamSet {
   ccssObreroBP: number;
   minuteRoundingPolicy: MinuteRoundingPolicy;
   globalMinWageRate?: number;
+  payUnworkedHolidays?: boolean;
 }

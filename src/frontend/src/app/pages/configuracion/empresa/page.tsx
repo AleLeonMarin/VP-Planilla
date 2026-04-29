@@ -5,13 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { 
-  BriefcaseIcon, 
+import {
+  BriefcaseIcon,
   ArrowLeftIcon,
   CheckIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  ShieldExclamationIcon
   } from "@heroicons/react/24/outline";
   import Link from "next/link";
 
@@ -21,12 +22,14 @@ import {
   ShiftType
   } from "@/services/enterpriseService";
   import LegalRoundingModal from "@/components/LegalRoundingModal";
+  import LegalArt148Modal from "@/components/LegalArt148Modal";
   import { useLegalParamConfig } from "@/hooks/useLegalParamConfig";
 const enterpriseSchema = z.object({
   enterprise_minute_rounding_policy: z.nativeEnum(MinuteRoundingPolicy),
   enterprise_is_commercial_activity: z.boolean(),
   enterprise_ordinary_shift_type: z.nativeEnum(ShiftType),
   enterprise_rounding_policy_acknowledged: z.boolean(),
+  enterprise_pay_unworked_holidays: z.boolean(),
 });
 
 type EnterpriseFormValues = z.infer<typeof enterpriseSchema>;
@@ -35,6 +38,7 @@ export default function EnterpriseConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState(false);
+  const [showArt148Modal, setShowArt148Modal] = useState(false);
   const [initialPolicy, setInitialPolicy] = useState<MinuteRoundingPolicy>(MinuteRoundingPolicy.EXACT);
 
   const {
@@ -57,6 +61,7 @@ export default function EnterpriseConfigPage() {
       enterprise_is_commercial_activity: true,
       enterprise_ordinary_shift_type: ShiftType.DIURNA,
       enterprise_rounding_policy_acknowledged: false,
+      enterprise_pay_unworked_holidays: true,
     },
   });
 
@@ -84,6 +89,7 @@ export default function EnterpriseConfigPage() {
         enterprise_is_commercial_activity: config.enterprise_is_commercial_activity,
         enterprise_ordinary_shift_type: config.enterprise_ordinary_shift_type,
         enterprise_rounding_policy_acknowledged: config.enterprise_rounding_policy_acknowledged,
+        enterprise_pay_unworked_holidays: config.enterprise_pay_unworked_holidays ?? true,
       });
       setInitialPolicy(config.enterprise_minute_rounding_policy);
     } catch (error) {
@@ -134,6 +140,28 @@ export default function EnterpriseConfigPage() {
     setShowLegalModal(false);
     // Revert the select value to previous
     setValue("enterprise_minute_rounding_policy", initialPolicy);
+  };
+
+  const handlePayUnworkedHolidaysChange = (checked: boolean) => {
+    if (!checked) {
+      // Turning OFF is the risky action — update checkbox immediately then show disclaimer
+      setValue("enterprise_pay_unworked_holidays", false, { shouldDirty: true });
+      setShowArt148Modal(true);
+    } else {
+      // Turning ON is the safe default — save directly
+      setValue("enterprise_pay_unworked_holidays", true, { shouldDirty: true });
+    }
+  };
+
+  const handleConfirmArt148 = () => {
+    setShowArt148Modal(false);
+    // Value already set to false when modal opened — nothing to change
+  };
+
+  const handleCancelArt148 = () => {
+    setShowArt148Modal(false);
+    // Revert: keep it ON since user cancelled
+    setValue("enterprise_pay_unworked_holidays", true, { shouldDirty: true });
   };
 
   if (isLoading) {
@@ -305,6 +333,42 @@ export default function EnterpriseConfigPage() {
               </div>
             </div>
 
+            {/* Feriados no trabajados Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ShieldExclamationIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-zinc-800 dark:text-zinc-100">
+                        Pago de Feriados No Trabajados
+                      </h3>
+                      <input
+                        type="checkbox"
+                        checked={watch("enterprise_pay_unworked_holidays")}
+                        onChange={(e) => handlePayUnworkedHolidaysChange(e.target.checked)}
+                        className="w-5 h-5 text-red-600 border-zinc-300 rounded focus:ring-red-500 cursor-pointer"
+                      />
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+                      Activado (recomendado): los feriados obligatorios que no fueron trabajados se incluyen en la planilla al salario ordinario.
+                      Desactivado: solo se consideran los feriados que el empleado efectivamente trabajó, siguiendo la configuración individual de cada feriado.
+                    </p>
+                    {!watch("enterprise_pay_unworked_holidays") && (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl flex gap-2">
+                        <ExclamationTriangleIcon className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-700 dark:text-red-400">
+                          Desactivado — Los feriados obligatorios no trabajados no se incluirán en el cálculo automático. Descargo de responsabilidades aceptado.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Validación Salario Mínimo Card */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
               <div className="p-6">
@@ -349,6 +413,12 @@ export default function EnterpriseConfigPage() {
         isOpen={showLegalModal}
         onConfirm={handleConfirmLegal}
         onCancel={handleCancelLegal}
+      />
+
+      <LegalArt148Modal
+        isOpen={showArt148Modal}
+        onConfirm={handleConfirmArt148}
+        onCancel={handleCancelArt148}
       />
     </div>
   );

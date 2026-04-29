@@ -7,6 +7,7 @@ export const updateEnterpriseSchema = z.object({
   enterprise_rounding_policy_acknowledged: z.boolean().optional(),
   enterprise_is_commercial_activity: z.boolean().optional(),
   enterprise_ordinary_shift_type: z.nativeEnum(ShiftType).optional(),
+  enterprise_pay_unworked_holidays: z.boolean().optional(),
 });
 
 export type UpdateEnterpriseInput = z.infer<typeof updateEnterpriseSchema>;

@@ -312,6 +312,12 @@ export class NomineeService {
 
       const legalParams = await LegalParamService.getParamSetAtDate(startDate);
 
+      const enterpriseConfig = await prisma.vpg_enterprise.findFirst({
+        select: { enterprise_pay_unworked_holidays: true }
+      });
+      // Default true: unworked mandatory holidays are paid (CR labor law standard)
+      legalParams.payUnworkedHolidays = enterpriseConfig?.enterprise_pay_unworked_holidays ?? true;
+
       for (const employee of employees) {
         try {
           const employeePayroll = await this.calculateEmployeePayroll(
@@ -588,7 +594,19 @@ export class NomineeService {
         holidays,
         params
       );
-      
+
+      // Mandatory holiday breakdown for display (Option A) — reuses same Art. 148 logic
+      const mandatoryHolidayBreakdown = PayrollUtils.getMandatoryHolidayBreakdown(
+        dailyWork.days,
+        employeePayroll.baseHourlySalary,
+        startDate,
+        endDate,
+        holidays,
+        params
+      );
+      employeePayroll.mandatoryHolidayHours = mandatoryHolidayBreakdown.hours;
+      employeePayroll.mandatoryHolidayPay   = mandatoryHolidayBreakdown.pay;
+
       // Calculate deductions from preloaded data
       const deductionsData = this.calculateDeductionsFromData(
         employeeDeductions,

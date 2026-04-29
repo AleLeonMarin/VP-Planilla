@@ -22,6 +22,7 @@ export interface EnterpriseConfig {
   enterprise_rounding_policy_acknowledged: boolean;
   enterprise_is_commercial_activity: boolean;
   enterprise_ordinary_shift_type: ShiftType;
+  enterprise_pay_unworked_holidays: boolean;
 }
 
 export const EnterpriseService = {

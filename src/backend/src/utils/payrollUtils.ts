@@ -14,7 +14,8 @@ export const DEFAULT_LEGAL_PARAMS: LegalParamSet = {
   ccssObreroSalud: 5.5,
   ccssObrerosPension: 4.33,
   ccssObreroBP: 1.0,
-  minuteRoundingPolicy: MinuteRoundingPolicy.EXACT
+  minuteRoundingPolicy: MinuteRoundingPolicy.EXACT,
+  payUnworkedHolidays: true,
 };
 
 // ── Costa Rica labor law constants ────────────────────────────────────────────
@@ -425,10 +426,10 @@ export function calculateOvertimePay(
     const dayOvertime = Math.max(0, day.hoursWorked - params.regularHoursPerDay);
     if (dayOvertime > 0) {
       const holiday = getHolidayForDate(new Date(day.date), holidays);
-      let multiplier = params.otFactor;
-      if (holiday?.company_holidays_is_mandatory) {
-        multiplier = holiday.company_holidays_is_triple ? params.holidayTripleFactor : params.holidayMandatoryFactor;
-      }
+      const holidayFactor = holiday?.company_holidays_is_mandatory
+        ? params.holidayMandatoryFactor  // 2.0
+        : 1.0;
+      const multiplier = holidayFactor * params.otFactor;  // 2.0 × 1.5 = 3.0 | 1.0 × 1.5 = 1.5
       totalOtPay += dayOvertime * hourlyRate * multiplier;
     }
   });
@@ -449,6 +450,58 @@ export function calculateWeeklyRestPay(
   const regularHours = calculateRegularHours(days, params);
   const restHours = calculateWeeklyRestHours(regularHours, startDate, endDate);
   return roundToMoney(restHours * hourlyRate);
+}
+
+/**
+/**
+ * Returns the hours and pay owed for mandatory holidays NOT worked in the period.
+ *
+ * Behaviour controlled by params.payUnworkedHolidays (enterprise config):
+ *   true  (default) — unworked mandatory holidays are paid. This is the standard
+ *                     behavior under Costa Rica labor law for feriados de pago obligatorio.
+ *   false           — unworked mandatory holidays are excluded from the calculation.
+ *                     The employer has accepted the legal disclaimer for this setting.
+ *
+ * Holidays that WERE worked are always handled by calculateGrossSalary's regular-pay
+ * loop, which applies the individual holiday multiplier (2× mandatory, 3× triple).
+ *
+ * @param days       - All DayWork records for the period
+ * @param hourlyRate - Employee hourly rate
+ * @param startDate  - Period start
+ * @param endDate    - Period end
+ * @param holidays   - Company holidays list
+ * @param params     - Legal param set (payUnworkedHolidays defaults to true)
+ * @returns { hours, pay }
+ */
+export function getMandatoryHolidayBreakdown(
+  days: DayWork[],
+  hourlyRate: number,
+  startDate: Date,
+  endDate: Date,
+  holidays: PayrollHoliday[],
+  params: LegalParamSet = DEFAULT_LEGAL_PARAMS
+): { hours: number; pay: number } {
+  // When the enterprise opts out, unworked holidays are not included
+  if (params.payUnworkedHolidays === false) {
+    return { hours: 0, pay: 0 };
+  }
+
+  let hours = 0;
+  let pay = 0;
+
+  for (const holiday of holidays) {
+    if (!holiday.company_holidays_is_mandatory) continue;
+    const hDate = new Date(holiday.company_holidays_date);
+    if (hDate < startDate || hDate > endDate || hDate.getDay() === 0) continue;
+
+    const workedDay = days.find(d => formatDateString(new Date(d.date)) === formatDateString(hDate));
+    if (workedDay && workedDay.hoursWorked > 0) continue; // worked → handled in regular pay loop
+
+    hours += params.regularHoursPerDay;
+    pay   += params.regularHoursPerDay * hourlyRate;
+  }
+
+  return { hours: roundToMoney(hours), pay: roundToMoney(pay) };
 }
 
 /**
@@ -478,24 +531,18 @@ export function calculateGrossSalary(
     regularPay += dayRegular * hourlyRate * multiplier;
   });
   
-  // Base pay for mandatory holidays not worked
-  holidays.forEach(holiday => {
-    if (holiday.company_holidays_is_mandatory) {
-      const hDate = new Date(holiday.company_holidays_date);
-      // If it falls in period, and not a Sunday, and we have NO record of hours worked
-      if (hDate >= startDate && hDate <= endDate && hDate.getDay() !== 0) {
-        const workedDay = days.find(d => formatDateString(new Date(d.date)) === formatDateString(hDate));
-        if (!workedDay || workedDay.hoursWorked === 0) {
-           regularPay += params.regularHoursPerDay * hourlyRate;
-        }
-      }
-    }
-  });
+  // Base pay for mandatory holidays not worked (Art. 148 eligibility check applied)
+  const { pay: mandatoryHolidayBasePay } = getMandatoryHolidayBreakdown(days, hourlyRate, startDate, endDate, holidays, params);
+  regularPay += mandatoryHolidayBasePay;
 
   const regular = roundToMoney(regularPay);
   const overtime = calculateOvertimePay(days, hourlyRate, holidays, params);
+  // Exclude mandatory holiday days from the weekly rest base — they have their own salary treatment
+  const nonHolidayDays = days.filter(
+    day => !getHolidayForDate(new Date(day.date), holidays)?.company_holidays_is_mandatory
+  );
   const weeklyRest = calculateWeeklyRestPay(
-    days,
+    nonHolidayDays,
     hourlyRate,
     startDate,
     endDate,
