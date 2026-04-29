@@ -15,7 +15,7 @@
 | 58 | Redondeo de Minutos en Motor | PAY-23 | 3 | Complete | 2026-04-26 |
 | 59 | Tarifa Mínima Global (Opcional) | PAY-24 | 2 | Completed |
 | 60 | Advertencia de Tarifa Mínima en Planilla | PAY-25 | 3 | Completed |
-| 61 | Alertas Persistentes Parámetros Legales | PAY-26 | 5 | Not Started |
+| 61 | Alertas Persistentes Parámetros Legales | PAY-26 | Completed | 2026-04-29 |
 | 62 | Confirmación Contraseña Params Críticos | PAY-27 | 2 | Not Started |
 | 63 | Panel Admin Parámetros Legales UI | PAY-28 | 5 | Not Started |
 | 64 | Snapshot de Params en Planilla Cerrada | PAY-29 | 3 | Not Started |
@@ -155,7 +155,7 @@
 1. Modificar OT_FACTOR crea notificación LEGAL_PARAM_CHANGE para todos los usuarios admin/payroll_manager.
 2. Banner en dashboard aparece y desaparece al marcar como revisado.
 3. Cambiar MIN_WAGE_CHECK_ENABLED a 0 muestra mensaje "Verificación de salario mínimo DESACTIVADA".
-**Status:** Planning Complete
+**Status:** Completed (2026-04-29)
 
 **Plans:** 5 plans
 - [ ] 61-01-PLAN.md — Schema migration + NotificationService methods (Wave 1)
