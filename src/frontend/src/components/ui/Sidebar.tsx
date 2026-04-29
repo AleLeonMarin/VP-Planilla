@@ -4,6 +4,7 @@ import Image from 'next/image';
 import SidebarItem from '@/components/SidebarItem';
 import React from 'react';
 import { XMarkIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -12,6 +13,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }: SidebarProps) {
+  const { user } = useAuth();
   const mainMenuItems = [
     { href: "/pages/main", icon: "/images/layout/dashboard.png", text: "Dashboard" },
     {
@@ -72,7 +74,10 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
       text: "Configuración",
       subItems: [
         { href: '/pages/configuracion/ventanas', text: 'Ventanas de Tiempo' },
-        { href: '/pages/configuracion/feriados', text: 'Feriados' }
+        { href: '/pages/configuracion/feriados', text: 'Feriados' },
+        ...(user?.role === 'admin' || user?.role === 'payroll_manager'
+          ? [{ href: '/pages/configuracion/parametros-legales', text: 'Parámetros Legales' }]
+          : []),
       ]
     },
   ];
@@ -132,6 +137,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
             href={item.href}
             icon={item.icon}
             text={item.text}
+            subItems={item.subItems}
           />
         ))}
 

@@ -39,4 +39,16 @@ export const LegalParamService = {
   patchParam: async (key: string, data: Partial<LegalParam> & { confirmationPassword?: string }): Promise<LegalParam> => {
     return http.patch(`/legal-params/${key}`, data);
   },
+
+  getActiveParams: async (): Promise<{ success: boolean; data?: LegalParam[] }> => {
+    return http.get(`/legal-params/active`);
+  },
+
+  getParamHistory: async (key: string): Promise<{ success: boolean; data?: LegalParam[] }> => {
+    return http.get(`/legal-params/history/${key}`);
+  },
+
+  bulkUpsertMinWages: async (data: { updates: { key: string; value: number }[]; validFrom: string; source_decree: string; confirmationPassword?: string }): Promise<{ success: boolean }> => {
+    return http.post(`/legal-params/min-wages/bulk`, data);
+  },
 };

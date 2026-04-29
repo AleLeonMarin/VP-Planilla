@@ -23,6 +23,17 @@ export class LegalParamController {
   }
 
   /**
+   * GET /api/legal-params/active?date=YYYY-MM-DD
+   * Returns all active parameters at the given date, across all categories.
+   */
+  static async getActiveParams(req: Request, res: Response): Promise<void> {
+    const { date } = req.query;
+    const targetDate = date ? new Date(date as string) : new Date();
+    const params = await LegalParamService.getActiveParams(targetDate);
+    res.status(200).json({ success: true, data: params });
+  }
+
+  /**
    * GET /api/legal-params/all
    * Returns all legal parameters ordered by key ASC, validFrom DESC.
    * Admin-only (enforced at route layer).
@@ -120,6 +131,44 @@ export class LegalParamController {
       { passwordVerified: isCritical ? true : false }
     );
     res.status(201).json({ success: true, data: newParam });
+  }
+
+  /**
+   * POST /api/legal-params/min-wages/bulk
+   * Admin-only. Bulk updates minimum wages.
+   */
+  static async bulkUpsertMinWages(req: Request, res: Response): Promise<void> {
+    const userId = String((req as any).user?.id ?? '');
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Unauthorized' });
+      return;
+    }
+
+    const { updates, validFrom, source_decree, confirmationPassword } = req.body;
+    if (!updates || !Array.isArray(updates) || !validFrom || !source_decree) {
+      res.status(400).json({ success: false, error: 'Missing required fields: updates, validFrom, source_decree' });
+      return;
+    }
+
+    // Require password confirmation for bulk update
+    if (!confirmationPassword) {
+      res.status(400).json({ success: false, error: 'La actualización masiva requiere confirmación de contraseña' });
+      return;
+    }
+    const verified = await AuthService.verifyPasswordForUser(userId, confirmationPassword);
+    if (!verified) {
+      res.status(403).json({ success: false, error: 'Contraseña incorrecta. El cambio masivo no fue guardado.' });
+      return;
+    }
+
+    const newParams = await LegalParamService.bulkUpsertMinWages(
+      updates,
+      new Date(validFrom),
+      source_decree,
+      userId,
+      true // passwordVerified
+    );
+    res.status(201).json({ success: true, data: newParams });
   }
 
   /**

@@ -14,6 +14,20 @@ const adminOnly = (req: any, res: any, next: any) => {
   next();
 };
 
+router.get(
+  '/legal-params/active',
+  AuthMiddleware.verifyToken,
+  adminOnly,
+  asyncHandler(LegalParamController.getActiveParams),
+);
+
+router.post(
+  '/legal-params/min-wages/bulk',
+  AuthMiddleware.verifyToken,
+  adminOnly,
+  asyncHandler(LegalParamController.bulkUpsertMinWages),
+);
+
 /**
  * @swagger
  * /api/legal-params:

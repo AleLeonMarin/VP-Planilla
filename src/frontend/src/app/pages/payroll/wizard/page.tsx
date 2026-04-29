@@ -198,7 +198,7 @@ export default function PayrollWizardPage() {
       setCalculationData(newResult as any);
       
       toast.success('Datos actualizados');
-    } catch (err) {
+    } catch {
       toast.error('Error al refrescar datos de la planilla');
     }
   }, [payrollId, calcResult, setCalcResult, setCalculationData]);
