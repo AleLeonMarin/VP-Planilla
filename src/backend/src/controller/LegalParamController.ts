@@ -92,11 +92,12 @@ export class LegalParamController {
    * @throws 400 if required fields missing; 401 if no user; 500 on Prisma error
    */
   static async upsertParam(req: Request, res: Response): Promise<void> {
-    const userId = String((req as any).user?.id ?? '');
-    if (!userId) {
+    const rawId = (req as any).user?.id;
+    if (rawId === undefined || rawId === null) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
     }
+    const userId = String(rawId);
 
     const { key, value, description, category, validFrom, isCritical, source_decree, confirmationPassword } = req.body;
 
@@ -138,11 +139,12 @@ export class LegalParamController {
    * Admin-only. Bulk updates minimum wages.
    */
   static async bulkUpsertMinWages(req: Request, res: Response): Promise<void> {
-    const userId = String((req as any).user?.id ?? '');
-    if (!userId) {
+    const rawId = (req as any).user?.id;
+    if (rawId === undefined || rawId === null) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
     }
+    const userId = String(rawId);
 
     const { updates, validFrom, source_decree, confirmationPassword } = req.body;
     if (!updates || !Array.isArray(updates) || !validFrom || !source_decree) {
@@ -179,11 +181,12 @@ export class LegalParamController {
    * @param res - { success: true, data: VpgLegalParam }
    */
   static async patchParam(req: Request, res: Response): Promise<void> {
-    const userId = String((req as any).user?.id ?? '');
-    if (!userId) {
+    const rawId = (req as any).user?.id;
+    if (rawId === undefined || rawId === null) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
     }
+    const userId = String(rawId);
 
     const key = req.params.key as string;
     const { value, description, category, validFrom, isCritical, source_decree, confirmationPassword } = req.body;
