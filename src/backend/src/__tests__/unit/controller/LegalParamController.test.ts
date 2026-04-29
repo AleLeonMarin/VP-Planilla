@@ -116,7 +116,7 @@ describe('LegalParamController', () => {
     });
 
     it('returns 400 if required fields are missing', async () => {
-      mockRequest.user = { user_id: 'admin' };
+      mockRequest.user = { id: 'admin' };
       mockRequest.body = { key: 'OT_FACTOR' }; // Missing value, description, etc.
 
       await LegalParamController.upsertParam(mockRequest as Request, mockResponse as Response);
@@ -126,7 +126,7 @@ describe('LegalParamController', () => {
     });
 
     it('upserts param successfully', async () => {
-      mockRequest.user = { user_id: 'admin' };
+      mockRequest.user = { id: 'admin' };
       mockRequest.body = {
         key: 'OT_FACTOR',
         value: 1.5,

@@ -48,15 +48,15 @@ describe('PayrollService.saveEmployeeOverride — PAY-12', () => {
 
   it('should throw error if employee is not in the payroll', async () => {
     prisma.vpg_payrolls.findUnique.mockResolvedValue({ payrolls_status: 'BORRADOR' });
-    prisma.vpg_payroll_employee.findFirst.mockResolvedValue(null);
+    prisma.vpg_payroll_employee.findUnique.mockResolvedValue(null);
 
     await expect(PayrollService.saveEmployeeOverride(payrollId, employeeId, {}))
-      .rejects.toThrow(`Empleado ${employeeId} no encontrado en planilla ${payrollId}`);
+      .rejects.toThrow(`Registro de planilla ${employeeId} no encontrado.`);
   });
 
   it('should allow hours exceeding 24h (removed old validation)', async () => {
     prisma.vpg_payrolls.findUnique.mockResolvedValue({ payrolls_status: 'BORRADOR' });
-    prisma.vpg_payroll_employee.findFirst.mockResolvedValue(mockEmployeeData);
+    prisma.vpg_payroll_employee.findUnique.mockResolvedValue(mockEmployeeData);
     prisma.vpg_payroll_employee.update.mockResolvedValue({ id: 1 });
 
     // Should NOT throw for 80 hours (biweekly)
@@ -66,7 +66,7 @@ describe('PayrollService.saveEmployeeOverride — PAY-12', () => {
 
   it('should update correctly and recalculate gross and net salary', async () => {
     prisma.vpg_payrolls.findUnique.mockResolvedValue({ payrolls_status: 'BORRADOR' });
-    prisma.vpg_payroll_employee.findFirst.mockResolvedValue(mockEmployeeData);
+    prisma.vpg_payroll_employee.findUnique.mockResolvedValue(mockEmployeeData);
     prisma.vpg_payroll_employee.update.mockResolvedValue({ id: 1 });
 
     // Hourly rate = 2000

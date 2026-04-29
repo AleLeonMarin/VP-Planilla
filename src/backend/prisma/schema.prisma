@@ -370,11 +370,28 @@ model vpg_payrolls {
   vpg_payroll_types             vpg_payroll_types             @relation(fields: [payrolls_payroll_type_id], references: [payroll_types_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payrolls_payroll_types_07")
   vpg_users                     vpg_users?                    @relation(fields: [payrolls_approved_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_vpg_payrolls_users_approved_by_30")
   vpg_payroll_recalculations    vpg_payroll_recalculations[]
+  vpgPayrollParamSnapshots      vpgPayrollParamSnapshot[]
 
   @@index([payrolls_payroll_type_id], map: "idx_vpg_payrolls_payroll_type_id")
   @@index([payrolls_period_end], map: "idx_vpg_payrolls_period_end")
   @@index([payrolls_period_start], map: "idx_vpg_payrolls_period_start")
   @@index([payrolls_status], map: "idx_vpg_payrolls_status")
+}
+
+model vpgPayrollParamSnapshot {
+  id               String   @id @default(cuid())
+  payroll_id       Int
+  param_key        String
+  param_value      Decimal
+  param_valid_from DateTime
+  source_decree    String?
+  captured_at      DateTime @default(now())
+
+  payroll vpg_payrolls @relation(fields: [payroll_id], references: [payrolls_id])
+
+  @@unique([payroll_id, param_key])
+  @@index([payroll_id], map: "idx_vpg_payroll_param_snapshots_payroll_id")
+  @@map("vpg_payroll_param_snapshots")
 }
 
 model vpg_payroll_recalculations {
