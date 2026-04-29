@@ -1,4 +1,5 @@
 import { http } from './http';
+import { LegalParam } from '../types/legalParam';
 
 /**
  * Service to manage legal parameters from the backend.
@@ -18,9 +19,24 @@ export const LegalParamService = {
    * Updates the value of a specific legal parameter.
    * @param key The unique key of the parameter.
    * @param value The new value to set.
+   * @param confirmationPassword Optional password if the parameter is critical.
    * @returns Success status of the update.
    */
-  updateParam: async (key: string, value: string | number | boolean): Promise<{ success: boolean }> => {
-    return http.patch(`/legal-params/${key}`, { value });
+  updateParam: async (key: string, value: string | number | boolean, confirmationPassword?: string): Promise<{ success: boolean }> => {
+    return http.patch(`/legal-params/${key}`, { value, confirmationPassword });
+  },
+
+  /**
+   * Create a new legal parameter record.
+   */
+  upsertParam: async (data: Partial<LegalParam> & { confirmationPassword?: string }): Promise<LegalParam> => {
+    return http.post(`/legal-params`, data);
+  },
+
+  /**
+   * Update a parameter value.
+   */
+  patchParam: async (key: string, data: Partial<LegalParam> & { confirmationPassword?: string }): Promise<LegalParam> => {
+    return http.patch(`/legal-params/${key}`, data);
   },
 };
