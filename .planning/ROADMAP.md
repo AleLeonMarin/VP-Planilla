@@ -197,7 +197,12 @@
 1. Aprobar una planilla crea registros en vpg_payroll_param_snapshots por cada parámetro.
 2. Detalle de planilla muestra sección "Parámetros utilizados" con valores históricos.
 3. Planilla histórica muestra snapshot correcto aunque los parámetros actuales sean distintos.
-**Status:** Not Started
+**Status:** Planning Complete (3 plans ready — execute waves 1→2→3)
+
+**Plans:** 3 plans
+- [ ] 64-01-PLAN.md — Wave 1: Schema vpgPayrollParamSnapshot + migration
+- [ ] 64-02-PLAN.md — Wave 2: Captura snapshot en approvePayroll + endpoint GET /payroll/:id/snapshot
+- [ ] 64-03-PLAN.md — Wave 3: Frontend sección "Parámetros utilizados" en detalle de planilla
 
 ### Phase 65: Proyección de Aguinaldo en UI
 **Goal:** Perfil de empleado y wizard de planilla muestran aguinaldo acumulado proporcional en tiempo real.
