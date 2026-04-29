@@ -168,7 +168,7 @@ export class ClockLogsController {
             : 'excel_import') as ClockLogSource;
 
         // Extract userId from JWT payload set by AuthMiddleware.verifyToken
-        const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+        const userId: number = (req as any).user?.id ?? 1;
 
         const importService = new ClockLogsImportService();
         try {
@@ -417,7 +417,7 @@ export class ClockLogsController {
         const { employee_id, timestamp, log_type, remarks, justification } = req.body;
 
         // Extract userId from JWT payload set by AuthMiddleware.verifyToken
-        const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+        const userId: number = (req as any).user?.id ?? 1;
 
         // Validate timestamp
         const ts = new Date(timestamp);
@@ -520,7 +520,7 @@ export class ClockLogsController {
         }
 
         const { status, justification } = req.body;
-        const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+        const userId: number = (req as any).user?.id ?? 1;
 
         const service = new ClockLogsService();
         try {

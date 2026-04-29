@@ -13,7 +13,7 @@ export class ClockLogAdjustmentController {
    * POST /api/clock-logs/adjust
    */
   async createAdjustment(req: Request, res: Response): Promise<Response> {
-    const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+    const userId: number = (req as any).user?.id ?? 1;
 
     try {
       const adjustment = await ClockLogAdjustmentService.createAdjustment(req.body, userId);
@@ -34,7 +34,7 @@ export class ClockLogAdjustmentController {
    * POST /api/clock-logs/manual
    */
   async createManualLog(req: Request, res: Response): Promise<Response> {
-    const userId: number = (req as any).user?.id ?? (req as any).user?.user_id ?? 1;
+    const userId: number = (req as any).user?.id ?? 1;
     const { employee_id, timestamp, log_type, remarks, justification } = req.body;
 
     const ts = new Date(timestamp);

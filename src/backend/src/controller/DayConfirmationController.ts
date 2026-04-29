@@ -5,7 +5,7 @@ import { DayConfirmationInput } from '../schemas/DayConfirmationSchema';
 export class DayConfirmationController {
   static async upsert(req: Request, res: Response) {
     const data = DayConfirmationInput.parse(req.body);
-    const userId = (req as any).user?.user_id || (req as any).user?.userId || 1;
+    const userId = (req as any).user?.id || (req as any).user?.userId || 1;
     const result = await DayConfirmationService.upsert(data.employeeId, data.confirmationDate, userId, data.notes);
     res.status(201).json({ success: true, data: result });
   }

@@ -80,7 +80,7 @@ export class LegalParamController {
    * @throws 400 if required fields missing; 401 if no user; 500 on Prisma error
    */
   static async upsertParam(req: Request, res: Response): Promise<void> {
-    const userId = String((req as any).user?.user_id ?? '');
+    const userId = String((req as any).user?.id ?? '');
     if (!userId) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
@@ -110,7 +110,7 @@ export class LegalParamController {
    * @param res - { success: true, data: VpgLegalParam }
    */
   static async patchParam(req: Request, res: Response): Promise<void> {
-    const userId = String((req as any).user?.user_id ?? '');
+    const userId = String((req as any).user?.id ?? '');
     if (!userId) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
