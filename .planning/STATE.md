@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
-**Current focus:** Phase --phase — 64
+**Current focus:** Phase 65 — ProyecciÃ³n de Aguinaldo en UI
 
 ## Current Position
 
 Milestone: v1.7 IN PROGRESS
-Phase: --phase (64) — EXECUTING
-Plan: 1 of --name
-Status: Executing Phase --phase
-Last activity: 2026-04-29 -- Phase --phase execution started
+Phase: 65 — EXECUTING
+Plan: 2 of 4
+Status: Executing Phase 65
+Last activity: 2026-04-29 -- Completed Plan 65-01 (AguinaldoService)
 
-Progress: [###################_] 92% (11 phases complete, Phase 63 complete)
+Progress: [####################] 100% (12 phases complete, Phase 63 complete)
 
 ## v1.7 Phase Map
 
@@ -47,6 +47,7 @@ Progress: [###################_] 92% (11 phases complete, Phase 63 complete)
 | 62 | Confirmación Contraseña Params Críticos | PAY-27 | ✅ Complete |
 | 63 | Panel Admin Parámetros Legales UI | PAY-28 | ✅ Complete |
 | 64 | Snapshot de Params en Planilla Cerrada | PAY-29 | ⏳ Not Started |
+| 65 | Proyección de Aguinaldo en UI | PAY-30 | 🚧 In Progress |
 
 ## v1.6 Phase Map (Audit Refinement)
 

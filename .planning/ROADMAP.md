@@ -4,10 +4,10 @@
 
 | Phase | Name | Requirements | Success Criteria | Status |
 |-------|------|--------------|------------------|--------|
-| 49 | Persistencia de Vista (CachÃ© de UI) | UX-11, UX-12 | Complete    | 2026-04-26 |
-| 50 | CorrecciÃ³n LÃ³gica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Completed |
+| 49 | Persistencia de Vista (Caché de UI) | UX-11, UX-12 | Complete    | 2026-04-26 |
+| 50 | Corrección Lógica de Nivel de Confianza y Estatus | AUDIT-02, AUDIT-03 | 2 | Completed |
 | 52 | Persistencia Robusta (LocalStorage) | UX-11, UX-12 | 2 | Completed |
-| 51 | EdiciÃ³n Directa de Marcas en AuditorÃ­a | AUDIT-01 | 3 | Not Started |
+| 51 | Edición Directa de Marcas en Auditoría | AUDIT-01 | 3 | Not Started |
 | 54 | Rediseño del Flujo de Planilla | PAY-11, PAY-12, PAY-13 | 5 | Completed |
 | 55 | Fundación vpg_legal_params | PAY-20 | 3 | Completed |
 | 56 | Motor de Cálculo Desacoplado | PAY-21 | 4 | Completed |
@@ -20,7 +20,7 @@
 | 63 | Panel Admin Parámetros Legales UI | PAY-28 | 5 | Completed | 2026-04-29 |
 | 64 | Snapshot de Params en Planilla Cerrada | PAY-29 | 3 | Not Started |
 | 65 | Proyección de Aguinaldo en UI | PAY-30 | 4 | Not Started |
-| 66 | Soporte Jornadas Mixtas y Nocturnas | PAY-31 | 4 | Not Started |
+| 66 | Soporte Jornadas Mixtas y Nocturnas | PAY-31 | 4 | Planning Complete (4 plans) |
 
 
 ---
@@ -138,7 +138,7 @@
 **Success Criteria:**
 1. El Wizard del frontend muestra advertencias visuales si un empleado está bajo el mínimo (si el toggle está activo).
 2. Aprobar planilla con advertencias registra el evento en vpg_audit_logs.
-3. MIN_WAGE_CHECK_ENABLED=0 omite validaciones y logs de auditorÃ­a por este motivo.
+3. MIN_WAGE_CHECK_ENABLED=0 omite validaciones y logs de auditoría por este motivo.
 **Status:** Completed
 
 
@@ -216,7 +216,7 @@
 **Status:** Planning Complete (4 plans ready — execute waves 1->2->3)
 
 Plans:
-- [ ] 65-01-PLAN.md — Wave 1: AguinaldoService + unit tests (TDD)
+- [x] 65-01-PLAN.md — Wave 1: AguinaldoService + unit tests (TDD)
 - [ ] 65-02-PLAN.md — Wave 2: Endpoints GET /employees/:id/aguinaldo y GET /payroll/:id/aguinaldo-summary
 - [ ] 65-03-PLAN.md — Wave 3: Frontend AguinaldoCard en perfil de empleado
 - [ ] 65-04-PLAN.md — Wave 3: Frontend columna en wizard paso 3 + box en paso 4
@@ -228,7 +228,13 @@ Plans:
 1. Empleado con shift_type=NOCTURNA: 7h trabajadas produce 6h regular + 1h OT.
 2. Empleado con USE_ENTERPRISE_DEFAULT hereda el ShiftType de vpg_enterprise.
 3. npm test pasa con los 6 escenarios de jornada definidos en 66-CONTEXT.md.
-**Status:** Not Started
+**Status:** Planning Complete (4 plans ready — execute waves 1→2→3)
+
+**Plans:**
+- [ ] 66-01-PLAN.md — Wave 1: Schema migration + Employee model extension
+- [ ] 66-02-PLAN.md — Wave 2: Backend resolution logic (N+1 optimized) + EmployeeService persistence
+- [ ] 66-03-PLAN.md — Wave 2: Unit tests for shift resolution (TDD mode)
+- [ ] 66-04-PLAN.md — Wave 3: Frontend shift override UI + Wizard tooltip
 
 ### Phase 52: UI de Drag and Drop para Ventanas de Tiempo por Empleado
 **Goal:** Allow administrators to intuitively manage, assign, and visualize time windows per employee through a drag-and-drop interface within the sidebar views.
