@@ -14,3 +14,15 @@ export interface VpgPayrollParamSnapshot {
   source_decree: string | null;
   captured_at: Date;
 }
+
+/**
+ * API response shape for snapshot entries.
+ * param_value is serialized as string (via Decimal.toString()) for JSON consumers.
+ * Use this type for API response payloads, not for internal DB operations.
+ */
+export interface VpgPayrollParamSnapshotResponse {
+  param_key: string;
+  param_value: string;
+  param_valid_from: Date;
+  source_decree: string | null;
+}

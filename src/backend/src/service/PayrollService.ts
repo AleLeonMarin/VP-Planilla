@@ -5,6 +5,7 @@ import { calculateGrossSalary, countWorkingDaysInPeriod, calculateScheduledHours
 import { DayWork } from '../types/payroll.types';
 import { LegalParamService } from './LegalParamService';
 import { AuditLogsService } from './AuditLogsService';
+import { VpgPayrollParamSnapshotResponse } from '../model/VpgPayrollParamSnapshot';
 
 export class PayrollService {
   /**
@@ -378,12 +379,7 @@ export class PayrollService {
    */
   static async getPayrollWithSnapshot(payrollId: number): Promise<{
     payroll: Payroll;
-    snapshot: Array<{
-      param_key: string;
-      param_value: string;
-      param_valid_from: Date;
-      source_decree: string | null;
-    }>;
+    snapshot: VpgPayrollParamSnapshotResponse[];
   }> {
     const payroll = await prisma.vpg_payrolls.findUnique({
       where: { payrolls_id: payrollId },
