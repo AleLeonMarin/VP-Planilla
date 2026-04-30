@@ -5,6 +5,7 @@ import { calculateGrossSalary, countWorkingDaysInPeriod, calculateScheduledHours
 import { DayWork } from '../types/payroll.types';
 import { LegalParamService } from './LegalParamService';
 import { AuditLogsService } from './AuditLogsService';
+import { VpgPayrollParamSnapshot } from '../model/VpgPayrollParamSnapshot';
 
 export class PayrollService {
   /**
@@ -309,17 +310,105 @@ export class PayrollService {
       }
     }
     
-    const updated = await prisma.vpg_payrolls.update({
-      where: { payrolls_id: payrollId },
-      data: {
-        payrolls_status: PayrollStatus.APROBADA,
-        payrolls_approved_by: userId,
-        payrolls_approved_at: new Date(),
-        payrolls_version: payroll.payrolls_version + 1
-      }
+    // Capture snapshot of legal parameters active at period start (PAY-29)
+    const paramsAtPeriodStart = await LegalParamService.getActiveParams(payroll.payrolls_period_start);
+    const enterprise = await prisma.vpg_enterprise.findFirst({
+      select: {
+        enterprise_minute_rounding_policy: true,
+        enterprise_ordinary_shift_type: true,
+        enterprise_is_commercial_activity: true,
+      },
     });
-    
+
+    const snapshotData = [
+      ...paramsAtPeriodStart.map((p) => ({
+        payroll_id: payrollId,
+        param_key: p.key,
+        param_value: p.value,
+        param_valid_from: p.validFrom,
+        source_decree: p.source_decree,
+      })),
+      {
+        payroll_id: payrollId,
+        param_key: 'ENTERPRISE_MINUTE_ROUNDING_POLICY',
+        param_value: String(enterprise?.enterprise_minute_rounding_policy ?? 'EXACT'),
+        param_valid_from: new Date(),
+        source_decree: null,
+      },
+      {
+        payroll_id: payrollId,
+        param_key: 'ENTERPRISE_ORDINARY_SHIFT_TYPE',
+        param_value: String(enterprise?.enterprise_ordinary_shift_type ?? 'DIURNA'),
+        param_valid_from: new Date(),
+        source_decree: null,
+      },
+      {
+        payroll_id: payrollId,
+        param_key: 'ENTERPRISE_IS_COMMERCIAL_ACTIVITY',
+        param_value: enterprise?.enterprise_is_commercial_activity ? '1' : '0',
+        param_valid_from: new Date(),
+        source_decree: null,
+      },
+    ];
+
+    const [, updated] = await prisma.$transaction([
+      prisma.vpgPayrollParamSnapshot.createMany({
+        data: snapshotData,
+        skipDuplicates: true,
+      }),
+      prisma.vpg_payrolls.update({
+        where: { payrolls_id: payrollId },
+        data: {
+          payrolls_status: PayrollStatus.APROBADA,
+          payrolls_approved_by: userId,
+          payrolls_approved_at: new Date(),
+          payrolls_version: payroll.payrolls_version + 1,
+        },
+      }),
+    ]);
+
     return this.mapToPayroll(updated);
+  }
+
+  /**
+   * Get payroll with parameter snapshot captured at approval time.
+   * Returns an empty snapshot array for payrolls approved before Phase 64 (no snapshot exists).
+   * @param payrollId - The payroll ID
+   * @returns Promise with payroll and parameter snapshot
+   * @throws Error if payroll not found
+   */
+  static async getPayrollWithSnapshot(payrollId: number): Promise<{
+    payroll: Payroll;
+    snapshot: Array<{
+      param_key: string;
+      param_value: string;
+      param_valid_from: Date;
+      source_decree: string | null;
+    }>;
+  }> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId },
+    });
+    if (!payroll) throw new Error('Payroll not found');
+
+    const snapshot = await prisma.vpgPayrollParamSnapshot.findMany({
+      where: { payroll_id: payrollId },
+      select: {
+        param_key: true,
+        param_value: true,
+        param_valid_from: true,
+        source_decree: true,
+      },
+      orderBy: { param_key: 'asc' },
+    });
+
+    return {
+      payroll: this.mapToPayroll(payroll),
+      snapshot: snapshot.map((s) => ({
+        ...s,
+        param_value: s.param_value.toString(),
+      })),
+    };
   }
 
   /**

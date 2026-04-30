@@ -82,6 +82,31 @@ export class PayrollController {
   }
 
   /**
+   * Get payroll with parameter snapshot captured at approval time.
+   * GET /payroll/:id/snapshot
+   * @param req - Express request object with payrollId in params
+   * @param res - Express response object
+   * @returns Promise<Response> - HTTP response with { payroll, snapshot } or error
+   */
+  static async getPayrollSnapshot(req: Request, res: Response) {
+    try {
+      const payrollId = Number(req.params.id);
+      const result = await PayrollService.getPayrollWithSnapshot(payrollId);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      console.error('Failed to retrieve payroll snapshot:', error);
+      const is404 = error instanceof Error && error.message === 'Payroll not found';
+      res.status(is404 ? 404 : 500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to retrieve payroll snapshot',
+      });
+    }
+  }
+
+  /**
    * Update an existing payroll
    * PUT /payroll/:id
    * @param req - Express request object containing payroll ID in params and update data in body

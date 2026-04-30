@@ -194,6 +194,38 @@ router.put("/payroll/:id", validateBody(updatePayrollSchema), asyncHandler(Payro
 router.get("/payroll/:id/employees", asyncHandler(PayrollController.getPayrollEmployees));
 
 /**
+ * @route   GET /payroll/:id/snapshot
+ * @desc    Get payroll parameter snapshot captured at approval time
+ * @access  Private
+ */
+/**
+ * @swagger
+ * /api/payroll/{id}/snapshot:
+ *   get:
+ *     tags:
+ *       - Payroll
+ *     summary: Get payroll parameter snapshot
+ *     description: Retrieve the parameter snapshot captured when the payroll was approved. Returns empty snapshot for payrolls approved before Phase 64.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Payroll ID
+ *     responses:
+ *       '200':
+ *         description: Snapshot retrieved successfully
+ *       '404':
+ *         description: Payroll not found
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Internal server error
+ */
+router.get("/payroll/:id/snapshot", asyncHandler(PayrollController.getPayrollSnapshot));
+
+/**
  * @route   POST /payroll/:id/approve
  * @desc    Approve a payroll (BORRADOR -> APROBADA)
  * @access  Private

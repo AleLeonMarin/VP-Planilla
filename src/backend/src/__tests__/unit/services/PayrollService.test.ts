@@ -1,6 +1,7 @@
 import { PrismaClient, PayrollStatus } from '@prisma/client';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Payroll } from '../../../model/payroll';
+import { Decimal } from '@prisma/client/runtime/library';
 
 // Create mock instance
 const prismaMock = mockDeep<PrismaClient>();
@@ -27,6 +28,7 @@ jest.mock('../../../lib/prisma', () => ({
 
 // Import PayrollService after mocking
 import { PayrollService } from '../../../service/PayrollService';
+import { LegalParamService } from '../../../service/LegalParamService';
 
 // Helper: base nullable approval fields for vpg_payrolls mocks
 const nullablePayrollFields = {
@@ -380,21 +382,90 @@ describe('PayrollService', () => {
         payrolls_payment_date: new Date('2026-03-05'),
         ...nullablePayrollFields,
       };
-      
-      prismaMock.vpg_payrolls.findUnique.mockResolvedValue(existingPayroll as any);
-      prismaMock.vpg_payrolls.update.mockResolvedValue({
+      const approvedPayroll = {
         ...existingPayroll,
         payrolls_status: PayrollStatus.APROBADA,
         payrolls_approved_by: 1,
         payrolls_approved_at: new Date(),
         payrolls_version: 2,
+      };
+
+      prismaMock.vpg_payrolls.findUnique.mockResolvedValue(existingPayroll as any);
+      // PAY-29: mock all dependencies added by snapshot capture
+      jest.spyOn(LegalParamService, 'getParam').mockResolvedValue(0 as any); // MIN_WAGE_CHECK_ENABLED = 0
+      jest.spyOn(LegalParamService, 'getActiveParams').mockResolvedValue([]);
+      prismaMock.vpg_enterprise.findFirst.mockResolvedValue({
+        enterprise_minute_rounding_policy: 'EXACT',
+        enterprise_ordinary_shift_type: 'DIURNA',
+        enterprise_is_commercial_activity: true,
       } as any);
+      prismaMock.vpgPayrollParamSnapshot.createMany.mockResolvedValue({ count: 3 });
+      prismaMock.$transaction.mockResolvedValue([{ count: 3 }, approvedPayroll] as any);
 
       const result = await PayrollService.approvePayroll(1, 1);
-      
+
       expect(result.status).toBe(PayrollStatus.APROBADA);
       expect(result.approved_by).toBe(1);
       expect(result.version).toBe(2);
+    });
+
+    describe('snapshot capture (PAY-29)', () => {
+      const mockPayroll = {
+        payrolls_id: 1,
+        payrolls_status: 'BORRADOR' as PayrollStatus,
+        payrolls_period_start: new Date('2026-01-01'),
+        payrolls_period_end: new Date('2026-01-15'),
+        payrolls_payment_date: new Date('2026-01-20'),
+        payrolls_payroll_type_id: 1,
+        payrolls_version: 1,
+        vpg_payroll_employee: [],
+        ...nullablePayrollFields,
+      };
+
+      const mockParams = [
+        { key: 'OT_FACTOR', value: new Decimal('1.5'), validFrom: new Date('2025-01-01'), source_decree: 'DECRETO-2025' },
+        { key: 'CCSS_OBRERO', value: new Decimal('0.0550'), validFrom: new Date('2025-01-01'), source_decree: null },
+      ];
+
+      const mockEnterprise = {
+        enterprise_minute_rounding_policy: 'EXACT',
+        enterprise_ordinary_shift_type: 'DIURNA',
+        enterprise_is_commercial_activity: true,
+      };
+
+      beforeEach(() => {
+        prismaMock.vpg_payrolls.findUnique.mockResolvedValue(mockPayroll as any);
+        prismaMock.vpg_payrolls.update.mockResolvedValue({ ...mockPayroll, payrolls_status: 'APROBADA' } as any);
+        jest.spyOn(LegalParamService, 'getActiveParams').mockResolvedValue(mockParams as any);
+        jest.spyOn(LegalParamService, 'getParam').mockResolvedValue(0 as any);
+        prismaMock.vpg_enterprise.findFirst.mockResolvedValue(mockEnterprise as any);
+        prismaMock.vpgPayrollParamSnapshot.createMany.mockResolvedValue({ count: 5 });
+        // approvePayroll uses prisma.$transaction([op1, op2]) — array overload returns array of results
+        prismaMock.$transaction.mockResolvedValue([
+          { count: 5 },
+          { ...mockPayroll, payrolls_status: 'APROBADA' },
+        ] as any);
+      });
+
+      it('should call getActiveParams with period_start (not current date)', async () => {
+        await PayrollService.approvePayroll(1, 1);
+        expect(LegalParamService.getActiveParams).toHaveBeenCalledWith(mockPayroll.payrolls_period_start);
+      });
+
+      it('should call createMany with skipDuplicates: true and correct snapshot data', async () => {
+        await PayrollService.approvePayroll(1, 1);
+        expect(prismaMock.vpgPayrollParamSnapshot.createMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            skipDuplicates: true,
+            data: expect.arrayContaining([
+              expect.objectContaining({ payroll_id: 1, param_key: 'OT_FACTOR', param_value: new Decimal('1.5') }),
+              expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_MINUTE_ROUNDING_POLICY' }),
+              expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_ORDINARY_SHIFT_TYPE' }),
+              expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_IS_COMMERCIAL_ACTIVITY' }),
+            ]),
+          })
+        );
+      });
     });
   });
 
@@ -551,6 +622,33 @@ describe('PayrollService', () => {
       // 1 month * 100000 / 12 = 8333.33
       expect(result.total).toBeCloseTo(8333.33, 0);
       expect(result.months).toBe(1);
+    });
+  });
+
+  describe('getPayrollWithSnapshot', () => {
+    it('should throw when payroll not found', async () => {
+      prismaMock.vpg_payrolls.findUnique.mockResolvedValue(null as any);
+      await expect(PayrollService.getPayrollWithSnapshot(999)).rejects.toThrow('Payroll not found');
+    });
+
+    it('should return payroll and snapshot with param_value as string', async () => {
+      const mockPayroll = {
+        payrolls_id: 1,
+        payrolls_status: 'APROBADA',
+        payrolls_payroll_type_id: 1,
+        payrolls_period_start: new Date('2026-01-01'),
+        payrolls_period_end: new Date('2026-01-15'),
+        payrolls_payment_date: new Date('2026-01-20'),
+        payrolls_version: 2,
+        ...nullablePayrollFields,
+      };
+      const mockSnap = [{ param_key: 'OT_FACTOR', param_value: new Decimal('1.5'), param_valid_from: new Date(), source_decree: 'DEC-1' }];
+      prismaMock.vpg_payrolls.findUnique.mockResolvedValue(mockPayroll as any);
+      prismaMock.vpgPayrollParamSnapshot.findMany.mockResolvedValue(mockSnap as any);
+
+      const result = await PayrollService.getPayrollWithSnapshot(1);
+      expect(result.snapshot[0].param_value).toBe('1.5');
+      expect(result.payroll).toBeDefined();
     });
   });
 });
