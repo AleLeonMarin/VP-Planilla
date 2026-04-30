@@ -52,8 +52,7 @@ Exceptions: None. All spacing follows 4px grid.
 | Body (default) | 14px | 400 (regular) | 1.5 |
 | Label/caption | 12px | 500 (semibold) | 1.4 |
 | Subheading | 16px | 600 (semibold) | 1.4 |
-| Card title | 18px | 600 (semibold) | 1.2 |
-| Page heading | 24px | 700 (bold) | 1.2 |
+| Heading/Display | 20px | 700 (bold) | 1.2 |
 
 Font families apply globally via Tailwind extend. No additional declarations needed per component.
 
@@ -104,7 +103,7 @@ Accent is **NOT** used for:
    - Right: "Acumulado a [DD/MM/YYYY]" (caption, 12px, text-zinc-500)
 
 2. **Amount display:**
-   - Large amount: "₡[cantidad]" (24px, bold, #1F2937)
+   - Large amount: "₡[cantidad]" (20px, bold, #1F2937)
    - Format: 2 decimals, right-aligned within card
    - Example: "₡1,234,567.89"
 
@@ -161,7 +160,7 @@ Accent is **NOT** used for:
 
 **Layout (flex column, gap-lg):**
 1. **Title:**
-   - "Compromiso de Aguinaldo" (18px, semibold, verde-primary)
+   - "Compromiso de Aguinaldo" (20px, bold, verde-primary)
 
 2. **Stat blocks (grid 2 cols, gap-md):**
    - Block 1:
@@ -298,7 +297,7 @@ All components must include `dark:` variants in className strings.
 - [ ] Dimension 1 Copywriting: All labels match spec, Spanish labels consistent
 - [ ] Dimension 2 Visuals: Card layouts, progress bar, summary box match wireframes
 - [ ] Dimension 3 Color: Verde-primary used for accents only, 60/30/10 split maintained
-- [ ] Dimension 4 Typography: Font sizes, weights, line heights match declared spec
+- [ ] Dimension 4 Typography: Font sizes, weights, line heights match declared spec (4 sizes, 2 weights max)
 - [ ] Dimension 5 Spacing: All gaps multiples of 4px, padding consistent
 - [ ] Dimension 6 Registry Safety: No shadcn/third-party registries; manual Tailwind classes only
 
