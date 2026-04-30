@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PayrollService } from "../service/PayrollService";
 import { AuditLogsService } from "../service/AuditLogsService";
+import { AguinaldoService } from "../service/AguinaldoService";
 
 export class PayrollController {
   /**
@@ -325,6 +326,64 @@ export class PayrollController {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al guardar ajuste de empleado';
       return res.status(400).json({ success: false, error: message });
+    }
+  }
+
+  /**
+   * Get aguinaldo accrual for an employee
+   * GET /api/employees/:id/aguinaldo
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response>
+   */
+  static async getEmployeeAguinaldo(req: Request, res: Response) {
+    try {
+      const employeeId = Number(req.params.id);
+      if (isNaN(employeeId)) {
+        return res.status(400).json({ success: false, error: "ID de empleado inválido" });
+      }
+
+      const result = await AguinaldoService.calculateAccruedAguinaldo(employeeId);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error: any) {
+      console.error("Failed to calculate employee aguinaldo:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to calculate employee aguinaldo"
+      });
+    }
+  }
+
+  /**
+   * Get aguinaldo summary for a payroll
+   * GET /api/payroll/:id/aguinaldo-summary
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response>
+   */
+  static async getAguinaldoSummary(req: Request, res: Response) {
+    try {
+      const payrollId = Number(req.params.id);
+      if (isNaN(payrollId)) {
+        return res.status(400).json({ success: false, error: "ID de planilla inválido" });
+      }
+
+      const result = await AguinaldoService.getAguinaldoSummaryForPayroll(payrollId);
+      
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error: any) {
+      console.error("Failed to get aguinaldo summary:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to get aguinaldo summary"
+      });
     }
   }
 }
