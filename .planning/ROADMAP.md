@@ -19,7 +19,7 @@
 | 62 | Confirmación Contraseña Params Críticos | PAY-27 | 3 | Completed | 2026-04-29 |
 | 63 | Panel Admin Parámetros Legales UI | PAY-28 | 5 | Completed | 2026-04-29 |
 | 64 | Snapshot de Params en Planilla Cerrada | PAY-29 | 3 | Not Started |
-| 65 | Proyección de Aguinaldo en UI | PAY-30 | 4 | Not Started |
+| 65 | Proyección de Aguinaldo en UI | PAY-30 | 4 | In Progress (2/4 complete) |
 | 66 | Soporte Jornadas Mixtas y Nocturnas | PAY-31 | 4 | Planning Complete (4 plans) |
 
 

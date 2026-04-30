@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { usePayrollWizard } from '@/hooks/usePayrollWizard';
+import { useAguinaldoSummary } from '@/hooks/useAguinaldoSummary';
 import { NomineeService } from '@/services/nomineeService';
 import { PayrollService } from '@/services/payrollService';
 import { getEmployees } from '@/services/employeeService';
@@ -43,6 +44,8 @@ export default function PayrollWizardPage() {
     setPayrollId,
     reset,
   } = usePayrollWizard();
+
+  const { data: aguinaldoData } = useAguinaldoSummary(payrollId);
 
   // ── Step 1 state ──────────────────────────────────────────────────────────
   const [dateStart, setDateStart] = useState('');
@@ -516,6 +519,7 @@ export default function PayrollWizardPage() {
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">H. Extra</th>
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">D. Semanal</th>
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Deducciones</th>
+                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Aguinaldo acum.</th>
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Salario Neto</th>
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Estado</th>
                         <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400"></th>
@@ -544,6 +548,19 @@ export default function PayrollWizardPage() {
 
                             <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
                               ₡{Number(emp.totalDeductions ?? emp.total_deductions ?? 0).toLocaleString('es-CR')}
+                            </td>
+                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
+                              {(() => {
+                                const agui = aguinaldoData.find(a => a.employeeId === Number(emp.employee_id ?? emp.id ?? emp.employeeId));
+                                if (!agui) return '—';
+                                return (
+                                  <Tooltip content={`Este mes: ₡${agui.thisPayrollContribution.toLocaleString('es-CR')}`}>
+                                    <span className="cursor-help">
+                                      ₡{agui.totalAccruedWithThis.toLocaleString('es-CR')}
+                                    </span>
+                                  </Tooltip>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-zinc-800 dark:text-zinc-100">
                               ₡{Number(emp.netSalary ?? emp.net_salary ?? 0).toLocaleString('es-CR')}

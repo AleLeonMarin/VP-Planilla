@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { PayrollService } from '@/services/payrollService';
+import { useAguinaldoSummary } from '@/hooks/useAguinaldoSummary';
 import { formatCRC } from '@/utils/number';
 
 interface CalculationEmployee {
@@ -41,6 +42,32 @@ export default function PayrollWizardStep3({
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const { data: aguinaldoData } = useAguinaldoSummary(payrollId);
+
+  const aguinaldoTotals = useMemo(() => {
+    return {
+      prev: aguinaldoData.reduce((sum, r) => sum + r.accruedBeforeThisPayroll, 0),
+      this: aguinaldoData.reduce((sum, r) => sum + r.thisPayrollContribution, 0),
+      total: aguinaldoData.reduce((sum, r) => sum + r.totalAccruedWithThis, 0),
+    };
+  }, [aguinaldoData]);
+
+  const aguinaldoPeriod = useMemo(() => {
+    if (!calculationData?.period?.start) return null;
+    const d = new Date(calculationData.period.start);
+    // Ajuste para zona horaria local al leer de string ISO YYYY-MM-DD
+    const localD = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    
+    const isDec = localD.getMonth() === 11;
+    const yearStart = isDec ? localD.getFullYear() : localD.getFullYear() - 1;
+    const yearEnd = isDec ? localD.getFullYear() + 1 : localD.getFullYear();
+    
+    return {
+      start: `${yearStart}-12-01`,
+      end: `${yearEnd}-11-30`
+    };
+  }, [calculationData?.period?.start]);
 
   const totalNet = calculationData?.employees?.reduce(
     (sum, emp) => {
@@ -126,6 +153,35 @@ export default function PayrollWizardStep3({
             Aprobar Planilla
           </button>
         </div>
+
+        {/* Compromiso de Aguinaldo */}
+        {aguinaldoData && aguinaldoData.length > 0 && (
+          <div className="bg-[#FCF1D5] dark:bg-zinc-800/50 border border-[#4A5D3A] border-l-4 border-l-[#4A5D3A] rounded-lg p-6 shadow-sm">
+            <h3 className="text-xl font-bold text-[#4A5D3A] dark:text-zinc-200 mb-4">
+              Compromiso de Aguinaldo
+            </h3>
+            <div className="grid grid-cols-2 gap-8 mb-4">
+              <div>
+                <p className="text-xs text-[#6B7243] dark:text-zinc-400 mb-1">Generado en esta planilla</p>
+                <p className="text-xl font-bold text-[#4A5D3A] dark:text-zinc-100">₡{formatCRC(aguinaldoTotals.this)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6B7243] dark:text-zinc-400 mb-1">Total acumulado al aprobar</p>
+                <p className="text-xl font-bold text-[#4A5D3A] dark:text-zinc-100">₡{formatCRC(aguinaldoTotals.total)}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              {aguinaldoPeriod && (
+                <p className="text-xs text-[#6B7243] dark:text-zinc-400 font-medium">
+                  Período: {new Date(aguinaldoPeriod.start + 'T00:00:00').toLocaleDateString('es-CR')} - {new Date(aguinaldoPeriod.end + 'T00:00:00').toLocaleDateString('es-CR')}
+                </p>
+              )}
+              <p className="text-xs text-zinc-600 dark:text-zinc-500">
+                Estos montos serán capturados en vpg_payroll_param_snapshots para trazabilidad CCSS.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Inline confirmation modal with "APROBAR" requirement */}

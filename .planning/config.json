@@ -1,6 +1,6 @@
 {
   "mode": "stable",
-  "model_profile": "budget",
+  "model_profile": "auto",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,

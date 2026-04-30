@@ -17,6 +17,7 @@
 - [x] **PAY-13**: La UI del flujo de planilla es simple y sin fricción — período → empleados → revisión/ajuste → aprobación — ejecutable en menos de 5 pasos sin errores confusos.
 - [x] **PAY-24**: Definición de tarifa mínima global opcional en vpg_legal_params.
 - [x] **PAY-25**: Advertencia visual y auditoría de salarios por debajo del mínimo global.
+- [/] **PAY-30**: Visualización de aguinaldo acumulado y proyectado en UI (perfil de empleado y wizard).
 
 ## Future Requirements (Deferred)
 - (No aplican para este milestone)

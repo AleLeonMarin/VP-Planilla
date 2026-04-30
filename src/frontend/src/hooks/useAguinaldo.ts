@@ -19,8 +19,9 @@ export function useAguinaldo(employeeId: number | string | undefined) {
     try {
       const result = await aguinaldoService.getEmployeeAguinaldo(Number(employeeId));
       setData(result);
-    } catch (err: any) {
-      setError(err.message || 'Error loading aguinaldo data');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error loading aguinaldo data';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

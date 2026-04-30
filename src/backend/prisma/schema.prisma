@@ -382,7 +382,7 @@ model vpgPayrollParamSnapshot {
   id               String   @id @default(cuid())
   payroll_id       Int
   param_key        String
-  param_value      Decimal
+  param_value      String
   param_valid_from DateTime
   source_decree    String?
   captured_at      DateTime @default(now())

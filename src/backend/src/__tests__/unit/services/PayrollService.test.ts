@@ -458,7 +458,7 @@ describe('PayrollService', () => {
           expect.objectContaining({
             skipDuplicates: true,
             data: expect.arrayContaining([
-              expect.objectContaining({ payroll_id: 1, param_key: 'OT_FACTOR', param_value: new Decimal('1.5') }),
+              expect.objectContaining({ payroll_id: 1, param_key: 'OT_FACTOR', param_value: '1.5' }),
               expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_MINUTE_ROUNDING_POLICY' }),
               expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_ORDINARY_SHIFT_TYPE' }),
               expect.objectContaining({ payroll_id: 1, param_key: 'ENTERPRISE_IS_COMMERCIAL_ACTIVITY' }),
@@ -642,7 +642,7 @@ describe('PayrollService', () => {
         payrolls_version: 2,
         ...nullablePayrollFields,
       };
-      const mockSnap = [{ param_key: 'OT_FACTOR', param_value: new Decimal('1.5'), param_valid_from: new Date(), source_decree: 'DEC-1' }];
+      const mockSnap = [{ param_key: 'OT_FACTOR', param_value: '1.5', param_valid_from: new Date(), source_decree: 'DEC-1' }];
       prismaMock.vpg_payrolls.findUnique.mockResolvedValue(mockPayroll as any);
       prismaMock.vpgPayrollParamSnapshot.findMany.mockResolvedValue(mockSnap as any);
 
