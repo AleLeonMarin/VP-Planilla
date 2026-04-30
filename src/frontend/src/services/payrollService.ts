@@ -39,6 +39,18 @@ export interface PayrollEmployee {
   version: number;
 }
 
+export interface ParamSnapshot {
+  param_key: string;
+  param_value: string;
+  param_valid_from: string;
+  source_decree?: string | null;
+}
+
+export interface PayrollWithSnapshot {
+  payroll: Payroll;
+  snapshot: ParamSnapshot[];
+}
+
 export const PayrollService = {
   async getAllPayrolls(): Promise<Payroll[]> {
     try {
@@ -129,6 +141,20 @@ export const PayrollService = {
       return await http.patch(`/payroll/${payrollId}/employee/${payrollEmployeeId}/override`, override);
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al guardar ajuste de empleado');
+    }
+  },
+
+  /**
+   * Get payroll parameter snapshot captured at approval time.
+   * Returns empty snapshot for payrolls approved before Phase 64.
+   */
+  async getPayrollSnapshot(payrollId: number): Promise<PayrollWithSnapshot> {
+    try {
+      // http.get unwraps response.data — returns { payroll, snapshot } directly
+      const response = await http.get(`/payroll/${payrollId}/snapshot`);
+      return (response as unknown as PayrollWithSnapshot) || { payroll: {} as Payroll, snapshot: [] };
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al obtener parámetros de planilla');
     }
   },
 };

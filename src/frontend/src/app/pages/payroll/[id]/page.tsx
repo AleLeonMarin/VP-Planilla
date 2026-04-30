@@ -18,7 +18,8 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { PayrollService, Payroll, PayrollEmployee } from '@/services/payrollService';
+import { PayrollService, Payroll, PayrollEmployee, ParamSnapshot } from '@/services/payrollService';
+import { PayrollParamSnapshotSection } from '@/components/PayrollParamSnapshotSection';
 import { formatCRC } from '@/utils/number';
 import { useModal } from '@/hooks/useModal';
 import { toast } from 'sonner';
@@ -32,6 +33,8 @@ export default function PayrollDetailPage() {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [snapshots, setSnapshots] = useState<ParamSnapshot[]>([]);
+  const [snapshotsLoading, setSnapshotsLoading] = useState(false);
 
   useEffect(() => {
     const parts = pathname?.split('/') || [];
@@ -53,6 +56,20 @@ export default function PayrollDetailPage() {
       setPayroll(payrollData);
       const employeesData = await PayrollService.getPayrollEmployees(id);
       setEmployees(employeesData);
+      // Load snapshot only for approved/paid payrolls (PAY-29)
+      if (payrollData.status === 'APROBADA' || payrollData.status === 'PAGADA') {
+        setSnapshotsLoading(true);
+        try {
+          const { snapshot } = await PayrollService.getPayrollSnapshot(id);
+          setSnapshots(snapshot || []);
+        } catch (snapErr) {
+          // Degrade gracefully — old payrolls have no snapshot
+          console.warn('Snapshot not available for this payroll:', snapErr);
+          setSnapshots([]);
+        } finally {
+          setSnapshotsLoading(false);
+        }
+      }
     } catch (err) {
       const message = (err as Error)?.message || 'Error al cargar los detalles de la planilla';
       setError(message);
@@ -702,6 +719,13 @@ export default function PayrollDetailPage() {
               </div>
             )}
           </div>
+          {/* Parámetros de cálculo (PAY-29) */}
+          {payroll && (payroll.status === 'APROBADA' || payroll.status === 'PAGADA') && (
+            <PayrollParamSnapshotSection
+              snapshots={snapshots}
+              isLoading={snapshotsLoading}
+            />
+          )}
         </div>
       </div>
       <modal.ModalComponent />
