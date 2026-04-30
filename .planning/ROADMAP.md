@@ -207,11 +207,19 @@
 ### Phase 65: Proyección de Aguinaldo en UI
 **Goal:** Perfil de empleado y wizard de planilla muestran aguinaldo acumulado proporcional en tiempo real.
 **Requirements:** PAY-30
+**Plans:** 4 plans
 **Success Criteria:**
 1. GET /employees/:id/aguinaldo retorna accrued calculado correctamente.
 2. Perfil de empleado muestra card con monto acumulado y barra de progreso del año.
 3. Wizard paso 3 muestra columna "Aguinaldo acum." por empleado.
-**Status:** Not Started
+4. Wizard paso 4 muestra box "Compromiso de Aguinaldo" con totales.
+**Status:** Planning Complete (4 plans ready — execute waves 1->2->3)
+
+Plans:
+- [ ] 65-01-PLAN.md — Wave 1: AguinaldoService + unit tests (TDD)
+- [ ] 65-02-PLAN.md — Wave 2: Endpoints GET /employees/:id/aguinaldo y GET /payroll/:id/aguinaldo-summary
+- [ ] 65-03-PLAN.md — Wave 3: Frontend AguinaldoCard en perfil de empleado
+- [ ] 65-04-PLAN.md — Wave 3: Frontend columna en wizard paso 3 + box en paso 4
 
 ### Phase 66: Soporte Jornadas Mixtas y Nocturnas
 **Goal:** El motor aplica el cap de horas correcto (6/7/8) según el tipo de jornada asignado al empleado individualmente.
