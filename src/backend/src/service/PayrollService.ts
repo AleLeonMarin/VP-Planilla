@@ -320,6 +320,9 @@ export class PayrollService {
       },
     });
 
+    // Timestamp único de captura para las 3 claves ENTERPRISE_* (consistencia de auditoría)
+    const capturedAt = new Date();
+
     const snapshotData = [
       ...paramsAtPeriodStart.map((p) => ({
         payroll_id: payrollId,
@@ -332,21 +335,21 @@ export class PayrollService {
         payroll_id: payrollId,
         param_key: 'ENTERPRISE_MINUTE_ROUNDING_POLICY',
         param_value: String(enterprise?.enterprise_minute_rounding_policy ?? 'EXACT'),
-        param_valid_from: new Date(),
+        param_valid_from: capturedAt,
         source_decree: null,
       },
       {
         payroll_id: payrollId,
         param_key: 'ENTERPRISE_ORDINARY_SHIFT_TYPE',
         param_value: String(enterprise?.enterprise_ordinary_shift_type ?? 'DIURNA'),
-        param_valid_from: new Date(),
+        param_valid_from: capturedAt,
         source_decree: null,
       },
       {
         payroll_id: payrollId,
         param_key: 'ENTERPRISE_IS_COMMERCIAL_ACTIVITY',
         param_value: enterprise?.enterprise_is_commercial_activity ? '1' : '0',
-        param_valid_from: new Date(),
+        param_valid_from: capturedAt,
         source_decree: null,
       },
     ];
