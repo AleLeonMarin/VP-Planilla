@@ -157,6 +157,38 @@ router.get("/employee", asyncHandler(EmployeeController.getAllEmployees));
  * @desc    Get aguinaldo accrual for an employee
  * @access  Private
  */
+/**
+ * @swagger
+ * /api/employees/{id}/aguinaldo:
+ *   get:
+ *     tags:
+ *       - Employees
+ *     summary: Get accrued aguinaldo
+ *     description: Calculate the accrued aguinaldo for a specific employee based on Costa Rica labor law (Dec 1 - Nov 30).
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Employee ID
+ *     responses:
+ *       '200':
+ *         description: Aguinaldo accrual calculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/AguinaldoAccrual'
+ *       '400':
+ *         description: Invalid ID or parameters
+ *       '500':
+ *         description: Internal server error
+ */
 router.get("/employees/:id/aguinaldo", asyncHandler(PayrollController.getEmployeeAguinaldo));
 
 export default router;
