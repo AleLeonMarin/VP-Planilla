@@ -30,7 +30,7 @@ export class EmployeeService {
 
         // Build create payload. If positionId is provided, connect the relation (do NOT also provide the scalar field).
         const createPayload: any = {
-            employee_first_name: data.name,
+            employee_first_name: data.first_name,
             employee_last_name: data.last_name,
             employee_middle_name: middleName,
             employee_national_id: data.national_id,
@@ -42,6 +42,7 @@ export class EmployeeService {
             employee_exit_date: null,
             employee_fired: false,
             employee_status: statusChar,
+            employee_shift_type: data.shift_type || 'USE_ENTERPRISE_DEFAULT',
             employee_required_hours_biweekly: data.required_hours_biweekly || null,
             employee_version: 1
         };
@@ -51,15 +52,14 @@ export class EmployeeService {
         }
 
         const prismaEmployee = await prisma.vpg_employees.create({
-
             data: createPayload
-
         });
 
         const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
 
         const employee: Employee = {
             id: prismaEmployee.employee_id,
+            first_name: prismaEmployee.employee_first_name,
             name: fullName,
             last_name: prismaEmployee.employee_last_name,
             middle_name: prismaEmployee.employee_middle_name,
@@ -71,6 +71,7 @@ export class EmployeeService {
             fired: prismaEmployee.employee_fired,
             gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
+            shift_type: prismaEmployee.employee_shift_type,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
@@ -110,6 +111,7 @@ export class EmployeeService {
             fired: prismaEmployee.employee_fired,
             gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
+            shift_type: prismaEmployee.employee_shift_type,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id,
@@ -147,7 +149,9 @@ export class EmployeeService {
         const updateData: any = {
             employee_version: (data.version || 1) + 1,
         };
-        if (data.name !== undefined)          updateData.employee_first_name = data.name;
+        if (data.first_name !== undefined)    updateData.employee_first_name = data.first_name;
+        else if (data.name !== undefined)     updateData.employee_first_name = data.name;
+
         if (data.last_name !== undefined)     updateData.employee_last_name = data.last_name;
         if (data.middle_name !== undefined)   updateData.employee_middle_name = data.middle_name ?? '';
         if (data.national_id !== undefined)   updateData.employee_national_id = data.national_id ?? '';
@@ -159,6 +163,7 @@ export class EmployeeService {
         if (data.fired !== undefined)         updateData.employee_fired = data.fired;
         if (data.gender !== undefined)        updateData.employee_gender = data.gender || null;
         if (statusChar !== undefined)         updateData.employee_status = statusChar;
+        if (data.shift_type !== undefined)    updateData.employee_shift_type = data.shift_type;
         if (data.required_hours_biweekly !== undefined) updateData.employee_required_hours_biweekly = data.required_hours_biweekly || null;
         if (data.position_id !== undefined)   updateData.employee_position_id = data.position_id;
 
@@ -175,6 +180,7 @@ export class EmployeeService {
 
         const employee: Employee = {
             id: prismaEmployee.employee_id,
+            first_name: prismaEmployee.employee_first_name,
             name: fullName,
             last_name: prismaEmployee.employee_last_name,
             middle_name: prismaEmployee.employee_middle_name,
@@ -186,6 +192,7 @@ export class EmployeeService {
             fired: prismaEmployee.employee_fired,
             gender: prismaEmployee.employee_gender ?? null,
             status: prismaEmployee.employee_status,
+            shift_type: prismaEmployee.employee_shift_type,
             required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
             version: prismaEmployee.employee_version,
             position_id: prismaEmployee.employee_position_id
@@ -207,6 +214,7 @@ export class EmployeeService {
             const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
             return {
                 id: prismaEmployee.employee_id,
+                first_name: prismaEmployee.employee_first_name,
                 name: fullName,
                 last_name: prismaEmployee.employee_last_name,
                 middle_name: prismaEmployee.employee_middle_name,
@@ -218,6 +226,7 @@ export class EmployeeService {
                 fired: prismaEmployee.employee_fired,
                 gender: prismaEmployee.employee_gender ?? null,
                 status: prismaEmployee.employee_status,
+                shift_type: prismaEmployee.employee_shift_type,
                 required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
                 position_id: prismaEmployee.employee_position_id,
@@ -255,6 +264,7 @@ export class EmployeeService {
             const fullName = `${prismaEmployee.employee_first_name} ${prismaEmployee.employee_middle_name} ${prismaEmployee.employee_last_name}`.replace(/\s+/g, ' ').trim();
             return {
                 id: prismaEmployee.employee_id,
+                first_name: prismaEmployee.employee_first_name,
                 name: fullName,
                 last_name: prismaEmployee.employee_last_name,
                 middle_name: prismaEmployee.employee_middle_name,
@@ -264,6 +274,7 @@ export class EmployeeService {
                 hire_date: prismaEmployee.employee_hire_date,
                 fired: prismaEmployee.employee_fired,
                 status: prismaEmployee.employee_status,
+                shift_type: prismaEmployee.employee_shift_type,
                 required_hours_biweekly: prismaEmployee.employee_required_hours_biweekly ? Number(prismaEmployee.employee_required_hours_biweekly) : undefined,
                 version: prismaEmployee.employee_version,
                 position_id: prismaEmployee.employee_position_id,

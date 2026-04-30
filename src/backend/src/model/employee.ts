@@ -1,7 +1,7 @@
 export interface Employee {
   id: number;
-  name: string;
-  first_name?: string;
+  first_name: string;
+  name?: string;
   last_name: string;
   middle_name: string;
   national_id: string;
@@ -14,6 +14,7 @@ export interface Employee {
   fired: boolean;
   status: string; // e.g., 'active', 'inactive'
   gender?: string | null;
+  shift_type?: string;  // EmployeeShiftType: USE_ENTERPRISE_DEFAULT | DIURNA | MIXTA | NOCTURNA
   required_hours_biweekly?: number; // Horas requeridas por quincena
   version: number;
   salary?: number;

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ClockLogsService } from "../service/ClockLogsService";
 import { ClockLogEffectiveService } from "./ClockLogEffectiveService";
 import { prisma } from "../lib/prisma";
+import { Employee } from "../model/employee";
 import { DeductionsService } from "./DeductionsService";
 import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
@@ -18,7 +19,7 @@ import {
   LegalParamSet,
 } from "../types/payroll.types";
 import { Decimal } from "@prisma/client/runtime/library";
-import { MinuteRoundingPolicy } from "@prisma/client";
+import { MinuteRoundingPolicy, EmployeeShiftType, ShiftType } from "@prisma/client";
 
 // Re-export types so existing consumers importing from NomineeService continue to work
 export type {
@@ -33,6 +34,19 @@ export type {
 };
 
 export class NomineeService {
+  /**
+   * Resolves the effective shift type for an employee based on their configuration
+   * and the enterprise default.
+   */
+  static resolveEffectiveShiftType(
+    employeeShiftType: EmployeeShiftType,
+    enterpriseShiftType: ShiftType
+  ): ShiftType {
+    if (employeeShiftType === EmployeeShiftType.USE_ENTERPRISE_DEFAULT) {
+      return enterpriseShiftType;
+    }
+    return employeeShiftType as unknown as ShiftType;
+  }
   /**
    * Get clock logs for nominee calculation (legacy method)
    * @param req - Express request object with initDate and endDate query parameters
@@ -310,16 +324,40 @@ export class NomineeService {
         }
       });
 
-      const legalParams = await LegalParamService.getParamSetAtDate(startDate);
+      // Performance optimization: Pre-fetch legal params for all 3 shift types to avoid N+1 query
+      const [paramsDiurna, paramsMixta, paramsNocturna] = await Promise.all([
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.DIURNA),
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.MIXTA),
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.NOCTURNA)
+      ]);
+
+      const legalParamMap = new Map<ShiftType, LegalParamSet>([
+        [ShiftType.DIURNA, paramsDiurna],
+        [ShiftType.MIXTA, paramsMixta],
+        [ShiftType.NOCTURNA, paramsNocturna]
+      ]);
 
       const enterpriseConfig = await prisma.vpg_enterprise.findFirst({
-        select: { enterprise_pay_unworked_holidays: true }
+        select: { 
+          enterprise_pay_unworked_holidays: true,
+          enterprise_ordinary_shift_type: true
+        }
       });
-      // Default true: unworked mandatory holidays are paid (CR labor law standard)
-      legalParams.payUnworkedHolidays = enterpriseConfig?.enterprise_pay_unworked_holidays ?? true;
+      const enterpriseShiftType = enterpriseConfig?.enterprise_ordinary_shift_type ?? ShiftType.DIURNA;
+      const payUnworkedHolidays = enterpriseConfig?.enterprise_pay_unworked_holidays ?? true;
 
       for (const employee of employees) {
         try {
+          const employeeShiftType = (employee.shift_type as EmployeeShiftType) ?? EmployeeShiftType.USE_ENTERPRISE_DEFAULT;
+          const effectiveShift = NomineeService.resolveEffectiveShiftType(employeeShiftType, enterpriseShiftType);
+
+          // Get pre-calculated params and add enterprise-specific flag
+          const baseParams = legalParamMap.get(effectiveShift)!;
+          const legalParams: LegalParamSet = {
+            ...baseParams,
+            payUnworkedHolidays
+          };
+
           const employeePayroll = await this.calculateEmployeePayroll(
             employee,
             startDate,
@@ -331,7 +369,8 @@ export class NomineeService {
             deductionsMap.get(Number(employee.id)) || [],
             positionsMap,
             holidays,
-            legalParams
+            legalParams,
+            effectiveShift
           );
 
           result.employees.push(employeePayroll);
@@ -348,7 +387,7 @@ export class NomineeService {
           // Add employee with error state
           result.employees.push({
             employeeId: employee.id.toString(),
-            employeeName: employee.name,
+            employeeName: employee.name || '',
             positionId: employee.position_id?.toString() || "0",
             baseHourlySalary: 0,
             days: [],
@@ -374,8 +413,8 @@ export class NomineeService {
             // Frontend compatibility aliases
             id: Number(employee.id),
             employee_id: Number(employee.id),
-            name: employee.name,
-            employee_name: employee.name,
+            name: employee.name || '',
+            employee_name: employee.name || '',
             national_id: employee.national_id || "",
             position: "",
             position_name: "",
@@ -425,7 +464,7 @@ export class NomineeService {
    * @returns Promise<EmployeePayroll> - Complete payroll data for the employee
    */
   private async calculateEmployeePayroll(
-    employee: any,
+    employee: Employee,
     startDate: Date,
     endDate: Date,
     employeeClockLogs: any[],
@@ -435,11 +474,12 @@ export class NomineeService {
     employeeDeductions: any[],
     positionsMap: Map<number, any>,
     holidays: any[],
-    params: LegalParamSet
+    params: LegalParamSet,
+    effectiveShift?: ShiftType
   ): Promise<EmployeePayroll> {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
-      employeeName: employee.name,
+      employeeName: employee.name || '',
             positionId: employee.position_id?.toString() || "0",
       baseHourlySalary: 0,
       days: [],
@@ -450,6 +490,7 @@ export class NomineeService {
       weeklyRestHours: 0,
       weeklyRestPay: 0,
       overtimePay: 0,
+      shift_type: effectiveShift,
       grossSalary: 0,
       totalDeductions: 0,
       netSalary: 0,
@@ -460,12 +501,11 @@ export class NomineeService {
       // Frontend compatibility aliases
       id: Number(employee.id),
       employee_id: Number(employee.id),
-      name: employee.name,
-      employee_name: employee.name,
-      identification: employee.national_id || employee.identification || "",
-      employee_identification:
-        employee.national_id || employee.identification || "",
-      national_id: employee.national_id || employee.identification || "",
+      name: employee.name || '',
+      employee_name: employee.name || '',
+      identification: employee.national_id || "",
+      employee_identification: employee.national_id || "",
+      national_id: employee.national_id || "",
       position: "",
       position_name: "",
     };
@@ -508,7 +548,7 @@ export class NomineeService {
         employeeLaborEvents,
         startDate,
         endDate,
-        employee.name,
+        employee.name || '',
         params
       );
 
@@ -701,7 +741,7 @@ export class NomineeService {
 
       if (isVacationDay) {
         dayWork.isVacation = true;
-        dayWork.hoursWorked = 8.0; // Standard vacation day hours
+        dayWork.hoursWorked = params.regularHoursPerDay; // Use the regular hours defined for the shift
 
         // Check if there are also clock logs for this vacation day
         const hasLogs = clockPairs.some(pair => {
@@ -713,7 +753,7 @@ export class NomineeService {
 
         if (hasLogs) {
           dayWork.messages.push(
-            `Advertencia para ${employeeName} el ${dateStr}: día de vacaciones con marcajes detectados. Se prioriza vacaciones (8h).`,
+            `Advertencia para ${employeeName} el ${dateStr}: día de vacaciones con marcajes detectados. Se prioriza vacaciones (${params.regularHoursPerDay}h).`,
           );
         }
       } else if (laborEventForDay) {
