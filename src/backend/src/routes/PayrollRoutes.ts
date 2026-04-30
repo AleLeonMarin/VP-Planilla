@@ -271,4 +271,11 @@ router.patch(
   asyncHandler(PayrollController.saveEmployeeOverride)
 );
 
+/**
+ * @route   GET /payroll/:id/aguinaldo-summary
+ * @desc    Get aguinaldo summary for a payroll
+ * @access  Private
+ */
+router.get("/payroll/:id/aguinaldo-summary", asyncHandler(PayrollController.getAguinaldoSummary));
+
 export default router;

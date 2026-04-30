@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { EmployeeController } from "../controller/EmployeeController";
+import { PayrollController } from "../controller/PayrollController";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import { validateBody } from '../middleware/validateBody';
@@ -150,5 +151,12 @@ router.put("/employee/:id", validateBody(updateEmployeeSchema), asyncHandler(Emp
  *         description: Internal server error
  */
 router.get("/employee", asyncHandler(EmployeeController.getAllEmployees));
+
+/**
+ * @route   GET /employees/:id/aguinaldo
+ * @desc    Get aguinaldo accrual for an employee
+ * @access  Private
+ */
+router.get("/employees/:id/aguinaldo", asyncHandler(PayrollController.getEmployeeAguinaldo));
 
 export default router;
