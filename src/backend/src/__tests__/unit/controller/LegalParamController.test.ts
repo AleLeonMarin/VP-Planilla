@@ -149,7 +149,8 @@ describe('LegalParamController', () => {
           isCritical: undefined,
           source_decree: undefined,
         },
-        'admin'
+        'admin',
+        { passwordVerified: false }
       );
       expect(statusMock).toHaveBeenCalledWith(201);
       expect(jsonMock).toHaveBeenCalledWith({ success: true, data: mockParam });

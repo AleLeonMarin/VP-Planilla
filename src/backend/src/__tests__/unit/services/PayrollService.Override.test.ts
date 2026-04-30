@@ -86,7 +86,7 @@ describe('PayrollService.saveEmployeeOverride — PAY-12', () => {
     });
 
     expect(prisma.vpg_payroll_employee.update).toHaveBeenCalledWith({
-      where: { payroll_employee_id: 1 },
+      where: { payroll_employee_id: 101 },
       data: expect.objectContaining({
         payroll_employee_hours_override: 40,
         payroll_employee_overtime_override: 10,

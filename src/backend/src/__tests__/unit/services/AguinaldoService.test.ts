@@ -50,7 +50,7 @@ describe('AguinaldoService', () => {
       expect(prismaMock.vpg_payrolls.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            payrolls_period_start: { gte: result.periodStart },
+            payrolls_period_end: { gte: result.periodStart, lte: result.periodEnd },
           })
         })
       );

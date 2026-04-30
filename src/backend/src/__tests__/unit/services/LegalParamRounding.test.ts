@@ -23,6 +23,8 @@ describe('LegalParamService Rounding', () => {
 
     // Mock other legal params
     prisma.vpgLegalParam.findMany.mockResolvedValue([
+      { key: 'WORKDAY_DIURNA_DAILY', value: new Decimal('8.0'), validFrom: new Date('2026-01-01'), isActive: true },
+      { key: 'WORKDAY_DIURNA_WEEKLY', value: new Decimal('48.0'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'OT_FACTOR', value: new Decimal('1.5'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'HOLIDAY_MANDATORY_FACTOR', value: new Decimal('2.0'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'HOLIDAY_TRIPLE_FACTOR', value: new Decimal('3.0'), validFrom: new Date('2026-01-01'), isActive: true },
@@ -41,6 +43,8 @@ describe('LegalParamService Rounding', () => {
     prisma.vpg_enterprise.findFirst.mockResolvedValue(null);
 
     prisma.vpgLegalParam.findMany.mockResolvedValue([
+      { key: 'WORKDAY_DIURNA_DAILY', value: new Decimal('8.0'), validFrom: new Date('2026-01-01'), isActive: true },
+      { key: 'WORKDAY_DIURNA_WEEKLY', value: new Decimal('48.0'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'OT_FACTOR', value: new Decimal('1.5'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'HOLIDAY_MANDATORY_FACTOR', value: new Decimal('2.0'), validFrom: new Date('2026-01-01'), isActive: true },
       { key: 'HOLIDAY_TRIPLE_FACTOR', value: new Decimal('3.0'), validFrom: new Date('2026-01-01'), isActive: true },

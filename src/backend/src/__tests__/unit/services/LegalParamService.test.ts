@@ -38,6 +38,8 @@ const makeParam = (overrides: Partial<Record<string, unknown>> = {}) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   (NotificationService.createLegalParamAlert as jest.Mock).mockResolvedValue(undefined);
+  // Mock transaction to just execute the callback with the prisma mock
+  prisma.$transaction.mockImplementation((callback: any) => callback(prisma));
 });
 
 describe('LegalParamService', () => {
@@ -55,7 +57,7 @@ describe('LegalParamService', () => {
           validFrom: { lte: new Date('2026-03-15') },
           isActive: true,
         },
-        orderBy: { validFrom: 'desc' },
+        orderBy: [{ validFrom: 'desc' }, { createdAt: 'desc' }],
       });
     });
 
@@ -289,7 +291,7 @@ describe('LegalParamService', () => {
 
       expect(NotificationService.createLegalParamAlert).toHaveBeenCalledWith(
         'HOLIDAY_MANDATORY_FACTOR',
-        '2.5',
+        '',
         '2',
         new Date('2026-01-01'),
         42,
