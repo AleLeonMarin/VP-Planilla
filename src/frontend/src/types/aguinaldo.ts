@@ -13,4 +13,6 @@ export interface AguinaldoSummaryRow {
   accruedBeforeThisPayroll: number;
   thisPayrollContribution: number;
   totalAccruedWithThis: number;
+  periodStart: string;
+  periodEnd: string;
 }
