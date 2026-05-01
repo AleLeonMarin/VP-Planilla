@@ -6,6 +6,7 @@ import { useLaborEvents } from "@/hooks/useLaborEvents";
 import useEmployeeList from "@/hooks/useEmployeeList";
 import { useUser } from "@/hooks/user";
 import { LegalParamAlertBanner } from "@/components/LegalParamAlertBanner";
+import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { formatSalary, getStatusBadgeConfig } from "@/utils/employeeUtils";
 import { EmployeeLaborEvent } from "@/types/laborEvent";
 import { Employee } from "@/types/employee";
@@ -209,7 +210,9 @@ const Home: React.FC = () => {
                 </div>
                 <ArrowRightIcon className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors" />
               </div>
-              <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">{stat.value}</p>
+              <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
+                <AnimatedCounter value={Number(stat.value)} />
+              </p>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{stat.label}</p>
             </button>
           ))}
@@ -349,7 +352,9 @@ const Home: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{item.value}</span>
+                      <span className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                        <AnimatedCounter value={Number(item.value || 0)} />
+                      </span>
                       <ArrowRightIcon className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-500 transition-colors" />
                     </div>
                   </button>

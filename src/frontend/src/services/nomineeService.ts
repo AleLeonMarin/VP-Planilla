@@ -1,4 +1,5 @@
 import { http } from './http';
+import { PayrollCalculationResult } from '@/types/payrollTypes';
 
 export interface ClockLog {
   id: number;
@@ -33,15 +34,15 @@ export const NomineeService = {
     }
   },
 
-  async calculateNominee(): Promise<unknown> {
+  async calculateNominee(): Promise<PayrollCalculationResult> {
     try {
-      return await http.post('/nominee/calculate');
+      return await http.post('/nominee/calculate') as PayrollCalculationResult;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al ejecutar cálculo de nómina (legacy)');
     }
   },
 
-  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number, selectedEmployeeIds?: number[]): Promise<unknown> {
+  async calculatePayrollForPeriod(startDate: string, endDate: string, payrollId?: number, selectedEmployeeIds?: number[]): Promise<PayrollCalculationResult> {
     try {
       const payload: { startDate: string; endDate: string; payrollId?: number; selectedEmployeeIds?: number[] } = { startDate, endDate };
       if (payrollId) {
@@ -50,7 +51,7 @@ export const NomineeService = {
       if (selectedEmployeeIds && selectedEmployeeIds.length > 0) {
         payload.selectedEmployeeIds = selectedEmployeeIds;
       }
-      return await http.post('/nominee/calculate-payroll', payload);
+      return await http.post('/nominee/calculate-payroll', payload) as PayrollCalculationResult;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Error al calcular planilla para el periodo');
     }

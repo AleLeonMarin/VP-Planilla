@@ -14,7 +14,7 @@ describe('NotificationController', () => {
     jsonMock = jest.fn();
     statusMock = jest.fn().mockReturnValue({ json: jsonMock });
     req = {
-      user: { user_id: 1, user_role: 'admin' },
+      user: { id: 1, role: 'admin' },
       params: {},
       query: {},
       body: {},
@@ -91,7 +91,7 @@ describe('NotificationController', () => {
   describe('acknowledgeNotification', () => {
     it('returns 200 for admin role with valid ID', async () => {
       req.params = { id: '5' };
-      req.user = { user_id: 2, user_role: 'admin' };
+      req.user = { id: 2, role: 'admin' };
       (NotificationService.acknowledgeNotification as jest.Mock).mockResolvedValue(undefined);
 
       await NotificationController.acknowledgeNotification(req as Request, res as Response);
@@ -103,7 +103,7 @@ describe('NotificationController', () => {
 
     it('returns 200 for payroll_manager role with valid ID', async () => {
       req.params = { id: '5' };
-      req.user = { user_id: 3, user_role: 'payroll_manager' };
+      req.user = { id: 3, role: 'payroll_manager' };
       (NotificationService.acknowledgeNotification as jest.Mock).mockResolvedValue(undefined);
 
       await NotificationController.acknowledgeNotification(req as Request, res as Response);
@@ -114,7 +114,7 @@ describe('NotificationController', () => {
 
     it('returns 403 for employee role without calling service', async () => {
       req.params = { id: '5' };
-      req.user = { user_id: 4, user_role: 'employee' };
+      req.user = { id: 4, role: 'employee' };
 
       await NotificationController.acknowledgeNotification(req as Request, res as Response);
 
@@ -128,7 +128,7 @@ describe('NotificationController', () => {
 
     it('returns 400 for non-integer ID', async () => {
       req.params = { id: 'abc' };
-      req.user = { user_id: 2, user_role: 'admin' };
+      req.user = { id: 2, role: 'admin' };
 
       await NotificationController.acknowledgeNotification(req as Request, res as Response);
 
@@ -142,7 +142,7 @@ describe('NotificationController', () => {
 
     it('returns 404 when service throws error', async () => {
       req.params = { id: '5' };
-      req.user = { user_id: 2, user_role: 'admin' };
+      req.user = { id: 2, role: 'admin' };
       (NotificationService.acknowledgeNotification as jest.Mock).mockRejectedValue(
         new Error('Notification not found or already acknowledged')
       );

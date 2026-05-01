@@ -30,6 +30,7 @@ const mockPrismaEmployee = {
 function makeEmployee(input: Partial<Employee> = {}): Employee {
   return {
     id: 1,
+    first_name: 'Juan',
     name: 'Juan Carlos',
     last_name: 'Perez',
     middle_name: 'Carlos',

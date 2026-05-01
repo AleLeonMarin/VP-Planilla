@@ -163,18 +163,13 @@ export default function PayrollWizardPage() {
         selectedEmployeeIds,
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = (result as any)?.data ?? result;
-
       // Reemplazar empleados con datos de DB para que emp.id = payroll_employee_id
       // desde el primer guardado, evitando el mismatch de IDs al ajustar horas.
       const freshEmployees = await PayrollService.getPayrollEmployees(currentId!);
-      const normalizedData = { ...data, employees: freshEmployees };
+      const normalizedData: PayrollCalculationResult = { ...result, employees: freshEmployees };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCalcResult(normalizedData as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCalculationData(normalizedData as any);
+      setCalcResult(normalizedData);
+      setCalculationData(normalizedData);
       
       // Refrescar datos de aguinaldo después del cálculo para poblar la columna en Step 3
       await refetchAguinaldo();
@@ -185,7 +180,7 @@ export default function PayrollWizardPage() {
     } finally {
       setIsCalculating(false);
     }
-  }, [dateStart, dateEnd, selectedEmployeeIds, payrollId, setPayrollId, setCalculationData]);
+  }, [dateStart, dateEnd, selectedEmployeeIds, payrollId, setPayrollId, setCalculationData, refetchAguinaldo]);
 
   const refreshPayrollData = useCallback(async () => {
     if (payrollId === null) return;
@@ -193,15 +188,13 @@ export default function PayrollWizardPage() {
       const updatedEmployees = await PayrollService.getPayrollEmployees(payrollId);
       
       // Forzar actualización de estado con nuevas referencias para asegurar re-renderizado
-      const newResult = {
-        ...calcResult,
+      const newResult: PayrollCalculationResult = {
+        ...(calcResult as PayrollCalculationResult),
         employees: [...updatedEmployees]
       };
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCalcResult(newResult as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCalculationData(newResult as any);
+      setCalcResult(newResult);
+      setCalculationData(newResult);
 
       // Refrescar también aguinaldo por si el ajuste manual cambió el salario bruto
       await refetchAguinaldo();
@@ -209,7 +202,7 @@ export default function PayrollWizardPage() {
       toast.success('Datos actualizados');    } catch {
       toast.error('Error al refrescar datos de la planilla');
     }
-  }, [payrollId, calcResult, setCalcResult, setCalculationData]);
+  }, [payrollId, calcResult, setCalcResult, setCalculationData, refetchAguinaldo]);
 
   const handleApprove = useCallback(async (pid: number) => {
     await PayrollService.approvePayroll(pid);
@@ -531,8 +524,7 @@ export default function PayrollWizardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {calcEmployees.map((emp: any, i: number) => {
+                      {calcEmployees.map((emp: EmployeePayroll, i: number) => {
                         const inconsistencies: string[] = Array.isArray(emp.inconsistencies) ? emp.inconsistencies : [];
                         const hasIssues = inconsistencies.length > 0;
                         const empId = emp.id ?? emp.employeeId ?? emp.employee_id ?? i;
@@ -641,8 +633,7 @@ export default function PayrollWizardPage() {
           <div className="max-w-2xl">
             <PayrollWizardStep3
               payrollId={payrollId}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              calculationData={calculationData as any}
+              calculationData={calculationData}
               onApprove={handleApprove}
               onBack={() => goToStep(3)}
             />

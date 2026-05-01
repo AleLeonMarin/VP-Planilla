@@ -150,7 +150,7 @@ export class AuthService {
 
     const secret = env.JWT_SECRET;
     const options: jwt.SignOptions = {
-      expiresIn: env.JWT_EXPIRES_IN
+      expiresIn: env.JWT_EXPIRES_IN as any
     };
 
     return jwt.sign(payload, secret, options) as string;

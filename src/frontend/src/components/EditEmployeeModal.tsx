@@ -123,7 +123,7 @@ const { register, control, handleSubmit, formState: { errors, isSubmitting }, re
       employee_hire_date: employeeData.hire_date ? new Date(employeeData.hire_date).toISOString().split('T')[0] : '',
       employee_gender: employeeData.gender || '',
       employee_required_hours_biweekly: employeeData.required_hours_biweekly || '',
-      shift_type: employeeData.shift_type || 'USE_ENTERPRISE_DEFAULT',
+      shift_type: (employeeData.shift_type || 'USE_ENTERPRISE_DEFAULT') as EmployeeSchemaType['shift_type'],
     });
     
     // Force-set position after reset to ensure it survives validation
