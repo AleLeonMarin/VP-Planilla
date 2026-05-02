@@ -23,6 +23,9 @@ export interface EnterpriseConfig {
   enterprise_is_commercial_activity: boolean;
   enterprise_ordinary_shift_type: ShiftType;
   enterprise_pay_unworked_holidays: boolean;
+  enterprise_aguinaldo_period_start_month: number;
+  enterprise_aguinaldo_period_start_day: number;
+  enterprise_aguinaldo_payment_deadline_day: number;
 }
 
 export const EnterpriseService = {

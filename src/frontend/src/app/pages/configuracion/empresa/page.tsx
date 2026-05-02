@@ -19,8 +19,9 @@ import {
   import {
   EnterpriseService,
   MinuteRoundingPolicy,
-  ShiftType
+  ShiftType,
   } from "@/services/enterpriseService";
+  import { CalendarDaysIcon } from "@heroicons/react/24/outline";
   import LegalRoundingModal from "@/components/LegalRoundingModal";
   import LegalArt148Modal from "@/components/LegalArt148Modal";
   import { useLegalParamConfig } from "@/hooks/useLegalParamConfig";
@@ -30,6 +31,9 @@ const enterpriseSchema = z.object({
   enterprise_ordinary_shift_type: z.nativeEnum(ShiftType),
   enterprise_rounding_policy_acknowledged: z.boolean(),
   enterprise_pay_unworked_holidays: z.boolean(),
+  enterprise_aguinaldo_period_start_month: z.number().int().min(1).max(12),
+  enterprise_aguinaldo_period_start_day: z.number().int().min(1).max(31),
+  enterprise_aguinaldo_payment_deadline_day: z.number().int().min(1).max(31),
 });
 
 type EnterpriseFormValues = z.infer<typeof enterpriseSchema>;
@@ -62,6 +66,9 @@ export default function EnterpriseConfigPage() {
       enterprise_ordinary_shift_type: ShiftType.DIURNA,
       enterprise_rounding_policy_acknowledged: false,
       enterprise_pay_unworked_holidays: true,
+      enterprise_aguinaldo_period_start_month: 12,
+      enterprise_aguinaldo_period_start_day: 1,
+      enterprise_aguinaldo_payment_deadline_day: 20,
     },
   });
 
@@ -90,6 +97,9 @@ export default function EnterpriseConfigPage() {
         enterprise_ordinary_shift_type: config.enterprise_ordinary_shift_type,
         enterprise_rounding_policy_acknowledged: config.enterprise_rounding_policy_acknowledged,
         enterprise_pay_unworked_holidays: config.enterprise_pay_unworked_holidays ?? true,
+        enterprise_aguinaldo_period_start_month: config.enterprise_aguinaldo_period_start_month ?? 12,
+        enterprise_aguinaldo_period_start_day: config.enterprise_aguinaldo_period_start_day ?? 1,
+        enterprise_aguinaldo_payment_deadline_day: config.enterprise_aguinaldo_payment_deadline_day ?? 20,
       });
       setInitialPolicy(config.enterprise_minute_rounding_policy);
     } catch (error) {
@@ -403,6 +413,70 @@ export default function EnterpriseConfigPage() {
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
                       Habilitar advertencias en la planilla si un empleado tiene un salario base inferior al mínimo global.
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Período de Aguinaldo Card */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden md:col-span-2">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CalendarDaysIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-zinc-800 dark:text-zinc-100 mb-1">
+                    Período Fiscal de Aguinaldo
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
+                    Define cuándo inicia el período de acumulación y hasta qué día del mes de pago se muestra el año anterior (período de gracia).
+                    Por defecto: 1 de diciembre al 30 de noviembre, gracia hasta el día 20.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                        Mes de inicio del período
+                      </label>
+                      <select
+                        {...register("enterprise_aguinaldo_period_start_month", { valueAsNumber: true })}
+                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all outline-none text-zinc-800 dark:text-zinc-100 text-sm"
+                      >
+                        {["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Setiembre","Octubre","Noviembre","Diciembre"].map((m, i) => (
+                          <option key={i + 1} value={i + 1}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                        Día de inicio del período
+                      </label>
+                      <select
+                        {...register("enterprise_aguinaldo_period_start_day", { valueAsNumber: true })}
+                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all outline-none text-zinc-800 dark:text-zinc-100 text-sm"
+                      >
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                        Día límite de gracia
+                      </label>
+                      <select
+                        {...register("enterprise_aguinaldo_payment_deadline_day", { valueAsNumber: true })}
+                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all outline-none text-zinc-800 dark:text-zinc-100 text-sm"
+                      >
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Hasta este día del mes de inicio se muestra el año anterior.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
