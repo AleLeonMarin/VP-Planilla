@@ -31,10 +31,79 @@ describe('AguinaldoService', () => {
   });
 
   describe('calculateAccruedAguinaldo', () => {
-    it('should handle fiscal year rollover (Dec 1 boundary)', async () => {
+    it('should respect December grace period (Dec 1-20 shows prior year)', async () => {
       // Arrange
       const employeeId = 1;
-      const asOfDate = new Date('2026-12-05'); // Just after Dec 1
+      const asOfDate = new Date('2026-12-05'); // During grace period
+      
+      prismaMock.vpg_employees.findUnique.mockResolvedValue({ employee_hire_date: new Date('2024-01-01') } as any);
+      prismaMock.vpg_payrolls.findMany.mockResolvedValue([]);
+
+      // Act
+      const result = await AguinaldoService.calculateAccruedAguinaldo(employeeId, asOfDate);
+
+      // Assert: Should show period starting Dec 1 2025 (prior year)
+      expect(result.periodStart.getFullYear()).toBe(2025);
+      expect(result.periodStart.getMonth()).toBe(11); 
+    });
+
+    it('should switch to new fiscal year after Dec 20', async () => {
+      // Arrange
+      const employeeId = 1;
+      const asOfDate = new Date('2026-12-25'); // After grace period
+      
+      prismaMock.vpg_employees.findUnique.mockResolvedValue({ employee_hire_date: new Date('2024-01-01') } as any);
+      prismaMock.vpg_payrolls.findMany.mockResolvedValue([]);
+
+      // Act
+      const result = await AguinaldoService.calculateAccruedAguinaldo(employeeId, asOfDate);
+
+      // Assert: Should show period starting Dec 1 2026 (current year)
+      expect(result.periodStart.getFullYear()).toBe(2026);
+      expect(result.periodStart.getMonth()).toBe(11);
+    });
+
+    it('should accurately project for mid-year hires (WR-02)', async () => {
+      // Arrange
+      const employeeId = 1;
+      // Fiscal year starts Dec 1 2025
+      // Employee hired June 1 2026
+      // Checking on Aug 1 2026 (2 months worked)
+      const hireDate = new Date('2026-06-01');
+      const asOfDate = new Date('2026-08-01'); 
+      
+      prismaMock.vpg_employees.findUnique.mockResolvedValue({ employee_hire_date: hireDate } as any);
+      
+      const mockPayrolls = [
+        {
+          payrolls_id: 1,
+          vpg_payroll_employee: [{ payroll_employee_gross_salary: new Decimal(100000) }] // June
+        },
+        {
+          payrolls_id: 2,
+          vpg_payroll_employee: [{ payroll_employee_gross_salary: new Decimal(100000) }] // July
+        }
+      ];
+
+      prismaMock.vpg_payrolls.findMany.mockResolvedValue(mockPayrolls as any);
+
+      // Act
+      const result = await AguinaldoService.calculateAccruedAguinaldo(employeeId, asOfDate);
+
+      // Assert
+      // Total Gross: 200,000
+      // Accrued: 200,000 / 12 = 16666.67
+      // Months Worked: ~2 (61 days / 30.41 avg days per month = 2.0054)
+      // Average Salary (Projected): 200,000 / 2.0054 = 99726.78
+      expect(result.accrued).toBe(16666.67);
+      expect(result.projectedAnnual).toBe(99726.78);
+      expect(result.monthsCompleted).toBe(2);
+    });
+
+    it('should handle fiscal year rollover after grace period (e.g. Dec 25)', async () => {
+      // Arrange
+      const employeeId = 1;
+      const asOfDate = new Date('2026-12-25'); // After Dec 20 grace period
       
       prismaMock.vpg_payrolls.findMany.mockResolvedValue([]);
 

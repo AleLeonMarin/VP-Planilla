@@ -15,10 +15,20 @@ export class AguinaldoService {
     const year = asOfDate.getFullYear();
     // Period: Dec 1 (Prior Year) -> Nov 30 (Current Year)
     // If we are in Dec, the "Current Year" for aguinaldo purposes is the one that just started.
+    // WR-01: Implement grace period until Dec 20th to show previous fiscal year.
     const isDecember = asOfDate.getMonth() === 11;
-    const periodStart = new Date(isDecember ? year : year - 1, 11, 1); // Dec 1
-    const periodEndMax = new Date(isDecember ? year + 1 : year, 10, 30); // Nov 30
+    const dayOfMonth = asOfDate.getDate();
+    const usePriorPeriod = isDecember && dayOfMonth <= 20;
+
+    const periodStart = new Date(isDecember && !usePriorPeriod ? year : year - 1, 11, 1); // Dec 1
+    const periodEndMax = new Date(isDecember && !usePriorPeriod ? year + 1 : year, 10, 30); // Nov 30
     const periodEnd = asOfDate < periodEndMax ? asOfDate : periodEndMax;
+
+    // WR-02: Get employee hire date to improve projection accuracy
+    const employee = await prisma.vpg_employees.findUnique({
+      where: { employee_id: employeeId },
+      select: { employee_hire_date: true }
+    });
 
     const payrolls = await prisma.vpg_payrolls.findMany({
       where: {
@@ -34,12 +44,16 @@ export class AguinaldoService {
 
     const accrued = Math.round((totalGross / 12) * 100) / 100;
 
-    // Projection logic - Using more precise month calculation (IN-03)
-    const msElapsed = Math.max(0, asOfDate.getTime() - periodStart.getTime());
-    const monthsElapsed = msElapsed / (1000 * 60 * 60 * 24 * 365 / 12);
-    const monthsCompleted = Math.round(monthsElapsed);
+    // Projection logic - Using more precise month calculation and hire date (WR-02)
+    const hireDate = (employee?.employee_hire_date as Date | null) || periodStart;
+    const effectiveStart = hireDate > periodStart ? hireDate : periodStart;
+    
+    const msElapsed = Math.max(0, asOfDate.getTime() - effectiveStart.getTime());
+    const actualMonthsWorked = msElapsed / (1000 * 60 * 60 * 24 * 365 / 12);
+    const monthsCompleted = Math.round(actualMonthsWorked);
 
-    const projectedAnnual = monthsElapsed > 0.1 ? Math.round(((totalGross / monthsElapsed) * 12 / 12) * 100) / 100 : 0;
+    // IN-01: Simplified redundant math (* 12 / 12 removed)
+    const projectedAnnual = actualMonthsWorked > 0.1 ? Math.round((totalGross / actualMonthsWorked) * 100) / 100 : 0;
     return { 
       accrued, 
       projectedAnnual, 
