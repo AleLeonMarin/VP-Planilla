@@ -1,8 +1,8 @@
 ---
-phase: 65
-reviewed: 2025-03-05T16:00:00Z
+phase: 65-proyeccion-aguinaldo-ui
+reviewed: 2025-03-10T15:30:00Z
 depth: standard
-files_reviewed: 12
+files_reviewed: 15
 files_reviewed_list:
   - src/backend/src/model/AguinaldoAccrual.ts
   - src/backend/src/service/AguinaldoService.ts
@@ -14,99 +14,87 @@ files_reviewed_list:
   - src/frontend/src/types/aguinaldo.ts
   - src/frontend/src/services/aguinaldoService.ts
   - src/frontend/src/hooks/useAguinaldo.ts
+  - src/frontend/src/hooks/useAguinaldoSummary.ts
   - src/frontend/src/components/AguinaldoCard.tsx
   - src/frontend/src/components/ProfileSummaryTab.tsx
+  - src/frontend/src/app/pages/payroll/wizard/page.tsx
+  - src/frontend/src/components/PayrollWizardStep3.tsx
 findings:
   critical: 0
   warning: 2
-  info: 3
-  total: 5
+  info: 2
+  total: 4
 status: issues_found
 ---
 
-# Phase 65: Proyección Aguinaldo UI - Code Review Report
+# Phase 65: Code Review Report (Proyección Aguinaldo UI)
 
-**Reviewed:** 2025-03-05
+**Reviewed:** 2025-03-10
 **Depth:** standard
-**Files Reviewed:** 12
+**Files Reviewed:** 15
 **Status:** issues_found
 
 ## Summary
 
-The implementation of the Aguinaldo projection logic is robust and follows Costa Rica labor law (Dec 1 - Nov 30). The use of `groupBy` in `AguinaldoService` for bulk queries is an excellent optimization to avoid N+1 problems in the payroll summary. The frontend integration is clean, with proper type definitions and a reusable card component.
+The implementation of the Aguinaldo projection logic and UI is generally high quality. The use of `groupBy` in the backend service effectively prevents N+1 query issues during bulk processing in the payroll wizard. The frontend integration via custom hooks and the "Compromiso de Aguinaldo" summary in the wizard provides good transparency for payroll administrators.
 
-However, there are a few warnings regarding deprecated method usage and potential edge cases in date filtering that should be addressed to ensure long-term maintainability and correctness for non-standard payroll periods.
+However, a significant logic issue was identified regarding the fiscal period transition in December, which causes the accrued amount to "disappear" from the UI exactly when employees are most likely to check it (just before payment). Additionally, the projection formula does not account for hire dates, leading to inaccurate annual projections for mid-year hires.
 
 ## Warnings
 
-### WR-01: Usage of Deprecated Method in Controller
+### WR-01: Aguinaldo Accrual Resets Prematurely in December
 
-**File:** `src/backend/src/controller/PayrollController.ts:311`
-**Issue:** The endpoint `GET /payroll/aguinaldo/:employeeId/:year` still calls `PayrollService.calculateAguinaldo`, which is marked as `@deprecated` in `PayrollService.ts`. All aguinaldo logic should be centralized in `AguinaldoService`.
-**Fix:**
+**File:** `src/backend/src/service/AguinaldoService.ts:18-21`
+**Issue:** The logic for determining the `periodStart` uses `asOfDate.getMonth() === 11` (December). This means that on December 1st, the calculation immediately switches to the *next* fiscal year. Since Aguinaldo in Costa Rica is paid between Dec 1st and Dec 20th, employees checking their profile in early December will see an accrued amount of ₡0 (or only the first Dec payroll), which is confusing and alarming.
+**Fix:** Implement a "grace period" or a toggle. For the `calculateAccruedAguinaldo` method, if the date is in December, it should probably return the accrual for the period that just ended (Nov 30) unless specifically requested otherwise, or at least until a cutoff date like Dec 20th.
+
 ```typescript
-// In PayrollController.ts
-static async calculateAguinaldo(req: Request, res: Response) {
-  try {
-    const employeeId = Number(req.params.employeeId);
-    // Note: AguinaldoService.calculateAccruedAguinaldo uses a reference date
-    // instead of just a year to determine the fiscal period.
-    const asOfDate = new Date(Number(req.params.year), 10, 30); // Nov 30 of target year
-    const result = await AguinaldoService.calculateAccruedAguinaldo(employeeId, asOfDate);
-    
-    res.json({
-      success: true,
-      data: result
-    });
-  } catch (error: any) {
-    console.error("Failed to calculate aguinaldo:", error);
-    res.status(400).json({
-      success: false,
-      error: error.message || "Failed to calculate aguinaldo"
-    });
-  }
-}
+// Suggestion: allow viewing the period ending Nov 30 while in December
+const isDecember = asOfDate.getMonth() === 11;
+const dayOfMonth = asOfDate.getDate();
+// If it's early December, default to the period that just ended
+const usePriorPeriod = isDecember && dayOfMonth <= 20; 
+
+const periodStart = new Date(isDecember && !usePriorPeriod ? year : year - 1, 11, 1);
 ```
 
-### WR-02: Strict Period Filtering in Aguinaldo Calculation
+### WR-02: Inaccurate Projection for Mid-Year Hires
 
-**File:** `src/backend/src/service/AguinaldoService.ts:25-26`
-**Issue:** The current implementation filters payrolls where the entire period (start and end) is within the fiscal range. If a payroll overlaps the Dec 1 or Nov 30 boundaries (e.g., a weekly payroll from Nov 27 to Dec 3), it will be excluded from both the current and the next year's aguinaldo. In Costa Rica, the standard practice is to include any payroll whose `period_end` (or `payment_date`) falls within the fiscal range.
-**Fix:**
+**File:** `src/backend/src/service/AguinaldoService.ts:51`
+**Issue:** The `projectedAnnual` calculation uses `monthsElapsed` since the start of the fiscal period (`Dec 1`). For an employee hired in June, `monthsElapsed` will be ~8 months by August, but they only have 2 months of salary. Dividing `totalGross` by 8 months significantly underestimates their average monthly salary and thus their projected Aguinaldo.
+**Fix:** The service should ideally consider the employee's hire date to calculate `monthsSinceHire` and use `min(monthsSincePeriodStart, monthsSinceHire)` as the divisor for the average monthly salary calculation.
+
 ```typescript
-// In AguinaldoService.ts
-const payrolls = await prisma.vpg_payrolls.findMany({
-  where: {
-    payrolls_period_end: { gte: periodStart, lte: periodEndMax }, // Reference the end date only
-    payrolls_status: { in: ['APROBADA', 'PAGADA'] },
-    vpg_payroll_employee: { some: { payroll_employee_employee_id: employeeId } }
-  },
-  // ...
-});
+// In AguinaldoService.calculateAccruedAguinaldo
+// We would need to fetch the employee's hire_date
+const employee = await prisma.vpg_employees.findUnique({ where: { employee_id: employeeId }, select: { employee_hire_date: true } });
+const hireDate = employee?.employee_hire_date || periodStart;
+const effectiveStart = hireDate > periodStart ? hireDate : periodStart;
+const msSinceStart = Math.max(0, asOfDate.getTime() - effectiveStart.getTime());
+const actualMonthsWorked = msSinceStart / (1000 * 60 * 60 * 24 * 365 / 12);
+
+const projectedAnnual = actualMonthsWorked > 0.1 ? (totalGross / actualMonthsWorked) : 0;
 ```
 
 ## Info
 
-### IN-01: Incomplete Interface Definition in Frontend
+### IN-01: Redundant Mathematical Operation
 
-**File:** `src/frontend/src/types/aguinaldo.ts:11`
-**Issue:** The `AguinaldoSummaryRow` interface in the frontend is missing `periodStart` and `periodEnd` fields which are being returned by the backend `getAguinaldoSummaryForPayroll` method.
-**Fix:** Update `AguinaldoSummaryRow` in `src/frontend/src/types/aguinaldo.ts` to include these fields if they are intended to be used (e.g., in a summary header).
+**File:** `src/backend/src/service/AguinaldoService.ts:51`
+**Issue:** The expression `(totalGross / monthsElapsed) * 12 / 12` contains a redundant `* 12 / 12`.
+**Fix:** Simplify to `totalGross / monthsElapsed`.
 
-### IN-02: Missing Swagger Documentation
+### IN-02: Route Redundancy
 
-**File:** `src/backend/src/routes/EmployeeRoute.ts:133`
-**Issue:** The new route `GET /employees/:id/aguinaldo` lacks a Swagger JSDoc block, unlike other routes in the same file and in `PayrollRoutes.ts`.
-**Fix:** Add a `@swagger` annotation block to document the endpoint's purpose, parameters, and responses.
-
-### IN-03: Projection Logic "Months Completed" Edge Case
-
-**File:** `src/backend/src/service/AguinaldoService.ts:40`
-**Issue:** In the first few days of December, `msElapsed` will be very small, and `monthsCompleted` (rounded) might be 0. This results in a `projectedAnnual` of 0 in the UI until enough days have passed. While mathematically correct for a simple projection, it might be confusing for users. Consider a minimum of 1 month or a daily-based projection for better UX.
-**Fix:** No immediate code change required if this behavior is acceptable, but consider using `msElapsed / (1000 * 60 * 60 * 24 * 365 / 12)` for higher precision and handling the `monthsCompleted < 1` case gracefully in the projection formula.
+**File:** `src/backend/src/routes/PayrollRoutes.ts` & `src/backend/src/routes/EmployeeRoute.ts`
+**Issue:** There are multiple routes performing similar aguinaldo calculations:
+- `GET /payroll/aguinaldo/:employeeId/:year` (Legacy/Compatibility)
+- `GET /employees/:id/aguinaldo` (Used by Profile)
+- `GET /payroll/:id/aguinaldo-summary` (Used by Wizard)
+**Fix:** While acceptable for supporting different UI contexts, consider consolidating the controller logic to ensure consistent behavior across all endpoints. Currently, `calculateAguinaldo` and `getEmployeeAguinaldo` in `PayrollController` use slightly different approaches to determine the reference date.
 
 ---
 
-_Reviewed: 2025-03-05_
-_Reviewer: the agent (gsd-code-reviewer)_
+_Reviewed: 2025-03-10_
+_Reviewer: gsd-code-reviewer_
 _Depth: standard_

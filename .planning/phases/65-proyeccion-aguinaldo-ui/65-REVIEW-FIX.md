@@ -1,59 +1,47 @@
 ---
 phase: 65
-fixed_at: 2025-03-05T17:15:00Z
+fixed_at: 2025-03-10T16:00:00Z
 review_path: .planning/phases/65-proyeccion-aguinaldo-ui/65-REVIEW.md
 iteration: 1
-findings_in_scope: 5
-fixed: 5
+findings_in_scope: 3
+fixed: 3
 skipped: 0
 status: all_fixed
 ---
 
-# Phase 65: Proyección Aguinaldo UI - Code Review Fix Report
+# Phase 65: Code Review Fix Report
 
-**Fixed at:** 2025-03-05
+**Fixed at:** 2025-03-10
 **Source review:** .planning/phases/65-proyeccion-aguinaldo-ui/65-REVIEW.md
 **Iteration:** 1
 
 **Summary:**
-- Findings in scope: 5
-- Fixed: 5
+- Findings in scope: 3
+- Fixed: 3
 - Skipped: 0
 
 ## Fixed Issues
 
-### WR-01: Usage of Deprecated Method in Controller
+### WR-01: Aguinaldo Accrual Resets Prematurely in December
 
-**Files modified:** `src/backend/src/controller/PayrollController.ts`
-**Commit:** 1c8b5524
-**Applied fix:** Refactored `calculateAguinaldo` to use `AguinaldoService.calculateAccruedAguinaldo`. It now uses Nov 30 of the requested year as the reference date to correctly determine the fiscal period.
+**Files modified:** `src/backend/src/service/AguinaldoService.ts`, `src/backend/src/__tests__/unit/services/AguinaldoService.test.ts`
+**Commit:** `27e60faf`
+**Applied fix:** Implemented a grace period until December 20th in `calculateAccruedAguinaldo`. During this period, the service defaults to the fiscal year that just ended (Nov 30), which aligns with when employees expect to see their full accrual before payment. Added unit tests to verify both grace period and post-rollover behavior.
 
-### WR-02: Strict Period Filtering in Aguinaldo Calculation
+### WR-02: Inaccurate Projection for Mid-Year Hires
 
-**Files modified:** `src/backend/src/service/AguinaldoService.ts`
-**Commit:** 4b3f8fbb
-**Applied fix:** Updated `calculateAccruedAguinaldo` and `getAguinaldoSummaryForPayroll` to use `payrolls_period_end` for fiscal boundary inclusion. This ensures that payrolls overlapping the boundaries (e.g., Dec 1 or Nov 30) are correctly included in the calculation.
+**Files modified:** `src/backend/src/service/AguinaldoService.ts`, `src/backend/src/__tests__/unit/services/AguinaldoService.test.ts`
+**Commit:** `27e60faf`
+**Applied fix:** Updated `calculateAccruedAguinaldo` to fetch and consider the employee's hire date. The projection logic now uses the maximum of `periodStart` and `hireDate` to calculate months worked, resulting in accurate average monthly salary projections for employees who joined mid-period. Added a unit test to verify this scenario.
 
-### IN-01: Incomplete Interface Definition in Frontend
-
-**Files modified:** `src/frontend/src/types/aguinaldo.ts`
-**Commit:** a1ef305b
-**Applied fix:** Updated `AguinaldoSummaryRow` interface to include `periodStart` and `periodEnd` fields, matching the backend response.
-
-### IN-02: Missing Swagger Documentation
-
-**Files modified:** `src/backend/src/routes/EmployeeRoute.ts`
-**Commit:** 6d451434
-**Applied fix:** Added `@swagger` documentation block for the `GET /employees/:id/aguinaldo` endpoint.
-
-### IN-03: Projection Logic "Months Completed" Edge Case
+### IN-01: Redundant Mathematical Operation
 
 **Files modified:** `src/backend/src/service/AguinaldoService.ts`
-**Commit:** 4b3f8fbb
-**Applied fix:** Implemented more precise projection logic using fractional months (`monthsElapsed`) instead of rounded `monthsCompleted`. This provides a non-zero projection even in the first few days of the fiscal year, addressing the UX concern.
+**Commit:** `27e60faf`
+**Applied fix:** Simplified the expression `(totalGross / monthsElapsed) * 12 / 12` to `totalGross / actualMonthsWorked` (as part of the WR-02 fix).
 
 ---
 
-_Fixed: 2025-03-05_
+_Fixed: 2025-03-10_
 _Fixer: the agent (gsd-code-fixer)_
 _Iteration: 1_
