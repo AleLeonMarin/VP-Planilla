@@ -278,4 +278,48 @@ router.patch(
  */
 router.get("/payroll/:id/aguinaldo-summary", asyncHandler(PayrollController.getAguinaldoSummary));
 
+/**
+ * @route   POST /payrolls/:id/resend-payslip/:employeeId
+ * @desc    Resend payslip PDF to a specific employee (admin/analyst only)
+ * @access  Private — admin, analyst
+ */
+/**
+ * @swagger
+ * /api/payrolls/{id}/resend-payslip/{employeeId}:
+ *   post:
+ *     tags:
+ *       - Payroll
+ *     summary: Resend payslip to employee
+ *     description: Generate and resend the payslip PDF to a specific employee without reopening the payroll
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Payroll ID
+ *       - in: path
+ *         name: employeeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Employee ID
+ *     responses:
+ *       '200':
+ *         description: Payslip resent successfully
+ *       '400':
+ *         description: Invalid IDs
+ *       '422':
+ *         description: Employee has no email or not found in payroll
+ *       '403':
+ *         description: Insufficient permissions
+ *       '500':
+ *         description: Internal server error
+ */
+router.post(
+  "/payrolls/:id/resend-payslip/:employeeId",
+  AuthMiddleware.requireRole(['admin', 'analyst']),
+  asyncHandler(PayrollController.resendPayslip)
+);
+
 export default router;

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { PayrollService } from "../service/PayrollService";
 import { AuditLogsService } from "../service/AuditLogsService";
 import { AguinaldoService } from "../service/AguinaldoService";
+import { PayslipDispatchService } from "../service/PayslipDispatchService";
 
 export class PayrollController {
   /**
@@ -193,9 +194,10 @@ export class PayrollController {
   static async markAsPaid(req: Request, res: Response) {
     try {
       const payrollId = Number(req.params.id);
-      
-      const payroll = await PayrollService.markAsPaid(payrollId);
-      
+      const userId = req.user.id;
+
+      const payroll = await PayrollService.markAsPaid(payrollId, userId);
+
       res.json({
         success: true,
         data: payroll
@@ -206,6 +208,33 @@ export class PayrollController {
         success: false,
         error: error.message || "Failed to mark payroll as paid"
       });
+    }
+  }
+
+  /**
+   * Resend a payslip to a single employee
+   * POST /payrolls/:id/resend-payslip/:employeeId
+   * @param req - Express request object
+   * @param res - Express response object
+   * @returns Promise<Response>
+   */
+  static async resendPayslip(req: Request, res: Response): Promise<Response> {
+    const payrollId = parseInt(String(req.params.id), 10);
+    const employeeId = parseInt(String(req.params.employeeId), 10);
+
+    if (isNaN(payrollId) || isNaN(employeeId)) {
+      return res.status(400).json({ success: false, error: 'IDs de planilla o empleado inválidos' });
+    }
+
+    try {
+      const result = await PayslipDispatchService.resendPayslip(payrollId, employeeId, req.user.id);
+      if (!result.success) {
+        return res.status(422).json({ success: false, error: result.message });
+      }
+      return res.json({ success: true, message: result.message });
+    } catch (error: any) {
+      console.error("Failed to resend payslip:", error);
+      return res.status(500).json({ success: false, error: error.message || "Error al reenviar comprobante" });
     }
   }
 

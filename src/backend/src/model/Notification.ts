@@ -27,7 +27,8 @@ export type NotificationType =
   | 'employee_action'
   | 'system'
   | 'report_generated'
-  | 'LEGAL_PARAM_CHANGE';
+  | 'LEGAL_PARAM_CHANGE'
+  | 'PAYSLIP_SENT';
 
 /**
  * Input for creating a new notification.

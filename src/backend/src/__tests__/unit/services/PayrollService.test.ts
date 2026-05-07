@@ -472,7 +472,7 @@ describe('PayrollService', () => {
   describe('markAsPaid', () => {
     it('should throw error when payroll not found', async () => {
       prismaMock.vpg_payrolls.findUnique.mockResolvedValue(null as any);
-      await expect(PayrollService.markAsPaid(999)).rejects.toThrow('Payroll not found');
+      await expect(PayrollService.markAsPaid(999, 1)).rejects.toThrow('Payroll not found');
     });
 
     it('should throw error when status is not APROBADA', async () => {
@@ -484,7 +484,7 @@ describe('PayrollService', () => {
         payrolls_period_end: new Date('2026-02-28'),
         ...nullablePayrollFields,
       } as any);
-      await expect(PayrollService.markAsPaid(1)).rejects.toThrow('Solo las planillas en estado APROBADA pueden ser marcadas como pagadas');
+      await expect(PayrollService.markAsPaid(1, 1)).rejects.toThrow('Solo las planillas en estado APROBADA pueden ser marcadas como pagadas');
     });
 
     it('should successfully mark APROBADA payroll as paid', async () => {
@@ -506,7 +506,7 @@ describe('PayrollService', () => {
         payrolls_version: 2,
       } as any);
 
-      const result = await PayrollService.markAsPaid(1);
+      const result = await PayrollService.markAsPaid(1, 1);
       
       expect(result.status).toBe(PayrollStatus.PAGADA);
       expect(result.version).toBe(2);

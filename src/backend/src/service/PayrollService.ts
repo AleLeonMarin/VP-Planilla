@@ -6,6 +6,7 @@ import { DayWork } from '../types/payroll.types';
 import { LegalParamService } from './LegalParamService';
 import { AuditLogsService } from './AuditLogsService';
 import { VpgPayrollParamSnapshotResponse } from '../model/VpgPayrollParamSnapshot';
+import { PayslipDispatchService } from './PayslipDispatchService';
 
 export class PayrollService {
   /**
@@ -410,12 +411,15 @@ export class PayrollService {
   }
 
   /**
-   * Mark a payroll as paid — transition from APROBADA to PAGADA
+   * Mark a payroll as paid — transition from APROBADA to PAGADA.
+   * Triggers async payslip dispatch to all employees after the state change.
+   * The dispatch does not block the response; failures are notified in-app.
    * @param payrollId - The ID of the payroll to mark as paid
+   * @param userId - The ID of the admin confirming the payment
    * @returns Promise<Payroll> - The updated payroll
    * @throws Error if payroll not found or not in APROBADA status
    */
-  static async markAsPaid(payrollId: number): Promise<Payroll> {
+  static async markAsPaid(payrollId: number, userId: number): Promise<Payroll> {
     const payroll = await prisma.vpg_payrolls.findUnique({
       where: { payrolls_id: payrollId }
     });
@@ -423,7 +427,7 @@ export class PayrollService {
     if (payroll.payrolls_status !== PayrollStatus.APROBADA) {
       throw new Error('Solo las planillas en estado APROBADA pueden ser marcadas como pagadas');
     }
-    
+
     const updated = await prisma.vpg_payrolls.update({
       where: { payrolls_id: payrollId },
       data: {
@@ -431,10 +435,15 @@ export class PayrollService {
         payrolls_version: payroll.payrolls_version + 1
       }
     });
-    
+
     // Lock clock log adjustments for this payroll period
     await this.lockAdjustmentsForPayroll(payrollId, payroll.payrolls_period_start, payroll.payrolls_period_end);
-    
+
+    // Fire-and-forget: dispatch payslips asynchronously — must not block HTTP response
+    PayslipDispatchService.dispatchPayslips(payrollId, userId).catch(err => {
+      console.error(`[PayslipDispatch] Error inesperado despachando comprobantes para planilla ${payrollId}:`, err);
+    });
+
     return this.mapToPayroll(updated);
   }
 

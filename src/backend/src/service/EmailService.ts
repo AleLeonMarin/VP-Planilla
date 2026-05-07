@@ -1,6 +1,11 @@
 import { Resend } from 'resend';
 import { getEmailConfig } from '../config/emailConfig';
 
+export interface SendEmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
 export interface SendEmailParams {
   to: string | string[];
   subject: string;
@@ -8,6 +13,7 @@ export interface SendEmailParams {
   text?: string;
   from?: string;
   replyTo?: string;
+  attachments?: SendEmailAttachment[];
 }
 
 export interface SendEmailResult {
@@ -30,7 +36,7 @@ export class EmailService {
   private defaultFrom = 'VP-Planilla <noreply@mail.vplanilla.app>';
 
   async sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-    const { to, subject, html, text, from = this.defaultFrom, replyTo } = params;
+    const { to, subject, html, text, from = this.defaultFrom, replyTo, attachments } = params;
 
     try {
       const resend = getResendClient();
@@ -42,6 +48,7 @@ export class EmailService {
         html,
         text,
         replyTo,
+        attachments: attachments?.map(a => ({ filename: a.filename, content: a.content })),
       });
 
       if (error) {
