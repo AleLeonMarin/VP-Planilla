@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLaborEvents } from "@/hooks/useLaborEvents";
 import useEmployeeList from "@/hooks/useEmployeeList";
+import { useHolidays } from "@/hooks/useHolidays";
 import { useUser } from "@/hooks/user";
 import { LegalParamAlertBanner } from "@/components/LegalParamAlertBanner";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
@@ -22,6 +23,7 @@ import {
   ArrowRightIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import PayrollTrendChart from "@/components/PayrollTrendChart";
 
@@ -64,6 +66,7 @@ const Home: React.FC = () => {
 
   const { events, isLoading: eventsLoading, refreshEvents } = useLaborEvents();
   const { employees, refreshEmployees, stats } = useEmployeeList();
+  const { data: dbHolidays } = useHolidays();
   const { user: currentUser } = useUser();
   const userRole = currentUser?.role ?? '';
 
@@ -89,6 +92,12 @@ const Home: React.FC = () => {
   const safeEvents = events ?? [];
   const employeeList = employees ?? [];
   const activeEventsCount = safeEvents.filter((e) => e.status === EVENT_STATUS_ACTIVE).length;
+
+  const nextHoliday = dbHolidays
+    ? [...dbHolidays]
+        .filter(h => new Date(h.company_holidays_date).getTime() >= new Date().setHours(0,0,0,0))
+        .sort((a,b) => new Date(a.company_holidays_date).getTime() - new Date(b.company_holidays_date).getTime())[0]
+    : null;
 
   const monthlyEvents = visibleRangeStart && visibleRangeEnd
     ? safeEvents.filter((ev) => {
@@ -264,7 +273,7 @@ const Home: React.FC = () => {
               ))}
             </div>
 
-            {/* Quick actions - second row */}
+            {/* Quick actions - second row restored */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {quickActions.slice(2).map((action) => (
                 <button
@@ -295,42 +304,87 @@ const Home: React.FC = () => {
               <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
                 {eventsLoading ? (
                   <p className="text-xs text-zinc-400 text-center py-4">Cargando...</p>
-                ) : monthlyEvents.length === 0 ? (
+                ) : monthlyEvents.length === 0 && !nextHoliday ? (
                   <p className="text-xs text-zinc-400 text-center py-4">Sin eventos este mes</p>
                 ) : (
-                  monthlyEvents.slice(0, 5).map((event) => {
-                    const employee = employeeList.find((e) => String(e.id) === String(event.employee_id));
-                    const start = event.start_date ? new Date(event.start_date) : null;
-                    return (
-                      <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <CalendarIcon className="w-4 h-4 text-green-600" />
+                  <>
+                    {/* Render next holiday if available */}
+                    {nextHoliday && (
+                      <div className="flex items-start gap-3 p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                          <SparklesIcon className="w-4 h-4 text-amber-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{event.labor_event_name || "Evento"}</p>
-                          <p className={`${TEXT_ZINC_400_10PX} truncate`}>{employee?.name ?? NOT_ASSIGNED}</p>
-                          {start && <p className={`${TEXT_ZINC_400_10PX} mt-0.5`}>{start.toLocaleDateString("es-CR", { day: "numeric", month: "short" })}</p>}
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-amber-800 dark:text-amber-200 truncate">
+                              Feriado: {nextHoliday.company_holidays_name}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            {nextHoliday.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"}
+                          </p>
+                          <p className={`${TEXT_ZINC_400_10PX} mt-0.5`}>
+                            {new Date(nextHoliday.company_holidays_date).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}
+                          </p>
                         </div>
-                        <span className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                          event.status === EVENT_STATUS_ACTIVE ? ACTIVE_BADGE_CLASSES :
-                          event.status === EVENT_STATUS_COMPLETED ? COMPLETED_BADGE_CLASSES :
-                          "bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
-                        }`}>
-                          {event.status === EVENT_STATUS_ACTIVE ? "Activo" : event.status === EVENT_STATUS_COMPLETED ? "Completado" : "Pendiente"}
-                        </span>
                       </div>
-                    );
-                  })
+                    )}
+
+                    {monthlyEvents.slice(0, 5).map((event) => {
+                      const employee = employeeList.find((e) => String(e.id) === String(event.employee_id));
+                      const start = event.start_date ? new Date(event.start_date) : null;
+                      return (
+                        <div key={event.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <CalendarIcon className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{event.labor_event_name || "Evento"}</p>
+                            <p className={`${TEXT_ZINC_400_10PX} truncate`}>{employee?.name ?? NOT_ASSIGNED}</p>
+                            {start && <p className={`${TEXT_ZINC_400_10PX} mt-0.5`}>{start.toLocaleDateString("es-CR", { day: "numeric", month: "short" })}</p>}
+                          </div>
+                          <span className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            event.status === EVENT_STATUS_ACTIVE ? ACTIVE_BADGE_CLASSES :
+                            event.status === EVENT_STATUS_COMPLETED ? COMPLETED_BADGE_CLASSES :
+                            "bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
+                          }`}>
+                            {event.status === EVENT_STATUS_ACTIVE ? "Activo" : event.status === EVENT_STATUS_COMPLETED ? "Completado" : "Pendiente"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </div>
 
             {/* Payroll trend chart */}
             <PayrollTrendChart />
+
+            {/* Attention alerts - moved to sidebar for better visibility and balance */}
+            {attentionEmployees.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">Asistencias incompletas</h4>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 mb-3">Estos empleados requieren atención:</p>
+                    <div className="space-y-1.5">
+                      {attentionEmployees.map((emp) => (
+                        <div key={emp.id} className="flex items-center justify-between text-xs bg-white dark:bg-zinc-900 rounded-lg px-3 py-2 border border-amber-200/50 dark:border-amber-800/50">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-200 truncate pr-2">{emp.name}</span>
+                          <button onClick={() => router.push(ATTENDANCE_PATH)} className="text-amber-600 dark:text-amber-400 hover:text-amber-500 font-medium flex-shrink-0">Revisar →</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Employees table */}
+        {/* Recent Employees Table */}
         <div className={`${CARD_CONTAINER_CLASSES} overflow-hidden`}>
           <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
             <div>
@@ -368,27 +422,6 @@ const Home: React.FC = () => {
             </table>
           </div>
         </div>
-
-        {/* Attention alerts */}
-        {attentionEmployees.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
-            <div className="flex items-start gap-3">
-              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">Asistencias incompletas</h4>
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 mb-3">Estos empleados tienen registros de asistencia incompletos:</p>
-                <div className="space-y-1.5">
-                  {attentionEmployees.map((emp) => (
-                    <div key={emp.id} className="flex items-center justify-between text-xs bg-white dark:bg-zinc-900 rounded-lg px-3 py-2 border border-amber-200/50 dark:border-amber-800/50">
-                      <span className="font-medium text-zinc-700 dark:text-zinc-200">{emp.name}</span>
-                      <button onClick={() => router.push(ATTENDANCE_PATH)} className="text-amber-600 dark:text-amber-400 hover:text-amber-500 font-medium">Revisar →</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Day modal */}
