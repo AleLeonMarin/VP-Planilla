@@ -551,6 +551,103 @@ export function calculateGrossSalary(
   return roundToMoney(regular + overtime + weeklyRest + bonuses);
 }
 
+// ── Labor event pay resolution ────────────────────────────────────────────────
+
+/**
+ * Determines which day within a labor event a given calendar date corresponds to.
+ * Day 1 = the first day of the event (event start date itself).
+ * Needed to enforce max_paid_days rules (e.g., incapacidad CCSS: days 1–3 paid by employer).
+ *
+ * @param eventStartDate - The date the labor event started (may be before period start)
+ * @param currentDate    - The date being evaluated
+ * @returns 1-based day number within the event
+ */
+export function getDayNumberWithinEvent(eventStartDate: Date, currentDate: Date): number {
+  const diffMs = currentDate.getTime() - eventStartDate.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays + 1;
+}
+
+export interface LaborEventForDay {
+  name: string;
+  payBehavior: 'FULL_PAY' | 'PARTIAL_PAY' | 'NO_PAY' | 'EXTERNAL_PAY';
+  maxPaidDays: number | null;
+  payPercentage: number | null;
+  startDate: Date;
+}
+
+export interface EventPayResult {
+  /** Hours to count toward the payroll for this day */
+  hoursWorked: number;
+  /** Message to attach to the day's work record */
+  message: string;
+}
+
+/**
+ * Resolve the pay outcome for a single day covered by a labor event.
+ *
+ * Rules:
+ *  - If dayNumber > maxPaidDays → employer does not pay (EXTERNAL_PAY style)
+ *  - FULL_PAY   → regularHoursPerDay at full rate
+ *  - PARTIAL_PAY → regularHoursPerDay × (payPercentage / 100)
+ *  - NO_PAY     → 0 hours
+ *  - EXTERNAL_PAY → 0 hours (third party pays — informational message)
+ *
+ * @param event               - Labor event catalog entry with pay behavior fields
+ * @param dayNumberWithinEvent - 1-based index of this calendar day within the event
+ * @param regularHoursPerDay  - Normal hours per workday (from legal params)
+ * @returns { hoursWorked, message }
+ */
+export function resolveEventPayForDay(
+  event: LaborEventForDay,
+  dayNumberWithinEvent: number,
+  regularHoursPerDay: number,
+): EventPayResult {
+  const isWithinPaidLimit =
+    event.maxPaidDays === null || dayNumberWithinEvent <= event.maxPaidDays;
+
+  if (!isWithinPaidLimit) {
+    return {
+      hoursWorked: 0,
+      message: `${event.name} — día ${dayNumberWithinEvent} (pago externo, no patronal)`,
+    };
+  }
+
+  switch (event.payBehavior) {
+    case 'FULL_PAY':
+      return {
+        hoursWorked: regularHoursPerDay,
+        message: `${event.name} — con goce de salario`,
+      };
+
+    case 'PARTIAL_PAY': {
+      const pct = (event.payPercentage ?? 0) / 100;
+      return {
+        hoursWorked: roundToMoney(regularHoursPerDay * pct),
+        message: `${event.name} — ${event.payPercentage ?? 0}% del salario (día ${dayNumberWithinEvent})`,
+      };
+    }
+
+    case 'NO_PAY':
+      return {
+        hoursWorked: 0,
+        message: `${event.name} — sin goce de salario`,
+      };
+
+    case 'EXTERNAL_PAY':
+      return {
+        hoursWorked: 0,
+        message: `${event.name} — pago gestionado externamente (CCSS/INS)`,
+      };
+
+    default:
+      return {
+        hoursWorked: 0,
+        message: `${event.name} — sin goce de salario`,
+      };
+  }
+}
+
 export function hasAYear(hired_date: Date, end_date: Date) {
   const anniversary = new Date(hired_date);
   anniversary.setFullYear(anniversary.getFullYear() + 1);

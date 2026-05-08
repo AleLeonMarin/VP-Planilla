@@ -304,12 +304,22 @@ model vpg_enterprise_branch {
   @@ignore
 }
 
+enum LaborEventPayBehavior {
+  FULL_PAY
+  PARTIAL_PAY
+  NO_PAY
+  EXTERNAL_PAY
+}
+
 model vpg_labor_events {
-  labor_events_id          Int                        @id @default(autoincrement())
-  labor_events_name        String                     @db.VarChar(100)
-  labor_events_description String
-  labor_events_version     Int                        @default(1)
-  vpg_employee_labor_event vpg_employee_labor_event[]
+  labor_events_id            Int                        @id @default(autoincrement())
+  labor_events_name          String                     @db.VarChar(100)
+  labor_events_description   String
+  labor_events_version       Int                        @default(1)
+  labor_event_pay_behavior   LaborEventPayBehavior      @default(NO_PAY)
+  labor_event_max_paid_days  Int?
+  labor_event_pay_percentage Decimal?                   @db.Decimal(5, 2)
+  vpg_employee_labor_event   vpg_employee_labor_event[]
 }
 
 model vpg_mail_server_settings {

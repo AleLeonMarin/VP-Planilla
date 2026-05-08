@@ -17,9 +17,13 @@ export class LaborEventsController {
     const laborData = req.body;
 
     try {
-      const newLaborEvent = await LaborEventsService.createLaborEvent(
-        laborData
-      );
+      const newLaborEvent = await LaborEventsService.createLaborEvent({
+        name: laborData.name,
+        description: laborData.description ?? '',
+        payBehavior: laborData.payBehavior,
+        maxPaidDays: laborData.maxPaidDays ?? null,
+        payPercentage: laborData.payPercentage ?? null,
+      });
       return res.status(201).json(newLaborEvent);
     } catch (error) {
       console.error("Failed to create a labor event:", error);

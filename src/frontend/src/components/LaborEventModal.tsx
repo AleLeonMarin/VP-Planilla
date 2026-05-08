@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import dynamic from 'next/dynamic';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { LaborEventFormData, EmployeeLaborEvent } from '@/types/laborEvent';
+import { LaborEvent, LaborEventFormData, LaborEventPayBehavior, EmployeeLaborEvent } from '@/types/laborEvent';
 import { Employee } from '@/types/employee';
 import { Select, SelectItem } from '@/components/ui/Select';
 
@@ -19,23 +19,43 @@ interface Props {
   onSubmit: (data: LaborEventFormData) => Promise<void>;
   event?: EmployeeLaborEvent;
   employees: Employee[];
+  laborEventCatalog: LaborEvent[];
   onPreviewChange?: (preview: Partial<EmployeeLaborEvent> | null) => void;
   initialDates?: { start?: Date; end?: Date } | null;
 }
 
-// Tipos de evento laboral con emoji y color
-const EVENT_TYPES = [
-  { value: 'Vacaciones', emoji: '🏖️', color: 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' },
-  { value: 'Incapacidad', emoji: '🏥', color: 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300' },
-  { value: 'Permiso', emoji: '📋', color: 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300' },
-  { value: 'Día Libre', emoji: '🆓', color: 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300' },
-  { value: 'Suspensión', emoji: '⛔', color: 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' },
-  { value: 'Otro', emoji: '📁', color: 'border-zinc-500 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' },
-] as const;
+const PAY_BEHAVIOR_BANNER: Record<LaborEventPayBehavior, { icon: string; color: string; message: (ev: LaborEvent) => string }> = {
+  FULL_PAY: {
+    icon: '✅',
+    color: 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-300',
+    message: () => 'Este evento se paga al 100%. El colaborador recibirá su salario completo durante estos días.',
+  },
+  PARTIAL_PAY: {
+    icon: '⚠️',
+    color: 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300',
+    message: (ev) => {
+      const pct = ev.payPercentage ?? 0;
+      const days = ev.maxPaidDays;
+      if (days) {
+        return `Este evento se paga al ${pct}% los primeros ${days} días. Del día ${days + 1} en adelante no genera pago patronal.`;
+      }
+      return `Este evento se paga al ${pct}% del salario diario. El patrono cubre este porcentaje.`;
+    },
+  },
+  NO_PAY: {
+    icon: '❌',
+    color: 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300',
+    message: () => 'Este evento no genera pago. Los días no trabajados serán descontados del salario.',
+  },
+  EXTERNAL_PAY: {
+    icon: 'ℹ️',
+    color: 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300',
+    message: () => 'Este evento es pagado directamente por la CCSS o entidad correspondiente. No genera pago patronal.',
+  },
+};
 
 const laborEventSchema = z.object({
-  name: z.string().min(1, 'El nombre del evento es requerido'),
-  description: z.string().optional(),
+  labor_event_id: z.number({ error: 'Debe seleccionar un tipo de evento' }).min(1, 'Debe seleccionar un tipo de evento'),
   employee_id: z.number().min(1, 'Debe seleccionar un empleado'),
   start_date: z.string().min(1, 'La fecha de inicio es requerida'),
   end_date: z.string().optional(),
@@ -59,8 +79,9 @@ const LaborEventModal: React.FC<Props> = ({
   onSubmit,
   event,
   employees,
+  laborEventCatalog,
   onPreviewChange,
-  initialDates
+  initialDates,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -69,37 +90,38 @@ const LaborEventModal: React.FC<Props> = ({
     handleSubmit,
     watch,
     reset,
-    setValue,
     formState: { errors, isSubmitting }
   } = useForm<FormData>({
     resolver: zodResolver(laborEventSchema),
     defaultValues: {
-      name: '',
-      description: '',
+      labor_event_id: 0,
       employee_id: 0,
       start_date: toLocalInput(new Date()),
       end_date: '',
-      status: 'active'
+      status: 'active',
     }
   });
 
   const watchedValues = watch();
 
+  const selectedCatalogEvent = useMemo(
+    () => laborEventCatalog.find(c => c.id === watchedValues.labor_event_id) ?? null,
+    [laborEventCatalog, watchedValues.labor_event_id]
+  );
+
   // Escape key close
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Auto-focus first input
+  // Auto-focus
   useEffect(() => {
     if (isOpen && modalRef.current) {
-      const firstInput = modalRef.current.querySelector('input, select, textarea') as HTMLElement;
-      if (firstInput) setTimeout(() => firstInput.focus(), 100);
+      const first = modalRef.current.querySelector('input, select, textarea, button[data-autofocus]') as HTMLElement;
+      if (first) setTimeout(() => first.focus(), 100);
     }
   }, [isOpen]);
 
@@ -111,54 +133,55 @@ const LaborEventModal: React.FC<Props> = ({
       const startIsoLocal = event.start_date ? toLocalInput(new Date(event.start_date)) : toLocalInput(new Date());
       const endIsoLocal = event.end_date ? toLocalInput(new Date(event.end_date)) : '';
       reset({
-        name: event.labor_event_name || '',
-        description: event.labor_event_description || '',
+        labor_event_id: event.labor_event_id || 0,
         employee_id: event.employee_id || 0,
         start_date: startIsoLocal,
         end_date: endIsoLocal,
-        status: event.status || 'active'
+        status: event.status || 'active',
       });
       return;
     }
 
-    if (initialDates && initialDates.start) {
-      const startLocal = toLocalInput(initialDates.start);
-      const endLocal = initialDates.end ? toLocalInput(initialDates.end) : '';
-      reset({ name: '', description: '', employee_id: 0, start_date: startLocal, end_date: endLocal, status: 'active' });
-      onPreviewChange?.({ labor_event_name: '', employee_id: undefined, start_date: startLocal, end_date: endLocal });
+    if (initialDates?.start) {
+      reset({
+        labor_event_id: 0,
+        employee_id: 0,
+        start_date: toLocalInput(initialDates.start),
+        end_date: initialDates.end ? toLocalInput(initialDates.end) : '',
+        status: 'active',
+      });
       return;
     }
 
-    const defaultStart = toLocalInput(new Date());
-    reset({ name: '', description: '', employee_id: 0, start_date: defaultStart, end_date: '', status: 'active' });
-    onPreviewChange?.({ labor_event_name: '', employee_id: undefined, start_date: defaultStart, end_date: undefined });
-  }, [isOpen, event, initialDates, reset, onPreviewChange]);
+    reset({ labor_event_id: 0, employee_id: 0, start_date: toLocalInput(new Date()), end_date: '', status: 'active' });
+  }, [isOpen, event, initialDates, reset]);
 
-  // Update preview on form change
+  // Update calendar preview
   useEffect(() => {
     if (!event && isOpen && onPreviewChange) {
       onPreviewChange({
-        labor_event_name: watchedValues.name || '',
+        labor_event_name: selectedCatalogEvent?.name || '',
         employee_id: watchedValues.employee_id || undefined,
         start_date: watchedValues.start_date || undefined,
         end_date: watchedValues.end_date || undefined,
       });
     }
-  }, [watchedValues.name, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen, onPreviewChange]);
+  }, [selectedCatalogEvent, watchedValues.employee_id, watchedValues.start_date, watchedValues.end_date, event, isOpen, onPreviewChange]);
 
   const onFormSubmit = async (data: FormData) => {
     try {
       const payload: LaborEventFormData = {
-        name: data.name,
-        description: data.description,
+        labor_event_id: data.labor_event_id,
+        name: selectedCatalogEvent?.name,
+        description: selectedCatalogEvent?.description,
         employee_id: data.employee_id,
         start_date: data.start_date ? new Date(data.start_date).toISOString() : null,
         end_date: data.end_date ? new Date(data.end_date).toISOString() : null,
-        status: data.status
+        status: data.status,
       };
 
       if (event) {
-        Object.assign(payload, { id: event.id, labor_event_id: event.labor_event_id });
+        Object.assign(payload, { id: event.id });
       }
 
       await onSubmit(payload);
@@ -174,14 +197,6 @@ const LaborEventModal: React.FC<Props> = ({
     onClose();
   };
 
-  // Seleccionar tipo de evento → set name
-  const handleEventTypeSelect = (typeName: string) => {
-    setValue('name', typeName, { shouldValidate: true });
-  };
-
-  // Encontrar qué tipo de evento está activo
-  const selectedEventType = EVENT_TYPES.find(t => watchedValues.name === t.value);
-
   const inputClasses = 'w-full rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all';
   const labelClasses = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5';
 
@@ -190,7 +205,7 @@ const LaborEventModal: React.FC<Props> = ({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <MotionDiv 
+          <MotionDiv
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -198,7 +213,7 @@ const LaborEventModal: React.FC<Props> = ({
             transition={{ duration: 0.2 }}
             onClick={handleClose}
           />
-          
+
           {/* Modal container */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <MotionDiv
@@ -214,10 +229,10 @@ const LaborEventModal: React.FC<Props> = ({
                 <div className="bg-green-600 dark:bg-green-700 px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                      <span className="text-lg">{selectedEventType?.emoji || '📅'}</span>
+                      <span className="text-lg">📅</span>
                     </div>
                     <h2 className="text-lg font-bold text-white">
-                      {event ? 'Editar Evento Laboral' : 'Crear Evento Laboral'}
+                      {event ? 'Editar Evento Laboral' : 'Registrar Evento Laboral'}
                     </h2>
                   </div>
                   <button
@@ -232,47 +247,42 @@ const LaborEventModal: React.FC<Props> = ({
                 {/* Form content */}
                 <div className="max-h-[70vh] overflow-y-auto p-6">
                   <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
-                    
-                    {/* Event Type selector — visual card grid */}
+
+                    {/* Catalog event type selector */}
                     <div>
-                      <label className={labelClasses}>Tipo de Evento</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {EVENT_TYPES.map(type => {
-                          const isSelected = watchedValues.name === type.value;
-                          return (
-                            <button
-                              key={type.value}
-                              type="button"
-                              onClick={() => handleEventTypeSelect(type.value)}
-                              className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border-2 transition-all text-xs font-medium ${
-                                isSelected
-                                  ? `border-green-500 ${type.color} ring-1 ring-green-500/30`
-                                  : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-600 dark:text-zinc-400'
-                              }`}
-                            >
-                              <span className="text-lg">{type.emoji}</span>
-                              <span>{type.value}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {/* Hidden name input for custom names */}
+                      <label className={labelClasses}>Tipo de evento</label>
                       <Controller
-                        name="name"
+                        name="labor_event_id"
                         control={control}
                         render={({ field }) => (
-                          <input
-                            {...field}
-                            type="text"
-                            className={`${inputClasses} mt-2`}
-                            placeholder="O escriba un nombre personalizado..."
-                          />
+                          <Select
+                            value={field.value ? String(field.value) : ''}
+                            onValueChange={(v) => field.onChange(Number(v))}
+                            placeholder={laborEventCatalog.length === 0 ? 'Cargando catálogo…' : 'Seleccionar tipo de evento'}
+                          >
+                            {laborEventCatalog.map(ev => (
+                              <SelectItem key={ev.id} value={String(ev.id)}>
+                                {ev.name}
+                              </SelectItem>
+                            ))}
+                          </Select>
                         )}
                       />
-                      {errors.name && (
-                        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.name.message}</p>
+                      {errors.labor_event_id && (
+                        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.labor_event_id.message}</p>
                       )}
                     </div>
+
+                    {/* Pay behavior banner */}
+                    {selectedCatalogEvent && (() => {
+                      const banner = PAY_BEHAVIOR_BANNER[selectedCatalogEvent.payBehavior];
+                      return (
+                        <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${banner.color}`}>
+                          <span className="mt-0.5 shrink-0">{banner.icon}</span>
+                          <p>{banner.message(selectedCatalogEvent)}</p>
+                        </div>
+                      );
+                    })()}
 
                     {/* Employee selector */}
                     <div>
@@ -300,10 +310,10 @@ const LaborEventModal: React.FC<Props> = ({
                       )}
                     </div>
 
-                    {/* Dates — side by side */}
+                    {/* Dates */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className={labelClasses}>Fecha Inicio</label>
+                        <label className={labelClasses}>Fecha inicio</label>
                         <Controller
                           name="start_date"
                           control={control}
@@ -316,7 +326,7 @@ const LaborEventModal: React.FC<Props> = ({
                         )}
                       </div>
                       <div>
-                        <label className={labelClasses}>Fecha Fin</label>
+                        <label className={labelClasses}>Fecha fin <span className="text-zinc-400 font-normal">(opcional)</span></label>
                         <Controller
                           name="end_date"
                           control={control}
@@ -327,24 +337,7 @@ const LaborEventModal: React.FC<Props> = ({
                       </div>
                     </div>
 
-                    {/* Description */}
-                    <div>
-                      <label className={labelClasses}>Descripción <span className="text-zinc-400 font-normal">(opcional)</span></label>
-                      <Controller
-                        name="description"
-                        control={control}
-                        render={({ field }) => (
-                          <textarea
-                            {...field}
-                            className={`${inputClasses} resize-none`}
-                            rows={2}
-                            placeholder="Descripción del evento..."
-                          />
-                        )}
-                      />
-                    </div>
-
-                    {/* Status — radio buttons */}
+                    {/* Status */}
                     <div>
                       <label className={labelClasses}>Estado</label>
                       <Controller
@@ -396,9 +389,7 @@ const LaborEventModal: React.FC<Props> = ({
                         Guardando...
                       </>
                     ) : (
-                      <>
-                        {event ? 'Actualizar Evento' : 'Guardar Evento'}
-                      </>
+                      event ? 'Actualizar evento' : 'Guardar evento'
                     )}
                   </button>
                 </div>

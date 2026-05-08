@@ -14,6 +14,9 @@ const mockPrismaLaborEvent = {
   labor_events_name: 'Incapacidad',
   labor_events_description: 'Baja médica',
   labor_events_version: 1,
+  labor_event_pay_behavior: 'PARTIAL_PAY',
+  labor_event_max_paid_days: 3,
+  labor_event_pay_percentage: { toString: () => '50.00' },
 };
 
 const mockPrismaEmployeeLaborEvent = {
@@ -49,6 +52,9 @@ describe('LaborEventsService', () => {
         name: 'Incapacidad',
         description: 'Baja médica',
         version: 1,
+        payBehavior: 'PARTIAL_PAY',
+        maxPaidDays: 3,
+        payPercentage: 50,
       });
 
       expect(result).toEqual({
@@ -56,6 +62,9 @@ describe('LaborEventsService', () => {
         name: 'Incapacidad',
         description: 'Baja médica',
         version: 1,
+        payBehavior: 'PARTIAL_PAY',
+        maxPaidDays: 3,
+        payPercentage: 50,
       });
       expect(prisma.vpg_labor_events.create).toHaveBeenCalledTimes(1);
     });
@@ -64,7 +73,7 @@ describe('LaborEventsService', () => {
       prisma.vpg_labor_events.create.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        LaborEventsService.createLaborEvent({ id: 0, name: 'X', description: 'Y', version: 1 })
+        LaborEventsService.createLaborEvent({ name: 'X', description: 'Y', payBehavior: 'NO_PAY', maxPaidDays: null, payPercentage: null })
       ).rejects.toThrow('DB error');
     });
   });
@@ -123,6 +132,9 @@ describe('LaborEventsService', () => {
         name: 'Incapacidad',
         description: 'Baja médica',
         version: 1,
+        payBehavior: 'PARTIAL_PAY',
+        maxPaidDays: 3,
+        payPercentage: 50,
       });
     });
 

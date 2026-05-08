@@ -8,6 +8,7 @@ import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
 import { LegalParamService } from "./LegalParamService";
 import * as PayrollUtils from "../utils/payrollUtils";
+import { resolveEventPayForDay, getDayNumberWithinEvent } from "../utils/payrollUtils";
 import {
   PayrollPeriod,
   DayWork,
@@ -757,15 +758,36 @@ export class NomineeService {
           );
         }
       } else if (laborEventForDay) {
-        // Labor event active — no clock-in expected, hours are 0
-        dayWork.hoursWorked = 0;
-        const eventName =
-          laborEventForDay.vpg_labor_events?.labor_events_name ||
-          laborEventForDay.employee_labor_event_status ||
-          "Evento";
-        dayWork.messages.push(
-          `${eventName} registrado para ${employeeName} el ${dateStr}: sin marcaje requerido.`,
-        );
+        // Labor event active — resolve pay behavior from catalog
+        const evStart = new Date(laborEventForDay.employee_labor_event_start_date);
+        const catalog = laborEventForDay.vpg_labor_events;
+        const dayNumber = getDayNumberWithinEvent(evStart, currentDate);
+
+        const eventForDay: PayrollUtils.LaborEventForDay = {
+          name: catalog?.labor_events_name || laborEventForDay.employee_labor_event_status || 'Evento',
+          payBehavior: (catalog?.labor_event_pay_behavior as any) ?? 'NO_PAY',
+          maxPaidDays: catalog?.labor_event_max_paid_days ?? null,
+          payPercentage: catalog?.labor_event_pay_percentage != null
+            ? parseFloat(catalog.labor_event_pay_percentage.toString())
+            : null,
+          startDate: evStart,
+        };
+
+        const payResult = resolveEventPayForDay(eventForDay, dayNumber, params.regularHoursPerDay);
+        dayWork.hoursWorked = payResult.hoursWorked;
+        dayWork.messages.push(`${payResult.message} — ${employeeName} el ${dateStr}.`);
+
+        // Warn if there are clock logs for this day (they are NOT used)
+        const hasLogs = clockPairs.some(pair => {
+          const timestamp = pair.in?.effectiveTimestamp || pair.out?.effectiveTimestamp;
+          if (!timestamp) return false;
+          return new Date(timestamp).toISOString().split('T')[0] === dateStr;
+        });
+        if (hasLogs) {
+          dayWork.messages.push(
+            `Advertencia para ${employeeName} el ${dateStr}: marcajes detectados durante evento laboral. Se ignoran — prevalece el evento.`,
+          );
+        }
       } else {
         // Process clock logs for the day (using pre-paired marks)
         const dayPairs = clockPairs.filter(pair => {

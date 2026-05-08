@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
+import { LaborEvent, EmployeeLaborEvent, LaborEventFormData } from '@/types/laborEvent';
 import { LaborEventsService } from '@/services/laborEventsService';
 import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
 
@@ -18,6 +18,7 @@ type ApiLaborEvent = EmployeeLaborEvent & {
 
 export const useLaborEvents = () => {
   const [events, setEvents] = useState<EmployeeLaborEvent[]>([]);
+  const [catalog, setCatalog] = useState<LaborEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +29,7 @@ export const useLaborEvents = () => {
     setError(null);
     try {
       const data = await LaborEventsService.getAllLaborEvents();
+      setCatalog((data.laborEvents as LaborEvent[]) || []);
       const employeeEvents = data.employeeEvents || [];
 
       const mapped = (employeeEvents as ApiLaborEvent[]).map(ev => ({
@@ -52,23 +54,23 @@ export const useLaborEvents = () => {
   };
 
   const getOrCreateLaborEventId = async (eventData: LaborEventFormData): Promise<{ id: number; name?: string }> => {
-    let laborEventId = (eventData as LaborEventFormData & { labor_event_id?: number }).labor_event_id;
-    let created: { id?: number; name?: string } | undefined = undefined;
+    // If the form already sent a catalog ID, use it directly
+    if (eventData.labor_event_id) {
+      const catalogEntry = catalog.find(c => c.id === eventData.labor_event_id);
+      return { id: eventData.labor_event_id, name: catalogEntry?.name };
+    }
 
-    if (!laborEventId && (eventData.name || eventData.description)) {
-      created = await LaborEventsService.createLaborEvent({
+    // Fallback: create a new catalog entry from the name (custom / legacy path)
+    if (eventData.name || eventData.description) {
+      const created = await LaborEventsService.createLaborEvent({
         name: eventData.name!,
         description: eventData.description!,
         event_type: 'custom'
       });
-      laborEventId = created.id;
+      return { id: created.id, name: created.name };
     }
 
-    if (!laborEventId) {
-      throw new Error('No se especificó un ID de evento ni datos para crear uno');
-    }
-
-    return { id: laborEventId, name: created?.name };
+    throw new Error('No se especificó un ID de evento ni datos para crear uno');
   };
 
   const createEvent = async (eventData: LaborEventFormData): Promise<EmployeeLaborEvent> => {
@@ -208,6 +210,7 @@ export const useLaborEvents = () => {
 
   return {
     events,
+    catalog,
     isLoading,
     error,
     createEvent,

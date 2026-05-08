@@ -1,52 +1,69 @@
 import { prisma } from '../lib/prisma';
-import { LaborEvent } from "../model/laborEvent";
-import { EmployeeLaborEvent } from "../model/employeeLaborEvent";
+import { LaborEvent, LaborEventPayBehavior } from '../model/laborEvent';
+import { EmployeeLaborEvent } from '../model/employeeLaborEvent';
+
+/** Map a Prisma vpg_labor_events row to the LaborEvent domain model */
+function mapLaborEvent(row: {
+  labor_events_id: number;
+  labor_events_name: string;
+  labor_events_description: string;
+  labor_events_version: number;
+  labor_event_pay_behavior?: string | null;
+  labor_event_max_paid_days?: number | null;
+  labor_event_pay_percentage?: { toString(): string } | null;
+}): LaborEvent {
+  return {
+    id: row.labor_events_id,
+    name: row.labor_events_name,
+    description: row.labor_events_description,
+    version: row.labor_events_version,
+    payBehavior: (row.labor_event_pay_behavior ?? 'NO_PAY') as LaborEventPayBehavior,
+    maxPaidDays: row.labor_event_max_paid_days ?? null,
+    payPercentage: row.labor_event_pay_percentage != null
+      ? parseFloat(row.labor_event_pay_percentage.toString())
+      : null,
+  };
+}
 
 export class LaborEventsService {
   /**
-   * Create a new labor event
-   * @param laborEvent - The labor event to create
+   * Create a new labor event catalog entry.
+   * @param data - The labor event to create
    * @returns The created labor event
    * @throws Error if the labor event could not be created
    */
-
-  static async createLaborEvent(data: LaborEvent): Promise<LaborEvent> {
+  static async createLaborEvent(data: Partial<LaborEvent>): Promise<LaborEvent> {
     const prismaEvent = await prisma.vpg_labor_events.create({
       data: {
-        labor_events_name: data.name,
-        labor_events_description: data.description,
+        labor_events_name: data.name ?? '',
+        labor_events_description: data.description ?? '',
         labor_events_version: 1,
+        labor_event_pay_behavior: (data.payBehavior ?? 'NO_PAY') as any,
+        labor_event_max_paid_days: data.maxPaidDays ?? null,
+        labor_event_pay_percentage: data.payPercentage ?? null,
       },
     });
 
-    const laborEvent: LaborEvent = {
-      id: prismaEvent.labor_events_id,
-      name: prismaEvent.labor_events_name,
-      description: prismaEvent.labor_events_description,
-      version: prismaEvent.labor_events_version,
-    };
-
-    return laborEvent;
+    return mapLaborEvent(prismaEvent);
   }
 
   /**
-   * Update an existing labor event
+   * Update an existing labor event catalog entry.
    * @param id - The ID of the labor event to update
    * @param data - The new data for the labor event
    * @returns The updated labor event
    * @throws Error if the labor event could not be updated
    */
-
-  static async updateLaborEvent(
-    id: number,
-    data: Partial<LaborEvent>
-  ): Promise<LaborEvent | null> {
+  static async updateLaborEvent(id: number, data: Partial<LaborEvent>): Promise<LaborEvent | null> {
     const prismaEvent = await prisma.vpg_labor_events.update({
       where: { labor_events_id: id },
       data: {
-        labor_events_name: data.name,
-        labor_events_description: data.description,
-        labor_events_version: data.version,
+        ...(data.name !== undefined && { labor_events_name: data.name }),
+        ...(data.description !== undefined && { labor_events_description: data.description }),
+        ...(data.version !== undefined && { labor_events_version: data.version }),
+        ...(data.payBehavior !== undefined && { labor_event_pay_behavior: data.payBehavior as any }),
+        ...(data.maxPaidDays !== undefined && { labor_event_max_paid_days: data.maxPaidDays }),
+        ...(data.payPercentage !== undefined && { labor_event_pay_percentage: data.payPercentage }),
       },
     });
 
@@ -54,23 +71,15 @@ export class LaborEventsService {
       throw new Error(`Labor event with ID ${id} not found`);
     }
 
-    const laborEvent: LaborEvent = {
-      id: prismaEvent.labor_events_id,
-      name: prismaEvent.labor_events_name,
-      description: prismaEvent.labor_events_description,
-      version: prismaEvent.labor_events_version,
-    };
-
-    return laborEvent;
+    return mapLaborEvent(prismaEvent);
   }
 
   /**
-   * Delete an existing labor event
+   * Delete an existing labor event catalog entry.
    * @param id - The ID of the labor event to delete
    * @returns The deleted labor event
    * @throws Error if the labor event could not be deleted
    */
-
   static async deleteLaborEvent(id: number): Promise<LaborEvent | null> {
     const prismaEvent = await prisma.vpg_labor_events.delete({
       where: { labor_events_id: id },
@@ -80,37 +89,24 @@ export class LaborEventsService {
       throw new Error(`Labor event with ID ${id} not found`);
     }
 
-    const laborEvent: LaborEvent = {
-      id: prismaEvent.labor_events_id,
-      name: prismaEvent.labor_events_name,
-      description: prismaEvent.labor_events_description,
-      version: prismaEvent.labor_events_version,
-    };
-
-    return laborEvent;
+    return mapLaborEvent(prismaEvent);
   }
 
   /**
-   * Get all labor Events
+   * Get all labor event catalog entries.
    * @returns An array of all labor events
    * @throws Error if the labor events could not be retrieved
    */
-
   static async getAllLaborEvents(): Promise<LaborEvent[]> {
-    const prismaEvents = await prisma.vpg_labor_events.findMany();
+    const prismaEvents = await prisma.vpg_labor_events.findMany({
+      orderBy: { labor_events_name: 'asc' },
+    });
 
-    const laborEvents: LaborEvent[] = prismaEvents.map((event) => ({
-      id: event.labor_events_id,
-      name: event.labor_events_name,
-      description: event.labor_events_description,
-      version: event.labor_events_version,
-    }));
-
-    return laborEvents;
+    return prismaEvents.map(mapLaborEvent);
   }
 
   /**
-   * Get all assigned labor events (employee assignments)
+   * Get all employee labor event assignments (with catalog relation included).
    */
   static async getAllEmployeeLaborEvents(): Promise<EmployeeLaborEvent[]> {
     const prismaEvents = await prisma.vpg_employee_labor_event.findMany({
@@ -119,7 +115,7 @@ export class LaborEventsService {
       },
     });
 
-    const employeeLaborEvents: EmployeeLaborEvent[] = prismaEvents.map((pe) => ({
+    return prismaEvents.map((pe) => ({
       id: pe.employee_labor_event_id,
       employee_id: pe.employee_labor_event_employee_id,
       labor_event_id: pe.employee_labor_event_labor_event_id,
@@ -127,59 +123,46 @@ export class LaborEventsService {
       end_date: pe.employee_labor_event_end_date,
       status: pe.employee_labor_event_status,
       version: pe.employee_labor_event_version,
-      // Agregar los datos del evento laboral desde la relación incluida
       labor_event_name: pe.vpg_labor_events?.labor_events_name || null,
       labor_event_description: pe.vpg_labor_events?.labor_events_description || null,
     } as any));
-
-
-    return employeeLaborEvents;
   }
 
   /**
-   * Assign labor events to employees
+   * Assign a labor event to an employee.
    * @param data - The employee labor event data
-   * @returns The updated employee with the assigned labor events
-   * @throws Error if the labor events could not be assigned
+   * @returns The created assignment
+   * @throws Error if the assignment could not be created
    */
-
-  static async assignLaborEventsToEmployee(
-    data: EmployeeLaborEvent
-  ): Promise<EmployeeLaborEvent | null> {
-    const prismaEmployeeLaborEvent =
-      await prisma.vpg_employee_labor_event.create({
-        data: {
-          employee_labor_event_employee_id: data.employee_id,
-          employee_labor_event_labor_event_id: data.labor_event_id,
-          employee_labor_event_start_date: data.start_date,
-          employee_labor_event_end_date: data.end_date,
-          employee_labor_event_status: data.status,
-          employee_labor_event_version: 1,
-        },
-      });
+  static async assignLaborEventsToEmployee(data: EmployeeLaborEvent): Promise<EmployeeLaborEvent | null> {
+    const prismaEmployeeLaborEvent = await prisma.vpg_employee_labor_event.create({
+      data: {
+        employee_labor_event_employee_id: data.employee_id,
+        employee_labor_event_labor_event_id: data.labor_event_id,
+        employee_labor_event_start_date: data.start_date,
+        employee_labor_event_end_date: data.end_date,
+        employee_labor_event_status: data.status,
+        employee_labor_event_version: 1,
+      },
+    });
 
     if (!prismaEmployeeLaborEvent) {
-      throw new Error(
-        `Could not assign labor event to employee with ID ${data.employee_id}`
-      );
+      throw new Error(`Could not assign labor event to employee with ID ${data.employee_id}`);
     }
 
-    const employeeLaborEvent: EmployeeLaborEvent = {
+    return {
       id: prismaEmployeeLaborEvent.employee_labor_event_id,
       employee_id: prismaEmployeeLaborEvent.employee_labor_event_employee_id,
-      labor_event_id:
-        prismaEmployeeLaborEvent.employee_labor_event_labor_event_id,
+      labor_event_id: prismaEmployeeLaborEvent.employee_labor_event_labor_event_id,
       start_date: prismaEmployeeLaborEvent.employee_labor_event_start_date,
       end_date: prismaEmployeeLaborEvent.employee_labor_event_end_date,
       status: prismaEmployeeLaborEvent.employee_labor_event_status,
       version: prismaEmployeeLaborEvent.employee_labor_event_version,
     };
-
-    return employeeLaborEvent;
   }
 
   /**
-   * Delete an employee labor event assignment by id
+   * Delete an employee labor event assignment by id.
    */
   static async deleteEmployeeLaborEvent(id: number): Promise<EmployeeLaborEvent | null> {
     try {
@@ -187,7 +170,7 @@ export class LaborEventsService {
         where: { employee_labor_event_id: id },
       });
 
-      const result: EmployeeLaborEvent = {
+      return {
         id: deleted.employee_labor_event_id,
         employee_id: deleted.employee_labor_event_employee_id,
         labor_event_id: deleted.employee_labor_event_labor_event_id,
@@ -196,10 +179,7 @@ export class LaborEventsService {
         status: deleted.employee_labor_event_status,
         version: deleted.employee_labor_event_version,
       };
-
-      return result;
-    } catch (error) {
-      // If not found Prisma will throw; return null to indicate not found
+    } catch {
       return null;
     }
   }

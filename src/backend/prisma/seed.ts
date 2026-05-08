@@ -214,6 +214,79 @@ const legalParams = [
   },
 ];
 
+// Standard labor event catalog (Costa Rica legal baseline)
+const standardLaborEvents: Array<{
+  name: string;
+  description: string;
+  payBehavior: 'FULL_PAY' | 'PARTIAL_PAY' | 'NO_PAY' | 'EXTERNAL_PAY';
+  maxPaidDays: number | null;
+  payPercentage: number | null;
+}> = [
+  {
+    name: 'Incapacidad CCSS',
+    description: 'Incapacidad médica emitida por la CCSS. Días 1–3: patrono paga el 50%. Día 4 en adelante: CCSS paga directamente.',
+    payBehavior: 'PARTIAL_PAY',
+    payPercentage: 50.00,
+    maxPaidDays: 3,
+  },
+  {
+    name: 'Ausencia injustificada',
+    description: 'Ausencia sin permiso ni justificación. No genera pago. Puede ser causal de despido (CT Art. 81).',
+    payBehavior: 'NO_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+  {
+    name: 'Permiso sin goce de salario',
+    description: 'Permiso acordado entre patrono y trabajador sin compensación salarial (CT Art. 31).',
+    payBehavior: 'NO_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+  {
+    name: 'Permiso con goce de salario',
+    description: 'Permiso otorgado por el patrono con pago completo del salario (contrato / reglamento interno).',
+    payBehavior: 'FULL_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+  {
+    name: 'Licencia de paternidad',
+    description: 'Licencia por nacimiento o adopción. Patrono paga el 100% hasta 8 días hábiles (Ley 9371).',
+    payBehavior: 'FULL_PAY',
+    payPercentage: null,
+    maxPaidDays: 8,
+  },
+  {
+    name: 'Suspensión disciplinaria',
+    description: 'Suspensión sin goce de salario impuesta por el patrono como medida disciplinaria (CT Art. 81).',
+    payBehavior: 'NO_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+  {
+    name: 'Duelo familiar',
+    description: 'Licencia por fallecimiento de familiar directo. Patrono paga el 100% (convención colectiva estándar, hasta 3 días).',
+    payBehavior: 'FULL_PAY',
+    payPercentage: null,
+    maxPaidDays: 3,
+  },
+  {
+    name: 'Licencia de maternidad',
+    description: 'Licencia de maternidad (4 meses). La CCSS paga directamente al trabajador — no genera pago patronal.',
+    payBehavior: 'EXTERNAL_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+  {
+    name: 'Otro',
+    description: 'Evento laboral de tipo no categorizado. Revisar con RR.HH. para definir impacto en el pago.',
+    payBehavior: 'NO_PAY',
+    payPercentage: null,
+    maxPaidDays: null,
+  },
+];
+
 async function main() {
   console.log('Seeding vpg_legal_params...');
 
@@ -242,6 +315,39 @@ async function main() {
   }
 
   console.log(`Seeded ${legalParams.length} legal parameters.`);
+
+  // Seed standard labor events catalog
+  // No unique constraint on name, so: update existing by name, create if absent
+  console.log('Seeding vpg_labor_events catalog...');
+  for (const ev of standardLaborEvents) {
+    const existing = await prisma.vpg_labor_events.findFirst({
+      where: { labor_events_name: ev.name },
+    });
+
+    if (existing) {
+      await prisma.vpg_labor_events.update({
+        where: { labor_events_id: existing.labor_events_id },
+        data: {
+          labor_events_description: ev.description,
+          labor_event_pay_behavior: ev.payBehavior,
+          labor_event_max_paid_days: ev.maxPaidDays,
+          labor_event_pay_percentage: ev.payPercentage,
+        },
+      });
+    } else {
+      await prisma.vpg_labor_events.create({
+        data: {
+          labor_events_name: ev.name,
+          labor_events_description: ev.description,
+          labor_events_version: 1,
+          labor_event_pay_behavior: ev.payBehavior,
+          labor_event_max_paid_days: ev.maxPaidDays,
+          labor_event_pay_percentage: ev.payPercentage,
+        },
+      });
+    }
+  }
+  console.log(`Seeded ${standardLaborEvents.length} labor event catalog entries.`);
 }
 
 main()

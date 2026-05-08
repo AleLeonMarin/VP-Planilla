@@ -21,7 +21,7 @@ const LaborEventsPage: React.FC = () => {
   const [editingHoliday, setEditingHoliday] = useState<import('@/services/holidaysService').CompanyHoliday | null>(null);
   const [previewEvent, setPreviewEvent] = useState<Partial<EmployeeLaborEvent> | null>(null);
   const [modalInitialDates, setModalInitialDates] = useState<{ start?: Date; end?: Date } | null>(null);
-  const { events, isLoading, error, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
+  const { events, catalog, isLoading, error, createEvent, updateEvent, refreshEvents, deleteAssignment } = useLaborEvents();
   const { employees } = useEmployeeList();
   const { data: dbHolidays, refetch: refetchHolidays } = useHolidays();
 
@@ -239,6 +239,7 @@ const LaborEventsPage: React.FC = () => {
         onSubmit={handleSubmit}
         event={selectedEvent}
         employees={employees}
+        laborEventCatalog={catalog}
         initialDates={modalInitialDates}
         onPreviewChange={setPreviewEvent}
       />
