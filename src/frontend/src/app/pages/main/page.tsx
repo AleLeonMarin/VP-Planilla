@@ -23,6 +23,7 @@ import {
   XMarkIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import PayrollTrendChart from "@/components/PayrollTrendChart";
 
 const ATTENDANCE_PATH = "/pages/attendance";
 const CARD_CONTAINER_CLASSES = "bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800";
@@ -128,13 +129,6 @@ const Home: React.FC = () => {
     { label: "Generar reportes", description: "Descarga métricas y resúmenes", icon: ChartBarIcon, href: "/pages/reports", color: "bg-zinc-700 hover:bg-zinc-600 dark:bg-zinc-600 dark:hover:bg-zinc-500" },
     { label: "Registro de asistencia", description: "Valida marcaciones del día", icon: ClipboardDocumentCheckIcon, href: ATTENDANCE_PATH, color: "bg-blue-600 hover:bg-blue-500" },
     { label: "Dashboard de Marcas", description: "Revisar y corregir marcas de reloj", icon: ClockIcon, href: "/pages/clock-logs", color: "bg-indigo-600 hover:bg-indigo-500" },
-  ];
-
-  const actionItems = [
-    { title: "Asistencias por revisar", value: stats?.incompleteAssistance ?? 0, description: "Registros con inconsistencias", href: ATTENDANCE_PATH, icon: ClipboardDocumentCheckIcon, accent: "text-amber-600" },
-    { title: "Vacaciones activas", value: stats?.onVacation ?? 0, description: "Colaboradores fuera de oficina", href: "/pages/vacations", icon: ClockIcon, accent: "text-purple-600" },
-    { title: "Eventos activos", value: activeEventsCount, description: "Actividades laborales en curso", href: "/pages/employee/events", icon: CalendarIcon, accent: "text-green-600" },
-    { title: "Marcas de control", description: "Revisar anomalías y corregir", href: "/pages/clock-logs", icon: ClockIcon, accent: "text-indigo-600" },
   ];
 
   const renderCalendarDays = () => {
@@ -331,35 +325,8 @@ const Home: React.FC = () => {
               </div>
             </div>
 
-            {/* Task center */}
-            <div className={`${CARD_CONTAINER_CLASSES} overflow-hidden`}>
-              <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800">
-                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Centro de tareas</h3>
-              </div>
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {actionItems.map((item) => (
-                  <button
-                    key={item.title}
-                    onClick={() => router.push(item.href)}
-                    className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className={`w-4 h-4 ${item.accent}`} />
-                      <div>
-                        <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">{item.title}</p>
-                        <p className={TEXT_ZINC_400_10PX}>{item.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                        <AnimatedCounter value={Number(item.value || 0)} />
-                      </div>
-                      <ArrowRightIcon className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-500 transition-colors" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Payroll trend chart */}
+            <PayrollTrendChart />
           </div>
         </div>
 

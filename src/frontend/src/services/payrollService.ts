@@ -18,6 +18,17 @@ export interface Payroll {
   status: string;
   created_at?: string;
   version?: number;
+  // Aggregated stats returned by getAllPayrolls()
+  total_employees?: number;
+  total_gross?: number;
+  total_deductions?: number;
+  total_net?: number;
+  total_bonuses?: number;
+  total_hours?: number;
+  total_overtime_hours?: number;
+  total_weekly_rest_hours?: number;
+  total_overtime_pay?: number;
+  total_weekly_rest_pay?: number;
 }
 
 export interface PayrollEmployee {
