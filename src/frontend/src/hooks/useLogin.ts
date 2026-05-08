@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/user";
 import { useModal } from "@/hooks/useModal";
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 // Interfaces para tipado
 interface LoginCredentials {
@@ -26,6 +27,7 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const { setUser } = useUser();
@@ -38,10 +40,7 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
 
   const validateCredentials = (username: string, password: string): boolean => {
     if (!username.trim() || !password.trim()) {
-      showError(
-        "¡Ups! Faltan datos",
-        "Por favor completa tanto tu usuario como tu contraseña para poder ingresar."
-      );
+      setError("Por favor completa tanto tu usuario como tu contraseña.");
       return false;
     }
     return true;
@@ -71,21 +70,19 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
       // Actualizar estado global
       setUser(userData);
 
-      // Dar tiempo para que el estado se propague antes de mostrar el modal
-      setTimeout(() => {
-        showSuccess(
-          "¡Bienvenido de vuelta!",
-          `Hola ${userData.first_name}, nos alegra verte de nuevo.`,
-          () => {
-            router.push("/pages/main");
-          }
-        );
-      }, 100);
+      // Toast de bienvenida y redirección inmediata
+      toast.success(`¡Bienvenido de vuelta, ${userData.first_name}!`, {
+        description: "Has iniciado sesión correctamente.",
+        duration: 4000,
+      });
+      
+      router.push("/pages/main");
     }
   };
 
   const performLogin = async (credentials: LoginCredentials): Promise<void> => {
     try {
+      setError(null);
       await login(credentials.username, credentials.password);
 
       // after login, current user is stored in localStorage by AuthProvider; read it
@@ -98,10 +95,12 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
       }
 
       // fallback: show success without user
-      showSuccess('Inicio exitoso', 'Has iniciado sesión correctamente', () => router.push('/pages/main'));
+      toast.success('Inicio exitoso');
+      router.push('/pages/main');
     } catch (error: unknown) {
       if (error instanceof Error && error.message) {
-        showError('Error de autenticación', error.message);
+        // En lugar de modal, usamos el estado de error local para credenciales incorrectas
+        setError(error.message);
       } else {
         handleNetworkError(error);
       }
@@ -151,10 +150,11 @@ export const useLogin = (modalActions?: { showError: (title: string, message: st
     password,
     showPassword,
     isLoading,
+    error,
     
     // Funciones de estado
-    setUsername,
-    setPassword,
+    setUsername: (val: string) => { setUsername(val); setError(null); },
+    setPassword: (val: string) => { setPassword(val); setError(null); },
     togglePasswordVisibility,
     resetForm,
     

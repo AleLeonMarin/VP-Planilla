@@ -37,6 +37,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems })
         <Link
           href={href}
           className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-200 group ${
+            subItems ? 'pr-8' : ''
+          } ${
             isActive
               ? 'bg-green-600 text-white shadow-sm shadow-green-900/20'
               : 'text-[#4A5D3A] dark:text-zinc-400 hover:bg-[#E7DCC1] dark:hover:bg-zinc-800 hover:text-[#3A4D2A] dark:hover:text-zinc-100'

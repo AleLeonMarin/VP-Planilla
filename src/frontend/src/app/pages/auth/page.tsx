@@ -26,6 +26,7 @@ const LoginScreen = () => {
     setPassword,
     togglePasswordVisibility,
     handleSubmit,
+    error,
   } = useLogin({ showError, showSuccess });
 
   return (
@@ -90,9 +91,14 @@ const LoginScreen = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Tu nombre de usuario"
-                    className="w-full pl-10 pr-4 py-3 bg-white dark:bg-zinc-800 border border-[#D4C89A] dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] dark:focus:ring-green-500 focus:border-transparent text-zinc-800 dark:text-zinc-100 text-sm placeholder-[#B8A989] dark:placeholder-zinc-500 transition-all"
+                    className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-zinc-800 border ${
+                      error ? 'border-red-500 ring-1 ring-red-500' : 'border-[#D4C89A] dark:border-zinc-700'
+                    } rounded-xl focus:outline-none focus:ring-2 ${
+                      error ? 'focus:ring-red-500' : 'focus:ring-[#6F7153] dark:focus:ring-green-500'
+                    } focus:border-transparent text-zinc-800 dark:text-zinc-100 text-sm placeholder-[#B8A989] dark:placeholder-zinc-500 transition-all`}
                     aria-label="Username"
                     required
+                    autoFocus
                     disabled={isLoading}
                     autoComplete="username"
                   />
@@ -114,7 +120,11 @@ const LoginScreen = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Tu contraseña"
-                    className="w-full pl-10 pr-12 py-3 bg-white dark:bg-zinc-800 border border-[#D4C89A] dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] dark:focus:ring-green-500 focus:border-transparent text-zinc-800 dark:text-zinc-100 text-sm placeholder-[#B8A989] dark:placeholder-zinc-500 transition-all"
+                    className={`w-full pl-10 pr-12 py-3 bg-white dark:bg-zinc-800 border ${
+                      error ? 'border-red-500 ring-1 ring-red-500' : 'border-[#D4C89A] dark:border-zinc-700'
+                    } rounded-xl focus:outline-none focus:ring-2 ${
+                      error ? 'focus:ring-red-500' : 'focus:ring-[#6F7153] dark:focus:ring-green-500'
+                    } focus:border-transparent text-zinc-800 dark:text-zinc-100 text-sm placeholder-[#B8A989] dark:placeholder-zinc-500 transition-all`}
                     aria-label="Password"
                     required
                     disabled={isLoading}
@@ -135,6 +145,16 @@ const LoginScreen = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Error message */}
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                  <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                    {error}
+                  </p>
+                </div>
+              )}
 
               {/* Submit */}
               <button

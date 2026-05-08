@@ -183,11 +183,10 @@ const Home: React.FC = () => {
       <div className="p-6 max-w-screen-2xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">Panel General</p>
-            <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">Dashboard</h1>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+            Panel General
+          </p>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 capitalize">
             {today.toLocaleDateString("es-CR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
