@@ -77,6 +77,7 @@ export default function PayrollWizardPage() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [selectedQuincena, setSelectedQuincena] = useState<1 | 2 | null>(null);
 
   // ── Step 2 state ──────────────────────────────────────────────────────────
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -110,6 +111,7 @@ export default function PayrollWizardPage() {
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const applyQuincenaPreset = useCallback((half: 1 | 2) => {
+    setSelectedQuincena(half);
     const d = new Date();
     const year = d.getFullYear();
     const month = d.getMonth();
@@ -411,17 +413,33 @@ export default function PayrollWizardPage() {
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <button
                         onClick={() => applyQuincenaPreset(1)}
-                        className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all group"
+                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all group ${
+                          selectedQuincena === 1
+                            ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
+                            : 'border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10'
+                        }`}
                       >
-                        <span className="text-xs font-bold text-zinc-400 group-hover:text-green-600 transition-colors uppercase">Primera Quincena</span>
-                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">1 – 15 de este mes</span>
+                        <span className={`text-xs font-bold uppercase transition-colors ${
+                          selectedQuincena === 1 ? 'text-green-600' : 'text-zinc-400 group-hover:text-green-600'
+                        }`}>Primera Quincena</span>
+                        <span className={`text-sm font-bold ${
+                          selectedQuincena === 1 ? 'text-green-800 dark:text-green-100' : 'text-zinc-800 dark:text-zinc-200'
+                        }`}>1 – 15 de este mes</span>
                       </button>
                       <button
                         onClick={() => applyQuincenaPreset(2)}
-                        className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all group"
+                        className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all group ${
+                          selectedQuincena === 2
+                            ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
+                            : 'border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10'
+                        }`}
                       >
-                        <span className="text-xs font-bold text-zinc-400 group-hover:text-green-600 transition-colors uppercase">Segunda Quincena</span>
-                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">16 – Fin de mes</span>
+                        <span className={`text-xs font-bold uppercase transition-colors ${
+                          selectedQuincena === 2 ? 'text-green-600' : 'text-zinc-400 group-hover:text-green-600'
+                        }`}>Segunda Quincena</span>
+                        <span className={`text-sm font-bold ${
+                          selectedQuincena === 2 ? 'text-green-800 dark:text-green-100' : 'text-zinc-800 dark:text-zinc-200'
+                        }`}>16 – Fin de mes</span>
                       </button>
                     </div>
                   )}
@@ -802,31 +820,6 @@ export default function PayrollWizardPage() {
               </div>
             ) : null}
 
-            {/* Adjust Modal Integration */}
-            {adjustingEmpId !== null && payrollId !== null && (() => {
-              const emp = calcEmployees.find((e) => Number(e.id ?? e.employeeId ?? e.employee_id) === adjustingEmpId);
-              if (!emp) return null;
-              const normalizedData = {
-                regularHours: Number((emp as any).regular_hours ?? emp.regularHours ?? 0),
-                overtimeHours: Number((emp as any).overtime_hours ?? emp.overtimeHours ?? 0),
-                weeklyRestHours: Number((emp as any).weekly_rest_hours ?? emp.weeklyRestHours ?? 0),
-                totalDeductions: Number((emp as any).total_deductions ?? emp.totalDeductions ?? 0),
-              };
-
-              return (
-                <PayrollEmployeeAdjustModal
-                  isOpen={true}
-                  payrollId={payrollId}
-                  employeeId={adjustingEmpId}
-                  employeeName={emp.name ?? emp.employeeName ?? emp.employee_name ?? 'Empleado'}
-                  currentData={normalizedData}
-                  onClose={() => setAdjustingEmpId(null)}
-                  onSave={async () => {
-                    await refreshPayrollData();
-                  }}
-                />
-              );
-            })()}
           </div>
         )}
 
@@ -841,6 +834,32 @@ export default function PayrollWizardPage() {
             />
           </div>
         )}
+        {/* ── Adjust Modal (Global to escape overflows) ──────────────────── */}
+        {adjustingEmpId !== null && payrollId !== null && (() => {
+          const calcEmployees = calculationData?.employees ?? [];
+          const emp = calcEmployees.find((e) => Number(e.id ?? e.employeeId ?? e.employee_id) === adjustingEmpId);
+          if (!emp) return null;
+          const normalizedData = {
+            regularHours: Number((emp as any).regular_hours ?? emp.regularHours ?? 0),
+            overtimeHours: Number((emp as any).overtime_hours ?? emp.overtimeHours ?? 0),
+            weeklyRestHours: Number((emp as any).weekly_rest_hours ?? emp.weeklyRestHours ?? 0),
+            totalDeductions: Number((emp as any).total_deductions ?? emp.totalDeductions ?? 0),
+          };
+
+          return (
+            <PayrollEmployeeAdjustModal
+              isOpen={true}
+              payrollId={payrollId}
+              employeeId={adjustingEmpId}
+              employeeName={emp.name ?? emp.employeeName ?? emp.employee_name ?? 'Empleado'}
+              currentData={normalizedData}
+              onClose={() => setAdjustingEmpId(null)}
+              onSave={async () => {
+                await refreshPayrollData();
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );

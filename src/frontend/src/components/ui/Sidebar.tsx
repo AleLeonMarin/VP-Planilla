@@ -3,7 +3,21 @@
 import Image from 'next/image';
 import SidebarItem from '@/components/SidebarItem';
 import React from 'react';
-import { XMarkIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  ArrowRightStartOnRectangleIcon,
+  ReceiptPercentIcon,
+  GiftIcon,
+  BuildingOffice2Icon,
+  Squares2X2Icon,
+  UsersIcon,
+  ClockIcon,
+  CalculatorIcon,
+  CalendarIcon,
+  DocumentChartBarIcon,
+  UserGroupIcon,
+  Cog6ToothIcon
+} from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
@@ -15,15 +29,15 @@ interface SidebarProps {
 export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }: SidebarProps) {
   const { user } = useAuth();
   const mainMenuItems = [
-    { href: "/pages/main", icon: "/images/layout/dashboard.png", text: "Dashboard" },
+    { href: "/pages/main", icon: Squares2X2Icon, text: "Dashboard" },
     {
       href: "/pages/employee/list",
-      icon: "/images/layout/employees.png",
+      icon: UsersIcon,
       text: "Empleados"
     },
     {
       href: "/pages/clock-logs",
-      icon: "/images/layout/attendance.png",
+      icon: ClockIcon,
       text: "Registro de asistencia",
       subItems: [
         { href: '/pages/clock-logs', text: 'Dashboard y corrección' },
@@ -32,7 +46,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
     },
     {
       href: "/pages/payroll/wizard",
-      icon: "/images/layout/payroll.png",
+      icon: CalculatorIcon,
       text: "Cálculo de planillas",
       subItems: [
         { href: '/pages/payroll/wizard', text: 'Nueva planilla' },
@@ -42,7 +56,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
     },
     {
       href: "/pages/deductions/list",
-      icon: "/images/layout/payroll.png",
+      icon: ReceiptPercentIcon,
       text: "Deducciones",
       subItems: [
         { href: '/pages/deductions/list', text: 'Todas las deducciones' },
@@ -51,7 +65,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
     },
     {
       href: "/pages/vacations",
-      icon: "/images/layout/attendance.png",
+      icon: CalendarIcon,
       text: "Vacaciones",
       subItems: [
         { href: '/pages/vacations/list', text: 'Solicitudes' },
@@ -60,22 +74,22 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
     },
     {
       href: "/pages/aguinaldo",
-      icon: "/images/layout/payroll.png",
+      icon: GiftIcon,
       text: "Aguinaldo"
     },
     {
       href: "/pages/branches/list",
-      icon: "/images/layout/settings.png",
+      icon: BuildingOffice2Icon,
       text: "Sucursales"
     },
-    { href: "/pages/reports", icon: "/images/layout/oficial_reports.png", text: "Reportes Oficiales" },
-    { href: "/pages/users", icon: "/images/layout/users_access.png", text: "Usuarios y Accesos" },
+    { href: "/pages/reports", icon: DocumentChartBarIcon, text: "Reportes Oficiales" },
+    { href: "/pages/users", icon: UserGroupIcon, text: "Usuarios y Accesos" },
   ];
 
   const bottomMenuItems = [
     { 
       href: "/pages/configuracion", 
-      icon: "/images/layout/settings.png", 
+      icon: Cog6ToothIcon, 
       text: "Configuración",
       subItems: [
         { href: '/pages/configuracion/empresa', text: 'Configuración Laboral' },

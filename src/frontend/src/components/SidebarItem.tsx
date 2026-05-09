@@ -8,12 +8,12 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface SidebarItemProps {
   href: string;
-  icon: string;
+  icon: string | React.ElementType;
   text: string;
   subItems?: { href: string; text: string }[];
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems }) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon: Icon, text, subItems }) => {
   const pathname = usePathname();
   const isActive = pathname === href || (subItems && subItems.some(sub => pathname.startsWith(sub.href)));
   const [isOpen, setIsOpen] = useState(isActive);
@@ -45,14 +45,18 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems })
           }`}
         >
           <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-            <Image
-              src={icon}
-              alt={text}
-              width={18}
-              height={18}
-              loading="eager"
-              className={isActive ? 'brightness-0 invert' : 'opacity-75 group-hover:opacity-100'}
-            />
+            {typeof Icon === 'string' ? (
+              <Image
+                src={Icon}
+                alt={text}
+                width={18}
+                height={18}
+                loading="eager"
+                className={isActive ? 'brightness-0 invert' : 'opacity-75 group-hover:opacity-100'}
+              />
+            ) : (
+              <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-white' : 'text-[#4A5D3A] dark:text-zinc-400 opacity-75 group-hover:opacity-100'}`} />
+            )}
           </div>
           <span className="flex-1 text-sm font-medium leading-none">
             {text}
