@@ -32,36 +32,50 @@ Source: `src/frontend/src/styles/globals.css` (verified).
 
 ## Spacing Scale
 
-Declared values (multiples of 4):
+Declared abstract values (standard multiples of 4):
 
 | Token | Value | Tailwind | Usage |
 |-------|-------|----------|-------|
 | xs | 4px | gap-1 / p-1 | Icon-to-text gaps, badge inner padding |
 | sm | 8px | gap-2 / p-2 | Inline element spacing, badge pill margins |
 | md | 16px | gap-4 / p-4 | Default content padding |
-| lg | 20px | p-5 | Card inner padding (matches ProfileSummaryTab) |
-| xl | 24px | gap-6 / p-6 | Modal inner padding (matches LaborEventModal) |
-| 2xl | 32px | gap-8 | Section separation in modals |
-| 3xl | 48px | — | Not used in tab context |
+| lg | 24px | gap-6 / p-6 | Modal inner padding |
+| xl | 32px | gap-8 | Section separation |
+| 2xl | 48px | — | Not used in tab context |
 
-Exceptions:
-- Table `<th>` and `<td>`: `px-4 py-3` (16px / 12px) — matches EmployeeTable header pattern
-- Card section headers: `px-5 py-4` — matches ProfileSummaryTab header strip
+### Locked Project-Level Spacing Exceptions
+
+The following values fall outside the standard {4, 8, 16, 24, 32, 48, 64} set. They are **locked exceptions** inherited from existing implemented components. Executor must match these values exactly to maintain visual consistency with the implemented codebase.
+
+| Value | Tailwind | Where Used | Justification |
+|-------|----------|-----------|---------------|
+| 20px | `p-5` | Card content body (`<div class="p-5">`) | Locked from `ProfileSummaryTab.tsx` card content area — all new tab cards must use `p-5` to align with the existing profile tab visual rhythm |
+| 20px | `px-5 py-4` | Card section header strip | Locked from `ProfileSummaryTab.tsx` lines 72–74 — all tab card headers use `px-5 py-4` |
+| 12px | `py-3` | Table `<th>` and `<td>` vertical padding | Locked from `EmployeeTable.tsx` header/cell pattern — `px-4 py-3` is the project-wide table cell baseline |
+
+> Note: `p-5` (20px) and `py-3` (12px) are intentional codebase-locked exceptions. They are NOT bugs in the spec. The executor must use them exactly — do not substitute `p-4` (16px) or `p-6` (24px) for card content, and do not substitute `py-2` or `py-4` for table cells.
+
+Additional layout exceptions:
 - Tab container outer margin-bottom: `mb-6` — matches EmployeeProfileTabs
+- Document list row: `px-5 py-3` — matches the info-row pattern from ProfileSummaryTab
 
 ---
 
 ## Typography
 
+Maximum 2 weights declared for this phase.
+
 | Role | Size | Weight | Line Height | Tailwind |
 |------|------|--------|-------------|---------|
 | Body | 14px | 400 (normal) | 1.5 | `text-sm` |
 | Label / Column header | 12px | 700 (bold) | 1.0 | `text-xs font-bold uppercase tracking-widest` |
-| Badge text | 11px | 600 (semibold) | 1.0 | `text-[11px] font-semibold` |
+| Badge text | 11px | 700 (bold) | 1.0 | `text-[11px] font-bold` |
 | Heading (card section) | 12px | 700 (bold) | 1.0 | `text-xs font-bold uppercase tracking-widest` |
-| Monetary value | 14px | 600 (semibold) | 1.5 | `text-sm font-semibold` |
-| Empty state heading | 14px | 600 (semibold) | 1.5 | `text-sm font-semibold` |
+| Monetary value | 14px | 700 (bold) | 1.5 | `text-sm font-bold` |
+| Empty state heading | 14px | 700 (bold) | 1.5 | `text-sm font-bold` |
 | Empty state body | 12px | 400 (normal) | 1.5 | `text-xs` |
+
+**Declared weights: 400 (normal) and 700 (bold) only.** No intermediate weight (600/semibold) is used in this phase. All labels, column headers, card section titles, monetary values, badge text, and empty state headings use 700 (bold). Body text and secondary metadata use 400 (normal).
 
 Source: ProfileSummaryTab.tsx h3, EmployeeTable.tsx headers, Aguinaldo tab stat labels — all verified.
 
@@ -95,7 +109,7 @@ Source: ProfileSummaryTab.tsx h3, EmployeeTable.tsx headers, Aguinaldo tab stat 
 | Completado (evento) | blue-100 | blue-700 | blue-900/30 | blue-300 | `bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300` |
 | Cancelado (evento) | red-100 | red-600 | red-900/30 | red-400 | `bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400` |
 
-Badge shape: `inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold`
+Badge shape: `inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold`
 
 ### Semantic colors
 
@@ -167,7 +181,7 @@ Centered card, icon + heading + body + optional action. Verified from Aguinaldo 
 ```
 <div class="flex flex-col items-center justify-center py-12 px-6 text-center">
   <HeroIcon class="w-10 h-10 text-zinc-300 dark:text-zinc-600 mb-3" />
-  <p class="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-1">
+  <p class="text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-1">
     [Empty state heading]
   </p>
   <p class="text-xs text-zinc-400 dark:text-zinc-500 max-w-xs">
@@ -190,18 +204,18 @@ Centered card, icon + heading + body + optional action. Verified from Aguinaldo 
 ### Shared: Primary Action Button (in card header, right side)
 
 ```
-<button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#4A5D3A] hover:bg-[#3a4d2a] dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg transition-colors">
+<button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#4A5D3A] hover:bg-[#3a4d2a] dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg transition-colors">
   <PlusIcon class="w-3.5 h-3.5" />
   [Action label]
 </button>
 ```
 
-### Shared: Secondary / Ghost Action Button
+### Shared: Secondary / Ghost Action Button (modal dismiss)
 
-Used for "Cancelar" in modals:
+> **Project convention (locked):** All modal dismiss buttons in this project use the label "Cancelar". This matches the established baseline in `LaborEventModal.tsx` which is the reference modal for this phase. The word "Cancelar" is treated as a project-specific dismiss label — not a generic label — because it is the consistent dismissal convention across all modals in the codebase (EditEmployeeModal, LaborEventModal, etc.). Executor must use "Cancelar" for all modal dismiss ghost buttons to maintain codebase consistency.
 
 ```
-<button class="px-5 py-2.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
+<button class="px-5 py-2.5 text-sm font-normal text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
   Cancelar
 </button>
 ```
@@ -219,6 +233,8 @@ Used for "Cancelar" in modals:
 ## Tab-Specific Interaction Contracts
 
 ### Tab: Planillas (EmployeePayrollsTab)
+
+**Primary focal point:** Net salary column (`Salario Neto`) — displayed in accent green bold to draw the eye; it is the most decision-relevant value per row.
 
 **Layout:** Single card with header strip + scrollable table. No secondary cards.
 
@@ -242,12 +258,12 @@ Used for "Cancelar" in modals:
 
 **Net salary column styling:**
 ```
-<td class="px-4 py-3 text-sm font-semibold text-[#4A5D3A] dark:text-green-400 text-right">
+<td class="px-4 py-3 text-sm font-bold text-[#4A5D3A] dark:text-green-400 text-right">
 ```
 
 **Download button — enabled state (APROBADA or PAGADA):**
 ```
-<button class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#4A5D3A] dark:text-green-400 border border-[#4A5D3A] dark:border-green-600 rounded-lg hover:bg-[#E7DCC1] dark:hover:bg-green-900/20 transition-colors">
+<button class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-normal text-[#4A5D3A] dark:text-green-400 border border-[#4A5D3A] dark:border-green-600 rounded-lg hover:bg-[#E7DCC1] dark:hover:bg-green-900/20 transition-colors">
   <ArrowDownTrayIcon class="w-3.5 h-3.5" />
   Descargar
 </button>
@@ -265,7 +281,7 @@ Interaction: calls `http.raw()` to fetch PDF blob with Bearer token, creates `UR
 
 **Manually adjusted badge:**
 ```
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
   Ajustado
 </span>
 ```
@@ -289,6 +305,8 @@ Show in Ajuste column only when `is_manually_adjusted === true`, empty otherwise
 ---
 
 ### Tab: Eventos Laborales (EmployeeEventsTab)
+
+**Primary focal point:** Event name column (`Evento`) — leftmost and widest column; it is the primary identifier the user scans to find a specific assignment.
 
 **Layout:** Single card with header strip + scrollable table. "Asignar Evento" button in the card header right side.
 
@@ -341,6 +359,8 @@ Show in Ajuste column only when `is_manually_adjusted === true`, empty otherwise
 
 ### Tab: Documentos (EmployeeDocumentsTab)
 
+**Primary focal point:** Document name (`file_path`) — the primary text in each list row; rendered at 14px/400 in zinc-700 so it reads as the primary label, with type and date rendered below at 12px/400 as secondary metadata.
+
 **Layout:** Single card with header strip + list of document rows. "Agregar Documento" button in card header right side.
 
 **Section header:**
@@ -355,7 +375,7 @@ Show in Ajuste column only when `is_manually_adjusted === true`, empty otherwise
   <div class="flex items-center gap-3">
     <DocumentIcon class="w-5 h-5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
     <div>
-      <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{file_path}</p>
+      <p class="text-sm text-zinc-700 dark:text-zinc-200">{file_path}</p>
       <p class="text-xs text-zinc-400 dark:text-zinc-500">{document_type} · {formatDateDisplay(uploaded_at)}</p>
     </div>
   </div>
@@ -369,7 +389,7 @@ Show in Ajuste column only when `is_manually_adjusted === true`, empty otherwise
 
 **Delete action behavior:**
 1. Click `TrashIcon` button
-2. `window.confirm('¿Eliminar el documento "' + file_path + '"? Esta acción no se puede deshacer.')` 
+2. `window.confirm('¿Eliminar el documento "' + file_path + '"? Esta acción no se puede deshacer.')`
 3. On confirm: `employeeDocumentService.delete(employeeId, docId)`, `toast.success('Documento eliminado')`, refresh list
 4. On error: `toast.error('No se pudo eliminar el documento')`
 
@@ -398,7 +418,7 @@ w-full rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2.5 text-s
 
 Label classes (exact match):
 ```
-block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5
+block text-sm font-normal text-zinc-700 dark:text-zinc-300 mb-1.5
 ```
 
 Error text under field:
@@ -412,7 +432,7 @@ Error text under field:
 
 "Guardar" button:
 ```
-<button class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+<button class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
   [Loading spinner when isSubmitting]
   Guardar documento
 </button>
@@ -475,6 +495,7 @@ Guardando...
 | Assign error toast | Eventos | "No se pudo asignar el evento" |
 | Add document success toast | Documentos | "Documento agregado correctamente" |
 | Add document error toast | Documentos | "No se pudo agregar el documento" |
+| Modal dismiss button — all modals | All | "Cancelar" — **project convention: locked.** All modal dismiss ghost buttons in this codebase use "Cancelar" per the LaborEventModal.tsx baseline. Treat as a project-specific dismiss label, not a generic word. |
 
 Source for empty states and errors: Claude's Discretion area from CONTEXT.md. Source for toast pattern: LaborEventModal.tsx (verified sonner usage in page.tsx).
 
@@ -547,7 +568,7 @@ No third-party component registry blocks are used. All components are custom-bui
 - [ ] `EmployeePayrollsTab` uses `DocumentTextIcon` for section header
 - [ ] `EmployeeEventsTab` uses `CalendarDaysIcon` for section header
 - [ ] `EmployeeDocumentsTab` uses `FolderOpenIcon` for section header
-- [ ] Net salary column uses `text-[#4A5D3A] dark:text-green-400 font-semibold`
+- [ ] Net salary column uses `text-[#4A5D3A] dark:text-green-400 font-bold`
 - [ ] Download button disabled for BORRADOR (not just visually — no click handler)
 - [ ] Download uses `http.raw()` + `URL.createObjectURL` + `<a>.click()` (NOT window.open — auth requirement)
 - [ ] LaborEventModal receives `employees={[currentEmployee]}` (single-element array)
@@ -559,6 +580,10 @@ No third-party component registry blocks are used. All components are custom-bui
 - [ ] `formatDateDisplay` from `@/utils/formatters` for all date values
 - [ ] Tab components receive `employeeId: number | string` as sole prop from page.tsx
 - [ ] Empty state CTA buttons in Eventos and Documentos open the same modal as the header action button
+- [ ] All modal dismiss buttons use the label "Cancelar" (project-locked convention)
+- [ ] No font-semibold / font-medium in new components — only font-bold or font-normal
+- [ ] Card content areas use `p-5` (20px), not `p-4` or `p-6`
+- [ ] Table cells use `px-4 py-3`, not `py-2` or `py-4`
 
 ---
 
