@@ -2,25 +2,7 @@
 
 import React from 'react';
 import PayrollResults from '@/components/PayrollResults';
-
-interface CalculationResult {
-  period: {
-    label: string;
-    start: string;
-    end: string;
-  };
-  employees: Array<{
-    id: number;
-    name: string;
-    gross: number;
-    net: number;
-    deductions: number;
-    inconsistencies?: string[];
-  }>;
-  totalGross: number;
-  totalNet: number;
-  totalDeductions: number;
-}
+import type { CalculationResult } from '@/types/payrollWizard';
 
 interface PayrollWizardStep2Props {
   data: CalculationResult;
@@ -88,7 +70,7 @@ export default function PayrollWizardStep2({
       )}
 
       {/* Reuse existing PayrollResults component */}
-      <PayrollResults data={data} onCreate={onConfirm} />
+      <PayrollResults data={data as any} onCreate={onConfirm} />
     </div>
   );
 }

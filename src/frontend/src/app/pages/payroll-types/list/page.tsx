@@ -102,36 +102,33 @@ export default function PayrollTypesPage() {
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
       <div className="px-8 py-6 max-w-screen-2xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">
-            Gestión de Planillas
-          </p>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-zinc-800 dark:text-zinc-100">Tipos de Planilla</h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                Gestiona los diferentes tipos de planilla del sistema
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => refetch()} 
-                disabled={isLoading}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
-              >
-                <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
-                Recargar
-              </button>
-              <button 
-                onClick={openCreate} 
-                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                <PlusCircleIcon className="w-5 h-5" />
-                Nuevo Tipo
-              </button>
-            </div>
+        <div className="flex justify-between items-end mb-5">
+          <div>
+            <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">
+              Gestión de Planillas
+            </p>
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">Tipos de Planilla</h1>
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => refetch()} 
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              Recargar
+            </button>
+            <button 
+              onClick={openCreate} 
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <PlusCircleIcon className="w-5 h-5" />
+              Nuevo Tipo
+            </button>
           </div>
         </div>
+
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
         {/* Error message */}
         {error && (

@@ -396,13 +396,13 @@ function ClockLogsDashboardPageInner() {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
 
         {/* B. Page header */}
         <div className="mb-6 flex justify-between items-end">
           <div>
-            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Marcas / Dashboard</p>
-            <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Panel de Control de Marcas</h1>
+            <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">Marcas / Dashboard</p>
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">Panel de Control de Marcas</h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               Revise y corrija marcas de reloj antes de calcular planilla. Grupos por sucursal, empleado y día.
             </p>
@@ -412,6 +412,8 @@ function ClockLogsDashboardPageInner() {
             Importar marcas (.xlsx, .csv)
           </button>
         </div>
+
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
         {/* TAB BAR */}
         <div className="flex gap-1 mb-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 w-fit">

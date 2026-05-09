@@ -30,13 +30,13 @@ export default function AguinaldoPage() {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <div className="px-6 py-6 max-w-screen-2xl mx-auto">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex justify-between items-end mb-5">
           <div>
-            <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">Aguinaldo</p>
-            <h1 className="text-2xl font-bold text-zinc-700 dark:text-zinc-100">
+            <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">Aguinaldo</p>
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">
               Proyección de Aguinaldo
             </h1>
           </div>
@@ -60,6 +60,8 @@ export default function AguinaldoPage() {
             </button>
           </div>
         </div>
+
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
         {/* Fiscal period info bar */}
         {data && (

@@ -41,7 +41,7 @@ export default function Sidebar({ onClose, onLogoutClick, isLoggingOut = false }
       ]
     },
     {
-      href: "/pages/deductions",
+      href: "/pages/deductions/list",
       icon: "/images/layout/payroll.png",
       text: "Deducciones",
       subItems: [

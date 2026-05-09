@@ -14,6 +14,7 @@ import AguinaldoResults from '@/components/AguinaldoResults';
 import { useLegalParamAlerts } from '@/hooks/useLegalParamAlerts';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { Employee } from '@/types/employee';
+import type { CalculationResult } from '@/types/payrollWizard';
 
 type WizardType = 'quincenal' | 'aguinaldo';
 
@@ -90,7 +91,7 @@ export default function PayrollWizard() {
         selectedPeriod.end,
         created.id
       );
-      setCalculationData(result as Parameters<typeof setCalculationData>[0]);
+      setCalculationData(result as unknown as CalculationResult);
       goToStep(2);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al calcular planilla';
@@ -118,7 +119,7 @@ export default function PayrollWizard() {
 
       const result = await NomineeService.calculateAguinaldo(activeIds, displayToIso(aguinaldoStart), displayToIso(aguinaldoEnd));
       setAguinaldoEmployees(employees);
-      setCalculationData(result as Parameters<typeof setCalculationData>[0]);
+      setCalculationData(result as unknown as CalculationResult);
       goToStep(2);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al calcular aguinaldo';
@@ -290,7 +291,6 @@ export default function PayrollWizard() {
       {/* Step 2: Review */}
       {currentStep === 2 && calculationData && isAguinaldo && (
         <AguinaldoResults
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           results={calculationData as any}
           employees={aguinaldoEmployees}
           onBack={() => { reset(); goToStep(1); }}
@@ -298,8 +298,7 @@ export default function PayrollWizard() {
       )}
       {currentStep === 2 && calculationData && !isAguinaldo && (
         <PayrollWizardStep2
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data={calculationData as any}
+          data={calculationData}
           onBack={() => { reset(); goToStep(1); }}
           onNext={() => goToStep(3)}
           onConfirm={() => goToStep(3)}
@@ -310,8 +309,7 @@ export default function PayrollWizard() {
       {currentStep === 3 && calculationData && payrollId && !isAguinaldo && (
         <PayrollWizardStep3
           payrollId={payrollId}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          calculationData={calculationData as any}
+          calculationData={calculationData}
           onApprove={handleApprove}
           onBack={() => goToStep(2)}
         />

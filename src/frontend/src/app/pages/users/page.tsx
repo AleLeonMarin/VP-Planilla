@@ -106,12 +106,12 @@ export default function UsersPermissionsPage() {
       ];
 
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6 space-y-6">
-      <div className="mb-2">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto flex flex-col gap-6">
+        <div className="flex justify-between items-end mb-5">
           <div>
-            <p className="text-xs text-zinc-400 uppercase tracking-widest">Seguridad / Usuarios y accesos</p>
-            <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Usuarios y accesos</h1>
+            <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">Seguridad / Usuarios y accesos</p>
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">Usuarios y accesos</h1>
           </div>
           <button
             onClick={() => setShowPasswordModal(true)}
@@ -121,7 +121,8 @@ export default function UsersPermissionsPage() {
             Cambiar mi contraseña
           </button>
         </div>
-      </div>
+
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
       <section className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm p-6 border border-zinc-200 dark:border-zinc-800">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -346,6 +347,7 @@ export default function UsersPermissionsPage() {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
       />
+      </div>
     </div>
   );
 }

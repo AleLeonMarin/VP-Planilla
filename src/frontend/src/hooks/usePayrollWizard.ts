@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { LegalParamService } from '@/services/legalParamService';
+import type { CalculationResult } from '@/types/payrollWizard';
 
 export interface BiweeklyPeriod {
   start: Date;
@@ -18,33 +19,6 @@ export interface WizardState {
   } | null;
   calculationData: CalculationResult | null;
   payrollId: number | null;
-}
-
-interface CalculationResult {
-  period: {
-    label: string;
-    start: string;
-    end: string;
-  };
-  employees: CalculationEmployee[];
-  totalGross: number;
-  totalNet: number;
-  totalDeductions: number;
-  createdAt: string;
-}
-
-interface CalculationEmployee {
-  id: number;
-  name: string;
-  grossSalary: number;
-  netSalary: number;
-  deductions: DeductionBreakdown[];
-  inconsistencies?: string[];
-}
-
-interface DeductionBreakdown {
-  type: string;
-  amount: number;
 }
 
 export function usePayrollWizard() {
@@ -143,11 +117,9 @@ export function generateBiweeklyPeriods(monthsBack: number = 2): BiweeklyPeriod[
     const year = monthDate.getFullYear();
     const month = monthDate.getMonth();
 
-    // First quincena: 1-15
     const q1Start = new Date(year, month, 1);
     const q1End = new Date(year, month, 15);
 
-    // Second quincena: 16-last day
     const q2Start = new Date(year, month, 16);
     const q2End = new Date(year, month + 1, 0);
 

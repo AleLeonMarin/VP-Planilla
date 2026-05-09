@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePayrollWizard } from '@/hooks/usePayrollWizard';
 import { useAguinaldoSummary } from '@/hooks/useAguinaldoSummary';
 import { NomineeService } from '@/services/nomineeService';
@@ -12,10 +13,32 @@ import PayrollWizardStep3 from '@/components/PayrollWizardStep3';
 import PayrollEmployeeAdjustModal from '@/components/PayrollEmployeeAdjustModal';
 import type { Employee } from '@/types/employee';
 import type { PayrollCalculationResult, EmployeePayroll } from '@/types/payrollTypes';
+import type { CalculationResult, CalculationEmployee, DeductionBreakdown } from '@/types/payrollWizard';
+import { 
+  CalendarIcon, 
+  UserGroupIcon, 
+  DocumentCheckIcon, 
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  MagnifyingGlassIcon,
+  ExclamationCircleIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
 
 type PeriodType = 'quincenal' | 'mensual' | 'rango_libre';
 
-const STEPS = ['Período', 'Empleados', 'Revisar', 'Aprobar'] as const;
+const STEPS = [
+  { label: 'Período', icon: CalendarIcon },
+  { label: 'Empleados', icon: UserGroupIcon },
+  { label: 'Revisar', icon: DocumentCheckIcon },
+  { label: 'Aprobar', icon: CheckCircleIcon }
+] as const;
+
+const CARD_CLASSES = "bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-all duration-300";
+const INPUT_CLASSES = "w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white/50 dark:bg-zinc-800/50 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all";
+const BUTTON_PRIMARY = "px-6 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold hover:bg-zinc-800 dark:hover:bg-white transition-all shadow-lg active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+const BUTTON_SECONDARY = "px-6 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all flex items-center justify-center gap-2";
 
 function formatDate(d: Date): string {
   return d.toISOString().split('T')[0];
@@ -59,6 +82,7 @@ export default function PayrollWizardPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [filterText, setFilterText] = useState('');
 
   // ── Step 3 state ──────────────────────────────────────────────────────────
   const [isCalculating, setIsCalculating] = useState(false);
@@ -112,12 +136,16 @@ export default function PayrollWizardPage() {
   }, [dateStart, dateEnd, selectPeriod, goToStep]);
 
   const toggleAll = useCallback(() => {
-    if (checkedIds.size === employees.length) {
+    const filteredEmployees = employees.filter(e => 
+      e.name.toLowerCase().includes(filterText.toLowerCase())
+    );
+    
+    if (checkedIds.size === filteredEmployees.length && filteredEmployees.length > 0) {
       setCheckedIds(new Set());
     } else {
-      setCheckedIds(new Set(employees.map((e) => e.id)));
+      setCheckedIds(new Set(filteredEmployees.map((e) => e.id)));
     }
-  }, [checkedIds.size, employees]);
+  }, [checkedIds.size, employees, filterText]);
 
   const toggleEmployee = useCallback((id: string) => {
     setCheckedIds((prev) => {
@@ -135,6 +163,47 @@ export default function PayrollWizardPage() {
     goToStep(3);
   }, [checkedIds, setSelectedEmployeeIds, goToStep]);
 
+  const mapToWizardResult = useCallback((res: PayrollCalculationResult): CalculationResult => {
+    let totalGross = 0;
+    let totalNet = 0;
+    let totalDeductions = 0;
+
+    const mappedEmployees: CalculationEmployee[] = res.employees.map(emp => {
+      const gross = emp.grossSalary ?? (emp as any).gross_salary ?? 0;
+      const net = emp.netSalary ?? (emp as any).net_salary ?? 0;
+      const deductions = emp.totalDeductions ?? (emp as any).total_deductions ?? 0;
+
+      totalGross += gross;
+      totalNet += net;
+      totalDeductions += deductions;
+
+      return {
+        id: Number(emp.id ?? emp.employee_id ?? emp.employeeId),
+        name: emp.name ?? emp.employeeName ?? emp.employee_name ?? 'Empleado',
+        grossSalary: gross,
+        netSalary: net,
+        deductions: (emp.deductionsBreakdown ?? []).map(d => ({
+          type: d.type,
+          amount: d.amount
+        })) as DeductionBreakdown[],
+        inconsistencies: (emp.inconsistencies ?? []).map(i => typeof i === 'string' ? i : i.message)
+      };
+    });
+
+    return {
+      period: {
+        label: `${res.period.startDate} – ${res.period.endDate}`,
+        start: res.period.startDate,
+        end: res.period.endDate
+      },
+      employees: mappedEmployees,
+      totalGross,
+      totalNet,
+      totalDeductions,
+      createdAt: new Date().toISOString()
+    };
+  }, []);
+
   const handleCalculate = useCallback(async () => {
     setIsCalculating(true);
     setCalcError(null);
@@ -142,7 +211,6 @@ export default function PayrollWizardPage() {
     try {
       let currentId = payrollId;
 
-      // Solo crear planilla si no existe ya una para esta sesión del wizard
       if (currentId === null) {
         const payroll = await PayrollService.createPayroll({
           payroll_type_id: 1,
@@ -155,7 +223,6 @@ export default function PayrollWizardPage() {
         setPayrollId(currentId);
       }
 
-      // Calcular con los empleados seleccionados y el ID de planilla existente
       const result = await NomineeService.calculatePayrollForPeriod(
         dateStart,
         dateEnd,
@@ -163,15 +230,11 @@ export default function PayrollWizardPage() {
         selectedEmployeeIds,
       );
 
-      // Reemplazar empleados con datos de DB para que emp.id = payroll_employee_id
-      // desde el primer guardado, evitando el mismatch de IDs al ajustar horas.
       const freshEmployees = await PayrollService.getPayrollEmployees(currentId!);
-      const normalizedData: PayrollCalculationResult = { ...result, employees: freshEmployees };
+      const normalizedData: PayrollCalculationResult = { ...result, employees: freshEmployees as any };
 
       setCalcResult(normalizedData);
-      setCalculationData(normalizedData);
-      
-      // Refrescar datos de aguinaldo después del cálculo para poblar la columna en Step 3
+      setCalculationData(mapToWizardResult(normalizedData));
       await refetchAguinaldo();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al calcular la planilla';
@@ -180,29 +243,26 @@ export default function PayrollWizardPage() {
     } finally {
       setIsCalculating(false);
     }
-  }, [dateStart, dateEnd, selectedEmployeeIds, payrollId, setPayrollId, setCalculationData, refetchAguinaldo]);
+  }, [dateStart, dateEnd, selectedEmployeeIds, payrollId, setPayrollId, setCalculationData, refetchAguinaldo, mapToWizardResult]);
 
   const refreshPayrollData = useCallback(async () => {
     if (payrollId === null) return;
     try {
       const updatedEmployees = await PayrollService.getPayrollEmployees(payrollId);
       
-      // Forzar actualización de estado con nuevas referencias para asegurar re-renderizado
       const newResult: PayrollCalculationResult = {
         ...(calcResult as PayrollCalculationResult),
-        employees: [...updatedEmployees]
+        employees: [...updatedEmployees] as any
       };
       
       setCalcResult(newResult);
-      setCalculationData(newResult);
-
-      // Refrescar también aguinaldo por si el ajuste manual cambió el salario bruto
+      setCalculationData(mapToWizardResult(newResult));
       await refetchAguinaldo();
-
-      toast.success('Datos actualizados');    } catch {
+      toast.success('Datos actualizados');
+    } catch {
       toast.error('Error al refrescar datos de la planilla');
     }
-  }, [payrollId, calcResult, setCalcResult, setCalculationData, refetchAguinaldo]);
+  }, [payrollId, calcResult, setCalcResult, setCalculationData, refetchAguinaldo, mapToWizardResult]);
 
   const handleApprove = useCallback(async (pid: number) => {
     await PayrollService.approvePayroll(pid);
@@ -214,7 +274,12 @@ export default function PayrollWizardPage() {
     setCalcResult(null);
   }, [reset]);
 
-  // ── Derived ───────────────────────────────────────────────────────────────
+  const filteredEmployees = employees.filter(e => 
+    e.name.toLowerCase().includes(filterText.toLowerCase()) ||
+    (e as any).position_name?.toLowerCase().includes(filterText.toLowerCase()) ||
+    e.position?.toLowerCase().includes(filterText.toLowerCase())
+  );
+
   const calcEmployees: EmployeePayroll[] = Array.isArray(calcResult?.employees)
     ? calcResult.employees
     : [];
@@ -223,218 +288,324 @@ export default function PayrollWizardPage() {
     (e) => Array.isArray(e.inconsistencies) && e.inconsistencies.length > 0
   ).length;
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <div className="px-6 py-8 max-w-screen-xl mx-auto">
-        <div className="mb-6">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-            Gestión de Planillas
-          </p>
-          <h1 className="text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-none">
-            Nueva Planilla
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-            Calcula y aprueba planillas paso a paso
-          </p>
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">Cálculo de Planillas</p>
+            <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">
+              Nueva Planilla
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+              Procesa el pago de tus colaboradores de forma rápida y segura.
+            </p>
+          </div>
+          <div className="hidden lg:flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+              <DocumentCheckIcon className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+            </div>
+            <div>
+              <p className="text-[10px] text-zinc-400 font-medium">Estado</p>
+              <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Paso {currentStep} de 4</p>
+            </div>
+          </div>
         </div>
 
-        {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          {STEPS.map((label, i) => {
-            const stepNum = (i + 1) as 1 | 2 | 3 | 4;
-            const isActive = currentStep === stepNum;
-            const isDone = currentStep > stepNum;
-            return (
-              <React.Fragment key={label}>
-                <div
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors
-                    ${isActive ? 'bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900' : ''}
-                    ${isDone ? 'bg-green-600 text-white' : ''}
-                    ${!isActive && !isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400' : ''}
-                  `}
-                >
-                  <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs">
-                    {isDone ? '✓' : stepNum}
-                  </span>
-                  <span>{label}</span>
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
+
+        {/* Premium Animated Step Indicator (Compact) */}
+        <div className="relative mb-12 px-4 sm:px-10">
+          {/* Background Track */}
+          <div className="absolute top-5 left-9 right-9 sm:left-[60px] sm:right-[60px] h-0.5 bg-zinc-200 dark:bg-zinc-800 rounded-full z-10 translate-y-[-50%]" />
+          
+          {/* Animated Progress Fill */}
+          <motion.div 
+            className="absolute top-5 left-9 right-9 sm:left-[60px] sm:right-[60px] h-0.5 bg-green-500 rounded-full z-10 origin-left translate-y-[-50%]"
+            initial={false}
+            animate={{ scaleX: (currentStep - 1) / (STEPS.length - 1) }}
+            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          />
+
+          <div className="relative z-20 flex justify-between">
+            {STEPS.map((step, i) => {
+              const stepNum = (i + 1) as 1 | 2 | 3 | 4;
+              const isActive = currentStep === stepNum;
+              const isDone = currentStep > stepNum;
+              const Icon = step.icon;
+
+              return (
+                <div key={step.label} className="flex flex-col items-center group">
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      scale: isActive ? 1.1 : 1,
+                    }}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg relative z-30 border-2 ${
+                      isActive 
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 ring-4 ring-green-500/10 border-green-500/50' 
+                        : isDone 
+                          ? 'bg-green-600 border-green-600 text-white' 
+                          : 'bg-white dark:bg-zinc-900 text-zinc-400 dark:text-zinc-600 border-zinc-200 dark:border-zinc-800'
+                    }`}
+                  >
+                    {isDone ? (
+                      <CheckCircleIcon className="w-5 h-5" />
+                    ) : (
+                      <Icon className={`w-5 h-5 ${isActive ? 'animate-pulse' : ''}`} />
+                    )}
+                  </motion.div>
+                  
+                  <div className="mt-3 text-center">
+                    <p className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors duration-300 ${
+                      isActive ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'
+                    }`}>
+                      {step.label}
+                    </p>
+                  </div>
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
-                )}
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* ── STEP 1: Período ────────────────────────────────────────────── */}
         {currentStep === 1 && (
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 max-w-2xl">
-            <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100 mb-6">
-              Seleccionar Período
-            </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className={`lg:col-span-8 ${CARD_CLASSES} p-6`}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <CalendarIcon className="w-5 h-5 text-green-700 dark:text-green-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
+                    Período de pago
+                  </h2>
+                  <p className="text-xs text-zinc-500">Selecciona el rango de fechas.</p>
+                </div>
+              </div>
 
-            {/* Tipo de período */}
-            <div className="flex gap-3 mb-6">
-              {(['quincenal', 'mensual', 'rango_libre'] as PeriodType[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => { setPeriodType(t); setDateStart(''); setDateEnd(''); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border
-                    ${periodType === t
-                      ? 'bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 border-transparent'
-                      : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'}
-                  `}
-                >
-                  {t === 'rango_libre' ? 'Rango libre' : t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
+              <div className="space-y-8">
+                {/* Tipo de período selection */}
+                <div className="grid grid-cols-3 gap-3 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                  {(['quincenal', 'mensual', 'rango_libre'] as PeriodType[]).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => { setPeriodType(t); setDateStart(''); setDateEnd(''); }}
+                      className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        periodType === t
+                          ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                          : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                      }`}
+                    >
+                      {t === 'rango_libre' ? 'Personalizado' : t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Specific selectors */}
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {periodType === 'quincenal' && (
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <button
+                        onClick={() => applyQuincenaPreset(1)}
+                        className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all group"
+                      >
+                        <span className="text-xs font-bold text-zinc-400 group-hover:text-green-600 transition-colors uppercase">Primera Quincena</span>
+                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">1 – 15 de este mes</span>
+                      </button>
+                      <button
+                        onClick={() => applyQuincenaPreset(2)}
+                        className="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-zinc-200 dark:border-zinc-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/10 transition-all group"
+                      >
+                        <span className="text-xs font-bold text-zinc-400 group-hover:text-green-600 transition-colors uppercase">Segunda Quincena</span>
+                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">16 – Fin de mes</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {periodType === 'mensual' && (
+                    <div className="mb-6">
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-1">
+                        Seleccionar Mes
+                      </label>
+                      <input
+                        type="month"
+                        value={selectedMonth}
+                        onChange={(e) => {
+                          setSelectedMonth(e.target.value);
+                          applyMonthPreset(e.target.value);
+                        }}
+                        className={INPUT_CLASSES}
+                      />
+                    </div>
+                  )}
+
+                  {/* Date inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-1">
+                        Fecha Inicio
+                      </label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                        <input
+                          type="date"
+                          value={dateStart}
+                          onChange={(e) => setDateStart(e.target.value)}
+                          readOnly={periodType !== 'rango_libre'}
+                          className={`${INPUT_CLASSES} pl-12`}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-1">
+                        Fecha Fin
+                      </label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                        <input
+                          type="date"
+                          value={dateEnd}
+                          onChange={(e) => setDateEnd(e.target.value)}
+                          readOnly={periodType !== 'rango_libre'}
+                          className={`${INPUT_CLASSES} pl-12`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    onClick={handleNextStep1}
+                    disabled={!dateStart || !dateEnd}
+                    className={`${BUTTON_PRIMARY} w-full`}
+                  >
+                    Confirmar Período <ChevronRightIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Quincenal presets */}
-            {periodType === 'quincenal' && (
-              <div className="flex gap-3 mb-5">
-                <button
-                  onClick={() => applyQuincenaPreset(1)}
-                  className="flex-1 py-2 rounded-lg text-sm border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-700 dark:text-zinc-300"
-                >
-                  1–15 del mes actual
-                </button>
-                <button
-                  onClick={() => applyQuincenaPreset(2)}
-                  className="flex-1 py-2 rounded-lg text-sm border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-700 dark:text-zinc-300"
-                >
-                  16–fin del mes actual
-                </button>
-              </div>
-            )}
-
-            {/* Mensual month selector */}
-            {periodType === 'mensual' && (
-              <div className="mb-5">
-                <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-2">
-                  Mes y Año
-                </label>
-                <input
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => {
-                    setSelectedMonth(e.target.value);
-                    applyMonthPreset(e.target.value);
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                />
-              </div>
-            )}
-
-            {/* Date display (all types) */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                  Fecha inicio
-                </label>
-                <input
-                  type="date"
-                  value={dateStart}
-                  onChange={(e) => setDateStart(e.target.value)}
-                  readOnly={periodType !== 'rango_libre'}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                  Fecha fin
-                </label>
-                <input
-                  type="date"
-                  value={dateEnd}
-                  onChange={(e) => setDateEnd(e.target.value)}
-                  readOnly={periodType !== 'rango_libre'}
-                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                />
+            <div className="lg:col-span-4 space-y-6">
+              <div className="p-6 rounded-2xl bg-zinc-900 text-white shadow-xl">
+                <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">Información Legal</h4>
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <ExclamationCircleIcon className="w-5 h-5 text-green-400" />
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      VP-Planilla valida automáticamente los recargos por feriados y horas extra según la ley laboral de Costa Rica.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <SparklesIcon className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      El cálculo incluye el acumulado proporcional para el aguinaldo de forma automática.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <button
-              onClick={handleNextStep1}
-              disabled={!dateStart || !dateEnd}
-              className="w-full py-3 bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Siguiente →
-            </button>
           </div>
         )}
 
         {/* ── STEP 2: Empleados ──────────────────────────────────────────── */}
         {currentStep === 2 && (
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8 max-w-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">
-                Seleccionar Empleados
-              </h2>
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                {checkedIds.size} seleccionados / {employees.length} total
-              </span>
+          <div className={`${CARD_CLASSES} p-6 max-w-3xl mx-auto`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <UserGroupIcon className="w-5 h-5 text-blue-700 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
+                    Colaboradores
+                  </h2>
+                  <p className="text-xs text-zinc-500">Selecciona quiénes incluir en la planilla.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-xl">
+                <span className="text-xl font-black text-zinc-900 dark:text-zinc-100">{checkedIds.size}</span>
+                <span className="text-xs text-zinc-400 font-medium">/ {employees.length} seleccionados</span>
+              </div>
             </div>
 
-            <div className="flex gap-3 mb-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o posición..."
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className={`${INPUT_CLASSES} pl-12`}
+                />
+              </div>
               <button
                 onClick={toggleAll}
-                className="px-4 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                className="px-6 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all whitespace-nowrap"
               >
-                {checkedIds.size === employees.length && employees.length > 0
-                  ? 'Deseleccionar todos'
-                  : 'Seleccionar todos'}
+                {checkedIds.size === filteredEmployees.length && filteredEmployees.length > 0 ? 'Deseleccionar todos' : 'Marcar todos'}
               </button>
             </div>
 
             {loadingEmployees ? (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-2 border-zinc-300 dark:border-zinc-600 border-t-zinc-700 dark:border-t-zinc-300 rounded-full animate-spin" />
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-12 h-12 border-4 border-zinc-200 dark:border-zinc-800 border-t-zinc-900 dark:border-t-zinc-100 rounded-full animate-spin" />
+                <p className="text-sm text-zinc-400 font-medium">Cargando lista de colaboradores...</p>
               </div>
             ) : (
-              <div className="max-h-96 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl mb-6">
-                {employees.map((emp) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto p-1 custom-scrollbar mb-8">
+                {filteredEmployees.map((emp) => {
                   const rawSalary = Number(emp.salary);
-                  // Si el salario es menor a 5000, asumimos que ya es una tarifa por hora (como 1682 o 1530)
-                  // Si es mayor, es un salario mensual (como 400,000) y lo convertimos.
                   const hourlySalary = rawSalary > 5000 ? (rawSalary / 30 / 8) : rawSalary;
                   const threshold = Number(globalMinWageRate);
-                  
-                  // Redondear a 2 decimales para evitar falsos positivos
                   const isLowWage = minWageCheckEnabled === 1 && 
                     Math.round(hourlySalary * 100) / 100 < Math.round(threshold * 100) / 100;
-                  
+                  const isChecked = checkedIds.has(emp.id);
+
                   return (
                     <label
                       key={emp.id}
-                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
+                        isChecked 
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/10' 
+                          : 'border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700 bg-white/50 dark:bg-zinc-800/30'
+                      }`}
                     >
+                      <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                        isChecked 
+                          ? 'bg-green-600 border-green-600' 
+                          : 'border-zinc-300 dark:border-zinc-600 group-hover:border-zinc-400'
+                      }`}>
+                        {isChecked && <CheckCircleIcon className="w-5 h-5 text-white" />}
+                      </div>
                       <input
                         type="checkbox"
-                        checked={checkedIds.has(emp.id)}
+                        checked={isChecked}
                         onChange={() => toggleEmployee(emp.id)}
-                        className="w-4 h-4 accent-zinc-700 dark:accent-zinc-300"
+                        className="hidden"
                       />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-bold truncate ${isChecked ? 'text-green-800 dark:text-green-300' : 'text-zinc-800 dark:text-zinc-200'}`}>
                           {emp.name}
-                          {isLowWage && (
-                            <Tooltip 
-                              content={`Salario (₡${(Math.round(hourlySalary * 100) / 100).toFixed(2)}) es inferior a la tarifa mínima (₡${(Math.round(threshold * 100) / 100).toFixed(2)})`}
-                            >
-                              <span className="text-amber-500 cursor-help">
-                                ⚠️
-                              </span>
-                            </Tooltip>
-                          )}
                         </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{emp.position}</p>
+                        <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">{(emp as any).position_name || emp.position || 'Sin posición'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                          ₡{Number(emp.salary).toLocaleString('es-CR')}
-                        </p>
+                        <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">₡{Number(emp.salary).toLocaleString('es-CR')}</p>
+                        {isLowWage && (
+                          <Tooltip content={`Salario inferior a tarifa mínima (₡${Number(threshold).toFixed(2)})`}>
+                            <ExclamationCircleIcon className="w-4 h-4 text-amber-500 ml-auto mt-1 cursor-help" />
+                          </Tooltip>
+                        )}
                       </div>
                     </label>
                   );
@@ -442,19 +613,16 @@ export default function PayrollWizardPage() {
               </div>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => goToStep(1)}
-                className="px-6 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-              >
-                ← Volver
+            <div className="flex gap-4">
+              <button onClick={() => goToStep(1)} className={`${BUTTON_SECONDARY} flex-1`}>
+                <ArrowLeftIcon className="w-5 h-5" /> Anterior
               </button>
               <button
                 onClick={handleNextStep2}
                 disabled={checkedIds.size === 0}
-                className="flex-1 py-3 bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`${BUTTON_PRIMARY} flex-[2]`}
               >
-                Siguiente →
+                Calcular Planilla <ChevronRightIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -462,124 +630,141 @@ export default function PayrollWizardPage() {
 
         {/* ── STEP 3: Revisar / Ajustar ──────────────────────────────────── */}
         {currentStep === 3 && (
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">
-                Revisar Resultados
-              </h2>
+          <div className={`${CARD_CLASSES} p-6 max-w-5xl mx-auto`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <DocumentCheckIcon className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
+                    Validar Resultados
+                  </h2>
+                  <p className="text-xs text-zinc-500">Revisa los cálculos antes de aprobar.</p>
+                </div>
+              </div>
               <button
                 onClick={() => goToStep(2)}
-                className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                className={BUTTON_SECONDARY}
               >
-                ← Volver
+                <ArrowLeftIcon className="w-5 h-5" /> Cambiar empleados
               </button>
             </div>
 
-            {isCalculating && (
-              <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <div className="w-10 h-10 border-2 border-zinc-300 dark:border-zinc-600 border-t-zinc-700 dark:border-t-zinc-300 rounded-full animate-spin" />
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm">Calculando planilla…</p>
+            {isCalculating ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-6">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-green-100 dark:border-green-900/20 border-t-green-600 rounded-full animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <SparklesIcon className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">Procesando cálculos...</p>
+                  <p className="text-sm text-zinc-400">Aplicando leyes laborales y deducciones CCSS</p>
+                </div>
               </div>
-            )}
-
-            {calcError && !isCalculating && (
-              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 mb-4">
-                {calcError}
-                <button
-                  onClick={handleCalculate}
-                  className="ml-4 underline text-sm"
-                >
-                  Reintentar
-                </button>
+            ) : calcError ? (
+              <div className="p-8 rounded-2xl bg-red-50 dark:bg-red-950/20 border-2 border-red-100 dark:border-red-900/30 text-center space-y-4">
+                <ExclamationCircleIcon className="w-12 h-12 text-red-500 mx-auto" />
+                <div>
+                  <h3 className="text-lg font-bold text-red-800 dark:text-red-300">Algo salió mal</h3>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">{calcError}</p>
+                </div>
+                <button onClick={handleCalculate} className={BUTTON_PRIMARY + " mx-auto"}>Reintentar Cálculo</button>
               </div>
-            )}
-
-            {!isCalculating && calcResult && (
-              <>
-                {/* Banner de inconsistencias */}
+            ) : calcResult ? (
+              <div className="animate-in fade-in duration-700">
+                {/* Inconsistencies Alert */}
                 {inconsistentCount > 0 && (
-                  <div className="flex items-start gap-3 p-4 mb-6 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
-                    <span className="text-amber-600 dark:text-amber-400 text-xl flex-shrink-0">⚠️</span>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
-                      <strong>{inconsistentCount} empleado(s)</strong> tienen marcas sin par (días sin entrada o salida registrada).
-                      Esas horas se calcularon como 0. Puedes ajustar manualmente o aprobar con los valores actuales.
-                    </p>
+                  <div className="flex items-center justify-between gap-4 p-4 mb-8 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-800 flex items-center justify-center flex-shrink-0">
+                        <ExclamationCircleIcon className="w-6 h-6 text-amber-700 dark:text-amber-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                          Se detectaron {inconsistentCount} colaboradores con marcas incompletas
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">Días sin entrada o salida registrada calculados como 0h.</p>
+                      </div>
+                    </div>
+                    <Tooltip content="Revisa las marcas en el dashboard de asistencia">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-white dark:bg-zinc-800 px-3 py-1 rounded-lg border border-amber-200 dark:border-amber-700">Audit Needed</div>
+                    </Tooltip>
                   </div>
                 )}
 
-                {/* Tabla de resultados */}
-                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6">
+                {/* Main Results Table */}
+                <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 mb-10 shadow-inner">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-zinc-50 dark:bg-zinc-800 text-left">
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Empleado</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">H. Regulares</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">H. Extra</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">D. Semanal</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Deducciones</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Aguinaldo acum.</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400 text-right">Salario Neto</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Estado</th>
-                        <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400"></th>
+                      <tr className="bg-zinc-50 dark:bg-zinc-900/50 text-left border-b border-zinc-200 dark:border-zinc-800">
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px]">Colaborador</th>
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px] text-right">Horas</th>
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px] text-right">Deducciones</th>
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px] text-right">Aguinaldo</th>
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px] text-right">Neto a Pagar</th>
+                        <th className="px-6 py-4 font-bold text-zinc-500 uppercase tracking-widest text-[10px] text-center">Estado</th>
+                        <th className="px-6 py-4"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                      {calcEmployees.map((emp: EmployeePayroll, i: number) => {
-                        const inconsistencies: string[] = Array.isArray(emp.inconsistencies) ? emp.inconsistencies : [];
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                      {calcEmployees.map((emp, i) => {
+                        const inconsistencies = Array.isArray(emp.inconsistencies) ? emp.inconsistencies : [];
                         const hasIssues = inconsistencies.length > 0;
-                        const empId = emp.id ?? emp.employeeId ?? emp.employee_id ?? i;
+                        const empId = emp.id ?? emp.employee_id ?? emp.employeeId ?? i;
+                        
                         return (
-                          <tr key={empId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                            <td className="px-4 py-3 text-zinc-800 dark:text-zinc-100 font-medium">
-                              {emp.name ?? emp.employeeName ?? emp.employee_name ?? `Empleado ${empId}`}
+                          <tr key={empId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors group">
+                            <td className="px-6 py-5">
+                              <p className="font-bold text-zinc-800 dark:text-zinc-100">{emp.name ?? emp.employeeName ?? emp.employee_name}</p>
+                              <p className="text-[10px] text-zinc-400 font-medium">{(emp as any).position_name || emp.position || 'ID: ' + empId}</p>
                             </td>
-                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
-                              {Number(emp.regularHours ?? emp.regular_hours ?? 0).toFixed(1)}h
+                            <td className="px-6 py-5 text-right">
+                              <div className="flex flex-col items-end">
+                                <span className="font-bold text-zinc-700 dark:text-zinc-300">{(Number(emp.regularHours ?? (emp as any).regular_hours ?? 0) + Number(emp.overtimeHours ?? (emp as any).overtime_hours ?? 0)).toFixed(1)}h</span>
+                                <span className="text-[10px] text-zinc-400">R: {Number(emp.regularHours ?? (emp as any).regular_hours ?? 0).toFixed(1)} | E: {Number(emp.overtimeHours ?? (emp as any).overtime_hours ?? 0).toFixed(1)}</span>
+                              </div>
                             </td>
-                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
-                              {Number(emp.overtimeHours ?? emp.overtime_hours ?? 0).toFixed(1)}h
+                            <td className="px-6 py-5 text-right font-medium text-zinc-600 dark:text-zinc-400">
+                              ₡{Number(emp.totalDeductions ?? (emp as any).total_deductions ?? 0).toLocaleString('es-CR')}
                             </td>
-                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
-                              {Number(emp.weeklyRestHours ?? emp.weekly_rest_hours ?? 0).toFixed(1)}h
-                            </td>
-
-                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
-                              ₡{Number(emp.totalDeductions ?? emp.total_deductions ?? 0).toLocaleString('es-CR')}
-                            </td>
-                            <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">
+                            <td className="px-6 py-5 text-right">
                               {(() => {
                                 const agui = aguinaldoData.find(a => a.employeeId === Number(emp.employee_id ?? emp.id ?? emp.employeeId));
-                                if (!agui) return '—';
+                                if (!agui) return <span className="text-zinc-300">—</span>;
                                 return (
-                                  <Tooltip content={`Este mes: ₡${agui.thisPayrollContribution.toLocaleString('es-CR')}`}>
-                                    <span className="cursor-help">
-                                      ₡{agui.totalAccruedWithThis.toLocaleString('es-CR')}
+                                  <Tooltip content={`Acumulado total: ₡${agui.totalAccruedWithThis.toLocaleString('es-CR')}`}>
+                                    <span className="text-zinc-700 dark:text-zinc-300 font-medium cursor-help hover:text-green-600 transition-colors underline decoration-dotted underline-offset-4">
+                                      ₡{agui.thisPayrollContribution.toLocaleString('es-CR')}
                                     </span>
                                   </Tooltip>
                                 );
                               })()}
                             </td>
-                            <td className="px-4 py-3 text-right font-semibold text-zinc-800 dark:text-zinc-100">
-                              ₡{Number(emp.netSalary ?? emp.net_salary ?? 0).toLocaleString('es-CR')}
+                            <td className="px-6 py-5 text-right">
+                              <p className="text-base font-black text-zinc-900 dark:text-white">
+                                ₡{Number(emp.netSalary ?? (emp as any).net_salary ?? 0).toLocaleString('es-CR')}
+                              </p>
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-6 py-5 text-center">
                               {hasIssues ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium">
-                                  ⚠️ {inconsistencies.length} inconsistencia{inconsistencies.length > 1 ? 's' : ''}
+                                <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase">
+                                  Audit
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium">
-                                  ✓ OK
+                                <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black uppercase">
+                                  Clean
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-6 py-5">
                               <button
-                                id={`adjust-btn-${empId}`}
                                 onClick={() => setAdjustingEmpId(Number(empId))}
-                                className="text-xs px-3 py-1 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all opacity-0 group-hover:opacity-100"
                               >
-                                Ajustar
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                               </button>
                             </td>
                           </tr>
@@ -591,24 +776,22 @@ export default function PayrollWizardPage() {
 
                 <button
                   onClick={() => goToStep(4)}
-                  className="w-full py-3 bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors"
+                  className={`${BUTTON_PRIMARY} w-full py-4 text-lg shadow-green-500/20`}
                 >
-                  Continuar a aprobación →
+                  Confirmar y Proceder <ChevronRightIcon className="w-6 h-6" />
                 </button>
-              </>
-            )}
+              </div>
+            ) : null}
 
-            {/* PayrollEmployeeAdjustModal integration */}
+            {/* Adjust Modal Integration */}
             {adjustingEmpId !== null && payrollId !== null && (() => {
               const emp = calcEmployees.find((e) => Number(e.id ?? e.employeeId ?? e.employee_id) === adjustingEmpId);
               if (!emp) return null;
-              
-              // Normalización de datos para el modal (Soporta snake_case y camelCase)
               const normalizedData = {
-                regularHours: Number(emp.regular_hours ?? emp.regularHours ?? 0),
-                overtimeHours: Number(emp.overtime_hours ?? emp.overtimeHours ?? 0),
-                weeklyRestHours: Number(emp.weekly_rest_hours ?? emp.weeklyRestHours ?? 0),
-                totalDeductions: Number(emp.total_deductions ?? emp.totalDeductions ?? 0),
+                regularHours: Number((emp as any).regular_hours ?? emp.regularHours ?? 0),
+                overtimeHours: Number((emp as any).overtime_hours ?? emp.overtimeHours ?? 0),
+                weeklyRestHours: Number((emp as any).weekly_rest_hours ?? emp.weeklyRestHours ?? 0),
+                totalDeductions: Number((emp as any).total_deductions ?? emp.totalDeductions ?? 0),
               };
 
               return (
@@ -630,7 +813,7 @@ export default function PayrollWizardPage() {
 
         {/* ── STEP 4: Aprobar ────────────────────────────────────────────── */}
         {currentStep === 4 && payrollId !== null && calculationData !== null && (
-          <div className="max-w-2xl">
+          <div className="max-w-3xl mx-auto animate-in zoom-in-95 duration-500">
             <PayrollWizardStep3
               payrollId={payrollId}
               calculationData={calculationData}

@@ -107,7 +107,7 @@ export default function CreateVacationPage() {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="px-8 py-6 max-w-screen-2xl mx-auto">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors mb-4 text-sm"
@@ -116,10 +116,12 @@ export default function CreateVacationPage() {
           Volver
         </button>
 
-        <div className="mb-6">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">Recursos Humanos</p>
-          <h1 className="text-2xl font-bold text-zinc-700 dark:text-zinc-100">Nueva Solicitud de Vacaciones</h1>
+        <div className="mb-5">
+          <p className="text-xs font-semibold text-zinc-400 dark:text-[#A3A3A3] uppercase tracking-widest mb-1">Recursos Humanos</p>
+          <h1 className="text-3xl font-bold text-zinc-700 dark:text-[#E5E5E5] leading-none">Nueva Solicitud de Vacaciones</h1>
         </div>
+
+        <div className="border-b border-[#C8BA9A] dark:border-[#404040] mb-5" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
