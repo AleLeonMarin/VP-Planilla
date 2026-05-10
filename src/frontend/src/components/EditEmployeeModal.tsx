@@ -23,14 +23,21 @@ interface RawEmployeeData {
   employee_last_name?: string;
   last_name?: string;
   national_id?: string;
+  employee_national_id?: string;
   social_code?: string;
+  employee_social_code?: string;
   email?: string;
+  employee_email?: string;
   phone?: string;
+  employee_phone?: string;
   position_id?: string | number | null;
   employee_position_id?: string | number | null;
   hire_date?: string;
+  employee_hire_date?: string;
   gender?: string;
+  employee_gender?: string;
   required_hours_biweekly?: string;
+  employee_required_hours_biweekly?: string;
   shift_type?: string;
 }
 
@@ -100,29 +107,36 @@ const { register, control, handleSubmit, formState: { errors, isSubmitting }, re
   useEffect(() => {
     if (!isOpen || !employeeData) return;
     
-    const empKey = `${employeeData.name || ''}-${employeeData.position_id || ''}`;
+    // Support both prefixed and non-prefixed IDs
+    const currentId = employeeData.employee_id ?? employeeData.id ?? '';
+    const currentName = employeeData.employee_first_name ?? employeeData.name ?? '';
+    const currentPosition = employeeData.employee_position_id ?? employeeData.position_id ?? '';
+    
+    const empKey = `${currentId}-${currentName}-${currentPosition}`;
     
     // Skip if already initialized for this employee
     if (initializedRef.current === empKey) return;
     initializedRef.current = empKey;
     
-    const targetPos = employeeData.position_id != null && employeeData.position_id !== undefined 
-      ? String(employeeData.position_id) 
+    const targetPos = currentPosition != null && currentPosition !== undefined 
+      ? String(currentPosition) 
       : '';
     
-    // Full reset with target position
+    // Full reset with target position, supporting both prefixed and non-prefixed field names
     reset({
       employee_first_name: employeeData.employee_first_name ?? employeeData.name ?? '',
       employee_middle_name: employeeData.employee_middle_name ?? employeeData.middle_name ?? '',
       employee_last_name: employeeData.employee_last_name ?? employeeData.last_name ?? '',
-      employee_national_id: employeeData.national_id || '',
-      employee_social_code: employeeData.social_code || '',
-      employee_email: employeeData.email || '',
-      employee_phone: employeeData.phone || '',
+      employee_national_id: employeeData.employee_national_id ?? employeeData.national_id ?? '',
+      employee_social_code: employeeData.employee_social_code ?? employeeData.social_code ?? '',
+      employee_email: employeeData.employee_email ?? employeeData.email ?? '',
+      employee_phone: employeeData.employee_phone ?? employeeData.phone ?? '',
       employee_position_id: targetPos,
-      employee_hire_date: employeeData.hire_date ? new Date(employeeData.hire_date).toISOString().split('T')[0] : '',
-      employee_gender: employeeData.gender || '',
-      employee_required_hours_biweekly: employeeData.required_hours_biweekly || '',
+      employee_hire_date: employeeData.employee_hire_date ?? employeeData.hire_date 
+        ? new Date((employeeData.employee_hire_date ?? employeeData.hire_date) as string).toISOString().split('T')[0] 
+        : '',
+      employee_gender: employeeData.employee_gender ?? employeeData.gender ?? '',
+      employee_required_hours_biweekly: employeeData.employee_required_hours_biweekly ?? employeeData.required_hours_biweekly ?? '',
       shift_type: (employeeData.shift_type || 'USE_ENTERPRISE_DEFAULT') as EmployeeSchemaType['shift_type'],
     });
     
