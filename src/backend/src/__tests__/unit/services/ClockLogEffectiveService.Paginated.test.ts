@@ -31,6 +31,7 @@ describe('ClockLogEffectiveService.getPaginatedEffectiveMarks', () => {
         employee_required_hours_biweekly: new Decimal(80),
         employee_gender: 'M',
         employee_phone: '12345678',
+        employee_shift_type: 'USE_ENTERPRISE_DEFAULT',
         employee_version: 1
       },
       { 
@@ -49,6 +50,7 @@ describe('ClockLogEffectiveService.getPaginatedEffectiveMarks', () => {
         employee_required_hours_biweekly: new Decimal(80),
         employee_gender: 'F',
         employee_phone: '87654321',
+        employee_shift_type: 'USE_ENTERPRISE_DEFAULT',
         employee_version: 1
       }
     ]);
