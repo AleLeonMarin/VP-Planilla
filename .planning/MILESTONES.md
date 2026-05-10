@@ -1,10 +1,27 @@
 # Milestones
 
-## v1.6 — Mejoras en Auditoría de Marcas y UX (In Progress)
+## v1.8 — Stabilization & Planning Sync (In Progress)
+
+**Goal:** Resolve technical debt, fix environment issues, and synchronize planning documents.
+**Phases:** 68-70
+**Status:** In Progress
+
+---
+
+## v1.7 — Robustez y Parámetros Legales (Shipped: 2026-05-09)
+
+**Goal:** Transformar el motor de cálculo en un sistema dinámico y auditable mediante vpg_legal_params y snapshots históricos.
+**Phases completed:** 14 phases (54-67)
+**Status:** Archived
+**Archive:** `.planning/milestones/v1.7-ROADMAP.md`
+
+---
+
+## v1.6 — Mejoras en Auditoría de Marcas y UX (Shipped: 2026-04-26)
 
 **Goal:** Refinar la experiencia de usuario en la auditoría de marcas y asegurar la persistencia de configuraciones críticas.
-**Phases:** 49-52
-**Status:** In Progress
+**Phases completed:** 5 phases (49-53)
+**Status:** Archived
 
 ---
 

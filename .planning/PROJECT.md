@@ -8,11 +8,11 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.7 SHIPPED — 2026-05-09)
+## Current State (v1.8 IN PROGRESS — 2026-05-09)
 
-Milestone v1.7 finalized. The system is now driven by a dynamic legal parameters engine with full historical traceability (snapshots).
+Milestone v1.8 focuses on system stabilization, planning document synchronization, and refactoring critical UI components like the Payroll Wizard.
 
-**Next milestone:** Definition pending (Run `/gsd-new-milestone`)
+**Current milestone:** v1.8 — Stabilization & Planning Sync
 
 ## Context
 
@@ -37,7 +37,7 @@ Milestone v1.7 finalized. The system is now driven by a dynamic legal parameters
 </details>
 
 <details>
-<summary>v1.6 ARCHIVED (2026-04-26) — Mejoras en Auditoría de Marcas y UX</summary>
+<summary>v1.6 SHIPPED (2026-04-26) — Mejoras en Auditoría de Marcas y UX</summary>
 
 - View persistence via URL and LocalStorage for auditor efficiency.
 - Real-time confidence logic correction and status recalculation.
