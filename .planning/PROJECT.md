@@ -8,27 +8,41 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.6 IN PROGRESS — 2026-04-24)
+## Current State (v1.7 SHIPPED — 2026-05-09)
 
-**v1.6 IN PROGRESS** — Mejoras en Auditoría de Marcas y UX (Phases TBD)
+Milestone v1.7 finalized. The system is now driven by a dynamic legal parameters engine with full historical traceability (snapshots).
 
-- [x] Implementación de caché de vista para panel de auditoría (URL) (Phase 49)
-- [x] Corrección de la lógica de "baja confianza" y recálculo en tiempo real (Phase 50)
-- [x] Persistencia robusta en LocalStorage (Tab, Filtros, Estados) (Phase 52)
-- [ ] Estado Global y Navegación Instantánea (ClockLogsContext) (Phase 53)
-- [ ] Edición directa de marcas en la auditoría por jornada (Phase 51)
-
-**Next milestone:** v1.7 (to be defined via `/gsd:new-milestone`)
+**Next milestone:** Definition pending (Run `/gsd-new-milestone`)
 
 ## Context
 
 - **Stack:** Express 5 + TypeScript 5.8 (backend) · Next.js 15 + React 19 (frontend) · Prisma 6 + PostgreSQL · Tailwind 4
 - **Arquitectura:** Route → Controller → Service → Prisma (backend) / Page → Hook → Service → http.ts (frontend)
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
-- **Tests:** 507+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 512+ passing.
-- **Performance:** JS diferido, imágenes comprimidas, Next.js compress habilitado.
+- **Legal Engine:** Dynamic parameters (OT, CCSS, Workday) via `vpg_legal_params` + historical snapshots.
+- **Tests:** 551+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 556+ passing.
 
 ## History
+
+<details>
+<summary>v1.7 SHIPPED (2026-05-09) — Robustez y Parámetros Legales</summary>
+
+- Dynamic Legal Parameters: Externalized calculation constants to an auditable database system.
+- Historical Snapshots: Automatic preservation of legal context for every approved payroll.
+- Dynamic Shifts: Native support for Diurna (8h), Mixta (7h), and Nocturna (6h) shifts with automatic overtime calculation.
+- Modular Employee Profile: Functional tabs for history, events, and document metadata (CRUD).
+- Administrative Governance: Control panel for legal parameters with password protection and audit notifications.
+- Enhanced Wizard: 4-step payroll flow with manual adjustments and employee selection.
+
+</details>
+
+<details>
+<summary>v1.6 ARCHIVED (2026-04-26) — Mejoras en Auditoría de Marcas y UX</summary>
+
+- View persistence via URL and LocalStorage for auditor efficiency.
+- Real-time confidence logic correction and status recalculation.
+
+</details>
 
 <details>
 <summary>v1.5 SHIPPED (2026-04-24) — Gestión de Marcas y Planilla para Producción</summary>
@@ -104,4 +118,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-24 after v1.6 milestone started*
+*Last updated: 2026-05-09 after v1.7 milestone shipped*

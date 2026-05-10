@@ -39,17 +39,10 @@ const NOT_ASSIGNED = "Sin asignar";
 
 interface CalendarEvent {
   date: number;
-  type: "highlighted" | "today";
+  type: "event" | "holiday" | "today" | "both";
   title: string;
   description?: string;
 }
-
-const fallbackCalendarEvents: CalendarEvent[] = [
-  { date: 13, type: "highlighted", title: "Quincena de Pago", description: "Primera quincena del mes" },
-  { date: 17, type: "highlighted", title: "Reunión de Equipo", description: "Coordinación mensual" },
-  { date: 19, type: "highlighted", title: "Día de Pago", description: "Depósito de salarios" },
-  { date: 26, type: "highlighted", title: "Cierre de Planilla", description: "Fecha límite de horas" }
-];
 
 const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const dayNames = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -60,7 +53,7 @@ const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month
 const Home: React.FC = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [dayModal, setDayModal] = useState<{ date: Date; events: EmployeeLaborEvent[] } | null>(null);
+  const [dayModal, setDayModal] = useState<{ date: Date; events: EmployeeLaborEvent[]; holidays: any[] } | null>(null);
   const [visibleRangeStart, setVisibleRangeStart] = useState<Date | null>(null);
   const [visibleRangeEnd, setVisibleRangeEnd] = useState<Date | null>(null);
 
@@ -110,19 +103,40 @@ const Home: React.FC = () => {
       }).sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
     : [];
 
-  const calendarHighlights = safeEvents.length > 0
-    ? safeEvents.filter((ev) => {
-        try {
-          const s = ev.start_date ? new Date(ev.start_date) : null;
-          return s && s.getMonth() === currentMonth && s.getFullYear() === currentYear;
-        } catch { return false; }
-      }).map((ev) => ({
-        date: new Date(ev.start_date).getDate(),
-        type: "highlighted" as const,
-        title: ev.labor_event_name || "Evento",
-        description: ev.labor_event_description
-      }))
-    : fallbackCalendarEvents;
+  const calendarHighlights = (() => {
+    const highlights: CalendarEvent[] = [];
+    
+    // Add labor events - ONLY START DATE
+    safeEvents.forEach((ev) => {
+      try {
+        const s = ev.start_date ? new Date(ev.start_date) : null;
+
+        if (s && s.getMonth() === currentMonth && s.getFullYear() === currentYear) {
+          highlights.push({
+            date: s.getDate(),
+            type: "event",
+            title: ev.labor_event_name || "Evento",
+            description: ev.labor_event_description
+          });
+        }
+      } catch {}
+    });
+
+    // Add holidays
+    dbHolidays?.forEach((h) => {
+      const d = new Date(h.company_holidays_date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        highlights.push({
+          date: d.getDate(),
+          type: "holiday",
+          title: h.company_holidays_name,
+          description: h.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"
+        });
+      }
+    });
+
+    return highlights;
+  })();
 
   const attentionEmployees = employeeList.filter((emp) => String(emp.status ?? "").toLowerCase().includes("incompleta")).slice(0, 3);
 
@@ -149,7 +163,9 @@ const Home: React.FC = () => {
 
     return calendarDays.map((day, index) => {
       const isCurrentMonthDay = index >= firstDayIndex && index < daysInMonth + firstDayIndex;
-      const event = isCurrentMonthDay ? calendarHighlights.find((e) => e.date === day) : undefined;
+      const dayEvents = isCurrentMonthDay ? calendarHighlights.filter((e) => e.date === day) : [];
+      const hasHoliday = dayEvents.some(e => e.type === "holiday");
+      const hasEvent = dayEvents.some(e => e.type === "event");
       const isToday = isCurrentMonthDay && day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
 
       return (
@@ -158,24 +174,47 @@ const Home: React.FC = () => {
           type="button"
           onClick={isCurrentMonthDay && typeof day === "number" ? () => {
             const dt = new Date(currentYear, currentMonth, day);
-            const dayEvents = safeEvents.filter((ev) => {
+            const dtStart = new Date(dt);
+            dtStart.setHours(0, 0, 0, 0);
+            const dtEnd = new Date(dt);
+            dtEnd.setHours(23, 59, 59, 999);
+
+            const laborEvents = safeEvents.filter((ev) => {
               try {
                 const s = ev.start_date ? new Date(ev.start_date) : null;
-                return s && s.getDate() === day && s.getMonth() === currentMonth && s.getFullYear() === currentYear;
+                const e = ev.end_date ? new Date(ev.end_date) : s;
+                if (!s || !e) return false;
+                const eventStart = new Date(s);
+                eventStart.setHours(0, 0, 0, 0);
+                const eventEnd = new Date(e);
+                eventEnd.setHours(23, 59, 59, 999);
+                return !(eventEnd.getTime() < dtStart.getTime() || eventStart.getTime() > dtEnd.getTime());
               } catch { return false; }
             });
-            setDayModal({ date: dt, events: dayEvents });
+
+            const dayHolidays = dbHolidays?.filter((h) => {
+              const d = new Date(h.company_holidays_date);
+              return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }) || [];
+            setDayModal({ date: dt, events: laborEvents, holidays: dayHolidays });
           } : undefined}
           className={`
-            h-8 rounded-lg text-xs font-medium flex items-center justify-center transition-all cursor-pointer
-            ${isToday ? "bg-green-600 text-white font-semibold" : ""}
-            ${event && !isToday ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400" : ""}
-            ${isCurrentMonthDay && !isToday && !event ? "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800" : ""}
+            h-8 rounded-lg text-xs font-medium flex flex-col items-center justify-center transition-all cursor-pointer relative
+            ${isToday ? "bg-green-600 text-white font-semibold shadow-md ring-2 ring-green-500 ring-offset-1 dark:ring-offset-zinc-950" : ""}
+            ${!isToday && hasHoliday ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50" : ""}
+            ${!isToday && !hasHoliday && hasEvent ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-800/50" : ""}
+            ${isCurrentMonthDay && !isToday && !hasHoliday && !hasEvent ? "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800" : ""}
             ${!isCurrentMonthDay ? "text-zinc-300 dark:text-zinc-600" : ""}
           `}
           disabled={!isCurrentMonthDay}
         >
-          {day ?? ""}
+          <span>{day ?? ""}</span>
+          {isCurrentMonthDay && dayEvents.length > 0 && (
+             <div className="flex gap-0.5 mt-0.5">
+                {hasHoliday && <div className={`w-1 h-1 rounded-full ${isToday ? "bg-white" : "bg-amber-500"}`} />}
+                {hasEvent && <div className={`w-1 h-1 rounded-full ${isToday ? "bg-white" : "bg-green-500"}`} />}
+             </div>
+          )}
         </button>
       );
     });
@@ -439,27 +478,53 @@ const Home: React.FC = () => {
                 <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {dayModal.events.length === 0 ? (
-                <p className="text-sm text-zinc-400 text-center py-6">No hay eventos para este día</p>
-              ) : (
-                dayModal.events.map((ev) => (
-                  <div key={ev.id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{ev.labor_event_name || "Evento"}</p>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                          {employeeList.find((em: Employee) => String(em.id) === String(ev.employee_id))?.name || NOT_ASSIGNED}
-                        </p>
+            <div className="space-y-4 max-h-80 overflow-y-auto">
+              {/* Holidays section */}
+              {dayModal.holidays.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Feriados</p>
+                  {dayModal.holidays.map((h) => (
+                    <div key={h.company_holidays_id} className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <SparklesIcon className="w-4 h-4 text-amber-600" />
+                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">{h.company_holidays_name}</p>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 uppercase font-medium">
-                        {ev.status}
-                      </span>
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                        {h.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"}
+                      </p>
                     </div>
-                    {ev.labor_event_description && <p className="text-xs text-zinc-400 mt-2">{ev.labor_event_description}</p>}
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
+
+              {/* Labor Events section */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Eventos Laborales</p>
+                {dayModal.events.length === 0 ? (
+                  <p className="text-xs text-zinc-400 italic">No hay eventos laborales para este día</p>
+                ) : (
+                  dayModal.events.map((ev) => (
+                    <div key={ev.id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{ev.labor_event_name || "Evento"}</p>
+                          <p className="text-xs text-zinc-400 mt-0.5">
+                            {employeeList.find((em: Employee) => String(em.id) === String(ev.employee_id))?.name || NOT_ASSIGNED}
+                          </p>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                          ev.status === EVENT_STATUS_ACTIVE ? ACTIVE_BADGE_CLASSES :
+                          ev.status === EVENT_STATUS_COMPLETED ? COMPLETED_BADGE_CLASSES :
+                          "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 uppercase"
+                        }`}>
+                          {ev.status}
+                        </span>
+                      </div>
+                      {ev.labor_event_description && <p className="text-xs text-zinc-400 mt-2">{ev.labor_event_description}</p>}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
