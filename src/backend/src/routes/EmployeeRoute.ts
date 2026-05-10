@@ -191,4 +191,25 @@ router.get("/employee", asyncHandler(EmployeeController.getAllEmployees));
  */
 router.get("/employees/:id/aguinaldo", asyncHandler(PayrollController.getEmployeeAguinaldo));
 
+/**
+ * @route   GET /employees/:id/documents
+ * @desc    List all document references for an employee
+ * @access  Private
+ */
+router.get("/employees/:id/documents", asyncHandler(EmployeeController.getDocuments));
+
+/**
+ * @route   POST /employees/:id/documents
+ * @desc    Create a new document reference for an employee
+ * @access  Private
+ */
+router.post("/employees/:id/documents", asyncHandler(EmployeeController.createDocument));
+
+/**
+ * @route   DELETE /employees/:id/documents/:docId
+ * @desc    Delete a document reference
+ * @access  Private
+ */
+router.delete("/employees/:id/documents/:docId", asyncHandler(EmployeeController.deleteDocument));
+
 export default router;

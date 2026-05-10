@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EmployeeService } from "../service/EmployeeService";
 import { AuditLogsService } from "../service/AuditLogsService";
+import { EmployeeDocumentService } from "../service/EmployeeDocumentService";
 
 export class EmployeeController {
   /**
@@ -155,6 +156,74 @@ export class EmployeeController {
     } catch (error) {
       console.error("Error retrieving employees:", error);
       return res.status(500).json({ error: "Failed to retrieve employees" });
+    }
+  }
+
+  /**
+   * Get all documents for an employee.
+   * GET /employees/:id/documents
+   */
+  static async getDocuments(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const docs = await EmployeeDocumentService.getAll(parseInt(employeeId, 10));
+      return res.status(200).json(docs);
+    } catch (error) {
+      console.error("Error retrieving employee documents:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee documents" });
+    }
+  }
+
+  /**
+   * Create a document reference for an employee.
+   * POST /employees/:id/documents
+   * Body: { file_path: string, document_type: string }
+   */
+  static async createDocument(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    const { file_path, document_type } = req.body ?? {};
+    if (typeof file_path !== "string" || file_path.trim().length === 0 || file_path.length > 255) {
+      return res.status(400).json({ error: "file_path is required (1-255 chars)" });
+    }
+    if (typeof document_type !== "string" || document_type.trim().length === 0 || document_type.length > 50) {
+      return res.status(400).json({ error: "document_type is required (1-50 chars)" });
+    }
+    try {
+      const doc = await EmployeeDocumentService.create(parseInt(employeeId, 10), {
+        file_path: file_path.trim(),
+        document_type: document_type.trim(),
+      });
+      return res.status(201).json(doc);
+    } catch (error) {
+      console.error("Error creating employee document:", error);
+      return res.status(500).json({ error: "Failed to create employee document" });
+    }
+  }
+
+  /**
+   * Delete a document by id.
+   * DELETE /employees/:id/documents/:docId
+   */
+  static async deleteDocument(req: Request, res: Response): Promise<Response> {
+    const docIdRaw = req.params.docId as string;
+    if (!docIdRaw || isNaN(Number(docIdRaw))) {
+      return res.status(400).json({ error: "Invalid document ID" });
+    }
+    try {
+      const deleted = await EmployeeDocumentService.delete(parseInt(docIdRaw, 10));
+      if (!deleted) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting employee document:", error);
+      return res.status(500).json({ error: "Failed to delete employee document" });
     }
   }
 }
