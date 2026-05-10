@@ -177,4 +177,22 @@ export class LaborEventsController {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
+
+  /**
+   * Get labor-event assignments for a specific employee.
+   * GET /labor-events/employee/:id
+   */
+  static async getLaborEventsByEmployee(req: Request, res: Response): Promise<Response> {
+    const employeeIdRaw = req.params.id as string;
+    if (!employeeIdRaw || isNaN(Number(employeeIdRaw))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const events = await LaborEventsService.getLaborEventsByEmployee(parseInt(employeeIdRaw, 10));
+      return res.status(200).json(events);
+    } catch (error) {
+      console.error("Error retrieving employee labor events:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee labor events" });
+    }
+  }
 }

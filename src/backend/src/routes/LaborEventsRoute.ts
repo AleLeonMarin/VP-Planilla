@@ -193,4 +193,18 @@ router.delete("/labor-events/:id", asyncHandler(LaborEventsController.deleteLabo
  */
 router.post("/labor-events/assign", asyncHandler(LaborEventsController.assignLaborEventsToEmployee));
 
+/**
+ * @route   GET /labor-events/employee/:id
+ * @desc    Get labor-event assignments for a specific employee
+ * @access  Private
+ */
+router.get("/labor-events/employee/:id", asyncHandler(LaborEventsController.getLaborEventsByEmployee));
+
+/**
+ * @route   DELETE /labor-events/assign/:id
+ * @desc    Delete a labor-event assignment by its id (closes RESEARCH §Pitfall 2)
+ * @access  Private
+ */
+router.delete("/labor-events/assign/:id", asyncHandler(LaborEventsController.deleteEmployeeLaborEvent));
+
 export default router;

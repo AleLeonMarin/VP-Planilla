@@ -230,4 +230,31 @@ describe('LaborEventsService', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('getLaborEventsByEmployee', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('filters by employee_labor_event_employee_id and joins vpg_labor_events', async () => {
+      prisma.vpg_employee_labor_event.findMany.mockResolvedValue([mockPrismaEmployeeLaborEvent]);
+
+      const events = await LaborEventsService.getLaborEventsByEmployee(1);
+
+      const call = prisma.vpg_employee_labor_event.findMany.mock.calls[0][0];
+      expect(call.where).toEqual({ employee_labor_event_employee_id: 1 });
+      expect(call.include).toEqual({ vpg_labor_events: true });
+      expect(call.orderBy).toEqual({ employee_labor_event_start_date: 'desc' });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].employee_id).toBe(1);
+      expect((events[0] as any).labor_event_name).toBe('Incapacidad');
+    });
+
+    it('returns empty array when the employee has no events', async () => {
+      prisma.vpg_employee_labor_event.findMany.mockResolvedValue([]);
+      const events = await LaborEventsService.getLaborEventsByEmployee(99);
+      expect(events).toEqual([]);
+    });
+  });
 });

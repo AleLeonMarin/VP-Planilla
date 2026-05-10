@@ -129,6 +129,33 @@ export class LaborEventsService {
   }
 
   /**
+   * Get all labor-event assignments for a single employee, with catalog
+   * fields (name/description) joined in. Used by the employee profile
+   * "Eventos" tab. Ordered by start_date desc (most recent first).
+   * @param employeeId - The employee's id
+   * @returns Array of EmployeeLaborEvent enriched with labor_event_name / labor_event_description
+   */
+  static async getLaborEventsByEmployee(employeeId: number): Promise<EmployeeLaborEvent[]> {
+    const prismaEvents = await prisma.vpg_employee_labor_event.findMany({
+      where: { employee_labor_event_employee_id: employeeId },
+      include: { vpg_labor_events: true },
+      orderBy: { employee_labor_event_start_date: 'desc' },
+    });
+
+    return prismaEvents.map((pe) => ({
+      id: pe.employee_labor_event_id,
+      employee_id: pe.employee_labor_event_employee_id,
+      labor_event_id: pe.employee_labor_event_labor_event_id,
+      start_date: pe.employee_labor_event_start_date,
+      end_date: pe.employee_labor_event_end_date,
+      status: pe.employee_labor_event_status,
+      version: pe.employee_labor_event_version,
+      labor_event_name: pe.vpg_labor_events?.labor_events_name || null,
+      labor_event_description: pe.vpg_labor_events?.labor_events_description || null,
+    } as any));
+  }
+
+  /**
    * Assign a labor event to an employee.
    * @param data - The employee labor event data
    * @returns The created assignment

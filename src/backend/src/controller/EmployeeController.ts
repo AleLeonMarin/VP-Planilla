@@ -160,6 +160,24 @@ export class EmployeeController {
   }
 
   /**
+   * Get the payroll history for an employee.
+   * GET /employees/:id/payrolls
+   */
+  static async getPayrollsByEmployee(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const rows = await EmployeeService.getPayrollsByEmployee(parseInt(employeeId, 10));
+      return res.status(200).json(rows);
+    } catch (error) {
+      console.error("Error retrieving employee payrolls:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee payrolls" });
+    }
+  }
+
+  /**
    * Get all documents for an employee.
    * GET /employees/:id/documents
    */

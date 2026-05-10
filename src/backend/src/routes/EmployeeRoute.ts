@@ -192,6 +192,13 @@ router.get("/employee", asyncHandler(EmployeeController.getAllEmployees));
 router.get("/employees/:id/aguinaldo", asyncHandler(PayrollController.getEmployeeAguinaldo));
 
 /**
+ * @route   GET /employees/:id/payrolls
+ * @desc    Get all payrolls a given employee has participated in
+ * @access  Private
+ */
+router.get("/employees/:id/payrolls", asyncHandler(EmployeeController.getPayrollsByEmployee));
+
+/**
  * @route   GET /employees/:id/documents
  * @desc    List all document references for an employee
  * @access  Private

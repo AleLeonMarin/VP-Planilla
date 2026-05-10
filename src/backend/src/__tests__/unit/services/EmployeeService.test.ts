@@ -252,4 +252,65 @@ describe('EmployeeService', () => {
       ).rejects.toThrow('DB error');
     });
   });
+
+  describe('getPayrollsByEmployee', () => {
+    const mockPayrollEmployeeRow = {
+      payroll_employee_id: 1,
+      payroll_employee_payroll_id: 100,
+      payroll_employee_employee_id: 7,
+      payroll_employee_total_hours: { toString: () => '80.00' },
+      payroll_employee_overtime_hours: { toString: () => '5.00' },
+      payroll_employee_gross_salary: { toString: () => '500000.00' },
+      payroll_employee_total_deductions: { toString: () => '50000.00' },
+      payroll_employee_net_salary: { toString: () => '450000.00' },
+      payroll_employee_is_manually_adjusted: false,
+      vpg_payrolls: {
+        payrolls_id: 100,
+        payrolls_period_start: new Date('2026-04-01'),
+        payrolls_period_end: new Date('2026-04-15'),
+        payrolls_status: 'APROBADA',
+        payrolls_period_type: 'quincenal',
+        vpg_payroll_types: {
+          payroll_types_id: 1,
+          payroll_types_name: 'Planilla Regular',
+        },
+      },
+    };
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      prisma.vpg_payroll_employee.findMany.mockResolvedValue([mockPayrollEmployeeRow]);
+    });
+
+    it('queries with the correct where clause and joins vpg_payrolls + vpg_payroll_types', async () => {
+      await EmployeeService.getPayrollsByEmployee(7);
+      const call = prisma.vpg_payroll_employee.findMany.mock.calls[0][0];
+      expect(call.where).toEqual({ payroll_employee_employee_id: 7 });
+      expect(call.include).toEqual({
+        vpg_payrolls: { include: { vpg_payroll_types: true } },
+      });
+      expect(call.orderBy).toEqual({ vpg_payrolls: { payrolls_period_start: 'desc' } });
+    });
+
+    it('maps decimals to numbers and surfaces payroll_type_name from join', async () => {
+      const rows = await EmployeeService.getPayrollsByEmployee(7);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].payroll_id).toBe(100);
+      expect(rows[0].status).toBe('APROBADA');
+      expect(rows[0].period_type).toBe('quincenal');
+      expect(rows[0].payroll_type_name).toBe('Planilla Regular');
+      expect(rows[0].total_hours).toBe(80);
+      expect(rows[0].overtime_hours).toBe(5);
+      expect(rows[0].gross_salary).toBe(500000);
+      expect(rows[0].total_deductions).toBe(50000);
+      expect(rows[0].net_salary).toBe(450000);
+      expect(rows[0].is_manually_adjusted).toBe(false);
+    });
+
+    it('returns empty array when employee has no payrolls', async () => {
+      prisma.vpg_payroll_employee.findMany.mockResolvedValue([]);
+      const rows = await EmployeeService.getPayrollsByEmployee(99);
+      expect(rows).toEqual([]);
+    });
+  });
 });

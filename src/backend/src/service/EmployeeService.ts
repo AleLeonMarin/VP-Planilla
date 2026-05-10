@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { Employee } from '../model/employee';
+import { EmployeePayrollRow } from '../types/payrollHistory';
 
 
 export class EmployeeService {
@@ -284,6 +285,41 @@ export class EmployeeService {
         });
 
         return employees;
+    }
+
+    /**
+     * Get the payroll history for a single employee.
+     * Joins vpg_payroll_employee with vpg_payrolls and vpg_payroll_types
+     * so the UI can render period dates, status, payroll type, and salaries
+     * without N+1 lookups.
+     * @param employeeId - The employee's id
+     * @returns Array of EmployeePayrollRow ordered by period_start desc (most recent first)
+     */
+    static async getPayrollsByEmployee(employeeId: number): Promise<EmployeePayrollRow[]> {
+        const rows = await prisma.vpg_payroll_employee.findMany({
+            where: { payroll_employee_employee_id: employeeId },
+            include: {
+                vpg_payrolls: {
+                    include: { vpg_payroll_types: true },
+                },
+            },
+            orderBy: { vpg_payrolls: { payrolls_period_start: 'desc' } },
+        });
+
+        return rows.map((r) => ({
+            payroll_id: r.payroll_employee_payroll_id,
+            period_start: r.vpg_payrolls.payrolls_period_start,
+            period_end: r.vpg_payrolls.payrolls_period_end,
+            status: r.vpg_payrolls.payrolls_status as 'BORRADOR' | 'APROBADA' | 'PAGADA',
+            period_type: r.vpg_payrolls.payrolls_period_type,
+            payroll_type_name: r.vpg_payrolls.vpg_payroll_types?.payroll_types_name ?? '',
+            total_hours: r.payroll_employee_total_hours != null ? Number(r.payroll_employee_total_hours) : null,
+            overtime_hours: r.payroll_employee_overtime_hours != null ? Number(r.payroll_employee_overtime_hours) : null,
+            gross_salary: Number(r.payroll_employee_gross_salary),
+            total_deductions: Number(r.payroll_employee_total_deductions),
+            net_salary: Number(r.payroll_employee_net_salary),
+            is_manually_adjusted: r.payroll_employee_is_manually_adjusted,
+        }));
     }
 
 }
