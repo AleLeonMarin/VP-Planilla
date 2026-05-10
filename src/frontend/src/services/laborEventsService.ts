@@ -15,6 +15,19 @@ export class LaborEventsService {
     }
   }
 
+  /**
+   * Get the labor-event assignments for a single employee, with the
+   * catalog name/description joined in (used by the employee profile
+   * "Eventos" tab).
+   */
+  static async getByEmployee(employeeId: number): Promise<EmployeeLaborEvent[]> {
+    try {
+      return await http.get(`/labor-events/employee/${employeeId}`);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al cargar eventos del empleado');
+    }
+  }
+
   static async createLaborEvent(data: { name: string; description: string; event_type: string }): Promise<LaborEvent> {
     try {
       return await http.post('/labor-events/create', data);
