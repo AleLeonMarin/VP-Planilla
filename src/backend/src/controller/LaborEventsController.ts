@@ -17,9 +17,13 @@ export class LaborEventsController {
     const laborData = req.body;
 
     try {
-      const newLaborEvent = await LaborEventsService.createLaborEvent(
-        laborData
-      );
+      const newLaborEvent = await LaborEventsService.createLaborEvent({
+        name: laborData.name,
+        description: laborData.description ?? '',
+        payBehavior: laborData.payBehavior,
+        maxPaidDays: laborData.maxPaidDays ?? null,
+        payPercentage: laborData.payPercentage ?? null,
+      });
       return res.status(201).json(newLaborEvent);
     } catch (error) {
       console.error("Failed to create a labor event:", error);
@@ -171,6 +175,24 @@ export class LaborEventsController {
     } catch (error) {
       console.error('Error deleting employee labor event', error);
       return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+
+  /**
+   * Get labor-event assignments for a specific employee.
+   * GET /labor-events/employee/:id
+   */
+  static async getLaborEventsByEmployee(req: Request, res: Response): Promise<Response> {
+    const employeeIdRaw = req.params.id as string;
+    if (!employeeIdRaw || isNaN(Number(employeeIdRaw))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const events = await LaborEventsService.getLaborEventsByEmployee(parseInt(employeeIdRaw, 10));
+      return res.status(200).json(events);
+    } catch (error) {
+      console.error("Error retrieving employee labor events:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee labor events" });
     }
   }
 }

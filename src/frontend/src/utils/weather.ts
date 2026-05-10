@@ -1,5 +1,6 @@
 // src/hooks/useWeather.ts
 import { useState, useEffect } from 'react';
+import { externalHttp } from '../services/externalHttp';
 
 interface WeatherData {
   description: string;
@@ -13,6 +14,12 @@ const FALLBACK_LOCATION = {
   longitude: Number(process.env.NEXT_PUBLIC_DEFAULT_LONGITUDE || -84.0907),
   label: process.env.NEXT_PUBLIC_DEFAULT_CITY || 'San José',
 };
+
+interface OpenWeatherResponse {
+  weather: Array<{ description: string; icon: string }>;
+  main: { temp: number };
+  name: string;
+}
 
 export function useWeather() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -38,20 +45,22 @@ export function useWeather() {
       }
 
       try {
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=es`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=es`;
+        const data = await externalHttp.get<OpenWeatherResponse>(url);
 
-        setWeather({
-          description: data.weather[0].description,
-          temperature: Math.round(data.main.temp),
-          icon: data.weather[0].icon,
-          city: data.name || forcedCityName || FALLBACK_LOCATION.label,
-        });
+        const weatherObj = data.weather?.[0];
+        const mainObj = data.main;
+
+        if (weatherObj && mainObj) {
+          setWeather({
+            description: weatherObj.description,
+            temperature: Math.round(mainObj.temp),
+            icon: weatherObj.icon,
+            city: data.name || forcedCityName || FALLBACK_LOCATION.label,
+          });
+        } else {
+          throw new Error('Malformed weather data');
+        }
         setIsLoadingWeather(false);
         setWeatherError(null);
       } catch (error) {

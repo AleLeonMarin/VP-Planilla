@@ -1,201 +1,169 @@
 # Architecture
 
-**Analysis Date:** 2026-03-26
+**Analysis Date:** 2026-04-11
 
 ## Pattern Overview
 
-**Overall:** Layered monolith — Express REST API backend + Next.js frontend, strictly separated into discrete layers. No shared code between backend and frontend at runtime.
+**Overall:** Layered monolith with domain-oriented modules across backend and frontend.
 
 **Key Characteristics:**
-- Mandatory layer ordering: Route → Controller → Service → Prisma. No layer may be skipped.
-- All services use the singleton Prisma client from `src/backend/src/lib/prisma.ts`. `new PrismaClient()` is forbidden.
-- All frontend HTTP traffic flows through `src/frontend/src/services/http.ts`. No raw `fetch` in components or hooks.
-- Every backend route is protected by `AuthMiddleware.verifyToken` (applied as `router.use(...)` on 14 of 16 routers; `UserRoute.ts` applies it per-endpoint alongside `requireRole`).
-- Body validation on mutation routes uses `validateBody(schema)` middleware composed inline in the route file.
+- Enforce backend request pipeline as `Route → Controller → Service → Prisma` using route modules in `src/backend/src/routes/` and service modules in `src/backend/src/service/`.
+- Enforce frontend request pipeline as `Page → Hook/Service → http client → Backend API` using app pages in `src/frontend/src/app/pages/`, hooks in `src/frontend/src/hooks/`, and API adapters in `src/frontend/src/services/`.
+- Keep database access centralized through Prisma singleton in `src/backend/src/lib/prisma.ts`; call Prisma only from services in `src/backend/src/service/`.
+- **Strict HTTP client enforcement:** All internal backend calls must use `src/frontend/src/services/http.ts`. All third-party/external API calls must use `src/frontend/src/services/externalHttp.ts` to prevent internal token leakage.
 
----
+## Layers
 
-## Backend Layers
+**Backend HTTP Layer (Routes):**
+- Purpose: Define API endpoints, attach middleware, and delegate handlers.
+- Location: `src/backend/src/routes/`
+- Contains: `*Route.ts` modules such as `src/backend/src/routes/PayrollRoutes.ts`, `src/backend/src/routes/EmployeeRoute.ts`, `src/backend/src/routes/ReportsRoute.ts`.
+- Depends on: Controllers in `src/backend/src/controller/`, middleware in `src/backend/src/middleware/`, wrapper in `src/backend/src/utils/asyncHandler.ts`.
+- Used by: Express app bootstrap in `src/backend/src/index.ts`.
 
-**Routes** (`src/backend/src/routes/`):
-- Purpose: Express Router setup — apply auth middleware, compose `validateBody`, wrap handlers in `asyncHandler`, define HTTP verb/path
-- Pattern: Most routers open with `router.use(AuthMiddleware.verifyToken)` to protect every endpoint in the file. `UserRoute.ts` applies auth per-route along with `AuthMiddleware.requireRole(["admin"])`.
-- Depends on: Middleware, Controller, schemas
-- Does NOT contain: Business logic, Prisma queries
+**Backend Transport Layer (Controllers):**
+- Purpose: Parse `req`, validate route-level assumptions, convert payload shapes, and format responses.
+- Location: `src/backend/src/controller/`
+- Contains: Controller classes like `src/backend/src/controller/PayrollController.ts`, `src/backend/src/controller/NomineeController.ts`, `src/backend/src/controller/ReportsController.ts`.
+- Depends on: Services in `src/backend/src/service/`.
+- Used by: Route modules in `src/backend/src/routes/`.
 
-**Controllers** (`src/backend/src/controller/`):
-- Purpose: Parse `req.body` / `req.params` / `req.query`, map field names, call the corresponding Service method, return HTTP response
-- Pattern: Static class with static async methods. Thin — all logic delegated to Service.
-- Example: `EmployeeController.createEmployee` maps `employee_first_name` / `name` field-name variants then calls `EmployeeService.createEmployee`
-- Depends on: Service layer, model types
+**Backend Domain/Application Layer (Services):**
+- Purpose: Execute business rules, orchestrate queries, compose domain results.
+- Location: `src/backend/src/service/`
+- Contains: Domain services such as `src/backend/src/service/NomineeService.ts`, `src/backend/src/service/PayrollService.ts`, `src/backend/src/service/ReportsService.ts`.
+- Depends on: Prisma singleton `src/backend/src/lib/prisma.ts`, utilities in `src/backend/src/utils/`, models in `src/backend/src/model/`.
+- Used by: Controllers in `src/backend/src/controller/`.
 
-**Services** (`src/backend/src/service/`):
-- Purpose: All business logic and all Prisma queries
-- Pattern: Static class with static async methods (or instance class for `NomineeService` which has both static preload helpers and instance calculation methods)
-- All services import: `import { prisma } from '../lib/prisma'`
-- Depends on: `lib/prisma`, model interfaces, `utils/payrollUtils.ts` (in NomineeService)
+**Backend Data/Contract Layer:**
+- Purpose: Define schema and data contracts.
+- Location: `src/backend/prisma/schema.prisma`, `src/backend/src/model/`, `src/backend/src/types/`, `src/backend/src/schemas/`.
+- Contains: Prisma models/tables (`vpg_*`), TypeScript interfaces, shared payroll types, Zod request schemas.
+- Depends on: Prisma generator and TypeScript compilation.
+- Used by: Services/controllers/routes.
 
-**Models** (`src/backend/src/model/`):
-- Purpose: Plain TypeScript interfaces — shape definitions only, no logic
-- Examples: `employee.ts`, `payroll.ts`, `user.ts`
-- Consumed by controllers and services for type safety
+**Frontend Route/View Layer (Next App Router):**
+- Purpose: Render pages, collect user input, and trigger domain actions.
+- Location: `src/frontend/src/app/` and `src/frontend/src/app/pages/`
+- Contains: Root layout `src/frontend/src/app/layout.tsx`, redirect entry `src/frontend/src/app/page.tsx`, feature pages like `src/frontend/src/app/pages/payroll/calculate/page.tsx` and `src/frontend/src/app/pages/reports/page.tsx`.
+- Depends on: Hooks in `src/frontend/src/hooks/`, components in `src/frontend/src/components/`.
+- Used by: Next.js runtime.
 
-**Middleware** (`src/backend/src/middleware/`):
-- `AuthMiddleware.ts` — JWT verification (`verifyToken`), role enforcement (`requireRole`), optional auth (`optionalAuth`). Extends `req.user` via global Express namespace augmentation.
-- `validateBody.ts` — Generic Zod validation middleware factory. Calls `schema.safeParse(req.body)`, replaces `req.body` with parsed/coerced value on success, returns `400 { success: false, error: "..." }` on failure.
+**Frontend State/Use-Case Layer (Hooks):**
+- Purpose: Manage view state, loading/error lifecycle, and action orchestration.
+- Location: `src/frontend/src/hooks/`
+- Contains: Hooks such as `src/frontend/src/hooks/useNominee.ts`, `src/frontend/src/hooks/usePayroll.ts`, `src/frontend/src/hooks/useEmployeeList.ts`.
+- Depends on: Services in `src/frontend/src/services/`, shared types in `src/frontend/src/types/`, utilities in `src/frontend/src/utils/`.
+- Used by: Pages/components.
 
-**Schemas** (`src/backend/src/schemas/`):
-- Purpose: Zod schemas used by `validateBody` middleware for request body validation
-- Files:
-  - `EmployeeSchema.ts` — `createEmployeeSchema`, `updateEmployeeSchema` (handles both `employee_` prefixed and unprefixed field names for backward compat)
-  - `DeductionSchema.ts` — `createDeductionSchema`, `updateDeductionSchema`
-  - `PayrollSchema.ts` — `createPayrollSchema`, `updatePayrollSchema`
-  - `ClockLogSchema.ts` — `bulkCreateClockLogSchema` (nested array of log items)
-  - `UserSchema.ts` — `updatePermissionsSchema`
-- All schemas export both the Zod schema and the inferred TypeScript type
+**Frontend API Access Layer (Services + HTTP client):**
+- Purpose: Encapsulate endpoint paths and transport details.
+- Location: `src/frontend/src/services/`
+- Contains: Domain services (`src/frontend/src/services/nomineeService.ts`, `src/frontend/src/services/reportsService.ts`, `src/frontend/src/services/payrollService.ts`) and shared clients `src/frontend/src/services/http.ts` (internal) and `src/frontend/src/services/externalHttp.ts` (external).
+- Depends on: Runtime config `src/frontend/src/config/index.ts` and browser storage for token lifecycle.
+- Used by: Hooks and some pages.
 
-**Types** (`src/backend/src/types/`):
-- `payroll.types.ts` — Central payroll domain interfaces: `PayrollPeriod`, `DayWork`, `DeductionBreakdown`, `Inconsistency`, `EmployeePayroll`, `PayrollSummary`, `PayrollCalculationResult`. Both `NomineeService` and the frontend depend on this shape.
+## Data Flow
 
-**Utils** (`src/backend/src/utils/`):
-- `asyncHandler.ts` — Express error boundary: wraps async route handlers, routes uncaught rejections to Express error middleware via `Promise.resolve(fn).catch(next)`
-- `payrollUtils.ts` — Pure Costa Rica labor law math functions (hours calculation, overtime, weekly rest)
-- `docs.ts` — Swagger spec generation
+**Backend request flow (standard endpoint):**
 
-**lib** (`src/backend/src/lib/`):
-- `prisma.ts` — Singleton `PrismaClient` with query logging and an exported query counter (`getQueryCount`, `resetQueryCount`) for debugging
+1. Request enters Express app in `src/backend/src/index.ts` under `/api`.
+2. Router in `src/backend/src/routes/*.ts` applies `AuthMiddleware.verifyToken` from `src/backend/src/middleware/AuthMiddleware.ts` and wraps handlers with `asyncHandler` from `src/backend/src/utils/asyncHandler.ts`.
+3. Controller in `src/backend/src/controller/*.ts` parses params/body and calls service methods.
+4. Service in `src/backend/src/service/*.ts` executes business logic and Prisma queries via `src/backend/src/lib/prisma.ts`.
+5. Controller sends JSON response, usually `{ success, data }` or entity payload.
 
----
+**Frontend API flow (standard page action):**
 
-## Frontend Layers
+1. Page in `src/frontend/src/app/pages/*/page.tsx` triggers action from a hook (example: `src/frontend/src/app/pages/payroll/calculate/page.tsx` uses `src/frontend/src/hooks/useNominee.ts`).
+2. Hook calls domain service in `src/frontend/src/services/*.ts`.
+3. Service calls shared HTTP client `src/frontend/src/services/http.ts` for backend data or `src/frontend/src/services/externalHttp.ts` for third-party integrations (like OpenWeatherMap).
+4. HTTP client composes URL, injects tokens (internal only), handles refresh/retries (internal only), and returns parsed data.
+5. Parsed data returns to hook and page renders updated UI.
 
-**Pages** (`src/frontend/src/app/pages/<domain>/page.tsx`):
-- All are `"use client"` components
-- Consume one or more domain hooks, pass actions and data to components
-- Do not call services directly; do not contain business logic
-- Root `src/frontend/src/app/page.tsx` redirects to `/pages/auth`
+**Payroll calculation flow (end-to-end):**
 
-**Hooks** (`src/frontend/src/hooks/`):
-- Encapsulate all data fetching, local state, and action callbacks
-- Return shape: `{ data, isLoading, error, ...actions }`
-- Async operations wrapped in `useCallback`
-- Examples: `useEmployeeList.ts`, `usePayroll.ts`, `useNominee.ts`, `useAuth.ts`
+1. `src/frontend/src/app/pages/payroll/calculate/page.tsx` submits date range.
+2. `src/frontend/src/hooks/useNominee.ts` calls `NomineeService.calculatePayrollForPeriod` in `src/frontend/src/services/nomineeService.ts`.
+3. Backend route `src/backend/src/routes/NomineeRoute.ts` delegates to `src/backend/src/controller/NomineeController.ts`.
+4. `src/backend/src/service/NomineeService.ts` preloads logs/vacations/labor events/bonuses/deductions/positions, computes per-employee results, and optionally persists into `vpg_payroll_employee` and `vpg_employee_deductions`.
+5. Result returns as summary + employee breakdown and is rendered in frontend components like `src/frontend/src/components/PayrollResults.tsx`.
 
-**Services** (`src/frontend/src/services/`):
-- Named export functions that call `http.get/post/put/delete`
-- No business logic — pure API call wrappers
-- Examples: `employeeService.ts`, `payrollService.ts`, `nomineeService.ts`
+**State Management:**
+- Use local component/hook state (`useState`, `useEffect`, `useCallback`) in `src/frontend/src/hooks/` and pages.
+- Use context providers in `src/frontend/src/layouts/main.tsx` (`AuthProvider`, `ThemeProvider`, `TooltipProvider`) for cross-page concerns.
+- Use session cache helper `src/frontend/src/utils/sessionCache.ts` for short-lived front-end data cache in selected hooks.
 
-**http.ts** (`src/frontend/src/services/http.ts`):
-- Central HTTP client — the ONLY place `fetch` is called
-- Automatically attaches `Authorization: Bearer <token>` from `localStorage`
-- Token refresh logic: on 401, attempts one silent refresh via `POST /api/refresh`; on second 401, clears tokens and invokes `onAuthFailureCallback`
-- Token storage keys: `vp_access_token`, `vp_refresh_token` (never change these)
-- Unwraps `{ success, data }` envelope: if response has a `data` key, returns `data` directly
-- Exposes `http.get`, `http.post`, `http.put`, `http.delete`, `http.raw`
+## Key Abstractions
 
-**Schemas** (`src/frontend/src/schemas/`):
-- Zod schemas for frontend form validation (separate from backend schemas)
-- Used with `react-hook-form` + `zodResolver`
-- Examples: `employee.ts`, `vacationSchema.ts`
+**Service class abstraction (backend):**
+- Purpose: Keep business rules and persistence orchestration outside controllers.
+- Examples: `src/backend/src/service/EmployeeService.ts`, `src/backend/src/service/NomineeService.ts`, `src/backend/src/service/ReportsService.ts`.
+- Pattern: Static methods in most services; `NomineeService` mixes instance methods and static preload helpers.
 
-**Components** (`src/frontend/src/components/`):
-- Reusable UI. Props interface defined in the same file.
-- Typed as `React.FC<PropsInterface>`
-- Modals use `AnimatePresence` + `motion.div` (framer-motion)
+**HTTP client abstraction (frontend):**
+- Purpose: Centralize auth headers, token refresh, and error normalization for internal API calls.
+- Examples: `src/frontend/src/services/http.ts`, used by `src/frontend/src/services/payrollService.ts` and `src/frontend/src/services/reportsService.ts`.
+- Pattern: Internal domain service methods MUST call `http.get/post/put/delete`.
 
-**Layouts** (`src/frontend/src/layouts/`):
-- `main.tsx` — `ClientLayout` wraps every page with `AuthProvider`, `ThemeProvider`, `Sidebar`, and `Header`. Redirects unauthenticated users to `/pages/auth` via `useEffect`.
+**External HTTP client abstraction (frontend):**
+- Purpose: Securely call third-party APIs without leaking internal tokens.
+- Examples: `src/frontend/src/services/externalHttp.ts`.
+- Pattern: Used for services like `src/frontend/src/utils/weather.ts` that fetch data from public APIs.
 
----
+**Schema-validation abstraction (backend):**
+- Purpose: Validate request body before controller logic.
+- Examples: `src/backend/src/middleware/validateBody.ts` + schemas in `src/backend/src/schemas/EmployeeSchema.ts` and `src/backend/src/schemas/PayrollSchema.ts`.
+- Pattern: Attach `validateBody(schema)` in route definitions before controller handlers.
 
-## Auth Flow
+**Domain types abstraction (shared intent):**
+- Purpose: Define strongly-typed payroll and entity contracts.
+- Examples: `src/backend/src/types/payroll.types.ts`, `src/backend/src/model/*.ts`, `src/frontend/src/types/*.ts`.
+- Pattern: Convert DB naming (`snake_case`) to UI-facing fields in controllers/services and frontend hooks.
 
-1. User submits credentials to `POST /api/login` (public endpoint, no auth middleware)
-2. `AuthController.login` calls `AuthService.authenticate` — bcrypt verify — sign JWT — return `{ token, refresh_token, user }`
-3. Frontend `authService.login` stores tokens via `http.setTokens(access, refresh)` into `localStorage`
-4. Subsequent requests: `http.ts` attaches `Authorization: Bearer <access_token>` automatically
-5. On 401: `http.ts` calls `POST /api/refresh` with refresh token and retries original request once
-6. On second 401: `clearStoredTokens()` + `onAuthFailureCallback()` triggers redirect to login
+## Entry Points
 
-**Public endpoints** (no `AuthMiddleware.verifyToken`):
-- `POST /api/login`
-- `POST /api/validate`
-- `POST /api/refresh`
+**Backend API bootstrap:**
+- Location: `src/backend/src/index.ts`
+- Triggers: Node runtime (`npm run dev` / `npm run start` in `src/backend/`).
+- Responsibilities: Load env, enforce `JWT_SECRET`, configure CORS/helmet/json parser, register all route modules, expose Swagger JSON/UI, start server.
 
-**Protected endpoints:** All others. Most route files apply `router.use(AuthMiddleware.verifyToken)` at the top. `UserRoute.ts` additionally applies `AuthMiddleware.requireRole(["admin"])` on every endpoint.
+**Frontend app bootstrap:**
+- Location: `src/frontend/src/app/layout.tsx`
+- Triggers: Next.js App Router runtime.
+- Responsibilities: Global metadata/styles and wrapping client shell from `src/frontend/src/layouts/main.tsx`.
 
----
+**Frontend root redirect:**
+- Location: `src/frontend/src/app/page.tsx`
+- Triggers: Navigation to `/`.
+- Responsibilities: Redirect to `/pages/auth`.
 
-## NomineeService Preload Architecture
-
-`NomineeService.calculatePayrollForPeriod` implements an O(6-queries) preload pattern to avoid N+1 database queries when calculating payroll for all employees.
-
-```
-calculatePayrollForPeriod(startDate, endDate, payrollId?)
-  |
-  +-- EmployeeService.getActiveEmployeesForPeriod(...)    [query 1]
-  |
-  +-- Promise.all([                                       [queries 2-7, parallel]
-        preloadClockLogs(startDate, endDate)   -> Map<employeeId, clockLog[]>
-        preloadVacations()                     -> Map<employeeId, vacation[]>
-        preloadLaborEvents(startDate, endDate) -> Map<employeeId, laborEvent[]>
-        preloadBonuses(startDate, endDate)     -> Map<employeeId, bonus[]>
-        preloadDeductions()                    -> Map<employeeId, deduction[]>
-        preloadPositions()                     -> Map<positionId, position>
-      ])
-  |
-  +-- for each employee: (pure in-memory, zero DB queries)
-        calculateEmployeePayroll(employee, startDate, endDate,
-          clockLogsMap.get(id), vacationsMap.get(id), ...)
-```
-
-All six preload methods are `private static` on `NomineeService`. The helper `groupByEmployee<T>(items, getIdFn)` produces `Map<number, T[]>` groupings used throughout.
-
----
-
-## Payroll Calculation Data Flow
-
-1. Frontend `useNominee.ts` hook calls `nomineeService.calculatePayroll(start, end, payrollId)`
-2. Service calls `POST /api/nominee/calculate`
-3. `NomineeRoute.ts` applies `AuthMiddleware.verifyToken`, then calls `NomineeController`
-4. Controller calls `nomineeService.calculatePayrollForPeriod(startDate, endDate, payrollId)`
-5. Service preloads all data in parallel (6 queries), iterates employees, runs `calculateEmployeePayroll` (pure in-memory)
-6. Payroll math via `utils/payrollUtils.ts`: regular hours (up to biweekly requirement), overtime (×1.5), weekly rest (proportional), net salary
-7. Persistence: `savePayrollEmployees(payrollId, employees)` upserts `vpg_payroll_employee` + `vpg_employee_deductions` rows
-8. Response shape: `PayrollCalculationResult` — `{ period, employees: EmployeePayroll[], summary }`
-
----
+**Domain batch/utility entry points:**
+- Location: `src/backend/src/scripts/seedDeductions.ts`
+- Triggers: Script execution in backend environment.
+- Responsibilities: Seed deduction catalog data through Prisma.
 
 ## Error Handling
 
-**Backend strategy:**
-- `asyncHandler` catches all async errors and passes them to Express error middleware
-- Services throw `Error` instances; controllers catch and return `{ error: "..." }` with HTTP 4xx/5xx
-- `validateBody` returns `400 { success: false, error: "<zod messages>" }` before the handler runs
-- Auth failures return `401 { success: false, message: "..." }`
+**Strategy:** Layered, defensive try/catch with normalized API errors on frontend.
 
-**Frontend strategy:**
-- `http.ts` throws `Error` with the API error message on non-OK responses
-- Hooks catch errors and expose them via the `error` field in the return shape
-- Network errors produce the message: "No se pudo conectar con la API..."
-
----
+**Patterns:**
+- Wrap async route handlers with `asyncHandler` (`src/backend/src/utils/asyncHandler.ts`) to forward rejected promises.
+- In controllers/services, catch exceptions and return 4xx/5xx JSON payloads (examples in `src/backend/src/controller/PayrollController.ts`, `src/backend/src/controller/NomineeController.ts`).
+- In frontend, throw/catch `ApiError` from `src/frontend/src/services/http.ts` and expose message through hooks/pages via `error` state and toasts.
 
 ## Cross-Cutting Concerns
 
-**Logging:** `console.log`/`console.error` directly throughout. Prisma query logging via `prisma.$on('query', ...)` in `src/backend/src/lib/prisma.ts` with a global query counter.
+**Logging:** Console logging in backend bootstrap and services/controllers (`src/backend/src/index.ts`, `src/backend/src/service/NomineeService.ts`, `src/backend/src/service/ReportsService.ts`) plus Prisma query logging in `src/backend/src/lib/prisma.ts`.
 
-**Validation (backend):** `validateBody(zodSchema)` middleware applied per-route in route files for mutation endpoints. Query param validation is ad-hoc inside controllers/services.
+**Validation:**
+- Backend: Zod body validation middleware in `src/backend/src/middleware/validateBody.ts` and schema modules in `src/backend/src/schemas/`.
+- Frontend: Form and payload validation schema modules in `src/frontend/src/schemas/`.
 
-**Validation (frontend):** Zod schemas in `src/frontend/src/schemas/` consumed by `react-hook-form` + `zodResolver`.
-
-**Authentication:** JWT Bearer tokens. Access token short-lived; refresh token enables silent re-auth. Server enforces via `AuthMiddleware.verifyToken`. Client enforces redirect in `src/frontend/src/layouts/main.tsx`.
-
-**CORS:** `cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') })` in `src/backend/src/index.ts` — origin-restricted, configured via environment variable.
-
-**API docs:** Swagger spec generated via `src/backend/src/utils/docs.ts`. Served at `GET /api/docs/swagger.json`; rendered at `GET /api/docs` via `@scalar/express-api-reference`.
+**Authentication:**
+- Backend JWT verification middleware in `src/backend/src/middleware/AuthMiddleware.ts` applied globally per router (`router.use(AuthMiddleware.verifyToken)` in routes like `src/backend/src/routes/EmployeeRoute.ts`).
+- Frontend token storage/refresh/logout lifecycle centralized in `src/frontend/src/services/http.ts` and auth context in `src/frontend/src/hooks/useAuth.tsx`.
 
 ---
 
-*Architecture analysis: 2026-03-26*
+*Architecture analysis: 2026-04-11*

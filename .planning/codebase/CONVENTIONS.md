@@ -1,266 +1,103 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-26
+**Analysis Date:** 2026-04-09
 
 ## Naming Patterns
 
-**Backend Files:**
-- Services: `PascalCase` — `EmployeeService.ts`, `NomineeService.ts`, `PayrollService.ts`
-- Controllers: `PascalCase` — `EmployeeController.ts`, `PayrollController.ts`
-- Routes: `PascalCase` — `EmployeeRoute.ts`, `PayrollRoutes.ts` (inconsistent: most are `Route.ts`, payroll is `Routes.ts`)
-- Schemas: `PascalCase` — `EmployeeSchema.ts`, `PayrollSchema.ts`, `ClockLogSchema.ts`
-- Models: lowercase `camelCase` file names — `employee.ts`, `payroll.ts` (not PascalCase like services)
+**Files:**
+- Use `PascalCase.ts` for backend controllers/services/routes in `src/backend/src/controller/`, `src/backend/src/service/`, and `src/backend/src/routes/` (for example `src/backend/src/service/EmployeeService.ts`, `src/backend/src/controller/UserController.ts`, `src/backend/src/routes/AuthRoute.ts`).
+- Use `lowercase.ts` for backend model interfaces in `src/backend/src/model/` (for example `src/backend/src/model/employee.ts`, `src/backend/src/model/user.ts`).
+- Use `PascalCase.tsx` for frontend components in `src/frontend/src/components/` and `src/frontend/src/components/ui/` (for example `src/frontend/src/components/AddEmployeeModal.tsx`, `src/frontend/src/components/ui/FormModal.tsx`).
+- Use `camelCase` with `use` prefix for hooks in `src/frontend/src/hooks/` (for example `src/frontend/src/hooks/useVacations.ts`, `src/frontend/src/hooks/useClockLogs.ts`).
+- Use `camelCase` service filenames in `src/frontend/src/services/` (for example `src/frontend/src/services/clockLogsService.ts`, `src/frontend/src/services/authService.ts`).
 
-**Frontend Files:**
-- Components: `PascalCase.tsx` — `AddEmployeeModal.tsx`, `EmployeeTable.tsx`
-- Hooks: `camelCase` with `use` prefix — `useEmployeeList.ts`, `usePayroll.ts`
-- Services: `camelCase` — `employeeService.ts`, `payrollService.ts`
-- Schemas: mixed — `employee.ts` (no suffix), `vacationSchema.ts` (has suffix)
-- Types: `camelCase` — `employee.ts`, `laborEvent.ts`
-
-**Functions / Methods:**
-- Backend: `camelCase` static methods — `createEmployee`, `getAllEmployees`, `getEmployeeById`
-- Frontend hook actions: `handleX` prefix for event handlers — `handleAddEmployee`, `handleUpdateEmployee`
-- Modal controls: `openX` / `closeX` naming — `openAddEmployeeModal`, `closeEditEmployeeModal`
+**Functions:**
+- Use `camelCase` for functions/methods across backend and frontend (for example `createEmployee` in `src/backend/src/controller/EmployeeController.ts`, `setFilters` in `src/frontend/src/hooks/useClockLogs.ts`).
+- Use static class methods for backend service/controller entrypoints (for example `EmployeeService.updateEmployee` in `src/backend/src/service/EmployeeService.ts`, `UserController.updatePermissions` in `src/backend/src/controller/UserController.ts`).
 
 **Variables:**
-- `camelCase` throughout both backend and frontend
-- `snake_case` for domain / DB field names — `employee_first_name`, `period_start`, `national_id`
+- Use `snake_case` for domain/database-aligned fields (for example `employee_first_name`, `employee_required_hours_biweekly` in `src/backend/src/schemas/EmployeeSchema.ts`; `employee_id`, `log_type` in `src/frontend/src/services/clockLogsService.ts`).
+- Use `camelCase` for local variables and helper names (for example `mockPrismaEmployee` and `makeEmployee` in `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`).
+- Use `SCREAMING_SNAKE_CASE` for module constants (for example `STORAGE_KEYS` in `src/frontend/src/services/http.ts`, `PAGE_SIZE` in `src/frontend/src/hooks/useClockLogs.ts`).
 
-**Types / Interfaces:**
-- `PascalCase` — `Employee`, `Payroll`, `EmployeeFormData`, `PayrollCalculationResult`
-- Exported type aliases: `PascalCase` — `EmployeeStatus`, `CreateEmployeeInput`, `UpdateEmployeeInput`
-
-**Constants:**
-- `SCREAMING_SNAKE_CASE` — `REGULAR_HOURS_PER_DAY`, `OVERTIME_MULTIPLIER`, `EMPLOYEE_STATUS`, `STATUS_BADGE_CONFIG`
-- Frontend constants: `src/frontend/src/constants/index.ts`
-- Backend constants: module-level in `src/backend/src/utils/payrollUtils.ts`
-
-**DB / Form Field Names:**
-- All DB fields follow `tablename_fieldname` snake_case — `employee_first_name`, `payrolls_period_start`
-- All HTML form input names follow `entity_field_name` — `employee_first_name`, `employee_email`
-- The `employee_` prefix convention is respected by both frontend forms and backend Zod schemas
+**Types:**
+- Use `PascalCase` for interfaces/types (for example `Employee` in `src/backend/src/model/employee.ts`, `ClockLogPaginated` in `src/frontend/src/services/clockLogsService.ts`, `FormData` in `src/frontend/src/components/LaborEventModal.tsx`).
 
 ## Code Style
 
 **Formatting:**
-- No `.prettierrc` or `biome.json` detected — formatting is manual / editor-enforced
-- Indentation: 2 spaces throughout both backend and frontend
+- Formatting tool: Not detected as enforced formatter config (`.prettierrc*` not detected in repository root).
+- TypeScript strict mode is enabled in both apps (`"strict": true` in `src/backend/tsconfig.json` and `src/frontend/tsconfig.json`).
+- Use single quotes heavily in source files (for example `src/frontend/src/hooks/useVacations.ts`, `src/backend/src/service/EmployeeService.ts`), with occasional double quotes in older backend files (for example `src/backend/src/controller/EmployeeController.ts`).
 
-**Linting (Frontend):**
-- ESLint via Next.js: `next/core-web-vitals` + `next/typescript`
-- Run: `npx next lint` from `src/frontend/`
-- Active suppression example in `useEmployeeList.ts`: `// eslint-disable-next-line react-hooks/exhaustive-deps`
-
-**TypeScript:**
-- Backend: `tsconfig.json` at `src/backend/`; 27 active type errors (see CONCERNS.md for details)
-- Frontend: `tsconfig.json` at `src/frontend/`; uses `@/` path alias configured via `paths`
-- `any` used in controller layer (`createPayload: any` in `EmployeeService.ts`) and in `NomineeService.ts`
+**Linting:**
+- Frontend linting is configured with ESLint flat config in `src/frontend/eslint.config.mjs` using `next/core-web-vitals` and `next/typescript`.
+- For test files, allow `any` and downgrade unused vars to warning in `src/frontend/eslint.config.mjs` (`files: ["src/__tests__/**/*.{ts,tsx}"]`).
+- Backend ESLint config: Not detected.
 
 ## Import Organization
 
-**Backend:**
-1. External packages — `import { Router } from 'express'`
-2. Internal services / controllers — `import { EmployeeService } from '../service/EmployeeService'`
-3. Middleware / utils — `import { asyncHandler } from '../utils/asyncHandler'`
-4. Schemas — `import { createEmployeeSchema } from '../schemas/EmployeeSchema'`
-
-**Frontend:**
-- Path alias `@/` used throughout — `import { http } from '@/services/http'`
-- Never use relative imports deeper than one level (`../../`)
-- External packages first, then `@/` imports
+**Order:**
+1. Framework/external packages first (for example `express`, `zod`, `react-hook-form` in `src/backend/src/routes/AuthRoute.ts` and `src/frontend/src/components/AddEmployeeModal.tsx`).
+2. Internal modules second (backend relative imports like `../service/EmployeeService` in `src/backend/src/controller/EmployeeController.ts`; frontend alias imports like `@/services/clockLogsService` in `src/frontend/src/hooks/useClockLogs.ts`).
+3. Types/interfaces colocated with usage (for example `Employee` import in `src/backend/src/service/EmployeeService.ts`, `ClockLogPaginated` import in `src/frontend/src/app/pages/clock-logs/page.tsx`).
 
 **Path Aliases:**
-- Frontend: `@/` maps to `src/frontend/src/`
-- Backend: no path aliases; uses relative `../` imports
+- Use `@/*` alias in frontend (`src/frontend/tsconfig.json`, `paths` section).
+- Use alias imports for frontend app code (for example `@/hooks/useClockLogs` in `src/frontend/src/app/pages/clock-logs/page.tsx`, `@/types/reports` in `src/frontend/src/services/index.ts`).
+- Backend path aliases: Not detected; use relative imports from `src/backend/src/*`.
 
 ## Error Handling
 
-**Backend Controller Pattern:**
-```typescript
-try {
-  const result = await SomeService.method(data);
-  return res.status(200).json(result);
-} catch (error) {
-  console.error("Error doing X:", error);
-  return res.status(500).json({ error: "Failed to do X" });
-}
-```
-
-**Zod Validation Errors (via `validateBody` middleware):**
-- Returns `400` with `{ success: false, error: "<comma-joined messages>" }`
-- Located at `src/backend/src/middleware/validateBody.ts`
-
-**`asyncHandler` wrapping:**
-- All routes must use `asyncHandler` from `src/backend/src/utils/asyncHandler.ts`
-- Wraps handler in `Promise.resolve(fn()).catch(next)` to forward unhandled rejections
-
-**Frontend Service Pattern:**
-```typescript
-export const getEmployees = async (): Promise<Employee[]> => {
-  try {
-    return await http.get('/employee');
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch employees');
-  }
-};
-```
-
-**Frontend Hook Error Handling:**
-- Hooks catch service errors with `console.error` + `alert()` — no toast library in use
-- Errors are not stored in hook state by default
+**Patterns:**
+- Wrap backend route handlers with `asyncHandler` to forward rejected promises (`src/backend/src/utils/asyncHandler.ts`, route usage in `src/backend/src/routes/EmployeeRoute.ts` and `src/backend/src/routes/AuthRoute.ts`).
+- Validate request body via Zod middleware before controller logic (`validateBody` in `src/backend/src/middleware/validateBody.ts`; usage in `src/backend/src/routes/EmployeeRoute.ts`).
+- Use controller-level `try/catch` with explicit HTTP status and JSON error payload (for example `src/backend/src/controller/UserController.ts`, `src/backend/src/controller/EmployeeController.ts`).
+- When writing new endpoints, keep response shape consistent per route family: either `{ success, data/error }` (for example `src/backend/src/controller/UserController.ts`) or plain entity/error (for example `src/backend/src/controller/EmployeeController.ts`) to avoid client parsing drift.
 
 ## Logging
 
-**Backend:**
-- `console.log` / `console.error` directly — no structured logging library
-- Singleton Prisma (`src/backend/src/lib/prisma.ts`) logs every SQL query via `$on('query')` with a running counter
-- Source-identified prefix pattern: `console.log('[Payroll] ...')`, `console.log('[QUERY N] ...')`
-- Debug-level logs remain in production code (deduction loading, payroll record saves in `NomineeService.ts`)
+**Framework:** console
 
-**Frontend:**
-- `console.error` in hook catch blocks
-- `console.log` for debug traces left in `useEmployeeList.ts`
-- `src/frontend/src/services/http.ts` logs `[http] API_BASE =` on every page load when `window` is defined
+**Patterns:**
+- Use `console.error` in backend controllers/services for failures (for example `src/backend/src/controller/UserController.ts`, `src/backend/src/service/AuthService.ts`).
+- Use `console.warn`/`console.error` in frontend hooks/services for recoverable API issues (for example `src/frontend/src/hooks/useClockLogs.ts`, `src/frontend/src/services/clockLogsService.ts`).
+- Use debug `console.log` sparingly for runtime diagnostics (for example API base URL log in `src/frontend/src/services/http.ts`, auth trace logs in `src/backend/src/service/AuthService.ts`).
 
 ## Comments
 
 **When to Comment:**
-- Every public backend method has JSDoc with `@param`, `@returns`, `@throws`
-- Every route has a `@swagger` JSDoc annotation
-- Business logic comments: Spanish — `// Formato cédula: X-XXXX-XXXX`
-- Infrastructure comments: English — `// Build API_BASE defensively`
+- Add intent-focused inline comments for transformations and compatibility mapping (for example field mapping comments in `src/backend/src/controller/EmployeeController.ts`; API wrapper comments in `src/frontend/src/services/http.ts`).
+- Add route purpose and access comments near endpoint declarations (for example `@route/@desc/@access` blocks in `src/backend/src/routes/AuthRoute.ts`).
 
-**JSDoc Example (backend service):**
-```typescript
-/**
- * Create a new employee
- * @param data - Employee data to create
- * @returns The created employee
- * @throws Error if the employee creation fails
- */
-static async createEmployee(data: Employee): Promise<Employee>
-```
-
-**Swagger JSDoc Example (route):**
-```typescript
-/**
- * @swagger
- * /api/employee/create:
- *   post:
- *     tags: [Employees]
- *     summary: Create a new employee
- */
-router.post("/employee/create", validateBody(createEmployeeSchema), asyncHandler(EmployeeController.createEmployee));
-```
+**JSDoc/TSDoc:**
+- Backend utility and service methods frequently include JSDoc with `@param` and `@returns` (for example `src/backend/src/middleware/validateBody.ts`, `src/backend/src/service/EmployeeService.ts`).
+- Frontend uses fewer formal docblocks; prefer clear function names and targeted inline comments (`src/frontend/src/hooks/useClockLogs.ts`).
 
 ## Function Design
 
-**Backend Services:**
-- Static methods only — service classes are never instantiated
-- Method ordering within each class: `create` → `getAll` → `getById` → `update` → `delete`
-- No `any` in method signatures — use types from `src/backend/src/model/`
-- Exception: `NomineeService.ts` still uses instance methods (`async getClockLogs`) — legacy design, not replicated
+**Size:**
+- Keep backend service methods focused on one data operation plus mapping (for example `getEmployeeById` in `src/backend/src/service/EmployeeService.ts`).
+- For complex UI workflows, separate orchestration into hooks and keep page components declarative (for example `useClockLogs` in `src/frontend/src/hooks/useClockLogs.ts` consumed by `src/frontend/src/app/pages/clock-logs/page.tsx`).
 
-**Frontend Hooks:**
-- Async operations wrapped in `useCallback` (convention; some hooks use inline `async` inside `useEffect`)
-- Return shape: `{ data, isLoading, error, ...actions }` — always a plain object, never a tuple
-- Modal open/close exposed as plain functions: `openAddEmployeeModal`, `closeEditEmployeeModal`
+**Parameters:**
+- Prefer typed input objects and explicit interfaces for service and hook boundaries (for example `LoginCredentials` in `src/backend/src/service/AuthService.ts`, filter object in `src/frontend/src/services/clockLogsService.ts#getClockLogsPaginated`).
 
-**Frontend Components:**
-- All components: `React.FC<PropsInterface>` with interface defined in the same file
-- `"use client"` directive required at top of every file that uses hooks or browser APIs
-
-## Form Pattern
-
-**Required stack:** `react-hook-form` + `zodResolver` — never raw `useState` for form fields.
-
-**Typing pattern:**
-```typescript
-const { register, handleSubmit, formState, reset } =
-  useForm<EmployeeSchemaInputType, unknown, EmployeeSchemaType>({
-    resolver: zodResolver(employeeSchema),
-    defaultValues: { ... }
-  });
-```
-
-**useEffect reset on modal open:**
-```typescript
-useEffect(() => {
-  if (!isOpen) return;
-  reset();
-  // focus first input via ref
-}, [isOpen, reset]);
-```
-
-Example: `src/frontend/src/components/AddEmployeeModal.tsx`
-
-## Modal Animation Pattern
-
-All modals use `framer-motion` `AnimatePresence` + `motion.div`. Use exactly these variant names for consistency:
-
-```typescript
-const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
-const modalVariants = {
-  hidden: { scale: 0.9, opacity: 0, y: 30 },
-  visible: {
-    scale: 1, opacity: 1, y: 0,
-    transition: { type: 'spring' as const, damping: 20, stiffness: 250 }
-  },
-  exit: { scale: 0.9, opacity: 0, y: 30, transition: { duration: 0.2 } }
-};
-```
-
-Backdrop: `bg-black/30 dark:bg-black/60 z-40`
-
-Example: `src/frontend/src/components/AddEmployeeModal.tsx`
-
-## Status Mapping Pattern (EmployeeService)
-
-The `statusMap` in `src/backend/src/service/EmployeeService.ts` translates frontend string values to the DB `Char(1)` values. This pattern is duplicated in **both** `createEmployee` and `updateEmployee`:
-
-```typescript
-const statusMap: Record<string, string> = {
-    active: 'A',
-    vacation: 'V',
-    incomplete_assistance: 'I',
-    incapacity_maternity: 'M'
-};
-// Pass through if already Char(1), otherwise map, fallback to 'A'
-const statusChar = (typeof data.status === 'string' && data.status.length === 1)
-    ? data.status
-    : statusMap[data.status as string] ?? 'A';
-```
-
-The reverse mapping (DB `Char(1)` → frontend constant) lives in `useEmployeeList.ts` inside `mapApiEmployees()`.
-
-## Zod Schema Conventions
-
-**Backend schemas** (`src/backend/src/schemas/`):
-- File per domain: `EmployeeSchema.ts`, `PayrollSchema.ts`, `DeductionSchema.ts`, `ClockLogSchema.ts`, `UserSchema.ts`
-- Export `createXSchema` + `updateXSchema` (usually `createXSchema.partial()`)
-- Export `CreateXInput` / `UpdateXInput` via `z.infer<typeof schema>`
-- Use `z.coerce.number()` for numeric IDs received as strings from HTTP bodies
-- Error messages in Spanish: `'El primer nombre es requerido'`
-- `updateEmployeeSchema` accepts both `employee_`-prefixed and non-prefixed fields for backward compatibility
-
-**Frontend schemas** (`src/frontend/src/schemas/`):
-- Optional string fields: `.optional().transform((v) => v ?? '')` to guarantee `string` output type
-- Export both `SchemaType` (output) and `SchemaInputType` (input = `z.input<typeof schema>`) for `useForm` typing
+**Return Values:**
+- Hooks should return a stable object shape with state + actions (`{ data, isLoading, error, ...actions }` pattern in `src/frontend/src/hooks/useVacations.ts`, expanded variant in `src/frontend/src/hooks/useClockLogs.ts`).
+- Service methods should return typed entities or typed envelopes, not `any` (for example `PaginatedResponse<T>` in `src/frontend/src/services/clockLogsService.ts`, `Promise<Employee | null>` in `src/backend/src/service/EmployeeService.ts`).
 
 ## Module Design
 
-**Backend:**
-- Each domain: one file per layer (route, controller, service, schema)
-- Services export a class with static methods only
-- Models export plain interfaces — zero logic allowed in `src/backend/src/model/`
+**Exports:**
+- Backend modules primarily export classes with static methods (for example `export class AuthService` in `src/backend/src/service/AuthService.ts`).
+- Frontend modules export either service objects (`ClockLogsService` in `src/frontend/src/services/clockLogsService.ts`) or default component/hook exports (for example `src/frontend/src/components/ui/FormModal.tsx`, `src/frontend/src/hooks/useVacations.ts`).
 
-**Frontend:**
-- Services export named async functions (not classes)
-- `src/frontend/src/services/index.ts` re-exports from all services
-- `src/frontend/src/types/index.ts` re-exports from all type files
-- No barrel file for hooks or components
+**Barrel Files:**
+- Use barrel exports for frontend services in `src/frontend/src/services/index.ts`.
+- Use minimal barrel export for frontend types in `src/frontend/src/types/index.ts`.
+- Backend barrel files: Not detected; import from concrete files directly.
 
 ---
 
-*Convention analysis: 2026-03-26*
+*Convention analysis: 2026-04-09*

@@ -1,6 +1,6 @@
 {
-  "mode": "yolo",
-  "model_profile": "balanced",
+  "mode": "stable",
+  "model_profile": "sonnet",
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,
@@ -30,6 +30,10 @@
     "_auto_chain_active": false
   },
   "hooks": {
-    "context_warnings": true
+    "context_warnings": true,
+    "community": true
+  },
+  "graphify": {
+    "enabled": true
   }
 }

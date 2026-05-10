@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { NomineeService } from "../service/NomineeService";
+import { AguinaldoService } from "../service/AguinaldoService";
 import { error } from "console";
 
 export class NomineeController {
@@ -60,7 +61,7 @@ export class NomineeController {
    */
   static async calculatePayrollForPeriod(req: Request, res: Response): Promise<Response> {
     try {
-      const { startDate, endDate, payrollId } = req.body;
+      const { startDate, endDate, payrollId, selectedEmployeeIds } = req.body;
 
       if (!startDate || !endDate) {
         return res.status(400).json({
@@ -96,7 +97,8 @@ export class NomineeController {
       const result = await nomineeService.calculatePayrollForPeriod(
         start, 
         end,
-        payrollId ? Number(payrollId) : undefined
+        payrollId ? Number(payrollId) : undefined,
+        Array.isArray(selectedEmployeeIds) ? selectedEmployeeIds.map(Number) : undefined,
       );
 
       return res.status(200).json({
@@ -167,10 +169,15 @@ export class NomineeController {
         });
       }
 
-      const resultados = await NomineeService.aguinaldoForEmployees(
-        ids,
-        start,
-        end,
+      const resultados = await Promise.all(
+        ids.map(async (id: number) => {
+          try {
+            const result = await AguinaldoService.calculateAccruedAguinaldo(id, end);
+            return { employeeId: id, aguinaldo: result.accrued, message: "OK" };
+          } catch {
+            return { employeeId: id, aguinaldo: null, message: "Error al calcular aguinaldo" };
+          }
+        })
       );
 
       return res.status(200).json({

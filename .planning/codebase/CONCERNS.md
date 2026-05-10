@@ -1,178 +1,164 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-26
-
----
-
-## Status of CLAUDE.md Known Debt Items
-
-| # | Item | Status |
-|---|------|--------|
-| 1 | Auth gap — 13/16 routes unprotected | **RESOLVED** — all 16 route files now apply `AuthMiddleware.verifyToken` |
-| 2 | Multiple `new PrismaClient()` instances | **PARTIALLY RESOLVED** — 1 stray instance remains (see Tech Debt) |
-| 3 | `PayrollService` bad `import { error } from 'console'` | **RESOLVED** — `PayrollService.ts` uses prisma singleton with no console import |
-| 4 | No backend input validation | **PARTIALLY RESOLVED** — `validateBody` exists and is applied to employee, deduction, payroll, clock-log bulk, and user-permission routes; 8 mutation routes still have no validation |
-| 5 | Wildcard CORS | **RESOLVED** — `cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') })` in `src/backend/src/index.ts:33` |
-| 6 | JWT fallback secret | **RESOLVED** — startup assertion at `src/backend/src/index.ts:24-27`; `process.exit(1)` if `JWT_SECRET` is unset |
-| 7 | `bcrypt@6.0.0` pre-release | **STILL OPEN** — `"bcrypt": "^6.0.0"` in `src/backend/package.json:20` |
-| 8 | Credentials in query params | **RESOLVED** — `AuthController.login` reads only `req.body` |
-| 9 | `@prisma/client` in devDependencies | **STILL OPEN** — `@prisma/client` is under `devDependencies` in `src/backend/package.json:33` |
-
----
+**Analysis Date:** 2026-04-09
 
 ## Tech Debt
 
-**Stray `new PrismaClient()` in ClockLogsController:**
-- Issue: `ClockLogsController.ts` instantiates its own Prisma client at module scope, bypassing the singleton. This creates a second connection pool that is never closed.
-- Files: `src/backend/src/controller/ClockLogsController.ts:5`
-- Impact: Extra idle DB connections; the query-log counter in `src/backend/src/lib/prisma.ts` under-counts actual queries from this controller.
-- Fix approach: Replace `const prisma = new PrismaClient()` with `import { prisma } from '../lib/prisma'`.
+**Auth token lifecycle is partially implemented across backend and frontend:**
+- Issue: Token refresh and password change flows are exposed in routes but return placeholder responses, while frontend client code assumes a real token refresh contract.
+- Files: `src/backend/src/controller/AuthController.ts`, `src/backend/src/routes/AuthRoute.ts`, `src/frontend/src/services/http.ts`, `src/frontend/src/services/authService.ts`
+- Impact: Expired sessions fail hard instead of refreshing (`http.ts` expects `token` from refresh response), causing forced logout loops and brittle auth UX.
+- Fix approach: Implement real refresh token issuance/rotation in `AuthController.refreshToken`, align response shape with `AuthService.refreshToken`, and add integration tests for access-token expiry + refresh path.
 
-**`@prisma/client` in devDependencies:**
-- Issue: `@prisma/client` is listed under `devDependencies`. A production `npm install --production` omits it, causing a runtime import failure.
-- Files: `src/backend/package.json:33`
-- Impact: Application cannot start in any production deployment that strips devDependencies.
-- Fix approach: Move `"@prisma/client": "^6.14.0"` to `dependencies`.
+**HTTP client layer is bypassed in multiple frontend services:**
+- Issue: Several services call `fetch` directly instead of centralizing calls through `http.ts`.
+- Files: `src/frontend/src/services/branchService.ts`, `src/frontend/src/services/payrollEmployeesService.ts`, `src/frontend/src/services/auditLogsService.ts`, `src/frontend/src/services/authService.ts`
+- Impact: Inconsistent error parsing, inconsistent retry/auth refresh behavior, and duplicated request logic.
+- Fix approach: Route non-auth API calls through `src/frontend/src/services/http.ts`; keep `authService.ts` as the only special-case client.
 
-**`bcrypt@6.0.0` pre-release in production:**
-- Issue: `^6.0.0` accepts all future 6.x releases automatically; bcrypt 6 is still pre-release with no stable API guarantee.
-- Files: `src/backend/package.json:20`
-- Impact: Risk of unexpected behaviour in password hashing and comparison after an upstream bcrypt release.
-- Fix approach: Pin to `"bcrypt": "^5.1.1"` (latest stable) or lock to an exact pre-release version.
+**Generated build artifacts are present in source tree:**
+- Issue: Built JS artifacts are committed under backend source tree.
+- Files: `src/backend/dist/**`
+- Impact: Drift risk between TS source and committed JS, noisy diffs, and accidental runtime confusion.
+- Fix approach: Treat `src/backend/dist/` as build output only; ignore it in VCS and regenerate in CI/CD.
 
-**Missing Zod validation on 8 mutation routes:**
-- Issue: `validateBody` middleware is applied only to employee, deduction, payroll, clock-log bulk, and user-permission routes. The following routes accept unvalidated POST/PUT bodies.
-- Files (unvalidated): `src/backend/src/routes/BonusesRoute.ts:67,149`, `src/backend/src/routes/VacationRoute.ts:63,166`, `src/backend/src/routes/LaborEventsRoute.ts:54,121,194`, `src/backend/src/routes/PositionRoute.ts:51,148`, `src/backend/src/routes/PayrollTypeRoute.ts:54,100`, `src/backend/src/routes/EmployeeDeductionsRoute.ts`
-- Impact: Malformed payloads reach controllers and may cause unhandled Prisma errors or persist corrupt data.
-- Fix approach: Add Zod schemas in `src/backend/src/schemas/` for each entity and wire `validateBody` on each POST/PUT handler.
+**Monolithic files concentrate business and UI complexity:**
+- Issue: Critical logic is concentrated in very large files.
+- Files: `src/backend/src/service/NomineeService.ts` (~1021 lines), `src/backend/src/service/ReportsService.ts` (~895), `src/backend/src/controller/ClockLogsController.ts` (~690), `src/frontend/src/app/pages/attendance/page.tsx` (~1178), `src/frontend/src/components/PayrollResults.tsx` (~817)
+- Impact: Higher regression risk, slower onboarding, and difficult unit isolation.
+- Fix approach: Split by sub-domain (parsing, calculations, persistence, presentation) into smaller modules with explicit interfaces and focused tests.
 
-**`NomineeController` instantiates `NomineeService` on every request:**
-- Issue: All four `NomineeController` handlers call `new NomineeService()` inside the handler body, contradicting the codebase convention of static-method classes with no instantiation.
-- Files: `src/backend/src/controller/NomineeController.ts:11,40,62,116`
-- Impact: Minor correctness issue — NomineeService holds no state so behaviour is unaffected — but violates architecture conventions.
-- Fix approach: Convert `NomineeService` to a static-method class consistent with `PayrollService`, `EmployeeService`, and others. Phase 5 backlog.
+## Known Bugs
 
-**`NomineeService.savePayrollEmployees` runs without a database transaction:**
-- Issue: The method loops over all employees and performs per-employee upserts on `vpg_payroll_employee` and `vpg_employee_deductions`. If the process crashes mid-loop, the database is left in a partially-saved state.
-- Files: `src/backend/src/service/NomineeService.ts:166-266`
-- Impact: Partial payroll saves produce incorrect aggregate totals visible in the payroll list page and any CCSS/Hacienda reports derived from saved data.
-- Fix approach: Wrap the loop in `prisma.$transaction(async (tx) => { ... })`.
+**Refresh endpoint contract mismatch breaks automatic re-authentication:**
+- Symptoms: Frontend refresh flow throws `Refresh failed` and users are logged out when access token expires.
+- Files: `src/backend/src/controller/AuthController.ts`, `src/frontend/src/services/http.ts`, `src/frontend/src/services/authService.ts`
+- Trigger: Any API request returning `401` with refresh token present.
+- Workaround: User re-login.
 
-**Pervasive `any` types in `NomineeService`:**
-- Issue: `calculateEmployeePayroll`, `processDailyWork`, and `calculateDailyHours` accept `any` / `any[]` for all domain objects (employees, clock logs, vacations, labor events, bonuses, deductions).
-- Files: `src/backend/src/service/NomineeService.ts:418-426, 595-597, 702-703`
-- Impact: TypeScript provides no safety on the most complex, payroll-critical code path. Field renames from Prisma schema changes will not be caught at compile time.
-- Fix approach: Define typed interfaces in `src/backend/src/model/` for each Prisma row shape and replace `any` with those types.
+**Employee profile modal uses placeholder attendance and contact data:**
+- Symptoms: UI shows hardcoded phone and sample attendance records unrelated to selected employee.
+- Files: `src/frontend/src/hooks/useEmployeeTable.ts`
+- Trigger: Opening employee profile from employee table.
+- Workaround: None in current UI; data is static placeholder.
 
----
+**Unimplemented hook shipped as empty module:**
+- Symptoms: `useDashboard` has no implementation.
+- Files: `src/frontend/src/hooks/useDashboard.ts`
+- Trigger: Any future import/use of dashboard hook.
+- Workaround: Use alternate hooks/pages that do not import this module.
 
 ## Security Considerations
 
-**Plaintext password comparison still enabled:**
-- Risk: `AuthService.verifyPassword` silently falls back to `inputPassword === storedPassword` when the stored value is not a bcrypt hash. Any user seeded with a plaintext password can authenticate without a hash.
-- Files: `src/backend/src/service/AuthService.ts:117-135`
-- Current mitigation: None — the code path executes with only a `console.log('Using plain text verification')` and no warning to the caller.
-- Recommendations: Remove the plaintext branch entirely. Add a migration script to bcrypt-hash any existing plaintext rows before deploying the removal.
+**Plaintext password fallback still accepted during authentication:**
+- Risk: Stored non-hashed passwords remain valid because auth path explicitly compares raw text when hash format is absent.
+- Files: `src/backend/src/service/AuthService.ts`
+- Current mitigation: bcrypt is used when stored hash matches bcrypt format.
+- Recommendations: Enforce hashed-only credentials, migrate legacy rows to bcrypt hashes, and remove plaintext comparison branch.
 
-**`updateLastLogin` is a no-op stub:**
-- Risk: Login timestamps are never persisted. There is no way to detect credential-stuffing patterns or audit when users last authenticated.
-- Files: `src/backend/src/service/AuthService.ts:281-287`
-- Current mitigation: None — the method body only calls `console.log`.
-- Recommendations: Implement the DB write using `prisma.vpg_users.update`. Requires a schema migration if `user_last_login` column is absent. Phase 5 backlog.
+**Sensitive operational data appears in logs:**
+- Risk: Query text and auth flow details are logged broadly, increasing exposure of internal data and operational metadata.
+- Files: `src/backend/src/lib/prisma.ts`, `src/backend/src/service/AuthService.ts`, `src/backend/src/controller/AuthController.ts`, `src/frontend/src/app/pages/attendance/page.tsx`, `src/frontend/src/components/PayrollResults.tsx`
+- Current mitigation: Not detected beyond default console output.
+- Recommendations: Replace ad-hoc `console.log` with structured logger + environment-based log levels; redact auth/user/query-sensitive fields.
 
-**No rate limiting on login endpoint:**
-- Risk: `POST /api/login` is publicly accessible with no request-rate control, leaving it open to brute-force and credential-stuffing attacks.
-- Files: `src/backend/src/routes/AuthRoute.ts:55`, `src/backend/src/index.ts`
-- Current mitigation: None.
-- Recommendations: Apply `express-rate-limit` (e.g. 10 attempts per 15 minutes per IP) scoped to auth routes. Phase 7 backlog.
-
-**No security headers (helmet missing):**
-- Risk: API responses carry no `X-Content-Type-Options`, `Strict-Transport-Security`, `X-Frame-Options`, or `Content-Security-Policy` headers.
-- Files: `src/backend/src/index.ts`
-- Current mitigation: None.
-- Recommendations: `app.use(helmet())` at server startup. Phase 7 backlog.
-
-**No token revocation on logout:**
-- Risk: `POST /api/logout` returns 200 but performs no server-side action. A stolen access token remains valid for its full 24-hour TTL after the user logs out.
-- Files: `src/backend/src/controller/AuthController.ts:129-145`
-- Current mitigation: None — code comment acknowledges the gap but no short-TTL + refresh-token strategy is in place.
-- Recommendations: Shorten access-token TTL to 15 minutes and implement the refresh-token flow (currently stubbed at `AuthController.refreshToken`), or maintain a token-revocation table keyed by `jti`. Phase 7 backlog.
-
-**Verbose query logging enabled in all environments:**
-- Risk: The singleton Prisma client logs every SQL query to `console.log` unconditionally. In production this leaks partial query structure to log aggregators and adds unnecessary I/O.
-- Files: `src/backend/src/lib/prisma.ts:4-13`
-- Current mitigation: None — no environment check before registering the `query` event listener.
-- Recommendations: Gate behind `if (process.env.NODE_ENV !== 'production')` or remove; the query counter export can remain for debugging.
-
----
-
-## Domain Correctness Issues
-
-**Costa Rica national holidays not excluded from working-day count:**
-- Problem: `countWorkingDaysInPeriod` and `calculateScheduledHours` exclude only Sundays (`getDay() !== 0`). Costa Rica has 12 statutory public holidays that are not regular working days.
-- Files: `src/backend/src/utils/payrollUtils.ts:306-321`
-- Impact: Scheduled hours are over-counted for any period containing a national holiday. An employee working that period shows a deficit against scheduled hours, potentially suppressing legitimate overtime.
-- Fix approach: Add a `CR_NATIONAL_HOLIDAYS` constant (array of `MM-DD` strings representing fixed-date holidays) and subtract matching calendar dates in `countWorkingDaysInPeriod`. Moveable dates (Holy Thursday/Friday) require year-calculation logic. Phase 6 backlog.
-
-**Audit logs are written by only one service:**
-- Problem: The `vpg_audit_logs` table and read-capable `AuditLogsService` exist, but only `UserService.updatePermissions` at line 150 ever writes a log entry. All other mutation operations — employee create/update/dismiss, payroll creation, vacation approval, deduction changes, clock-log bulk import — produce no audit trail.
-- Files: `src/backend/src/service/AuditLogsService.ts` (read-only in practice), `src/backend/src/service/UserService.ts:150` (sole writer)
-- Impact: The audit log UI page shows near-empty results. Compliance with CCSS and Ministerio de Hacienda may require a full mutation audit trail.
-- Fix approach: Add a `static async writeLog(userId, action, entity, entityId, details)` method to `AuditLogsService` and call it from `EmployeeService`, `PayrollService`, `VacationService`, and `NomineeService.savePayrollEmployees`. Phase 5 backlog.
-
----
-
-## Fragile Areas
-
-**Legacy `POST /api/nominee/calculate` route:**
-- Files: `src/backend/src/routes/NomineeRoute.ts:97`, `src/backend/src/service/NomineeService.ts:107-158`
-- Why fragile: The legacy `calculateNominee()` method uses a hardcoded salary of `1000` for percentage-deduction math. The frontend `NomineeService.calculateNominee()` client method at `src/frontend/src/services/nomineeService.ts:36-42` still exists and will call this endpoint if invoked. Any accidental invocation produces completely incorrect deduction figures with no error.
-- Safe modification: Do not call this endpoint from any UI. Remove `NomineeService.calculateNominee()` from the frontend service once confirmed unused across all pages.
-- Test coverage: None.
-
-**`AuthController.refreshToken` and `changePassword` are stubs returning 200:**
-- Files: `src/backend/src/controller/AuthController.ts:201-213, 220-233`
-- Why fragile: Both endpoints are registered, protected by `verifyToken`, and return `{ success: true, message: "...pendiente implementar" }` for any valid input. Any frontend code relying on these endpoints for real behaviour will silently succeed with no effect.
-- Safe modification: Do not call from production UI until implemented. Phase 5/future backlog.
-
----
-
-## Test Coverage Gaps
-
-**`NomineeService` — zero test coverage:**
-- What's not tested: `calculatePayrollForPeriod`, `calculateEmployeePayroll`, `processDailyWork`, `calculateDailyHours`, `savePayrollEmployees`, all six `preload*` static methods.
-- Files: `src/backend/src/service/NomineeService.ts` (889 lines, no test file)
-- Risk: Any regression in overtime calculation, vacation-day handling, labor-event exclusion, or weekly-rest computation goes undetected. This is the highest-risk service because errors directly affect employee pay.
-- Priority: **High** — Phase 8 backlog.
-
-**`payrollUtils.ts` — zero test coverage:**
-- What's not tested: `calculateOvertimeHoursBiweekly`, `calculateWeeklyRestHours`, `validateClockLogPairs`, `hasOverlappingPairs`, `countWorkingDaysInPeriod`, `calculateScheduledHours`.
-- Files: `src/backend/src/utils/payrollUtils.ts`
-- Risk: Pure-function math errors in Costa Rica labor law calculations go undetected. These are the easiest functions in the codebase to unit-test.
-- Priority: **High** — Phase 8 backlog.
-
-**Only one test file exists for the entire backend:**
-- What's not tested: All controllers, all services except `PayrollService` (partial — create + getAll only), all middleware, all route handlers.
-- Files: `src/backend/src/__tests__/unit/services/PayrollService.test.ts` (sole test file)
-- Risk: Near-zero regression safety for any refactor.
-- Priority: **Medium** — grow incrementally; prioritise `NomineeService` and `payrollUtils`.
-
----
+**Secrets are modeled as plaintext fields in DB schema:**
+- Risk: Mail and report target credentials/tokens are persisted as plain strings.
+- Files: `src/backend/prisma/schema.prisma` (`vpg_mail_server_settings.mail_server_settings_password`, `vpg_report_targets.report_targets_auth_token`)
+- Current mitigation: Not detected at schema/service layer.
+- Recommendations: Encrypt at rest (application-level or database), restrict read paths, and rotate secrets periodically.
 
 ## Performance Bottlenecks
 
-**`preloadVacations` fetches all historical paid vacations with no date filter:**
-- Problem: `NomineeService.preloadVacations()` returns every `vpg_vacations` row where `vacations_paid = true` with no period date constraint.
-- Files: `src/backend/src/service/NomineeService.ts:781-788`
-- Cause: Missing date range predicate — contrast with `preloadLaborEvents` which filters by period dates.
-- Improvement path: Add `vacations_end_date: { gte: startDate }` and `vacations_start_date: { lte: endDate }` predicates, consistent with the pattern used in `preloadLaborEvents` at line 790.
+**Import employee resolution scales poorly with log volume:**
+- Problem: Employee resolution can fetch and scan active employees repeatedly per imported log.
+- Files: `src/backend/src/controller/ClockLogsController.ts`
+- Cause: `resolveEmployeeId()` does DB queries and full-employee scan inside per-log loop.
+- Improvement path: Preload employee lookup maps once per import session (by ID and normalized name) and resolve in-memory.
 
-**Verbose Prisma query logging unconditionally writes to stdout:**
-- Problem: Every SQL query emits a `console.log` via the `query` event listener on the singleton Prisma client. A payroll calculation for 100 employees triggers hundreds of log lines.
-- Files: `src/backend/src/lib/prisma.ts:4-13`
-- Cause: No environment check — listener fires in all environments.
-- Improvement path: Gate behind `process.env.NODE_ENV !== 'production'`.
+**Payroll save path performs per-employee/per-deduction DB writes:**
+- Problem: Large payroll runs incur many serial queries.
+- Files: `src/backend/src/service/NomineeService.ts`
+- Cause: Sequential `findFirst`/`update|create` and nested deduction `upsert` per employee.
+- Improvement path: Batch operations in transactions, pre-diff records, and reduce round trips with grouped writes.
+
+**Receipt batch generation is sequential and browser-heavy:**
+- Problem: Consolidated receipts generation is slow for many employees.
+- Files: `src/backend/src/service/PaymentReceiptService.ts`
+- Cause: Per-employee PDF generation loops sequentially and launches Puppeteer path repeatedly via `generateReceiptPDF()`.
+- Improvement path: Reuse one browser/page context per batch or render multi-receipt HTML once when possible.
+
+**Report dashboard and dispatch paths include repeated DB operations:**
+- Problem: Throughput drops as payroll/employee count grows.
+- Files: `src/backend/src/service/ReportsService.ts`
+- Cause: `getDashboard()` executes per-payroll `findFirst`; `sendReports()` performs serial file generation + email sends + per-attachment status updates.
+- Improvement path: Pre-aggregate logs in one query, parallelize safe sections, and queue email dispatch asynchronously.
+
+## Fragile Areas
+
+**Attendance page parsing and transformation pipeline is highly coupled:**
+- Files: `src/frontend/src/app/pages/attendance/page.tsx`
+- Why fragile: Parsing, normalization, import, persistence calls, and rendering logic are all in one client page with many date/time edge branches.
+- Safe modification: Extract parsing utilities and import orchestration into dedicated modules with unit tests before behavior changes.
+- Test coverage: Frontend tests target clock-logs page/hook area, but no dedicated tests cover this attendance parser workflow.
+
+**Payroll core computation and persistence are tightly intertwined:**
+- Files: `src/backend/src/service/NomineeService.ts`, `src/backend/src/utils/payrollUtils.ts`
+- Why fragile: Domain math, fallback behavior, DB preloads, and persistence side effects are combined; minor edits can alter legal payroll outputs.
+- Safe modification: Isolate pure calculation stages from data access; protect each rule with deterministic unit tests.
+- Test coverage: `payrollUtils` and `NomineeService` tests exist, but end-to-end coverage of all real-world combinations remains limited.
+
+**Clock log correction/import controller is overloaded:**
+- Files: `src/backend/src/controller/ClockLogsController.ts`, `src/backend/src/service/ClockLogsService.ts`
+- Why fragile: Multiple workflows (import, pagination, orphan/anomaly resolution, status transitions) share one controller and mixed typing (`any` usage).
+- Safe modification: Split controller by concern (query, import, correction) and introduce strict request DTO types.
+- Test coverage: Unit tests exist for controller/service, but complexity and branching depth remain high.
+
+## Scaling Limits
+
+**Synchronous report dispatch pipeline:**
+- Current capacity: Operates per employee in-process (`for ... of`) with XML generation, filesystem write, SMTP send, and status update.
+- Limit: Large payrolls can cause long request times and partial completion risk on transient SMTP/file errors.
+- Scaling path: Move dispatch to background jobs (queue + worker), persist job status, and expose async progress endpoints.
+
+**In-process heavy document generation:**
+- Current capacity: PDF generation uses Puppeteer in API process.
+- Limit: CPU/memory pressure increases with concurrent/batch receipt generation.
+- Scaling path: Offload PDF generation to worker pool/service and cache static assets/templates.
+
+## Dependencies at Risk
+
+**bcrypt pre-release major (`^6.0.0`):**
+- Risk: Pre-release/less-proven compatibility for production auth-critical path.
+- Impact: Authentication regressions or platform-specific issues can block all login flows.
+- Migration plan: Pin to stable `bcrypt@^5.1.1` and run auth regression suite after downgrade.
+
+## Missing Critical Features
+
+**Production-grade refresh token and password-change implementation:**
+- Problem: Endpoints are present but return placeholder success messages.
+- Blocks: Reliable session continuity, token rotation, and secure user credential lifecycle.
+
+## Test Coverage Gaps
+
+**Backend reporting and receipt generation flows:**
+- What's not tested: `ReportsService` dispatch/storage flows and `PaymentReceiptService` PDF/data assembly edge cases.
+- Files: `src/backend/src/service/ReportsService.ts`, `src/backend/src/service/PaymentReceiptService.ts`
+- Risk: Regressions in legally relevant outputs (official reports and payment receipts) can ship undetected.
+- Priority: High
+
+**Frontend service consistency outside clock-logs domain:**
+- What's not tested: Most non-clock-logs services using direct `fetch` and mixed response parsing.
+- Files: `src/frontend/src/services/branchService.ts`, `src/frontend/src/services/payrollEmployeesService.ts`, `src/frontend/src/services/auditLogsService.ts`
+- Risk: Runtime failures and inconsistent UX on auth/network errors.
+- Priority: Medium
+
+**Attendance import/parser edge cases:**
+- What's not tested: Excel date/time parsing branches and employee name resolution behavior in attendance flow.
+- Files: `src/frontend/src/app/pages/attendance/page.tsx`
+- Risk: Silent misclassification of timestamps or employees during import.
+- Priority: High
 
 ---
 
-*Concerns audit: 2026-03-26*
+*Concerns audit: 2026-04-09*

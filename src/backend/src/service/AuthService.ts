@@ -1,7 +1,10 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../model/user';
+import { EmailService } from './EmailService';
+import { env } from '../config/env';
 
 export interface LoginCredentials {
   username: string;
@@ -93,7 +96,7 @@ export class AuthService {
       console.log('Generating token for user:', authenticatedUser.username);
 
       // Generar JWT token
-      const token = this.generateToken(authenticatedUser);
+      const token = this.issueAccessToken(authenticatedUser);
 
       return {
         success: true,
@@ -138,16 +141,16 @@ export class AuthService {
   /**
    * Genera un JWT token para el usuario
    */
-  private static generateToken(user: AuthenticatedUser): string {
+  static issueAccessToken(user: Pick<AuthenticatedUser, 'id' | 'username' | 'role'>): string {
     const payload = {
       id: user.id,
       username: user.username,
       role: user.role
     };
 
-    const secret = process.env.JWT_SECRET || 'your-default-secret-key';
+    const secret = env.JWT_SECRET;
     const options: jwt.SignOptions = {
-      expiresIn: process.env.JWT_EXPIRES_IN ? Number(process.env.JWT_EXPIRES_IN) : 24 * 60 * 60 // 24 horas por defecto
+      expiresIn: env.JWT_EXPIRES_IN as any
     };
 
     return jwt.sign(payload, secret, options) as string;
@@ -156,12 +159,41 @@ export class AuthService {
   /**
    * Verifica si un JWT token es válido
    */
-  static verifyToken(token: string): any {
+  static verifyToken(token: string): { id: number; username?: string; role?: string; exp: number; iat?: number } {
     try {
-      const secret = process.env.JWT_SECRET || 'your-default-secret-key';
-      return jwt.verify(token, secret);
+      const secret = env.JWT_SECRET;
+      return jwt.verify(token, secret) as { id: number; username?: string; role?: string; exp: number; iat?: number };
     } catch (error) {
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        const tokenExpiredError = new Error('Token expirado');
+        tokenExpiredError.name = 'TokenExpiredError';
+        throw tokenExpiredError;
+      }
+
       throw new Error('Token inválido');
+    }
+  }
+
+  /**
+   * Verifies that the supplied plain-text password matches the stored hash for the given user.
+   * Used to enforce step-up authentication before mutating critical legal parameters.
+   *
+   * @param userId - The numeric user ID whose password to verify
+   * @param plainPassword - The password supplied by the caller (never logged)
+   * @returns true if the password matches, false otherwise (including if user not found)
+   * @throws Never — all DB errors are caught and return false to avoid leaking user existence
+   */
+  static async verifyPasswordForUser(userId: string, plainPassword: string): Promise<boolean> {
+    try {
+      const user = await prisma.vpg_users.findUnique({
+        where: { user_id: parseInt(userId, 10) },
+        select: { user_password: true },
+      });
+      if (!user?.user_password) return false;
+      return await bcrypt.compare(plainPassword, user.user_password);
+    } catch {
+      // Do NOT include plainPassword in any error log
+      return false;
     }
   }
 
@@ -296,12 +328,23 @@ export class AuthService {
    * Agrega un token a la blocklist de logout
    */
   static async addTokenToBlocklist(token: string, expiresAt: Date): Promise<void> {
-    await prisma.vpg_token_blocklist.create({
-      data: {
-        blocklist_token: token,
-        blocklist_expires: expiresAt,
-      },
-    });
+    try {
+      await prisma.vpg_token_blocklist.create({
+        data: {
+          blocklist_token: token,
+          blocklist_expires: expiresAt,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        return;
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -330,5 +373,149 @@ export class AuthService {
         },
       },
     });
+  }
+
+  /**
+   * Request password change - generates 6-digit code and sends via email
+   */
+  static async requestPasswordChange(email: string): Promise<{ success: boolean; message: string }> {
+    // Find user by email (using findFirst since email is not unique)
+    const user = await prisma.vpg_users.findFirst({
+      where: { user_email: email }
+    });
+
+    if (!user) {
+      // Return success even if user not found (prevent email enumeration)
+      return { success: true, message: 'If the email exists, a code has been sent' };
+    }
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Hash code with bcrypt (cost 3 for speed since codes are short-lived)
+    const hashedCode = await bcrypt.hash(code, 3);
+
+    // Set expiration to 15 minutes from now
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Store in DB
+    await prisma.vpg_password_change_request.create({
+      data: {
+        pcr_user_id: user.user_id,
+        pcr_code: hashedCode,
+        pcr_expires: expires
+      }
+    });
+
+    // Send email with code using EmailService
+    const emailService = new EmailService();
+    await emailService.sendEmail({
+      to: user.user_email,
+      subject: 'Código de verificación - Verde Gestión',
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FCF1D5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FCF1D5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 500px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 77, 54, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #3B4D36 0%, #2D3A28 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h1 style="color: #D4BD80; margin: 0; font-size: 24px; font-weight: bold;">VERDE GESTIÓN</h1>
+              <p style="color: #8B7D5E; margin: 5px 0 0 0; font-size: 12px;">Sistema de Planilla</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px;">
+              <h2 style="color: #3B4D36; margin: 0 0 20px 0; font-size: 18px;">Código de verificación</h2>
+              <p style="color: #4A5D3A; font-size: 14px; line-height: 1.6;">
+                Has solicitado un código para cambiar tu contraseña. Utiliza el siguiente código:
+              </p>
+              <div style="background-color: #FCF1D5; border: 2px dashed #D4C89A; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; color: #3B4D36; letter-spacing: 8px;">${code}</span>
+              </div>
+              <p style="color: #8B7D5E; font-size: 12px;">
+                Este código <strong>expira en 15 minutos</strong>.
+              </p>
+              <p style="color: #8B7D5E; font-size: 12px; margin-top: 20px;">
+                Si no solicitaste este cambio, puedes ignorar este correo.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 12px 12px;">
+              <p style="color: #8B7D5E; font-size: 11px; margin: 0;">
+                © ${new Date().getFullYear()} Verde Gestión — Control de planilla
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+    });
+
+    return { success: true, message: 'Code sent to email' };
+  }
+
+  /**
+   * Confirm password change with verification code
+   */
+  static async confirmPasswordChange(code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    // Validate inputs
+    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      return { success: false, message: 'Invalid code format' };
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      return { success: false, message: 'Password must be at least 8 characters' };
+    }
+
+    // Find valid (not used, not expired) request
+    const request = await prisma.vpg_password_change_request.findFirst({
+      where: {
+        pcr_used: false,
+        pcr_expires: { gt: new Date() }
+      },
+      orderBy: { pcr_created: 'desc' }
+    });
+
+    if (!request) {
+      return { success: false, message: 'Invalid or expired code' };
+    }
+
+    // Verify code
+    const isValid = await bcrypt.compare(code, request.pcr_code);
+    if (!isValid) {
+      return { success: false, message: 'Invalid code' };
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    await prisma.vpg_users.update({
+      where: { user_id: request.pcr_user_id },
+      data: { user_password: hashedPassword }
+    });
+
+    // Mark code as used
+    await prisma.vpg_password_change_request.update({
+      where: { pcr_id: request.pcr_id },
+      data: { pcr_used: true }
+    });
+
+    return { success: true, message: 'Password changed successfully' };
   }
 }

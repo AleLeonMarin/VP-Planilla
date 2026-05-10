@@ -7,11 +7,11 @@ import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { usePositions } from '@/hooks/usePositions';
 import { Position } from '@/services/positionsService';
-import { useModal } from '@/hooks/useModal';
+import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function PositionsPage() {
-  const { data, refetch, create, update, remove } = usePositions();
-  const modal = useModal();
+  const { data, isLoading, error, refetch, create, update, remove } = usePositions();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Position | null>(null);
@@ -29,9 +29,8 @@ export default function PositionsPage() {
       if (editing) {
         try {
           await update(editing.id, values);
-          modal.showSuccess('Actualizado', 'Posición actualizada correctamente');
+          toast.success('Posición actualizada correctamente');
         } catch (err: unknown) {
-          // Detect conflict
           const apiErr = err as { status?: number; message?: string };
           if (apiErr?.status === 409) {
             setConflictMessage(apiErr.message || 'Conflicto al actualizar. Otro usuario modificó el registro.');
@@ -42,12 +41,12 @@ export default function PositionsPage() {
         }
       } else {
         await create(values);
-        modal.showSuccess('Creado', 'Posición creada correctamente');
+        toast.success('Posición creada correctamente');
       }
       refetch();
       setFormOpen(false);
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -55,10 +54,10 @@ export default function PositionsPage() {
     if (!toDelete) return;
     try {
       await remove(toDelete.id);
-      modal.showSuccess('Eliminado', 'Posición eliminada correctamente');
+      toast.success('Posición eliminada correctamente');
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
@@ -69,7 +68,6 @@ export default function PositionsPage() {
     setConflictOpen(false);
     setConflictMessage(null);
     await refetch();
-    // reopen form with fresh data if editing
     if (editing) {
       const fresh = (data || []).find(d => d.id === editing.id) as Position | undefined;
       setEditing(fresh || null);
@@ -85,36 +83,48 @@ export default function PositionsPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6">
+      <div className="mb-2">
+        <p className="text-xs text-zinc-400 uppercase tracking-widest">Configuración / Posiciones</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Posiciones</h1>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold text-[#3B4D36] dark:text-white">Posiciones</h2>
-        <div>
-          <button onClick={() => refetch()} className="mr-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600">Recargar</button>
-          <button onClick={openCreate} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Nueva posición</button>
+        <div />
+        <div className="flex gap-2">
+          <button onClick={() => refetch()} className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-2">
+            <ArrowPathIcon className="h-4 w-4" />
+            Recargar
+          </button>
+          <button onClick={openCreate} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center gap-2">
+            <PlusIcon className="h-4 w-4" />
+            Nueva posición
+          </button>
         </div>
       </div>
 
-      <Table columns={columns} data={data || []} onEdit={openEdit} onDelete={openDelete} />
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+        <Table columns={columns} data={data || []} isLoading={isLoading} error={error} onRetry={refetch} onEdit={openEdit} onDelete={openDelete} />
+      </div>
 
       <FormModal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Editar Posición' : 'Nueva Posición'} initialValues={editing || undefined} onSubmit={handleSubmit}>
         {(methods: UseFormReturn<Partial<Position>>) => (
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Nombre</label>
-              <input {...methods.register('name')} className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 rounded text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Nombre</label>
+              <input {...methods.register('name')} className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 rounded-lg text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Descripción</label>
-              <input {...methods.register('description')} className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 rounded text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Descripción</label>
+              <input {...methods.register('description')} className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 rounded-lg text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Salario base</label>
-              <input {...methods.register('base_salary', { valueAsNumber: true })} className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 rounded text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Salario base</label>
+              <input {...methods.register('base_salary', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 rounded-lg text-zinc-800 dark:text-zinc-100" />
             </div>
 
-            {/* version se envía en update para control optimista */}
             <input type="hidden" {...(methods.register ? methods.register('version') : {})} />
           </div>
         )}

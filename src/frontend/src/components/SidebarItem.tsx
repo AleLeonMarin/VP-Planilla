@@ -1,64 +1,107 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface SidebarItemProps {
   href: string;
-  icon: string;
+  icon: string | React.ElementType;
   text: string;
-  subItems?: { href: string; text: string }[]; // Optional array for submenus
+  subItems?: { href: string; text: string }[];
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon, text, subItems }) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ href, icon: Icon, text, subItems }) => {
   const pathname = usePathname();
   const isActive = pathname === href || (subItems && subItems.some(sub => pathname.startsWith(sub.href)));
-  const [isOpen, setIsOpen] = useState(isActive); // State to manage submenu open/close
+  const [isOpen, setIsOpen] = useState(isActive);
+
+  // Sync expansion state with active route changes
+  useEffect(() => {
+    if (isActive) {
+      setIsOpen(true);
+    }
+  }, [isActive]);
 
   const toggleSubmenu = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation if it's a parent item with submenus
+    e.preventDefault();
+    e.stopPropagation(); // Evitar que el clic llegue al Link si el layout cambia
     setIsOpen(!isOpen);
   };
 
   return (
-    <div>      <Link
-        href={subItems ? '#' : href} // If subItems exist, link to # or prevent default
-        onClick={subItems ? toggleSubmenu : undefined}
-        className={`flex items-center p-2 rounded-lg transition-colors duration-200 ${
-          isActive 
-            ? 'bg-[#E7DCC1] dark:bg-[#3d3d3d] text-[#4A5D3A] dark:text-[#E5E5E5]' 
-            : 'text-[#4A5D3A] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]'
-        } ${subItems ? 'cursor-pointer' : ''}`} // Add cursor pointer for items with submenus
-      >
-        <div className="mr-2 text-lg">
-          <Image src={icon} alt={text} width={20} height={20} />
-        </div>
-        <span className="flex-1 text-sm font-medium">
-          {text}
-        </span>
-        {subItems && (
-          <span className="ml-2 text-xs">
-            {isOpen ? '▲' : '▼'} {/* Arrow indicator for submenu */}
+    <div className="group/sidebar-item">
+      <div className="relative">
+        <Link
+          href={href}
+          className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-all duration-200 group ${
+            subItems ? 'pr-8' : ''
+          } ${
+            isActive
+              ? 'bg-green-600 text-white shadow-sm shadow-green-900/20'
+              : 'text-[#4A5D3A] dark:text-zinc-400 hover:bg-[#E7DCC1] dark:hover:bg-zinc-800 hover:text-[#3A4D2A] dark:hover:text-zinc-100'
+          }`}
+        >
+          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+            {typeof Icon === 'string' ? (
+              <Image
+                src={Icon}
+                alt={text}
+                width={18}
+                height={18}
+                loading="eager"
+                className={isActive ? 'brightness-0 invert' : 'opacity-75 group-hover:opacity-100'}
+              />
+            ) : (
+              <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-white' : 'text-[#4A5D3A] dark:text-zinc-400 opacity-75 group-hover:opacity-100'}`} />
+            )}
+          </div>
+          <span className="flex-1 text-sm font-medium leading-none">
+            {text}
           </span>
-        )}
-      </Link>
-      {subItems && isOpen && (
-        <div className="pl-6 mt-1 space-y-0.5"> {/* Submenu container */}
-          {subItems.map((subItem) => (
-            <Link
-              key={subItem.href}
-              href={subItem.href}
-              className={`flex items-center p-1.5 rounded-md transition-colors duration-200 text-xs ${
-                pathname === subItem.href 
-                  ? 'bg-[#E7DCC1] dark:bg-[#3d3d3d] text-[#4A5D3A] dark:text-[#E5E5E5] font-medium' 
-                  : 'text-[#6B7556] dark:text-[#A3A3A3] hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d]'
+        </Link>
+
+        {subItems && (
+          <button
+            onClick={toggleSubmenu}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-200 z-10 ${
+              isActive 
+                ? 'text-white/70 hover:bg-white/10' 
+                : 'text-[#7A8F6A] dark:text-zinc-500 hover:bg-[#D0C8A8]/30 dark:hover:bg-zinc-700/50'
+            }`}
+            aria-label={isOpen ? 'Colapsar' : 'Expandir'}
+          >
+            <ChevronDownIcon
+              className={`w-3.5 h-3.5 transition-all duration-300 ease-in-out transform ${
+                isOpen ? 'rotate-180' : 'rotate-0'
               }`}
-            >
-              {subItem.text}
-            </Link>
-          ))}
+            />
+          </button>
+        )}
+      </div>
+
+      {subItems && isOpen && (
+        <div className="pl-4 mt-0.5 space-y-0.5 relative">
+          {/* Línea guía vertical */}
+          <div className="absolute left-[18px] top-0 bottom-0 w-px bg-[#D0C8A8] dark:bg-zinc-700" />
+          {subItems.map((subItem) => {
+            const subActive = pathname === subItem.href;
+            return (
+              <Link
+                key={subItem.href}
+                href={subItem.href}
+                className={`flex items-center pl-3 pr-2 py-1.5 rounded-md transition-all duration-200 text-xs ${
+                  subActive
+                    ? 'text-green-700 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-900/20'
+                    : 'text-[#6B7556] dark:text-zinc-500 hover:text-[#3A4D2A] dark:hover:text-zinc-200 hover:bg-[#E7DCC1] dark:hover:bg-zinc-800'
+                }`}
+              >
+                {subItem.text}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -20,6 +20,7 @@ export interface Employee {
   hire_date?: string | null;
   gender?: string | null;
   schedule?: string | null;
+  shift_type?: string;
 }
 
 export type EmployeeStatus = 
@@ -41,6 +42,7 @@ export interface EmployeeFormData {
   employee_hire_date: string;
   employee_gender: string;
   employee_required_hours_biweekly: string;
+  shift_type?: string;
 }
 
 export interface EmployeeStats {

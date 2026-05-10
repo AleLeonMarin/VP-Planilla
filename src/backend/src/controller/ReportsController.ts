@@ -64,7 +64,7 @@ export class ReportsController {
         .json({ success: false, message: "ID de planilla inválido" });
     }
 
-    if (!req.user || (!req.user.id && !req.user.user_id)) {
+    if (!req.user || !req.user.id) {
       return res
         .status(401)
         .json({ success: false, message: "Usuario no autenticado" });
@@ -97,7 +97,7 @@ export class ReportsController {
         reportTypes: (reportTypes as OfficialReportType[]) || [],
         cc,
         customMessage,
-        requesterUserId: req.user.id || req.user.user_id,
+        requesterUserId: req.user.id,
       });
 
       res.json({ success: true, data: summary });

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { EmployeeDeductionsService } from '@/services/employeeDeductionsService';
 import { EmployeeDeductionWithDetails, AssignDeductionRequest } from '@/types/employeeDeductions';
 
@@ -45,6 +46,7 @@ export const useEmployeeDeductions = (employeeId?: number) => {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al asignar deducción';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);

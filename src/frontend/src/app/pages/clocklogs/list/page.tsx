@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useModal } from '@/hooks/useModal';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { ClockLogsService, AttendanceSummary, ClockLog } from '@/services/clockLogsService';
+import { getEmployees } from '@/services/employeeService';
 import {
   ClockIcon,
   CalendarIcon,
@@ -12,31 +13,91 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   PencilIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
+import { Select, SelectItem } from '@/components/ui/Select';
+
+const CR_TIMEZONE = 'America/Costa_Rica';
 
 export default function AttendancePage() {
-  const modal = useModal();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [data, setData] = useState<AttendanceSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [editingLog, setEditingLog] = useState<ClockLog | null>(null);
+  const [employees, setEmployees] = useState<{ id: number | string; name: string }[]>([]);
+
+  useEffect(() => {
+    getEmployees()
+      .then(emps => {
+        setEmployees((emps as unknown as Array<Record<string, unknown>>).map(e => ({
+          id: e.id as number | string,
+          name: String(e.name || '')
+        })));
+      })
+      .catch(() => {});
+  }, []);
+
+  const processLogs = (logs: ClockLog[], empList: { id: number | string; name: string }[]): AttendanceSummary[] => {
+    const grouped: Record<string, AttendanceSummary> = {};
+
+    for (const log of logs) {
+      const date = new Intl.DateTimeFormat('en-CA', { timeZone: CR_TIMEZONE }).format(new Date(log.timestamp));
+      const empId = log.employee_id ?? 'unknown';
+      const key = `${empId}_${date}`;
+      const emp = empList.find(e => String(e.id) === String(empId));
+      const empName = emp?.name || (empId !== 'unknown' ? `Empleado #${empId}` : 'Empleado sin identificar');
+
+      if (!grouped[key]) {
+        grouped[key] = { employee_id: empId, employee_name: empName, date, logs: [], hours_worked: 0, check_in: null, check_out: null, inconsistencies: [] };
+      }
+      grouped[key].logs.push(log);
+    }
+
+    return Object.values(grouped).map(entry => {
+      const sorted = [...entry.logs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      const firstIn = sorted.find(l => l.log_type === 'IN');
+      const lastOut = [...sorted].reverse().find(l => l.log_type === 'OUT');
+      const checkIn = firstIn?.timestamp ?? null;
+      const checkOut = lastOut?.timestamp ?? null;
+      const hoursWorked = checkIn && checkOut
+        ? (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 3_600_000
+        : 0;
+      const inCount = sorted.filter(l => l.log_type === 'IN').length;
+      const outCount = sorted.filter(l => l.log_type === 'OUT').length;
+      const inconsistencies: string[] = [];
+      if (!firstIn) inconsistencies.push('Sin entrada registrada');
+      if (!lastOut) inconsistencies.push('Sin salida registrada');
+      if (inCount !== outCount) inconsistencies.push(`Marcas desbalanceadas: ${inCount} entradas, ${outCount} salidas`);
+      return { ...entry, logs: sorted, check_in: checkIn, check_out: checkOut, hours_worked: hoursWorked, inconsistencies };
+    }).sort((a, b) => a.date.localeCompare(b.date) || a.employee_name.localeCompare(b.employee_name));
+  };
 
   const handleFetch = async () => {
     if (!startDate || !endDate) {
-      modal.showError('Fechas incompletas', 'Selecciona fecha de inicio y fin');
+      toast.error('Selecciona fecha de inicio y fin');
       return;
     }
 
     setIsLoading(true);
+    setError(null);
     try {
-      const res = await ClockLogsService.getAttendanceSummary(startDate, endDate);
-      setData(res);
-      modal.showSuccess('Registros cargados', `Se encontraron ${res.length} registros de asistencia`);
+      let currentEmployees = employees;
+      if (currentEmployees.length === 0) {
+        const emps = (await getEmployees()) as unknown as Array<Record<string, unknown>>;
+        currentEmployees = emps.map(e => ({ id: e.id as number | string, name: String(e.name || '') }));
+        setEmployees(currentEmployees);
+      }
+      const logs = await ClockLogsService.getClockLogs(startDate, endDate);
+      const processed = processLogs(logs, currentEmployees);
+      setData(processed);
+      toast.success(`Se encontraron ${processed.length} registros de asistencia`);
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al obtener registros');
+      setError(err instanceof Error ? err.message : 'Error al obtener registros');
+      toast.error(err instanceof Error ? err.message : 'Error al obtener registros');
     } finally {
       setIsLoading(false);
     }
@@ -52,10 +113,32 @@ export default function AttendancePage() {
     setExpandedRows(newExpanded);
   };
 
+  // Convert UTC ISO → "YYYY-MM-DDTHH:MM" in Costa Rica time (for datetime-local input)
+  const toLocalInputValue = (isoString: string): string => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: CR_TIMEZONE,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false
+    }).formatToParts(new Date(isoString));
+    const p: Record<string, string> = {};
+    parts.forEach(({ type, value }) => { p[type] = value; });
+    const h = p.hour === '24' ? '00' : p.hour;
+    return `${p.year}-${p.month}-${p.day}T${h}:${p.minute}`;
+  };
+
+  // Convert "YYYY-MM-DDTHH:MM" in CR time → UTC ISO string (Costa Rica is always UTC-6)
+  const crLocalToUTC = (localString: string): string => {
+    const [date, time] = localString.split('T');
+    const [y, mo, d] = date.split('-').map(Number);
+    const [h, mi] = time.split(':').map(Number);
+    return new Date(Date.UTC(y, mo - 1, d, h + 6, mi)).toISOString();
+  };
+
   const handleEditLog = (log: ClockLog) => {
     setEditingLog({
       ...log,
-      timestamp: new Date(log.timestamp).toISOString().slice(0, 16)
+      timestamp: toLocalInputValue(log.timestamp)
     });
   };
 
@@ -64,15 +147,15 @@ export default function AttendancePage() {
 
     try {
       await ClockLogsService.updateClockLog(editingLog.id, {
-        timestamp: editingLog.timestamp,
+        timestamp: crLocalToUTC(editingLog.timestamp),
         log_type: editingLog.log_type,
         remarks: editingLog.remarks
       });
-      modal.showSuccess('Actualizado', 'Marca actualizada correctamente');
+      toast.success('Marca actualizada correctamente');
       setEditingLog(null);
       await handleFetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al actualizar marca');
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar marca');
     }
   };
 
@@ -80,7 +163,8 @@ export default function AttendancePage() {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleTimeString('es-CR', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: CR_TIMEZONE
     });
   };
 
@@ -89,7 +173,8 @@ export default function AttendancePage() {
       weekday: 'short',
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
+      timeZone: CR_TIMEZONE
     });
   };
 
@@ -111,30 +196,49 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] dark:from-[#121212] via-[#F9F1DC] dark:via-[#1a1a1a] to-[#E7DCC1] dark:to-[#121212]">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] rounded-2xl shadow-lg p-8 mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <ClockIcon className="w-9 h-9 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-1">Registro de Asistencia</h1>
-                <p className="text-[#E7DCC1]">
-                  Gestiona las marcas de entrada y salida de los empleados
-                </p>
-              </div>
+        <div className="mb-8">
+          <p className="text-xs text-zinc-400 uppercase tracking-widest mb-1">
+            Asistencia / Registros
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+              <ClockIcon className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">Registro de Asistencia</h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Gestiona las marcas de entrada y salida de los empleados
+              </p>
             </div>
           </div>
         </div>
 
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 overflow-auto rounded-lg border border-red-200 dark:border-red-800">
+            <div className="bg-red-50 dark:bg-red-950/50 p-6 text-center">
+              <ExclamationTriangleIcon className="w-10 h-10 mx-auto mb-3 text-red-500 dark:text-red-400" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Error al obtener registros</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <button
+                onClick={handleFetch}
+                className="flex items-center gap-2 mx-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Filtros */}
-        <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6 mb-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha inicio
               </label>
@@ -142,11 +246,11 @@ export default function AttendancePage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                className="w-full border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+              <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
                 <CalendarIcon className="w-4 h-4 inline mr-1" />
                 Fecha fin
               </label>
@@ -154,14 +258,14 @@ export default function AttendancePage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                className="w-full border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
               />
             </div>
             <div className="flex gap-3 md:col-span-2">
               <button
                 onClick={handleFetch}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#6F7153] to-[#3B4D36] hover:from-[#5C5E44] hover:to-[#2D3A28] text-white rounded-xl transition-all font-semibold shadow-md disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors font-semibold disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -181,7 +285,7 @@ export default function AttendancePage() {
                   setEndDate('');
                   setData([]);
                 }}
-                className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl transition-all font-medium"
+                className="px-6 py-2.5 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors font-medium"
               >
                 Limpiar
               </button>
@@ -189,13 +293,50 @@ export default function AttendancePage() {
           </div>
         </div>
 
+        {/* Loading state - skeleton table */}
+        {isLoading && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden mb-6">
+            <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+              <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Fecha</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Empleado</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Horario</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Entrada</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Salida</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Balance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-4 w-28 bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-36 bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-20 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-14 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                      <td className="px-6 py-4"><div className="h-4 w-12 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Tabla de asistencia */}
-        {data.length > 0 && (
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#E0D6B7] dark:border-gray-700 bg-[#E7DCC1] dark:bg-[#2a2a2a]">
+        {data.length > 0 && !isLoading && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#3B4D36] dark:text-white">Registros de Asistencia</h2>
-                <div className="flex items-center gap-2 text-sm text-[#6B5B3D] dark:text-gray-400">
+                <h2 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">Registros de Asistencia</h2>
+                <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                   <UserGroupIcon className="w-5 h-5" />
                   <span className="font-semibold">{data.length} registros</span>
                 </div>
@@ -204,32 +345,32 @@ export default function AttendancePage() {
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#E7DCC1] dark:bg-[#2a2a2a]">
+                <thead className="bg-zinc-50 dark:bg-zinc-900/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Fecha
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Empleado
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Horario
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Entrada
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Salida
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-[#3B4D36] dark:text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Balance
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E0D6B7] dark:divide-gray-700">
+                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                   {data.map((entry, idx) => {
                     const key = `${entry.employee_id}_${entry.date}`;
                     const isExpanded = expandedRows.has(key);
@@ -239,42 +380,42 @@ export default function AttendancePage() {
                       <React.Fragment key={key}>
                         <tr
                           onClick={() => toggleRow(key)}
-                          className={`cursor-pointer hover:bg-[#F5EDD5] dark:hover:bg-[#2a2a2a] transition-colors ${
-                            idx % 2 === 0 ? 'bg-white dark:bg-[#1e1e1e]' : 'bg-[#FEFBF5] dark:bg-[#252525]'
+                          className={`cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors ${
+                            idx % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-zinc-50 dark:bg-zinc-800/50'
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               {isExpanded ? (
-                                <ChevronDownIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronDownIcon className="w-5 h-5 text-green-600" />
                               ) : (
-                                <ChevronRightIcon className="w-5 h-5 text-[#6F7153]" />
+                                <ChevronRightIcon className="w-5 h-5 text-green-600" />
                               )}
-                              <span className="text-sm font-medium text-[#3B4D36] dark:text-white">
+                              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                                 {formatDate(entry.date)}
                               </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                               {entry.employee_name}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-center text-sm text-[#6B5B3D] dark:text-gray-400">
+                          <td className="px-6 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
                             Mañana 8h
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                               {formatTime(entry.check_in)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold text-[#3B4D36] dark:text-white">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                               {formatTime(entry.check_out)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-bold text-[#6F7153]">
+                            <span className="text-sm font-bold text-green-600">
                               {formatHours(entry.hours_worked)}
                             </span>
                           </td>
@@ -286,7 +427,8 @@ export default function AttendancePage() {
                               </span>
                               {entry.inconsistencies.length > 0 && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300">
-                                  ⚠️ {entry.inconsistencies.length}
+                                  <ExclamationTriangleIcon className="w-3.5 h-3.5 mr-1" />
+                                  {entry.inconsistencies.length}
                                 </span>
                               )}
                             </div>
@@ -295,10 +437,10 @@ export default function AttendancePage() {
 
                         {/* Fila expandida con detalles de marcas */}
                         {isExpanded && (
-                          <tr className="bg-[#FEFBF5] dark:bg-[#252525]">
+                          <tr className="bg-zinc-50 dark:bg-zinc-800">
                             <td colSpan={7} className="px-6 py-6">
                               <div className="pl-7">
-                                <h4 className="text-sm font-bold text-[#3B4D36] dark:text-white mb-4">
+                                <h4 className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-4">
                                   Detalle de marcas del día
                                 </h4>
 
@@ -319,7 +461,7 @@ export default function AttendancePage() {
                                   {entry.logs.map((log: ClockLog, logIdx: number) => (
                                     <div
                                       key={log.id}
-                                      className="bg-white dark:bg-[#2a2a2a] border border-[#E0D6B7] dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow"
+                                      className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
                                     >
                                       <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
@@ -332,7 +474,7 @@ export default function AttendancePage() {
                                               {log.log_type}
                                             </span>
                                           </div>
-                                          <span className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium">
+                                          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                                             Marca #{logIdx + 1}
                                           </span>
                                         </div>
@@ -341,22 +483,22 @@ export default function AttendancePage() {
                                             e.stopPropagation();
                                             handleEditLog(log);
                                           }}
-                                          className="p-1.5 hover:bg-[#E7DCC1] dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                          className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors"
                                         >
-                                          <PencilIcon className="w-4 h-4 text-[#6F7153]" />
+                                          <PencilIcon className="w-4 h-4 text-green-600" />
                                         </button>
                                       </div>
                                       <div className="space-y-2">
                                         <div>
-                                          <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mb-1">Hora</p>
-                                          <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
-                                            {new Date(log.timestamp).toLocaleTimeString('es-CR')}
+                                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Hora</p>
+                                          <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                                            {new Date(log.timestamp).toLocaleTimeString('es-CR', { timeZone: CR_TIMEZONE })}
                                           </p>
                                         </div>
                                         {log.remarks && (
                                           <div>
-                                            <p className="text-xs text-[#6B5B3D] dark:text-gray-400 mb-1">Observaciones</p>
-                                            <p className="text-xs text-[#5D4E37] dark:text-gray-300">{log.remarks}</p>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Observaciones</p>
+                                            <p className="text-xs text-zinc-600 dark:text-zinc-400">{log.remarks}</p>
                                           </div>
                                         )}
                                       </div>
@@ -378,16 +520,16 @@ export default function AttendancePage() {
 
         {/* Estado vacío */}
         {data.length === 0 && !isLoading && (
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-16 text-center">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-16 text-center">
             <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-[#E7DCC1] to-[#D2B48C] dark:from-[#2a2a2a] dark:to-[#3a3a3a] rounded-2xl flex items-center justify-center shadow-lg">
-                <ClockIcon className="w-12 h-12 text-[#6F7153]" />
+              <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center">
+                <ClockIcon className="w-10 h-10 text-green-600" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#3B4D36] dark:text-white mb-3">
+            <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-3">
               No hay registros de asistencia
             </h3>
-            <p className="text-base text-[#6B5B3D] dark:text-gray-400 max-w-md mx-auto">
+            <p className="text-base text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
               Selecciona un rango de fechas para consultar los registros de marcación de los empleados
             </p>
           </div>
@@ -396,68 +538,68 @@ export default function AttendancePage() {
 
       {/* Modal de edición */}
       {editingLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#E0D6B7] dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">Editar Marca</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div className="bg-zinc-50 dark:bg-zinc-800 px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">Editar Marca</h3>
               <button
                 onClick={() => setEditingLog(null)}
-                className="text-white/80 hover:text-white transition-colors text-xl font-bold w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10"
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700"
               >
-                ×
+                <XMarkIcon className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
                   Fecha y Hora
                 </label>
                 <input
                   type="datetime-local"
                   value={editingLog.timestamp}
                   onChange={(e) => setEditingLog({ ...editingLog, timestamp: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  className="w-full border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
                   Tipo de Marca
                 </label>
-                <select
+                <Select
                   value={editingLog.log_type}
-                  onChange={(e) => setEditingLog({ ...editingLog, log_type: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  onValueChange={(value) => setEditingLog({ ...editingLog, log_type: value })}
+                  className="border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                 >
-                  <option value="IN">Entrada (IN)</option>
-                  <option value="OUT">Salida (OUT)</option>
-                </select>
+                  <SelectItem value="IN">Entrada (IN)</SelectItem>
+                  <SelectItem value="OUT">Salida (OUT)</SelectItem>
+                </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-[#3B4D36] dark:text-white">
+                <label className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
                   Observaciones
                 </label>
                 <textarea
                   value={editingLog.remarks || ''}
                   onChange={(e) => setEditingLog({ ...editingLog, remarks: e.target.value })}
-                  className="w-full border border-[#E0D6B7] dark:border-gray-600 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6F7153] bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white"
+                  className="w-full border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                   rows={3}
                   placeholder="Ajuste manual, corrección de error, etc."
                 />
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-[#E0D6B7] dark:border-gray-700">
+              <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
                 <button
                   onClick={() => setEditingLog(null)}
-                  className="flex-1 px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl transition-colors font-medium"
+                  className="flex-1 px-5 py-2.5 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="flex-1 px-5 py-2.5 bg-gradient-to-r from-[#6F7153] to-[#3B4D36] hover:from-[#5C5E44] hover:to-[#2D3A28] text-white rounded-xl transition-all font-semibold shadow-md"
+                  className="flex-1 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors font-semibold"
                 >
                   Guardar
                 </button>
@@ -466,8 +608,6 @@ export default function AttendancePage() {
           </div>
         </div>
       )}
-
-      <modal.ModalComponent />
     </div>
   );
 }

@@ -12,7 +12,9 @@ import {
   XCircleIcon,
   UserIcon,
   CurrencyDollarIcon,
+  PencilIcon,
 } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -23,7 +25,6 @@ export default function VacationDetailPage({ params }: PageProps) {
   const router = useRouter();
   const [vacation, setVacation] = useState<Vacation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVacation = async () => {
@@ -32,7 +33,7 @@ export default function VacationDetailPage({ params }: PageProps) {
         const data = await VacationsService.getById(parseInt(id));
         setVacation(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Error al cargar vacación');
+        toast.error(err instanceof Error ? err.message : 'Error al cargar vacación');
       } finally {
         setLoading(false);
       }
@@ -87,25 +88,24 @@ export default function VacationDetailPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] dark:from-[#121212] via-[#F9F1DC] dark:via-[#1a1a1a] to-[#E7DCC1] dark:to-[#121212] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-20 w-20 border-4 border-[#E7DCC1] dark:border-gray-700 border-t-[#6F7153] mx-auto mb-4"></div>
-          <p className="text-[#5D4E37] dark:text-gray-300 font-medium text-lg">Cargando detalle de vacación...</p>
+          <div className="animate-spin rounded-full h-20 w-20 border-4 border-zinc-200 dark:border-zinc-700 border-t-green-600 mx-auto mb-4"></div>
+          <p className="text-zinc-600 dark:text-zinc-300 font-medium text-lg">Cargando detalle de vacación...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !vacation) {
+  if (!vacation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] dark:from-[#121212] via-[#F9F1DC] dark:via-[#1a1a1a] to-[#E7DCC1] dark:to-[#121212]">
+      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
         <div className="p-6">
-          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-300 rounded-2xl p-8 text-center shadow-lg">
-            <p className="text-2xl font-bold mb-3">⚠️ Error</p>
-            <p className="text-lg mb-6">{error || 'No se pudo cargar la información de la vacación'}</p>
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 text-center">
+            <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-3">No se encontró la vacación</p>
             <button
               onClick={() => router.back()}
-              className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-medium shadow-lg"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-all font-medium"
             >
               Volver
             </button>
@@ -116,28 +116,33 @@ export default function VacationDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E7DCC1] dark:from-[#121212] via-[#F9F1DC] dark:via-[#1a1a1a] to-[#E7DCC1] dark:to-[#121212]">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
       <div className="p-6">
+        {/* Breadcrumb */}
+        <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">
+          Vacaciones / Detalle
+        </p>
+
         {/* Header with Back Button */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-[#6F7153] dark:text-gray-400 hover:text-[#5D614A] dark:hover:text-gray-300 transition-colors mb-4 font-medium"
+            className="flex items-center gap-2 text-green-600 hover:text-green-500 transition-colors mb-4 font-medium"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             Volver
           </button>
-          <div className="bg-gradient-to-r from-[#6F7153] to-[#3B4D36] rounded-2xl shadow-lg p-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                <div className="bg-green-600 p-3 rounded-lg">
                   <CalendarDaysIcon className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">
+                  <h1 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
                     Detalle de Vacación #{vacation.id}
                   </h1>
-                  <p className="text-white/80 mt-1">
+                  <p className="text-zinc-500 dark:text-zinc-400 mt-1">
                     Información completa de la solicitud de vacaciones
                   </p>
                 </div>
@@ -149,33 +154,33 @@ export default function VacationDetailPage({ params }: PageProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Information Card */}
-          <div className="lg:col-span-2 bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-8">
+          <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
             <div className="flex items-center gap-4 mb-8">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-[#6F7153] to-[#3B4D36] rounded-xl shadow-md">
+              <div className="flex items-center justify-center w-14 h-14 bg-green-600 rounded-lg">
                 <CalendarDaysIcon className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-[#3B4D36] dark:text-white">Información de Vacaciones</h2>
+              <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">Información de Vacaciones</h2>
             </div>
 
             <div className="space-y-6">
               {/* Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-6 border-2 border-[#E0D6B7] dark:border-gray-700">
-                  <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium mb-2">Fecha de Inicio</p>
-                  <p className="text-lg font-bold text-[#3B4D36] dark:text-white">
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-6 border border-zinc-200 dark:border-zinc-700">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mb-2">Fecha de Inicio</p>
+                  <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
                     {formatDate(vacation.start_date)}
                   </p>
                 </div>
-                <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-6 border-2 border-[#E0D6B7] dark:border-gray-700">
-                  <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium mb-2">Fecha de Fin</p>
-                  <p className="text-lg font-bold text-[#3B4D36] dark:text-white">
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-6 border border-zinc-200 dark:border-zinc-700">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mb-2">Fecha de Fin</p>
+                  <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
                     {formatDate(vacation.end_date)}
                   </p>
                 </div>
               </div>
 
               {/* Duration */}
-              <div className="bg-gradient-to-br from-[#6F7153] to-[#3B4D36] rounded-xl p-6 shadow-lg">
+              <div className="bg-green-600 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-white/80 font-medium mb-2">Duración Total</p>
@@ -188,16 +193,16 @@ export default function VacationDetailPage({ params }: PageProps) {
               </div>
 
               {/* Payment Status */}
-              <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-6 border-2 border-[#E0D6B7] dark:border-gray-700">
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-6 border border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium mb-2">Estado de Pago</p>
-                    <p className="text-2xl font-bold text-[#3B4D36] dark:text-white">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mb-2">Estado de Pago</p>
+                    <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">
                       {vacation.paid ? 'Pagado' : 'No Pagado'}
                     </p>
                   </div>
                   <CurrencyDollarIcon 
-                    className={`w-12 h-12 ${vacation.paid ? 'text-green-500' : 'text-gray-400'}`} 
+                    className={`w-12 h-12 ${vacation.paid ? 'text-green-600' : 'text-zinc-400'}`} 
                   />
                 </div>
               </div>
@@ -207,33 +212,33 @@ export default function VacationDetailPage({ params }: PageProps) {
           {/* Side Panel - Employee and Additional Info */}
           <div className="space-y-6">
             {/* Employee Info */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-[#6F7153] to-[#3B4D36] rounded-xl">
+                <div className="flex items-center justify-center w-12 h-12 bg-green-600 rounded-lg">
                   <UserIcon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3B4D36] dark:text-white">Empleado</h3>
+                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">Empleado</h3>
               </div>
-              <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-5 border-2 border-[#E0D6B7] dark:border-gray-700">
-                <p className="text-sm text-[#6B5B3D] dark:text-gray-400 font-medium mb-1">ID del Empleado</p>
-                <p className="text-3xl font-bold text-[#3B4D36] dark:text-white">#{vacation.employee_id}</p>
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-5 border border-zinc-200 dark:border-zinc-700">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium mb-1">ID del Empleado</p>
+                <p className="text-3xl font-bold text-zinc-800 dark:text-zinc-100">#{vacation.employee_id}</p>
               </div>
             </div>
 
             {/* Metadata */}
             {vacation.created_at && (
-              <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6">
-                <h3 className="text-xl font-bold text-[#3B4D36] dark:text-white mb-5">Información Adicional</h3>
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
+                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-5">Información Adicional</h3>
                 <div className="space-y-3">
-                  <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-4 border-2 border-[#E0D6B7] dark:border-gray-700">
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium mb-1">Fecha de Creación</p>
-                    <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
+                  <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-4 border border-zinc-200 dark:border-zinc-700">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mb-1">Fecha de Creación</p>
+                    <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
                       {formatDate(vacation.created_at)}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-[#F9F1DC] to-[#E7DCC1] dark:from-[#2a2a2a] dark:to-[#1e1e1e] rounded-xl p-4 border-2 border-[#E0D6B7] dark:border-gray-700">
-                    <p className="text-xs text-[#6B5B3D] dark:text-gray-400 font-medium mb-1">Estado</p>
-                    <p className="text-sm font-bold text-[#3B4D36] dark:text-white">
+                  <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-4 border border-zinc-200 dark:border-zinc-700">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mb-1">Estado</p>
+                    <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
                       {vacation.status || 'Pendiente'}
                     </p>
                   </div>
@@ -242,18 +247,19 @@ export default function VacationDetailPage({ params }: PageProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-lg border border-[#E0D6B7] dark:border-gray-700 p-6">
-              <h3 className="text-xl font-bold text-[#3B4D36] dark:text-white mb-5">Acciones</h3>
+            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
+              <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-5">Acciones</h3>
               <div className="space-y-3">
                 <button
                   onClick={() => router.push(`/pages/vacations/edit/${vacation.id}`)}
-                  className="w-full px-5 py-3 bg-gradient-to-r from-[#6F7153] to-[#3B4D36] text-white rounded-xl hover:shadow-lg transition-all font-medium"
+                  className="w-full px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-all font-medium flex items-center justify-center gap-2"
                 >
+                  <PencilIcon className="w-5 h-5" />
                   Editar Vacación
                 </button>
                 <button
                   onClick={() => router.back()}
-                  className="w-full px-5 py-3 bg-[#E7DCC1] dark:bg-gray-700 text-[#3B4D36] dark:text-white rounded-xl hover:bg-[#D2C9AE] dark:hover:bg-gray-600 transition-all font-medium"
+                  className="w-full px-5 py-3 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium"
                 >
                   Volver a la Lista
                 </button>

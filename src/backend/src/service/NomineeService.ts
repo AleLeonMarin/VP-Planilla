@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 import { ClockLogsService } from "../service/ClockLogsService";
+import { ClockLogEffectiveService } from "./ClockLogEffectiveService";
 import { prisma } from "../lib/prisma";
+import { Employee } from "../model/employee";
 import { DeductionsService } from "./DeductionsService";
 import { EmployeeService } from "./EmployeeService";
 import { PositionService } from "./PositionService";
+import { LegalParamService } from "./LegalParamService";
 import * as PayrollUtils from "../utils/payrollUtils";
+import { resolveEventPayForDay, getDayNumberWithinEvent } from "../utils/payrollUtils";
 import {
   PayrollPeriod,
   DayWork,
@@ -13,8 +17,9 @@ import {
   EmployeePayroll,
   PayrollSummary,
   PayrollCalculationResult,
+  LegalParamSet,
 } from "../types/payroll.types";
-import { Decimal } from "@prisma/client/runtime/library";
+import { MinuteRoundingPolicy, EmployeeShiftType, ShiftType } from "@prisma/client";
 
 // Re-export types so existing consumers importing from NomineeService continue to work
 export type {
@@ -25,9 +30,23 @@ export type {
   EmployeePayroll,
   PayrollSummary,
   PayrollCalculationResult,
+  LegalParamSet,
 };
 
 export class NomineeService {
+  /**
+   * Resolves the effective shift type for an employee based on their configuration
+   * and the enterprise default.
+   */
+  static resolveEffectiveShiftType(
+    employeeShiftType: EmployeeShiftType,
+    enterpriseShiftType: ShiftType
+  ): ShiftType {
+    if (employeeShiftType === EmployeeShiftType.USE_ENTERPRISE_DEFAULT) {
+      return enterpriseShiftType;
+    }
+    return employeeShiftType as unknown as ShiftType;
+  }
   /**
    * Get clock logs for nominee calculation (legacy method)
    * @param req - Express request object with initDate and endDate query parameters
@@ -146,28 +165,35 @@ export class NomineeService {
         });
 
         if (existing) {
-          // Update existing record
-          await prisma.vpg_payroll_employee.update({
-            where: {
-              payroll_employee_id: existing.payroll_employee_id,
-            },
-            data: {
-              payroll_employee_total_hours:
-                employee.regularHours + employee.overtimeHours,
-              payroll_employee_overtime_hours: employee.overtimeHours,
-              payroll_employee_overtime_pay: employee.overtimePay,
-              payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
-              payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
-              payroll_employee_bonuses: employee.bonuses,
-              payroll_employee_gross_salary: employee.grossSalary,
-              payroll_employee_total_deductions: employee.totalDeductions,
-              payroll_employee_net_salary: employee.netSalary,
-              payroll_employee_version: existing.payroll_employee_version + 1,
-            },
-          });
-          console.log(
-            `Updated payroll employee record for employee ${employee.employeeId}`,
-          );
+          // Si el registro fue ajustado manualmente, NO sobrescribimos las horas ni los salarios
+          // calculados, ya que el usuario ya definió valores específicos.
+          if (existing.payroll_employee_is_manually_adjusted) {
+            console.log(`Skipping auto-calculation update for manually adjusted employee ${employee.employeeId}`);
+            // Podríamos actualizar deducciones si no están bloqueadas, pero por ahora respetamos todo el ajuste manual
+          } else {
+            // Update existing record with auto-calculated data
+            await prisma.vpg_payroll_employee.update({
+              where: {
+                payroll_employee_id: existing.payroll_employee_id,
+              },
+              data: {
+                payroll_employee_total_hours:
+                  employee.regularHours + employee.overtimeHours,
+                payroll_employee_overtime_hours: employee.overtimeHours,
+                payroll_employee_overtime_pay: employee.overtimePay,
+                payroll_employee_weekly_rest_hours: employee.weeklyRestHours,
+                payroll_employee_weekly_rest_pay: employee.weeklyRestPay,
+                payroll_employee_bonuses: employee.bonuses,
+                payroll_employee_gross_salary: employee.grossSalary,
+                payroll_employee_total_deductions: employee.totalDeductions,
+                payroll_employee_net_salary: employee.netSalary,
+                payroll_employee_version: existing.payroll_employee_version + 1,
+              },
+            });
+            console.log(
+              `Updated payroll employee record for employee ${employee.employeeId}`,
+            );
+          }
         } else {
           // Create new record
           await prisma.vpg_payroll_employee.create({
@@ -244,6 +270,7 @@ export class NomineeService {
     startDate: Date,
     endDate: Date,
     payrollId?: number,
+    selectedEmployeeIds?: number[],
   ): Promise<PayrollCalculationResult> {
     const result: PayrollCalculationResult = {
       period: {
@@ -259,14 +286,14 @@ export class NomineeService {
     };
 
     try {
-      // Try to get employees eligible for payroll in the given period
-      let employees = await EmployeeService.getActiveEmployeesForPeriod(
-        startDate,
-        endDate,
-      );
+      // Filtrar empleados por IDs seleccionados si se proporcionan
+      let employees = selectedEmployeeIds && selectedEmployeeIds.length > 0
+        ? (await EmployeeService.getAllEmployees()).filter(e =>
+            selectedEmployeeIds.includes(Number(e.id)))
+        : await EmployeeService.getActiveEmployeesForPeriod(startDate, endDate);
 
-      // If none found, fallback to all employees to aid troubleshooting and avoid returning an empty result silently
-      if (employees.length === 0) {
+      // Fallback solo cuando no hay filtro activo
+      if (employees.length === 0 && !(selectedEmployeeIds && selectedEmployeeIds.length > 0)) {
         const allEmployees = await EmployeeService.getAllEmployees();
         result.summary.messages.push(
           `No se encontraron empleados activos para el periodo. Total en sistema: ${allEmployees.length}.` +
@@ -281,18 +308,56 @@ export class NomineeService {
         `Processing payroll for ${employees.length} employees from ${startDate.toISOString()} to ${endDate.toISOString()}`,
       );
 
-      const [clockLogsMap, vacationsMap, laborEventsMap, bonusesMap, deductionsMap, positionsMap] =
-        await Promise.all([
-          NomineeService.preloadClockLogs(startDate, endDate),
-          NomineeService.preloadVacations(),
-          NomineeService.preloadLaborEvents(startDate, endDate),
-          NomineeService.preloadBonuses(startDate, endDate),
-          NomineeService.preloadDeductions(),
-          NomineeService.preloadPositions()
-        ]);
+      const clockLogsMap   = await NomineeService.preloadClockLogs(startDate, endDate);
+      const vacationsMap   = await NomineeService.preloadVacations();
+      const laborEventsMap = await NomineeService.preloadLaborEvents(startDate, endDate);
+      const bonusesMap     = await NomineeService.preloadBonuses(startDate, endDate);
+      const deductionsMap  = await NomineeService.preloadDeductions();
+      const positionsMap   = await NomineeService.preloadPositions();
+      const holidays       = await prisma.vpg_company_holidays.findMany({
+        where: {
+          company_holidays_date: {
+            gte: startDate,
+            lte: endDate
+          },
+          company_holidays_status: 'active'
+        }
+      });
+
+      // Performance optimization: Pre-fetch legal params for all 3 shift types to avoid N+1 query
+      const [paramsDiurna, paramsMixta, paramsNocturna] = await Promise.all([
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.DIURNA),
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.MIXTA),
+        LegalParamService.getParamSetAtDate(startDate, ShiftType.NOCTURNA)
+      ]);
+
+      const legalParamMap = new Map<ShiftType, LegalParamSet>([
+        [ShiftType.DIURNA, paramsDiurna],
+        [ShiftType.MIXTA, paramsMixta],
+        [ShiftType.NOCTURNA, paramsNocturna]
+      ]);
+
+      const enterpriseConfig = await prisma.vpg_enterprise.findFirst({
+        select: { 
+          enterprise_pay_unworked_holidays: true,
+          enterprise_ordinary_shift_type: true
+        }
+      });
+      const enterpriseShiftType = enterpriseConfig?.enterprise_ordinary_shift_type ?? ShiftType.DIURNA;
+      const payUnworkedHolidays = enterpriseConfig?.enterprise_pay_unworked_holidays ?? true;
 
       for (const employee of employees) {
         try {
+          const employeeShiftType = (employee.shift_type as EmployeeShiftType) ?? EmployeeShiftType.USE_ENTERPRISE_DEFAULT;
+          const effectiveShift = NomineeService.resolveEffectiveShiftType(employeeShiftType, enterpriseShiftType);
+
+          // Get pre-calculated params and add enterprise-specific flag
+          const baseParams = legalParamMap.get(effectiveShift)!;
+          const legalParams: LegalParamSet = {
+            ...baseParams,
+            payUnworkedHolidays
+          };
+
           const employeePayroll = await this.calculateEmployeePayroll(
             employee,
             startDate,
@@ -302,7 +367,10 @@ export class NomineeService {
             laborEventsMap.get(Number(employee.id)) || [],
             bonusesMap.get(Number(employee.id)) || [],
             deductionsMap.get(Number(employee.id)) || [],
-            positionsMap
+            positionsMap,
+            holidays,
+            legalParams,
+            effectiveShift
           );
 
           result.employees.push(employeePayroll);
@@ -319,7 +387,7 @@ export class NomineeService {
           // Add employee with error state
           result.employees.push({
             employeeId: employee.id.toString(),
-            employeeName: employee.name,
+            employeeName: employee.name || '',
             positionId: employee.position_id?.toString() || "0",
             baseHourlySalary: 0,
             days: [],
@@ -345,8 +413,8 @@ export class NomineeService {
             // Frontend compatibility aliases
             id: Number(employee.id),
             employee_id: Number(employee.id),
-            name: employee.name,
-            employee_name: employee.name,
+            name: employee.name || '',
+            employee_name: employee.name || '',
             national_id: employee.national_id || "",
             position: "",
             position_name: "",
@@ -396,7 +464,7 @@ export class NomineeService {
    * @returns Promise<EmployeePayroll> - Complete payroll data for the employee
    */
   private async calculateEmployeePayroll(
-    employee: any,
+    employee: Employee,
     startDate: Date,
     endDate: Date,
     employeeClockLogs: any[],
@@ -404,12 +472,15 @@ export class NomineeService {
     employeeLaborEvents: any[],
     employeeBonuses: any[],
     employeeDeductions: any[],
-    positionsMap: Map<number, any>
+    positionsMap: Map<number, any>,
+    holidays: any[],
+    params: LegalParamSet,
+    effectiveShift?: ShiftType
   ): Promise<EmployeePayroll> {
     const employeePayroll: EmployeePayroll = {
       employeeId: employee.id.toString(),
-      employeeName: employee.name,
-      positionId: employee.position_id?.toString() || "0",
+      employeeName: employee.name || '',
+            positionId: employee.position_id?.toString() || "0",
       baseHourlySalary: 0,
       days: [],
       // Hour breakdown (populated after processDailyWork)
@@ -419,6 +490,7 @@ export class NomineeService {
       weeklyRestHours: 0,
       weeklyRestPay: 0,
       overtimePay: 0,
+      shift_type: effectiveShift,
       grossSalary: 0,
       totalDeductions: 0,
       netSalary: 0,
@@ -429,12 +501,11 @@ export class NomineeService {
       // Frontend compatibility aliases
       id: Number(employee.id),
       employee_id: Number(employee.id),
-      name: employee.name,
-      employee_name: employee.name,
-      identification: employee.national_id || employee.identification || "",
-      employee_identification:
-        employee.national_id || employee.identification || "",
-      national_id: employee.national_id || employee.identification || "",
+      name: employee.name || '',
+      employee_name: employee.name || '',
+      identification: employee.national_id || "",
+      employee_identification: employee.national_id || "",
+      national_id: employee.national_id || "",
       position: "",
       position_name: "",
     };
@@ -444,9 +515,9 @@ export class NomineeService {
       if (employee.position_id) {
         const position = positionsMap.get(employee.position_id);
         if (position) {
-          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(position.base_salary);
-          employeePayroll.position = position.name;
-          employeePayroll.position_name = position.name;
+          employeePayroll.baseHourlySalary = PayrollUtils.roundToMoney(Number(position.position_base_salary));
+          employeePayroll.position = position.position_name;
+          employeePayroll.position_name = position.position_name;
         } else {
           employeePayroll.generalMessages.push(
             `Advertencia: No se encontró información del puesto (ID: ${employee.position_id}). Usando salario base de 0.`,
@@ -477,7 +548,8 @@ export class NomineeService {
         employeeLaborEvents,
         startDate,
         endDate,
-        employee.name,
+        employee.name || '',
+        params
       );
 
       employeePayroll.days = dailyWork.days;
@@ -494,6 +566,8 @@ export class NomineeService {
         employeePayroll.scheduledHours = PayrollUtils.calculateScheduledHours(
           startDate,
           endDate,
+          holidays,
+          params
         );
       }
 
@@ -522,9 +596,11 @@ export class NomineeService {
         // Fallback to per-day calculation if no biweekly requirement set
         employeePayroll.regularHours = PayrollUtils.calculateRegularHours(
           dailyWork.days,
+          params
         );
         employeePayroll.overtimeHours = PayrollUtils.calculateOvertimeHours(
           dailyWork.days,
+          params
         );
       }
       employeePayroll.weeklyRestHours = PayrollUtils.calculateWeeklyRestHours(
@@ -532,26 +608,45 @@ export class NomineeService {
         startDate,
         endDate,
       );
-      // Calculate pay directly from already-computed hours to ensure consistency
+      // Calculate pay
       employeePayroll.weeklyRestPay = PayrollUtils.roundToMoney(
         employeePayroll.weeklyRestHours * employeePayroll.baseHourlySalary,
       );
-      employeePayroll.overtimePay = PayrollUtils.roundToMoney(
-        employeePayroll.overtimeHours * employeePayroll.baseHourlySalary * 1.5,
+
+      // Overtime Pay using the new logic
+      employeePayroll.overtimePay = PayrollUtils.calculateOvertimePay(
+        dailyWork.days,
+        employeePayroll.baseHourlySalary,
+        holidays,
+        params
       );
 
       // Calculate bonuses from preloaded data
       employeePayroll.bonuses = this.calculateBonusesFromData(employeeBonuses);
 
-      // Gross salary = regular pay + overtime pay (×1.5) + weekly rest pay + bonuses
-      // Use already-computed values for consistency
-      employeePayroll.grossSalary = PayrollUtils.roundToMoney(
-        employeePayroll.regularHours * employeePayroll.baseHourlySalary +
-          employeePayroll.overtimePay +
-          employeePayroll.weeklyRestPay +
-          employeePayroll.bonuses,
+      // Gross salary using the new holiday-aware logic
+      employeePayroll.grossSalary = PayrollUtils.calculateGrossSalary(
+        dailyWork.days,
+        employeePayroll.baseHourlySalary,
+        employeePayroll.bonuses,
+        startDate,
+        endDate,
+        holidays,
+        params
       );
-      
+
+      // Mandatory holiday breakdown for display (Option A) — reuses same Art. 148 logic
+      const mandatoryHolidayBreakdown = PayrollUtils.getMandatoryHolidayBreakdown(
+        dailyWork.days,
+        employeePayroll.baseHourlySalary,
+        startDate,
+        endDate,
+        holidays,
+        params
+      );
+      employeePayroll.mandatoryHolidayHours = mandatoryHolidayBreakdown.hours;
+      employeePayroll.mandatoryHolidayPay   = mandatoryHolidayBreakdown.pay;
+
       // Calculate deductions from preloaded data
       const deductionsData = this.calculateDeductionsFromData(
         employeeDeductions,
@@ -568,6 +663,14 @@ export class NomineeService {
         employeePayroll.grossSalary,
         employeePayroll.totalDeductions,
       );
+
+      // Add alias fields for frontend compatibility
+      (employeePayroll as any).regular_hours = employeePayroll.regularHours;
+      (employeePayroll as any).overtime_hours = employeePayroll.overtimeHours;
+      (employeePayroll as any).total_hours = employeePayroll.regularHours + employeePayroll.overtimeHours;
+      (employeePayroll as any).totalHours = employeePayroll.regularHours + employeePayroll.overtimeHours;
+      (employeePayroll as any).net_salary = employeePayroll.netSalary;
+      (employeePayroll as any).gross_salary = employeePayroll.grossSalary;
 
       if (originalNetSalary < 0) {
         employeePayroll.generalMessages.push(
@@ -597,12 +700,13 @@ export class NomineeService {
    * @returns Object with processed days and inconsistencies
    */
   private processDailyWork(
-    clockLogs: any[],
+    clockPairs: any[],
     vacations: any[],
     laborEvents: any[],
     startDate: Date,
     endDate: Date,
     employeeName: string,
+    params: LegalParamSet,
   ): { days: DayWork[]; inconsistencies: Inconsistency[] } {
     const days: DayWork[] = [];
     const inconsistencies: Inconsistency[] = [];
@@ -637,52 +741,72 @@ export class NomineeService {
 
       if (isVacationDay) {
         dayWork.isVacation = true;
-        dayWork.hoursWorked = 8.0; // Standard vacation day hours
+        dayWork.hoursWorked = params.regularHoursPerDay; // Use the regular hours defined for the shift
 
         // Check if there are also clock logs for this vacation day
-        const dayClockLogs = clockLogs.filter(log => {
-          const timestamp = log.timestamp;
+        const hasLogs = clockPairs.some(pair => {
+          const timestamp = (pair.in?.effectiveTimestamp || pair.out?.effectiveTimestamp);
           if (!timestamp) return false;
-          const parsedDate = new Date(timestamp);
-          if (isNaN(parsedDate.getTime())) return false;
-          const logDate = parsedDate.toISOString().split('T')[0];
+          const logDate = new Date(timestamp).toISOString().split('T')[0];
           return logDate === dateStr;
         });
 
-        if (dayClockLogs.length > 0) {
+        if (hasLogs) {
           dayWork.messages.push(
-            `Advertencia para ${employeeName} el ${dateStr}: día de vacaciones con marcajes detectados. Se prioriza vacaciones (8h).`,
+            `Advertencia para ${employeeName} el ${dateStr}: día de vacaciones con marcajes detectados. Se prioriza vacaciones (${params.regularHoursPerDay}h).`,
           );
         }
       } else if (laborEventForDay) {
-        // Labor event active — no clock-in expected, hours are 0
-        dayWork.hoursWorked = 0;
-        const eventName =
-          laborEventForDay.vpg_labor_events?.labor_events_name ||
-          laborEventForDay.employee_labor_event_status ||
-          "Evento";
-        dayWork.messages.push(
-          `${eventName} registrado para ${employeeName} el ${dateStr}: sin marcaje requerido.`,
-        );
-      } else {
-        // Process clock logs for the day
-        const dayClockLogs = clockLogs.filter(log => {
-          const timestamp = log.timestamp;
+        // Labor event active — resolve pay behavior from catalog
+        const evStart = new Date(laborEventForDay.employee_labor_event_start_date);
+        const catalog = laborEventForDay.vpg_labor_events;
+        const dayNumber = getDayNumberWithinEvent(evStart, currentDate);
+
+        const eventForDay: PayrollUtils.LaborEventForDay = {
+          name: catalog?.labor_events_name || laborEventForDay.employee_labor_event_status || 'Evento',
+          payBehavior: (catalog?.labor_event_pay_behavior as any) ?? 'NO_PAY',
+          maxPaidDays: catalog?.labor_event_max_paid_days ?? null,
+          payPercentage: catalog?.labor_event_pay_percentage != null
+            ? parseFloat(catalog.labor_event_pay_percentage.toString())
+            : null,
+          startDate: evStart,
+        };
+
+        const payResult = resolveEventPayForDay(eventForDay, dayNumber, params.regularHoursPerDay);
+        dayWork.hoursWorked = payResult.hoursWorked;
+        dayWork.messages.push(`${payResult.message} — ${employeeName} el ${dateStr}.`);
+
+        // Warn if there are clock logs for this day (they are NOT used)
+        const hasLogs = clockPairs.some(pair => {
+          const timestamp = pair.in?.effectiveTimestamp || pair.out?.effectiveTimestamp;
           if (!timestamp) return false;
-          const parsedDate = new Date(timestamp);
-          if (isNaN(parsedDate.getTime())) return false;
-          const logDate = parsedDate.toISOString().split('T')[0];
+          return new Date(timestamp).toISOString().split('T')[0] === dateStr;
+        });
+        if (hasLogs) {
+          dayWork.messages.push(
+            `Advertencia para ${employeeName} el ${dateStr}: marcajes detectados durante evento laboral. Se ignoran — prevalece el evento.`,
+          );
+        }
+      } else {
+        // Process clock logs for the day (using pre-paired marks)
+        const dayPairs = clockPairs.filter(pair => {
+          // Use IN mark date to assign hours to a specific day
+          const timestamp = (pair.in?.effectiveTimestamp || pair.out?.effectiveTimestamp);
+          if (!timestamp) return false;
+          const logDate = new Date(timestamp).toISOString().split('T')[0];
           return logDate === dateStr;
         });
 
-        if (dayClockLogs.length === 0) {
+        if (dayPairs.length === 0) {
           // No clock logs for this day - this is normal for weekends/days off
           dayWork.hoursWorked = 0;
         } else {
+          console.log(`[DEBUG] Found ${dayPairs.length} pairs for ${employeeName} on ${dateStr}`);
           const hoursData = this.calculateDailyHours(
-            dayClockLogs,
+            dayPairs,
             dateStr,
             employeeName,
+            params.minuteRoundingPolicy
           );
           dayWork.hoursWorked = hoursData.hours;
           dayWork.messages = hoursData.messages;
@@ -710,41 +834,46 @@ export class NomineeService {
    * @param dayClockLogs - Clock logs for a specific day
    * @param dateStr - Date string for messages
    * @param employeeName - Employee name for messages
+   * @param policy - MinuteRoundingPolicy to apply
    * @returns Object with calculated hours and messages
    */
   private calculateDailyHours(
-    dayClockLogs: any[],
+    dayPairs: any[],
     dateStr: string,
     employeeName: string,
+    policy: MinuteRoundingPolicy = MinuteRoundingPolicy.EXACT
   ): { hours: number; messages: string[]; hasInconsistency: boolean } {
     const messages: string[] = [];
+    let totalMinutes = 0;
+    let hasInconsistency = false;
 
-    // Use utility function to validate clock log pairs
-    const validation = PayrollUtils.validateClockLogPairs(dayClockLogs);
-
-    if (!validation.isValid) {
-      const inconsistencyMsg = `Inconsistencia de marcaje para ${employeeName} el ${dateStr}: ${validation.messages.join(", ")}. Revisar el marcaje manualmente.`;
-      messages.push(inconsistencyMsg);
-      return { hours: 0, messages, hasInconsistency: true };
+    for (const pair of dayPairs) {
+      if (pair.status === 'valid') {
+        const inTime = new Date(pair.in.effectiveTimestamp);
+        const outTime = new Date(pair.out.effectiveTimestamp);
+        const minutes = Math.round((outTime.getTime() - inTime.getTime()) / (1000 * 60));
+        totalMinutes += minutes;
+        console.log(`[DEBUG] Adding ${minutes} minutes for pair IN: ${pair.in?.effectiveTimestamp}`);
+      } else {
+        hasInconsistency = true;
+        const msg = pair.status === 'orphan' 
+          ? `Marca huérfana detectada (sin entrada o sin salida)`
+          : `Anomalía detectada (doble entrada o marca duplicada)`;
+        console.log(`[DEBUG] Inconsistency: ${msg} on ${dateStr}`);
+        messages.push(`${msg} para ${employeeName} el ${dateStr}.`);
+      }
     }
 
-    // Check for overlapping pairs
-    if (PayrollUtils.hasOverlappingPairs(validation.pairs)) {
-      messages.push(
-        `Inconsistencia de marcaje para ${employeeName} el ${dateStr}: periodos de trabajo superpuestos detectados. Revisar.`,
-      );
-      return { hours: 0, messages, hasInconsistency: true };
-    }
+    const totalHours = PayrollUtils.applyMinuteRounding(totalMinutes, policy);
 
-    // Calculate total hours from valid pairs
-    const totalHours = PayrollUtils.calculateTotalHoursFromPairs(
-      validation.pairs,
-    );
+    if (totalMinutes > 0) {
+      console.log(`[DEBUG] Total daily minutes for ${dateStr}: ${totalMinutes} -> Rounded hours: ${totalHours}`);
+    }
 
     return {
       hours: totalHours,
       messages,
-      hasInconsistency: false,
+      hasInconsistency,
     };
   }
 
@@ -765,149 +894,6 @@ export class NomineeService {
     return start1 <= end2 && end1 >= start2;
   }
 
-  /**
-   * Get the hire date for an employee
-   * @param employeeId - The ID of the employee
-   * @returns  Promise<Date | null> - Returns the employee hired date, if not found returns null
-   */
-  static async getHiredDate(employeeId: number): Promise<Date | null> {
-    const employee = await prisma.vpg_employees.findUnique({
-      where: {
-        employee_id: employeeId,
-      },
-    });
-
-    const hiredDate = employee?.employee_hire_date;
-
-    return hiredDate ?? null;
-  }
-
-  /**
-   * Get the payrolls ID from the date the employee is Hired
-   * @param start_date Date from where to calculate
-   * @param end_date Date where to end calculation
-   * @returns Promise<number[] | null> Returns a list of payrolls id, if not returns null
-   * @author AleLeonMarin
-   */
-  static async payrollsInPeriod(
-    start_date: Date,
-    end_date: Date,
-  ): Promise<number[] | null> {
-    const period = await prisma.vpg_payrolls.findMany({
-      where: {
-        payrolls_period_end: {
-          gte: start_date,
-          lte: end_date,
-        },
-      },
-      select: {
-        payrolls_id: true,
-      },
-      orderBy: {
-        payrolls_period_end: "asc",
-      },
-    });
-
-    return period.map((p) => p.payrolls_id);
-  }
-
-  /**
-   * Get the net salaries of an employee
-   * @param employeeID - The employee id
-   * @param payroll_ids - Payroll id
-   * @returns Promise <Decimal[] | null> returns a collections of all the salaries
-   * @author AleLeonMarin
-   */
-  static async getSalaries(
-    employeeID: number,
-    payroll_ids: number[],
-  ): Promise<Decimal[] | null> {
-    if (payroll_ids.length === 0) {
-      return [];
-    }
-    const salaries = await prisma.vpg_payroll_employee.findMany({
-      where: {
-        payroll_employee_employee_id: employeeID,
-        payroll_employee_payroll_id: {
-          in: payroll_ids,
-        },
-      },
-      select: {
-        payroll_employee_net_salary: true,
-      },
-    });
-
-    return salaries.map((s) => s.payroll_employee_net_salary);
-  }
-
-  /**
-   * Calculate the aguinaldo of an employee in a given dates
-   * @param employeeID - Employee id
-   * @param start_date - Star date
-   * @param end_date - End date
-   * @returns the calculation of the aguinaldo of a employee
-   * @author AleLeonMarin
-   */
-
-  static async aguinaldo(employeeID: number, start_date: Date, end_date: Date) {
-    const hired_date = await this.getHiredDate(employeeID);
-    let payrollIds: number[] = [];
-
-    if (!hired_date) {
-      return null;
-    }
-
-    const effectiveStartDate = new Date(start_date);
-    effectiveStartDate.setFullYear(effectiveStartDate.getFullYear() + 1);
-    payrollIds =
-      hired_date <= effectiveStartDate
-        ? ((await this.payrollsInPeriod(start_date, end_date)) ?? [])
-        : [];
-
-    const salaries = (await this.getSalaries(employeeID, payrollIds)) ?? [];
-
-    const aguinaldo = PayrollUtils.averageOfSalaries(
-      salaries.map((s: Decimal) => s.toNumber()),
-    );
-
-    return aguinaldo;
-  }
-
-  /**
-   * It calculates the aguinaldo of a list of employees
-   * @param employeeIds - List of employees
-   * @param start_date - Start date of calculation
-   * @param end_date - End date of calculation
-   * @returns Promise <Array<employeeID;aguinaldo>> returns an array
-   * of the employee with its id and the aguinaldo calculation
-   * @author AleLeonMarin
-   */
-
-  static async aguinaldoForEmployees(
-    employeeIds: number[],
-    start_date: Date,
-    end_date: Date,
-  ): Promise<
-    Array<{ employeeId: number; aguinaldo: number | null; message: string }>
-  > {
-    const results: Array<{
-      employeeId: number;
-      aguinaldo: number | null;
-      message: string;
-    }> = [];
-
-    for (const id of employeeIds) {
-      const value = await this.aguinaldo(id, start_date, end_date);
-      results.push({
-        employeeId: id,
-        aguinaldo: value,
-        message:
-          value === null ? "Sin fecha de contratación o no elegible" : "OK",
-      });
-    }
-
-    return results;
-  }
   private static groupByEmployee<T>(
     items: T[],
     getEmployeeId: (item: T) => number
@@ -926,15 +912,18 @@ export class NomineeService {
     startDate: Date,
     endDate: Date
   ): Promise<Map<number, any[]>> {
-    const logs = await prisma.vpg_clock_logs.findMany({
-      where: {
-        clock_logs_timestamp: {
-          gte: startDate,
-          lte: endDate
-        }
-      }
+    // Use effective marks so EDIT/VOID adjustments are reflected in payroll
+    const effectiveMarksMap = await ClockLogEffectiveService.getEffectiveMarksForAllEmployees(startDate, endDate);
+    
+    const result = new Map<number, any[]>();
+    
+    effectiveMarksMap.forEach((marks, employeeId) => {
+      // Use the service's pairing logic to get valid/orphan/anomaly pairs
+      const pairs = ClockLogEffectiveService.pairLogs(marks);
+      result.set(employeeId, pairs);
     });
-    return NomineeService.groupByEmployee(logs, (item) => item.clock_logs_employee_id);
+    
+    return result;
   }
 
   private static async preloadVacations(): Promise<Map<number, any[]>> {

@@ -15,7 +15,20 @@ export class LaborEventsService {
     }
   }
 
-  static async createLaborEvent(data: { name: string; description: string }): Promise<LaborEvent> {
+  /**
+   * Get the labor-event assignments for a single employee, with the
+   * catalog name/description joined in (used by the employee profile
+   * "Eventos" tab).
+   */
+  static async getByEmployee(employeeId: number): Promise<EmployeeLaborEvent[]> {
+    try {
+      return await http.get(`/labor-events/employee/${employeeId}`);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Error al cargar eventos del empleado');
+    }
+  }
+
+  static async createLaborEvent(data: { name: string; description: string; event_type: string }): Promise<LaborEvent> {
     try {
       return await http.post('/labor-events/create', data);
     } catch (err) {
@@ -23,7 +36,7 @@ export class LaborEventsService {
     }
   }
 
-  static async updateLaborEvent(id: number, data: { name?: string; description?: string }): Promise<LaborEvent> {
+  static async updateLaborEvent(id: number, data: { name?: string; description?: string; event_type?: string }): Promise<LaborEvent> {
     try {
       return await http.put(`/labor-events/${id}`, data);
     } catch (err) {
@@ -39,7 +52,14 @@ export class LaborEventsService {
     status: string;
   }): Promise<EmployeeLaborEvent> {
     try {
-      return await http.post('/labor-events/assign', data);
+      const payload = {
+        employee_id: data.employee_id,
+        labor_event_id: data.labor_event_id,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
+      };
+      return await http.post('/labor-events/assign', payload);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al asignar evento';
       throw new Error(msg);

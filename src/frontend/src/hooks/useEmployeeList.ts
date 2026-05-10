@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
 import { Employee, EmployeeStats, EmployeeFormData } from '@/types';
 import { 
   calculateEmployeeStats, 
@@ -117,6 +119,8 @@ const useEmployeeList = () => {
   const [isLoadingEmployee, setIsLoadingEmployee] = useState(false);
   const [showDismissModal, setShowDismissModal] = useState(false);
   const [dismissingEmployee, setDismissingEmployee] = useState<{ id: string; name: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<EmployeeStats>({
     total: 0,
     onVacation: 0,
@@ -171,20 +175,27 @@ const useEmployeeList = () => {
   // Cargar empleados desde el backend
   useEffect(() => {
     const loadEmployees = async () => {
+      const cached = readCache<RawEmployee[]>('vp_employees_cache');
+      if (cached) {
+        setRawEmployees(cached);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
       try {
         const apiEmployees = await apiGetEmployees();
+        writeCache('vp_employees_cache', apiEmployees as RawEmployee[]);
         setRawEmployees(apiEmployees as RawEmployee[]);
-      } catch (error) {
-        console.error('Error loading employees from API', error);
-        // Si falla, dejar la lista vacía (o podríamos mantener datos locales)
+      } catch (err) {
+        console.error('Error loading employees from API', err);
+        setError(err instanceof Error ? err.message : 'Error al cargar empleados');
         setRawEmployees([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-  loadEmployees();
-
-  // expose a refresh function by returning it from closure
-  // (we'll create a named function below to call from outside via returned object)
+    loadEmployees();
   }, []);
 
   useEffect(() => {
@@ -230,7 +241,7 @@ const useEmployeeList = () => {
         setEditingEmployeeData(normalizeEmployeeForEdit(employeeData));
       } catch (error) {
         console.error('Error loading employee:', error);
-        alert('No se pudo cargar el empleado. Intenta de nuevo.');
+        toast.error('No se pudo cargar el empleado. Intenta de nuevo.');
         setShowEditEmployeeModal(false);
       } finally {
         setIsLoadingEmployee(false);
@@ -245,7 +256,7 @@ const useEmployeeList = () => {
     } else if (action === 'delete') {
       // Kept for backward compatibility — dismiss replaces this in the UI
       console.log(`Eliminar empleado: ${employeeId}`);
-      alert('Use la opción "Despedir" para desactivar un empleado.');
+      toast.warning('Use la opción "Despedir" para desactivar un empleado.');
     } else {
       console.log(`Acción: ${action} para empleado: ${employeeId}`);
     }
@@ -274,15 +285,17 @@ const useEmployeeList = () => {
       };
 
       await updateEmployee(editingEmployeeId, updates);
-      
+
       // Recargar lista de empleados
+      invalidateCache('vp_employees_cache');
       const apiEmployees = await apiGetEmployees();
+      writeCache('vp_employees_cache', apiEmployees as RawEmployee[]);
       setRawEmployees(apiEmployees as RawEmployee[]);
-      
-      alert('Empleado actualizado correctamente');
+
+      toast.success('Empleado actualizado correctamente');
     } catch (error) {
       console.error('Error updating employee', error);
-      alert('No se pudo actualizar el empleado. Revisa la consola para más detalles.');
+      toast.error('No se pudo actualizar el empleado. Revisa la consola para más detalles.');
       throw error;
     }
   };
@@ -294,13 +307,15 @@ const useEmployeeList = () => {
     if (!dismissingEmployee) return;
     try {
       await fireEmployee(dismissingEmployee.id, exitDate);
+      invalidateCache('vp_employees_cache');
       const apiEmployees = await apiGetEmployees();
+      writeCache('vp_employees_cache', apiEmployees as RawEmployee[]);
       setRawEmployees(apiEmployees as RawEmployee[]);
       setShowDismissModal(false);
       setDismissingEmployee(null);
     } catch (error) {
       console.error('Error dismissing employee', error);
-      alert('No se pudo despedir al empleado. Intenta de nuevo.');
+      toast.error('No se pudo despedir al empleado. Intenta de nuevo.');
     }
   };
 
@@ -319,14 +334,16 @@ const useEmployeeList = () => {
   /**
    * Añade un nuevo empleado (persistido en backend)
    */
-  const handleAddEmployee = async (employeeData: EmployeeFormData) => {
+  const handleAddEmployee = async (employeeData: EmployeeFormData): Promise<Employee | void> => {
     try {
       const created = await apiCreateEmployee(employeeData);
       const createdObj = created as RawEmployee;
       setRawEmployees((prev) => [...prev, createdObj]);
+      invalidateCache('vp_employees_cache'); // so next mount re-fetches
+      return created;
     } catch (error) {
       console.error('Error creating employee', error);
-      alert('No se pudo guardar el empleado. Revisa la consola para más detalles.');
+      toast.error('No se pudo guardar el empleado. Revisa la consola para más detalles.');
     }
   };
 
@@ -351,6 +368,8 @@ const useEmployeeList = () => {
 
   return {
     employees: filteredEmployees,
+    isLoading,
+    error,
     searchTerm,
     stats,
     positions,
@@ -378,11 +397,15 @@ const useEmployeeList = () => {
     closeAddEmployeeModal,
     closeEditEmployeeModal
     ,
-    // Provide a refresh function so pages can re-fetch employees on demand
+    // Provide a refresh function so pages can re-fetch employees and positions on demand
     refreshEmployees: async () => {
       try {
+        invalidateCache('vp_employees_cache');
         const apiEmployees = await apiGetEmployees();
+        writeCache('vp_employees_cache', apiEmployees as RawEmployee[]);
         setRawEmployees(apiEmployees as RawEmployee[]);
+        // Also refresh positions so both datasets stay in sync
+        await refreshPositions();
       } catch (error) {
         console.error('Error refreshing employees', error);
       }

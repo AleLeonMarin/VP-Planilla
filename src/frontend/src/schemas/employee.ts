@@ -14,6 +14,7 @@ export const employeeSchema = z.object({
   employee_gender: z.string().optional().transform((v) => v ?? ''),
   employee_required_hours_biweekly: z.string().optional().transform((v) => v ?? ''),
   employee_schedule: z.string().optional().transform((v) => v ?? ''),
+  shift_type: z.enum(['USE_ENTERPRISE_DEFAULT', 'DIURNA', 'MIXTA', 'NOCTURNA']).default('USE_ENTERPRISE_DEFAULT'),
 });
 
 export type EmployeeSchemaType = z.infer<typeof employeeSchema>;

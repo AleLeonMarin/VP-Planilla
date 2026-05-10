@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { NoSymbolIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 interface DismissEmployeeModalProps {
   isOpen: boolean;
@@ -20,14 +21,11 @@ const DismissEmployeeModal: React.FC<DismissEmployeeModalProps> = ({
 }) => {
   const [exitDate, setExitDate] = useState(todayISO());
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Reset state every time the modal opens
   useEffect(() => {
     if (isOpen) {
       setExitDate(todayISO());
       setBusy(false);
-      setError(null);
     }
   }, [isOpen]);
 
@@ -35,28 +33,27 @@ const DismissEmployeeModal: React.FC<DismissEmployeeModalProps> = ({
 
   const handleConfirm = async () => {
     if (!exitDate) {
-      setError('La fecha de salida es requerida.');
+      toast.error('La fecha de salida es requerida.');
       return;
     }
     setBusy(true);
-    setError(null);
     try {
       await onConfirm(exitDate);
+      toast.success('Empleado despedido exitosamente');
+      onClose();
     } catch {
-      setError('No se pudo procesar el despido. Intenta de nuevo.');
+      toast.error('No se pudo procesar el despido. Intenta de nuevo.');
+    } finally {
       setBusy(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel */}
-      <div className="relative z-10 w-full max-w-md bg-[#F9F1DC] dark:bg-[#2d2d2d] rounded-xl shadow-2xl border border-[#D2B48C] dark:border-[#404040] overflow-hidden">
+      <div className="relative z-10 w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-red-700">
           <div className="flex items-center gap-3">
             <NoSymbolIcon className="w-5 h-5 text-white flex-shrink-0" />
@@ -72,38 +69,34 @@ const DismissEmployeeModal: React.FC<DismissEmployeeModalProps> = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-5 space-y-5">
 
-          {/* Warning notice */}
-          <div className="flex gap-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
-            <NoSymbolIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex gap-3 bg-red-900/20 border border-red-800/50 rounded-lg px-4 py-3">
+            <NoSymbolIcon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+              <p className="text-sm font-semibold text-red-300">
                 Esta acción marcará al empleado como despedido
               </p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+              <p className="text-xs text-red-400 mt-0.5">
                 El registro se mantendrá en el sistema pero el empleado quedará
                 inactivo y no podrá ser incluido en nóminas futuras.
               </p>
             </div>
           </div>
 
-          {/* Employee name */}
           <div>
-            <label className="block text-xs font-bold text-[#5D4E37] dark:text-[#A3A3A3] uppercase tracking-widest mb-1">
+            <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest mb-1">
               Empleado
             </label>
-            <p className="text-base font-semibold text-[#3B4D36] dark:text-[#E5E5E5] bg-[#EDE4CC] dark:bg-[#333333] rounded-lg px-4 py-2.5 border border-[#D2B48C] dark:border-[#404040]">
+            <p className="text-base font-semibold text-zinc-700 dark:text-zinc-100 bg-zinc-50 dark:bg-zinc-800 rounded-lg px-4 py-2.5 border border-zinc-200 dark:border-zinc-700">
               {employeeName}
             </p>
           </div>
 
-          {/* Exit date */}
           <div>
             <label
               htmlFor="dismiss-exit-date"
-              className="block text-xs font-bold text-[#5D4E37] dark:text-[#A3A3A3] uppercase tracking-widest mb-1"
+              className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest mb-1"
             >
               Fecha de salida <span className="text-red-500">*</span>
             </label>
@@ -114,25 +107,17 @@ const DismissEmployeeModal: React.FC<DismissEmployeeModalProps> = ({
               max={todayISO()}
               onChange={(e) => setExitDate(e.target.value)}
               disabled={busy}
-              className="w-full px-3 py-2.5 border border-[#D2B48C] dark:border-[#404040] rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent bg-white dark:bg-[#333333] text-[#3B4D36] dark:text-[#E5E5E5] text-sm"
+              className="w-full px-3 py-2.5 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-100 text-sm"
             />
           </div>
-
-          {/* Error */}
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#D2B48C] dark:border-[#404040] bg-[#F2E8CF] dark:bg-[#252525]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800">
           <button
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="px-4 py-2 text-sm border border-[#D2B48C] dark:border-[#404040] text-[#5D4E37] dark:text-[#A3A3A3] rounded-lg hover:bg-[#E7DCC1] dark:hover:bg-[#3d3d3d] transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>

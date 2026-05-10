@@ -8,41 +8,89 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.0 — 2026-03-27)
+## Current State (v1.7 SHIPPED — 2026-05-09)
 
-**v1.0 SHIPPED** — Sistema estabilizado:
-- ✅ Singleton Prisma en todos los servicios
-- ✅ Todas las rutas protegidas con AuthMiddleware
-- ✅ Validación Zod en endpoints críticos
-- ✅ Performance: O(6) queries para cualquier número de empleados
-- ✅ Feriados nacionales CR en cálculo de planilla
-- ✅ Rate limiting, Helmet, token revocation
-- ✅ 45 tests (42 unit + 3 integration), 0 failures
+Milestone v1.7 finalized. The system is now driven by a dynamic legal parameters engine with full historical traceability (snapshots).
+
+**Next milestone:** Definition pending (Run `/gsd-new-milestone`)
 
 ## Context
 
 - **Stack:** Express 5 + TypeScript 5.8 (backend) · Next.js 15 + React 19 (frontend) · Prisma 6 + PostgreSQL · Tailwind 4
 - **Arquitectura:** Route → Controller → Service → Prisma (backend) / Page → Hook → Service → http.ts (frontend)
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
-- **Repositorio:** brownfield — código existente mejorado en v1.0
+- **Legal Engine:** Dynamic parameters (OT, CCSS, Workday) via `vpg_legal_params` + historical snapshots.
+- **Tests:** 551+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 556+ passing.
 
-## Next Milestone Goals (v1.1)
+## History
 
-- Corregir 27 errores TypeScript pre-existentes
-- Fix logout frontend (no limpia localStorage)
-- Tests E2E con Playwright
-- Tests de frontend (Vitest)
+<details>
+<summary>v1.7 SHIPPED (2026-05-09) — Robustez y Parámetros Legales</summary>
 
-## Key Decisions
+- Dynamic Legal Parameters: Externalized calculation constants to an auditable database system.
+- Historical Snapshots: Automatic preservation of legal context for every approved payroll.
+- Dynamic Shifts: Native support for Diurna (8h), Mixta (7h), and Nocturna (6h) shifts with automatic overtime calculation.
+- Modular Employee Profile: Functional tabs for history, events, and document metadata (CRUD).
+- Administrative Governance: Control panel for legal parameters with password protection and audit notifications.
+- Enhanced Wizard: 4-step payroll flow with manual adjustments and employee selection.
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Singleton Prisma via lib/prisma.ts | Ya existía, solo faltaba usarlo | ✅ v1.0 |
-| AuthMiddleware por ruta (router.use) | Más control sin allowlist complicada | ✅ v1.0 |
-| Zod validation en backend | Frontend ya usa Zod | ✅ v1.0 |
-| Feriados CR como lista estática | No hay API pública confiable | ✅ v1.0 |
-| Token revocation con DB blocklist | Redis no está en el stack | ✅ v1.0 |
-| No eliminar empleados — solo desactivar | Eliminar rompería historial de planillas | ✅ Regla de negocio |
+</details>
+
+<details>
+<summary>v1.6 ARCHIVED (2026-04-26) — Mejoras en Auditoría de Marcas y UX</summary>
+
+- View persistence via URL and LocalStorage for auditor efficiency.
+- Real-time confidence logic correction and status recalculation.
+
+</details>
+
+<details>
+<summary>v1.5 SHIPPED (2026-04-24) — Gestión de Marcas y Planilla para Producción</summary>
+
+- Effective marks engine with non-destructive adjustment layer (ADD/EDIT/VOID + audit trail)
+- Payroll state machine (BORRADOR → APROBADA → PAGADA) + aguinaldo per CR labor law
+- 3-step payroll wizard (period → calculation review → approval)
+- Clock alias system with IN/OUT type inference for Excel imports
+- Mark recognition engine redesign (auto-detect columns, time windows, confidence indicators)
+- Grouped clock logs view: Branch → Employee → Day → IN/OUT pair
+- Configurable holidays engine (DB-backed, integrated into payroll math)
+- Employee profile redesign (consolidated tabs: summary, labor, salary, marks, events, docs)
+- Labor events calendar redesign
+- 497+ tests passing (492 Jest + 5 JUnit 5)
+
+</details>
+
+<details>
+<summary>v1.4 SHIPPED (2026-04-12) — Stability and Integration Hardening</summary>
+
+- Auth lifecycle unified (refresh/revocation/logout) with consistent error mapping
+- HTTP layer enforced: all frontend services use `http.ts`, no raw fetch bypasses
+- Repository hygiene: git index purged of build artifacts, `package-lock.json` tracked
+- Monolith decomposed into specialized services (ClockLogs, Audit, Notifications)
+- Email-verified password reset with bcrypt hashing and 15-min token expiry
+- Centralized environment validation via Zod; JUnit 5 baseline for Java utility
+
+</details>
+
+<details>
+<summary>v1.3 SHIPPED (2026-04-09) — Sistema de Marcas de Reloj Robusto</summary>
+
+- Normalizacion de tipos de marcas (IN/OUT) y trazabilidad por status/source
+- Sesiones de importacion con vinculo a marcas e historial operativo
+- Motor de deteccion de huerfanas y anomalias con endpoints de consulta/resolucion
+- Correccion manual con auditoria de cambios y rutas protegidas
+- Dashboard de marcas (filtros, badges, sesiones, modal de detalle/correccion)
+
+</details>
+
+<details>
+<summary>v1.2 SHIPPED (2026-04-04) — Cobertura de Tests y Mejoras UI</summary>
+
+- 287 backend tests total.
+- sessionStorage cache (TTL 5 min) en hooks.
+- Sidebar modernizado (dark mode zinc-950).
+
+</details>
 
 ## Out of Scope
 
@@ -52,5 +100,22 @@ Calcular y generar planillas correctas conforme a la ley laboral costarricense, 
 - Migración a microservicios — monolito es correcto para el tamaño actual
 - Eliminar empleados permanentemente — solo desactivar (status: inactivo)
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-03-27 — v1.0 shipped*
+*Last updated: 2026-05-09 after v1.7 milestone shipped*

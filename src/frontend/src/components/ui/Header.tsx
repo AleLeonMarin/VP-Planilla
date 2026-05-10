@@ -1,57 +1,29 @@
 "use client";
-import Image from "next/image";
 import { getCurrentSpanishFormattedDateString } from "@/utils/time";
 import { useWeather } from "@/utils/weather";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/hooks/user";
 import { useTheme } from "@/hooks/useTheme";
-import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useLegalParamAlertsContext } from "@/context/LegalParamAlertsContext";
+import { SunIcon, MoonIcon, Bars3Icon, BellIcon } from "@heroicons/react/24/outline";
+import { NotificationPanel } from "./NotificationPanel";
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const currentDate = getCurrentSpanishFormattedDateString();
   const { weather: currentWeather, isLoadingWeather } = useWeather();
   const { user: currentUser } = useUser();
   const { theme, toggleTheme, mounted } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
-
-  // Notificaciones de ejemplo
-  const notifications = [
-    {
-      id: 1,
-      title: "Quincena de Pago",
-      message: "La quincena de pago se procesará mañana",
-      time: "Hace 2 horas",
-      type: "payment",
-      unread: true
-    },
-    {
-      id: 2,
-      title: "Registro de Asistencia",
-      message: "3 empleados no han marcado salida",
-      time: "Hace 4 horas",
-      type: "attendance",
-      unread: true
-    },
-    {
-      id: 3,
-      title: "Reporte Mensual",
-      message: "El reporte de junio está listo para revisión",
-      time: "Hace 1 día",
-      type: "report",
-      unread: false
-    },
-    {
-      id: 4,
-      title: "Nuevo Empleado",
-      message: "Se ha registrado un nuevo empleado en el sistema",
-      time: "Hace 2 días",
-      type: "employee",
-      unread: false
-    }
-  ];
+  const { data, unreadCount, isLoading, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const { alerts: legalAlerts } = useLegalParamAlertsContext();
+  const legalAlertCount = legalAlerts.length;
 
   useEffect(() => {
-    // Cerrar notificaciones al hacer click fuera
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (showNotifications && !target.closest('.notification-container')) {
@@ -65,44 +37,62 @@ export default function Header() {
     };
   }, [showNotifications]);
 
-  // Función para obtener el nombre completo del usuario
   const getFullName = () => {
     if (!currentUser) return "Usuario";
 
     const { first_name, last_name, middle_name  } = currentUser;
     
-    // Construir nombre completo, manejando valores nulos o vacíos
     const nameParts = [
       first_name?.trim(),
       last_name?.trim(),
       middle_name?.trim() 
-    ].filter(Boolean); // Filtra valores falsy (null, undefined, "")
+    ].filter(Boolean);
     
     return nameParts.length > 0 ? nameParts.join(" ") : "Usuario";
   };
 
   const toggleNotifications = () => {
+    if (!showNotifications) {
+      fetchNotifications(1, 10);
+    }
     setShowNotifications(!showNotifications);
   };
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const handleMarkRead = useCallback(async (id: number) => {
+    await markAsRead(id);
+  }, [markAsRead]);
+
+  const handleMarkAllRead = useCallback(async () => {
+    await markAllAsRead();
+  }, [markAllAsRead]);
+
   return (
-    <header className="bg-[#FCF1D5] dark:bg-[#252525] px-6 py-3 flex items-center justify-between shadow-sm border-b border-[#D4C89A] dark:border-[#404040]">
-      <div>        <h1 className="text-base font-medium text-[#4A5D3A] dark:text-[#E5E5E5] leading-tight">
-          Bienvenido de vuelta, {getFullName()}
-        </h1>
-        <p className="text-sm text-[#D9C38B] dark:text-[#A3A3A3] mt-0.5">
-          {currentDate} |{" "}
-          {isLoadingWeather
-            ? "Cargando clima..."
-            : `Día de ${currentWeather?.description} en ${currentWeather?.city}`}
-        </p>
-      </div>      <div className="relative flex items-center space-x-3 notification-container">
-        {/* Theme Toggle Button */}
+    <header className="bg-[#FCF1D5] dark:bg-zinc-900 border-b border-[#D4C89A] dark:border-zinc-800 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-2 rounded-lg hover:bg-[#F0E6D2] dark:hover:bg-zinc-800 text-[#4A5D3A] dark:text-zinc-400"
+          aria-label="Open menu"
+        >
+          <Bars3Icon className="w-6 h-6" />
+        </button>
+        <div>
+          <h1 className="text-base font-medium text-[#4A5D3A] dark:text-zinc-100 leading-tight">
+            Bienvenido de vuelta, {getFullName()}
+          </h1>
+          <p className="text-sm text-[#D9C38B] dark:text-zinc-400 mt-0.5">
+            {currentDate} |{" "}
+            {isLoadingWeather
+              ? "Cargando clima..."
+              : `Día de ${currentWeather?.description} en ${currentWeather?.city}`}
+          </p>
+        </div>
+      </div>
+      <div className="relative flex items-center space-x-3 notification-container">
         {mounted && (
           <button
             onClick={toggleTheme}
-            className="w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-[#4a4a4a] flex items-center justify-center text-[#4A5D3A] dark:text-[#E5E5E5] cursor-pointer hover:bg-[#F0E6D2] dark:hover:bg-[#3d3d3d] transition-colors"
+            className="w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-zinc-700 flex items-center justify-center text-[#4A5D3A] dark:text-zinc-400 hover:bg-[#F0E6D2] dark:hover:bg-zinc-800 transition-colors"
             aria-label="Toggle theme"
           >
             {theme === 'light' ? (
@@ -113,75 +103,34 @@ export default function Header() {
           </button>
         )}
         
-        {/* Notification Bell Icon */}
         <div 
-          className="relative w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] flex items-center justify-center text-[#4A5D3A] cursor-pointer hover:bg-[#F0E6D2] transition-colors"
+          className="relative w-8 h-8 rounded-full border border-[rgba(184,179,166,0.37)] dark:border-zinc-700 flex items-center justify-center text-[#4A5D3A] dark:text-zinc-400 hover:bg-[#F0E6D2] dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           onClick={toggleNotifications}
         >
-          <Image
-            src={"/images/layout/notification.png"}
-            alt="Notification Bell"
-            width={28}
-            height={28}
-          />
+          <BellIcon className="w-5 h-5" />
           {unreadCount > 0 && (
             <div className="absolute flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-red-500 rounded-full -top-1 -right-1">
               {unreadCount}
             </div>
           )}
+          {legalAlertCount > 0 && (
+            <div
+              className="absolute w-1.5 h-1.5 bg-red-500 rounded-full bottom-0 right-0"
+              aria-label={`${legalAlertCount} alertas legales sin revisar`}
+            />
+          )}
         </div>
       </div>
 
-      {/* Notification Panel - Positioned as overlay */}
-      {showNotifications && (
-        <div className="fixed top-16 right-6 w-80 bg-white rounded-lg shadow-xl border border-[#E0D6B7] z-50 animate-in slide-in-from-top-2 duration-200">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-[#F0EDE5] bg-[#FCF1D5] rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-[#4A5D3A] text-sm">Notificaciones</h3>
-              <span className="text-xs text-[#6B7556]">{unreadCount} sin leer</span>
-            </div>
-          </div>
-
-          {/* Notifications List */}
-          <div className="overflow-y-auto max-h-96">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`px-4 py-3 border-b border-[#F8F6F1] hover:bg-[#FDFCF9] transition-colors cursor-pointer ${
-                  notification.unread ? 'bg-[#FFF9E6]' : ''
-                }`}
-              >
-                <div className="flex items-start space-x-3">
-                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                    notification.unread ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-[#4A5D3A] truncate">
-                        {notification.title}
-                      </p>
-                      <span className="text-xs text-[#8B8B8B] flex-shrink-0 ml-2">
-                        {notification.time}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#6B7556] mt-1 leading-relaxed">
-                      {notification.message}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <div className="px-4 py-3 bg-[#F8F6F1] rounded-b-lg">
-            <button className="text-xs text-[#4A5D3A] hover:text-[#2A3A1A] font-medium transition-colors">
-              Ver todas las notificaciones
-            </button>
-          </div>
-        </div>
-      )}
+      <NotificationPanel
+        open={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        notifications={data}
+        unreadCount={unreadCount}
+        onMarkRead={handleMarkRead}
+        onMarkAllRead={handleMarkAllRead}
+        isLoading={isLoading}
+      />
     </header>
   );
 }

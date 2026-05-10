@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EmployeeService } from "../service/EmployeeService";
 import { AuditLogsService } from "../service/AuditLogsService";
+import { EmployeeDocumentService } from "../service/EmployeeDocumentService";
 
 export class EmployeeController {
   /**
@@ -15,7 +16,7 @@ export class EmployeeController {
 
     // Map frontend fields to Employee model fields
     const employeeData = {
-      name: rawData.employee_first_name || rawData.name,
+      first_name: rawData.employee_first_name || rawData.first_name || rawData.name,
       last_name: rawData.employee_last_name || rawData.last_name,
       middle_name: rawData.employee_middle_name || rawData.middle_name || '',
       national_id: rawData.employee_national_id || rawData.national_id || '',
@@ -23,6 +24,8 @@ export class EmployeeController {
       email: rawData.employee_email || rawData.email,
       position_id: rawData.employee_position_id || rawData.position_id,
       hire_date: rawData.employee_hire_date || rawData.hire_date,
+      phone: rawData.employee_phone ?? rawData.phone ?? null,
+      gender: rawData.employee_gender ?? rawData.gender ?? null,
       required_hours_biweekly: rawData.employee_required_hours_biweekly || rawData.required_hours_biweekly || null,
       status: rawData.employee_status || rawData.status || 'active'
     };
@@ -77,22 +80,43 @@ export class EmployeeController {
     const employeeId = parseInt(req.params.id as string, 10);
     const rawData = req.body;
 
-    // Map frontend fields to Employee model fields (support both prefixed and non-prefixed)
-    const employeeData = {
-      name: rawData.employee_first_name || rawData.name,
-      last_name: rawData.employee_last_name || rawData.last_name,
-      middle_name: rawData.employee_middle_name || rawData.middle_name || '',
-      national_id: rawData.employee_national_id || rawData.national_id || '',
-      social_code: rawData.employee_social_code || rawData.social_code || '',
-      email: rawData.employee_email || rawData.email,
-      position_id: rawData.employee_position_id ?? rawData.position_id,
-      hire_date: rawData.employee_hire_date || rawData.hire_date,
-      exit_date: rawData.employee_exit_date || rawData.exit_date,
-      fired: rawData.employee_fired ?? rawData.fired ?? false,
-      required_hours_biweekly: rawData.employee_required_hours_biweekly ?? rawData.required_hours_biweekly ?? null,
-      status: rawData.employee_status || rawData.status,
-      version: rawData.employee_version || rawData.version
-    };
+    // Map frontend fields to Employee model fields (support both prefixed and non-prefixed).
+    // Use undefined (not null/empty) for missing fields so the service can distinguish
+    // "field was sent" from "field was omitted" — omitted fields must not overwrite DB values.
+    const resolve = (prefixed: unknown, plain: unknown) =>
+      prefixed !== undefined ? prefixed : plain;
+
+    const employeeData: Record<string, unknown> = {};
+    const name = resolve(rawData.employee_first_name, rawData.name);
+    if (name !== undefined) employeeData.name = name;
+    const last_name = resolve(rawData.employee_last_name, rawData.last_name);
+    if (last_name !== undefined) employeeData.last_name = last_name;
+    const middle_name = resolve(rawData.employee_middle_name, rawData.middle_name);
+    if (middle_name !== undefined) employeeData.middle_name = middle_name;
+    const national_id = resolve(rawData.employee_national_id, rawData.national_id);
+    if (national_id !== undefined) employeeData.national_id = national_id;
+    const social_code = resolve(rawData.employee_social_code, rawData.social_code);
+    if (social_code !== undefined) employeeData.social_code = social_code;
+    const email = resolve(rawData.employee_email, rawData.email);
+    if (email !== undefined) employeeData.email = email;
+    const phone = resolve(rawData.employee_phone, rawData.phone);
+    if (phone !== undefined) employeeData.phone = phone;
+    const position_id = resolve(rawData.employee_position_id, rawData.position_id);
+    if (position_id !== undefined) employeeData.position_id = position_id;
+    const hire_date = resolve(rawData.employee_hire_date, rawData.hire_date);
+    if (hire_date !== undefined) employeeData.hire_date = hire_date;
+    const exit_date = resolve(rawData.employee_exit_date, rawData.exit_date);
+    if (exit_date !== undefined) employeeData.exit_date = exit_date;
+    const fired = resolve(rawData.employee_fired, rawData.fired);
+    if (fired !== undefined) employeeData.fired = fired;
+    const gender = resolve(rawData.employee_gender, rawData.gender);
+    if (gender !== undefined) employeeData.gender = gender;
+    const required_hours_biweekly = resolve(rawData.employee_required_hours_biweekly, rawData.required_hours_biweekly);
+    if (required_hours_biweekly !== undefined) employeeData.required_hours_biweekly = required_hours_biweekly;
+    const status = resolve(rawData.employee_status, rawData.status);
+    if (status !== undefined) employeeData.status = status;
+    const version = resolve(rawData.employee_version, rawData.version);
+    if (version !== undefined) employeeData.version = version;
 
     try {
       const updatedEmployee = await EmployeeService.updateEmployee(
@@ -132,6 +156,92 @@ export class EmployeeController {
     } catch (error) {
       console.error("Error retrieving employees:", error);
       return res.status(500).json({ error: "Failed to retrieve employees" });
+    }
+  }
+
+  /**
+   * Get the payroll history for an employee.
+   * GET /employees/:id/payrolls
+   */
+  static async getPayrollsByEmployee(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const rows = await EmployeeService.getPayrollsByEmployee(parseInt(employeeId, 10));
+      return res.status(200).json(rows);
+    } catch (error) {
+      console.error("Error retrieving employee payrolls:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee payrolls" });
+    }
+  }
+
+  /**
+   * Get all documents for an employee.
+   * GET /employees/:id/documents
+   */
+  static async getDocuments(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    try {
+      const docs = await EmployeeDocumentService.getAll(parseInt(employeeId, 10));
+      return res.status(200).json(docs);
+    } catch (error) {
+      console.error("Error retrieving employee documents:", error);
+      return res.status(500).json({ error: "Failed to retrieve employee documents" });
+    }
+  }
+
+  /**
+   * Create a document reference for an employee.
+   * POST /employees/:id/documents
+   * Body: { file_path: string, document_type: string }
+   */
+  static async createDocument(req: Request, res: Response): Promise<Response> {
+    const employeeId = req.params.id as string;
+    if (!employeeId || isNaN(Number(employeeId))) {
+      return res.status(400).json({ error: "Invalid employee ID" });
+    }
+    const { file_path, document_type } = req.body ?? {};
+    if (typeof file_path !== "string" || file_path.trim().length === 0 || file_path.length > 255) {
+      return res.status(400).json({ error: "file_path is required (1-255 chars)" });
+    }
+    if (typeof document_type !== "string" || document_type.trim().length === 0 || document_type.length > 50) {
+      return res.status(400).json({ error: "document_type is required (1-50 chars)" });
+    }
+    try {
+      const doc = await EmployeeDocumentService.create(parseInt(employeeId, 10), {
+        file_path: file_path.trim(),
+        document_type: document_type.trim(),
+      });
+      return res.status(201).json(doc);
+    } catch (error) {
+      console.error("Error creating employee document:", error);
+      return res.status(500).json({ error: "Failed to create employee document" });
+    }
+  }
+
+  /**
+   * Delete a document by id.
+   * DELETE /employees/:id/documents/:docId
+   */
+  static async deleteDocument(req: Request, res: Response): Promise<Response> {
+    const docIdRaw = req.params.docId as string;
+    if (!docIdRaw || isNaN(Number(docIdRaw))) {
+      return res.status(400).json({ error: "Invalid document ID" });
+    }
+    try {
+      const deleted = await EmployeeDocumentService.delete(parseInt(docIdRaw, 10));
+      if (!deleted) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting employee document:", error);
+      return res.status(500).json({ error: "Failed to delete employee document" });
     }
   }
 }

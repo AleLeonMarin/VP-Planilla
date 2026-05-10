@@ -1,264 +1,183 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-26
+**Analysis Date:** 2026-04-09
 
 ## Test Framework
 
 **Runner:**
-- Jest 29.7.0
-- Config: `src/backend/jest.config.js`
-- Preset: `ts-jest`
-- Environment: `node`
-- Timeout: 10 000 ms per test
+- Jest `^29.7.0` in both backend and frontend (`src/backend/package.json`, `src/frontend/package.json`).
+- Backend config: `src/backend/jest.config.js` (Node environment, `ts-jest`).
+- Frontend config: `src/frontend/jest.config.js` (Next.js Jest wrapper, JSDOM).
 
 **Assertion Library:**
-- Jest built-in (`expect`, `toEqual`, `toHaveBeenCalledWith`, `toHaveBeenCalledTimes`, `rejects.toThrow`)
-
-**Mocking Library:**
-- `jest-mock-extended` 3.0.5 — used for deep Prisma mocking via `mockDeep<PrismaClient>()`
+- Jest `expect` + `@testing-library/jest-dom` matchers (`src/frontend/jest.setup.js`, `src/frontend/src/__tests__/jest.d.ts`).
 
 **Run Commands:**
 ```bash
-# From src/backend/
-npm test                # Run all tests (Jest)
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report (text + lcov + html)
-```
+cd src/backend && npm test              # Run backend tests
+cd src/backend && npm run test:watch    # Backend watch mode
+cd src/backend && npm run test:coverage # Backend coverage report
 
-**Coverage Output:**
-- Directory: `src/backend/coverage/`
-- Reporters: `text` (terminal), `lcov`, `html`
+cd src/frontend && npm test             # Run frontend tests
+```
 
 ## Test File Organization
 
-**Location:** `src/backend/src/__tests__/` — separate from source (not co-located)
+**Location:**
+- Use separate `__tests__` directories instead of co-located tests:
+  - Backend: `src/backend/src/__tests__/unit/`, `src/backend/src/__tests__/integration/`, `src/backend/src/__tests__/setup/`
+  - Frontend: `src/frontend/src/__tests__/components/`, `src/frontend/src/__tests__/hooks/`, `src/frontend/src/__tests__/pages/`, `src/frontend/src/__tests__/services/`
 
-**Directory structure:**
+**Naming:**
+- Use `*.test.ts` and `*.test.tsx` (for example `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`, `src/frontend/src/__tests__/pages/clock-logs/page.test.tsx`).
+
+**Structure:**
 ```
 src/backend/src/__tests__/
-├── setup/
-│   └── prisma-mock.ts          # Shared Prisma mock setup (not currently used via setupFiles)
-└── unit/
-    └── services/
-        └── PayrollService.test.ts  # Only existing test file
+  setup/prisma-mock.ts
+  unit/
+    services/*.test.ts
+    controller/*.test.ts
+    utils/*.test.ts
+  integration/*.integration.test.ts
+
+src/frontend/src/__tests__/
+  components/*.test.tsx
+  hooks/*.test.ts
+  pages/**/*.test.tsx
+  services/*.test.ts
 ```
-
-**Pattern:** `testMatch: ['**/__tests__/**/*.test.ts']` — only `.test.ts` files inside `__tests__/` are picked up.
-
-**Naming:** `<ServiceName>.test.ts` matching the service under test.
-
-## Current Test Coverage
-
-**Overall (as of 2026-03-26):**
-| Metric | Coverage |
-|--------|----------|
-| Statements | 1.81% |
-| Branches | 0.33% |
-| Functions | 1.35% |
-| Lines | 1.75% |
-
-**Only tested file:** `src/backend/src/service/PayrollService.ts` (45% statements, 63% lines)
-
-**Coverage by layer:**
-| Layer | Coverage |
-|-------|----------|
-| Controllers | 0% (16 files) |
-| Services | ~2.5% statements — only PayrollService has tests |
-| Routes | 0% (16 files) |
-| Schemas | 0% (5 files) |
-| Utils (payrollUtils.ts) | 0% |
-| Middleware | 0% |
-
-**No tests exist for:**
-- `src/backend/src/service/EmployeeService.ts`
-- `src/backend/src/service/NomineeService.ts` (payroll calculation engine)
-- `src/backend/src/service/AuthService.ts`
-- `src/backend/src/utils/payrollUtils.ts` (pure functions — highest-value test target)
-- Any frontend code (no test runner configured for `src/frontend/`)
-
-## Test Suite Status
-
-**Current state:** 2 tests **failing**, 7 tests passing (1 suite total).
-
-**Failing tests** (in `PayrollService.test.ts`):
-1. `getAllPayrolls > should retrieve all payrolls ordered by ID descending` — test expects the old plain `Payroll` shape but `PayrollService.getAllPayrolls()` now returns an enriched object with `total_employees`, `total_gross`, `total_net`, etc. (added during Phase 4 aggregation refactor)
-2. `getAllPayrolls > should correctly map database fields to model fields` — same root cause; expected shape omits the new aggregation fields
-
-**Root cause:** `PayrollService.getAllPayrolls()` was refactored to include aggregated employee statistics via `vpg_payroll_employee` relation, but the test mocks return raw `vpg_payrolls` without the `vpg_payroll_employee` include, causing `undefined` on the relation and producing `total_*: 0` fields the test does not expect.
-
-**Passing tests (7):**
-- `createPayroll > should create a payroll successfully with valid data`
-- `createPayroll > should throw error when database operation fails`
-- `createPayroll > should create payroll with default version 1`
-- `getAllPayrolls > should return empty array when no payrolls exist`
-- `getAllPayrolls > should throw error when database query fails`
-- `Edge Cases > should handle different payroll statuses`
-- `Edge Cases > should handle payroll with same period dates`
 
 ## Test Structure
 
-**Suite organization:**
+**Suite Organization:**
 ```typescript
-describe('PayrollService', () => {
+// Pattern used in src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+describe('EmployeeService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('createPayroll', () => {
-    it('should create a payroll successfully with valid data', async () => {
-      // Arrange
-      const payrollData: Payroll = { ... };
-      const mockCreatedPayroll = { payrolls_id: 1, ... };
-      prismaMock.vpg_payrolls.create.mockResolvedValue(mockCreatedPayroll);
-
-      // Act
-      const result = await PayrollService.createPayroll(payrollData);
-
-      // Assert
-      expect(result).toEqual({ id: 1, ... });
-      expect(prismaMock.vpg_payrolls.create).toHaveBeenCalledWith({ data: { ... } });
-      expect(prismaMock.vpg_payrolls.create).toHaveBeenCalledTimes(1);
+  describe('createEmployee', () => {
+    it('should create an employee with all fields', async () => {
+      // arrange
+      // act
+      // assert
     });
   });
 });
 ```
 
-**Pattern:** Arrange / Act / Assert with inline comments labeling each section.
+**Patterns:**
+- Setup pattern: use `beforeEach` to reset all mocks and restub defaults (`src/backend/src/__tests__/unit/services/AuthService.test.ts`, `src/frontend/src/__tests__/hooks/useClockLogs.test.ts`).
+- Teardown pattern: implicit via Jest + mock resets (`clearMocks/resetMocks/restoreMocks` enabled in `src/backend/jest.config.js`).
+- Assertion pattern: prefer response-shape assertions and call contract assertions (`toHaveBeenCalledWith`, `expect.objectContaining`) as seen in `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts` and `src/frontend/src/__tests__/services/clockLogsService.test.ts`.
 
 ## Mocking
 
-**Framework:** `jest-mock-extended` — `mockDeep<PrismaClient>()`
+**Framework:** Jest mocks (`jest.mock`, `jest.fn`) + `jest-mock-extended` for Prisma deep mocks.
 
-**Prisma mock setup (inline per test file):**
+**Patterns:**
 ```typescript
-import { PrismaClient } from '@prisma/client';
-import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
+// Backend Prisma module mocking pattern
+// src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+jest.mock('../../../lib/prisma', () => {
+  const mock = mockDeep<PrismaClient>();
+  return { prisma: mock };
+});
 
-const prismaMock = mockDeep<PrismaClient>();
-
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn(() => prismaMock),
+// Frontend service dependency mocking pattern
+// src/frontend/src/__tests__/services/clockLogsService.test.ts
+jest.mock('@/services/http', () => ({
+  http: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), raw: jest.fn() },
 }));
-
-// Import service AFTER mocking
-import { PayrollService } from '../../../service/PayrollService';
 ```
 
-**Important:** The service must be imported **after** `jest.mock()` is called. The `prisma-mock.ts` setup file at `src/backend/src/__tests__/setup/prisma-mock.ts` exists but is **not wired** into `jest.config.js` via `setupFiles` or `setupFilesAfterFramework` — it is a utility import used manually.
+**What to Mock:**
+- Mock DB/client boundaries in unit tests (Prisma client in backend service tests: `src/backend/src/__tests__/unit/services/*.test.ts`).
+- Mock service dependencies when testing controllers/hooks/pages (for example `ClockLogsService` in `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts`, `useClockLogs` in `src/frontend/src/__tests__/pages/clock-logs/page.test.tsx`).
+- Mock third-party auth/crypto utilities for deterministic auth tests (bcrypt and jsonwebtoken in `src/backend/src/__tests__/unit/services/AuthService.test.ts`).
 
-**Mock method pattern:**
-```typescript
-prismaMock.vpg_payrolls.create.mockResolvedValue(mockDbRow);
-prismaMock.vpg_payrolls.findMany.mockRejectedValue(new Error('timeout'));
-```
-
-**What is mocked:** `@prisma/client` PrismaClient — the only external dependency in services.
-
-**What is NOT mocked:** Business logic in `payrollUtils.ts` (not yet tested), Express request/response (no integration tests).
+**What NOT to Mock:**
+- Do not mock internal pure utility logic when unit-testing the utility itself (for example `normalizeLogType` behavior verified directly in `src/backend/src/__tests__/unit/utils/clockLogNormalization.test.ts`).
+- Do not mock HTTP middleware stack in integration route tests; exercise real Express app wiring with `supertest` (`src/backend/src/__tests__/integration/payroll.integration.test.ts`).
 
 ## Fixtures and Factories
 
-**Test data:** Inline object literals per test case — no factory functions or shared fixtures.
-
-**DB row shape convention:**
+**Test Data:**
 ```typescript
-// Raw DB row (as Prisma returns it)
-const mockCreatedPayroll = {
-  payrolls_id: 1,
-  payrolls_payroll_type_id: 1,
-  payrolls_period_start: new Date('2026-02-01'),
-  payrolls_period_end: new Date('2026-02-28'),
-  payrolls_payment_date: new Date('2026-03-05'),
-  payrolls_status: 'PENDIENTE',
-  payrolls_version: 1,
-};
-
-// Expected model output
-const expected: Payroll = {
-  id: 1,
-  payroll_type: 1,
-  period_start: new Date('2026-02-01'),
-  ...
-};
+// Factory/helper pattern from src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+function makeEmployee(input: Partial<Employee> = {}): Employee {
+  return {
+    id: 1,
+    name: 'Juan Carlos',
+    // ...defaults
+    ...input,
+  };
+}
 ```
 
-**Location:** All fixtures are inline in `src/backend/src/__tests__/unit/services/PayrollService.test.ts`.
+**Location:**
+- Keep shared setup helpers under `src/backend/src/__tests__/setup/` (for example `prisma-mock.ts`).
+- Keep scenario-specific fixtures inside each test file as `const mock...` objects (backend and frontend test files).
 
-## Coverage Requirements
+## Coverage
 
-**Target:** None enforced — no `coverageThreshold` configured in `jest.config.js`.
+**Requirements:** None enforced (no global thresholds detected in `src/backend/jest.config.js` or `src/frontend/jest.config.js`).
 
-**Current state:** 1.81% overall (critically low).
-
-**Coverage directory:** `src/backend/coverage/` (committed or gitignored — not confirmed)
+**View Coverage:**
+```bash
+cd src/backend && npm run test:coverage
+```
 
 ## Test Types
 
 **Unit Tests:**
-- Only unit tests exist
-- Scope: individual service methods
-- Location: `src/backend/src/__tests__/unit/services/`
-- Database: always mocked via `jest-mock-extended`
+- Primary testing style for backend services/controllers and frontend services/hooks/components.
+- Backend unit examples:
+  - `src/backend/src/__tests__/unit/services/EmployeeService.test.ts`
+  - `src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts`
+- Frontend unit examples:
+  - `src/frontend/src/__tests__/services/clockLogsService.test.ts`
+  - `src/frontend/src/__tests__/components/ClockLogStatusBadge.test.tsx`
 
 **Integration Tests:**
-- None — no HTTP-level tests, no supertest usage
+- Use `supertest` against actual Express app import (`src/backend/src/__tests__/integration/payroll.integration.test.ts`).
+- Current focus is route/auth behavior and HTTP response contract.
 
 **E2E Tests:**
-- None — no Playwright, Cypress, or similar
-
-**Frontend Tests:**
-- None — no Jest/Vitest configuration in `src/frontend/`
-- No React Testing Library setup detected
+- Not used (no Playwright/Cypress config detected).
 
 ## Common Patterns
 
 **Async Testing:**
 ```typescript
-// Success path
-const result = await PayrollService.createPayroll(payrollData);
-expect(result).toEqual(expected);
+// Backend async rejection assertion
+// src/backend/src/__tests__/unit/services/EmployeeService.test.ts
+await expect(EmployeeService.createEmployee(input)).rejects.toThrow('DB error');
 
-// Error path
-await expect(PayrollService.createPayroll(payrollData)).rejects.toThrow('Database connection failed');
-```
-
-**Verifying Prisma calls:**
-```typescript
-expect(prismaMock.vpg_payrolls.create).toHaveBeenCalledWith({
-  data: {
-    payrolls_payroll_type_id: 1,
-    payrolls_period_start: new Date('2026-02-01'),
-    // ... exact shape Prisma receives
-  },
+// Frontend async UI assertion
+// src/frontend/src/__tests__/components/ClockLogDetailModal.test.tsx
+await waitFor(() => {
+  expect(mockedClockLogsService.updateClockLogStatus).toHaveBeenCalledWith(
+    mockLog.id,
+    'corrected',
+    'Valid justification text'
+  );
 });
-expect(prismaMock.vpg_payrolls.create).toHaveBeenCalledTimes(1);
 ```
 
-**Partial matching (used for version tests):**
+**Error Testing:**
 ```typescript
-expect(prismaMock.vpg_payrolls.create).toHaveBeenCalledWith(
-  expect.objectContaining({
-    data: expect.objectContaining({ payrolls_version: 1 }),
-  })
+// HTTP/controller error contract checks
+// src/backend/src/__tests__/unit/controller/ClockLogsController.test.ts
+await controller.getStats(req, res);
+expect(res.status).toHaveBeenCalledWith(400);
+expect(res.json).toHaveBeenCalledWith(
+  expect.objectContaining({ error: expect.any(String) })
 );
 ```
 
-## Highest-Value Untested Areas
-
-These areas have zero test coverage and carry the highest risk:
-
-1. **`src/backend/src/utils/payrollUtils.ts`** — Pure functions (no DB, no HTTP). Easiest to test. Calculates CR labor-law overtime, weekly rest, deductions. A bug here affects every payroll calculation silently.
-
-2. **`src/backend/src/service/NomineeService.ts` — `calculatePayrollForPeriod`** — The payroll engine. Requires mocking Prisma + multiple service calls. Highest business risk if broken.
-
-3. **`src/backend/src/service/EmployeeService.ts`** — `statusMap` translation logic (frontend string → DB Char(1)) is untested. A mapping mistake sends wrong status to DB.
-
-4. **`src/backend/src/schemas/`** — All 5 Zod schema files have 0% coverage. Schema validation errors are the primary defense against malformed HTTP bodies; they should be tested with valid and invalid inputs.
-
-5. **`src/backend/src/middleware/validateBody.ts`** — The Zod middleware bridges schemas to routes. Untested behavior: what happens when `result.error.issues` is empty, or when schema coerces types unexpectedly.
-
-6. **`getAllPayrolls` test fix** — Two existing tests are broken because the mock does not include the `vpg_payroll_employee` relation that `getAllPayrolls` now uses. Fix: add `vpg_payroll_employee: []` to the mock return value.
-
 ---
 
-*Testing analysis: 2026-03-26*
+*Testing analysis: 2026-04-09*

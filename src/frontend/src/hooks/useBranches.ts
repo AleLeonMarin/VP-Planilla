@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { BranchService } from '@/services/branchService';
 import { Branch, BranchFormData } from '@/types/branch';
+import { readCache, writeCache, invalidateCache } from '@/utils/sessionCache';
+
+const CACHE_KEY = 'vp_branches_cache';
 
 /**
  * Hook for managing branches
@@ -14,11 +18,14 @@ export const useBranches = () => {
    * Fetch all branches
    */
   const fetchBranches = async () => {
+    const cached = readCache<Branch[]>(CACHE_KEY);
+    if (cached) { setData(cached); return cached; }
     setIsLoading(true);
     setError(null);
     try {
       const branches = await BranchService.getAllBranches();
       setData(branches);
+      writeCache(CACHE_KEY, branches);
       return branches;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar sucursales';
@@ -37,11 +44,13 @@ export const useBranches = () => {
     setError(null);
     try {
       const newBranch = await BranchService.createBranch(branchData);
+      invalidateCache(CACHE_KEY);
       setData(prev => [...prev, newBranch]);
       return newBranch;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear sucursal';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
@@ -56,6 +65,7 @@ export const useBranches = () => {
     setError(null);
     try {
       const updatedBranch = await BranchService.updateBranch(id, branchData);
+      invalidateCache(CACHE_KEY);
       setData(prev => prev.map(b => b.id === id ? updatedBranch : b));
       return updatedBranch;
     } catch (err: unknown) {
@@ -75,6 +85,7 @@ export const useBranches = () => {
     setError(null);
     try {
       await BranchService.deleteBranch(id);
+      invalidateCache(CACHE_KEY);
       setData(prev => prev.filter(b => b.id !== id));
       return true;
     } catch (err: unknown) {

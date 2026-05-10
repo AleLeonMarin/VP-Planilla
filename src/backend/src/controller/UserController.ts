@@ -43,7 +43,7 @@ export class UserController {
           .json({ success: false, error: "Debe indicar el rol a asignar" });
       }
 
-      const actorId = req.user?.id || req.user?.user_id;
+      const actorId = req.user?.id;
       const updated = await UserService.updatePermissions(userId, role, actorId);
 
       return res.status(200).json({

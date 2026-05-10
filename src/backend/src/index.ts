@@ -1,5 +1,4 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./routes/AuthRoute";
@@ -11,6 +10,7 @@ import payrollTypeRoutes from "./routes/PayrollTypeRoute";
 import payrollRoutes from "./routes/PayrollRoutes";
 import reportsRoutes from "./routes/ReportsRoute";
 import clockLogsRoutes from "./routes/ClockLogsRoute";
+import clockAliasRoutes from "./routes/ClockAliasRoute";
 import bonusesRoutes from "./routes/BonusesRoute";
 import nomineeRoutes from "./routes/NomineeRoute";
 import positionRoutes from "./routes/PositionRoute";
@@ -18,20 +18,33 @@ import vacationRoutes from "./routes/VacationRoute";
 import auditLogsRoutes from "./routes/AuditLogsRoute";
 import userRoutes from "./routes/UserRoute";
 import paymentReceiptRoutes from "./routes/PaymentReceiptRoute";
+import { notificationRouter } from "./routes/NotificationRoute";
+import emailRoutes from "./routes/EmailRoute";
+import companyHolidayRoutes from "./routes/companyHolidayRoutes";
+import timeWindowRoutes from "./routes/TimeWindowRoute";
+import dayConfirmationRoutes from "./routes/DayConfirmationRoute";
+import markSuggestionRoutes from "./routes/MarkSuggestionRoute";
+import legalParamRoutes from "./routes/LegalParamRoute";
+import enterpriseRoutes from "./routes/EnterpriseRoute";
+import aguinaldoRoutes from "./routes/AguinaldoRoute";
 import { swaggerSpec } from "./utils/docs";
-
-dotenv.config();
-
-if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is not set. Server will not start.');
-  process.exit(1);
-}
+import { env } from "./config/env";
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const PORT = env.PORT;
 
 // Middlewares básicos
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') }));
+const allowedOrigins = env.ALLOWED_ORIGINS;
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isVercel = origin.endsWith('.vercel.app') || origin === 'https://vp-planilla.vercel.app';
+    const isAllowed = allowedOrigins.includes(origin);
+    if (isVercel || isAllowed) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(helmet());
 app.use(express.json());
 
@@ -62,6 +75,7 @@ app.use("/api", employeeDeductionsRoutes);
 app.use("/api", payrollTypeRoutes);
 app.use("/api", payrollRoutes);
 app.use("/api", clockLogsRoutes);
+app.use("/api", clockAliasRoutes);
 app.use("/api", bonusesRoutes);
 app.use("/api", reportsRoutes);
 app.use("/api", nomineeRoutes);
@@ -70,6 +84,15 @@ app.use("/api", vacationRoutes);
 app.use("/api", auditLogsRoutes);
 app.use("/api", userRoutes);
 app.use("/api/payment-receipts", paymentReceiptRoutes);
+app.use("/api/notifications", notificationRouter);
+app.use("/api/email", emailRoutes);
+app.use("/api/company-holidays", companyHolidayRoutes);
+app.use("/api/time-windows", timeWindowRoutes);
+app.use("/api/day-confirmations", dayConfirmationRoutes);
+app.use("/api/suggestions", markSuggestionRoutes);
+app.use("/api", legalParamRoutes);
+app.use("/api", enterpriseRoutes);
+app.use("/api", aguinaldoRoutes);
 
 // Servir la especificación de Swagger en formato JSON
 app.get("/api/docs/swagger.json", (req, res) => {

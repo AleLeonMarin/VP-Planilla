@@ -6,12 +6,12 @@ import FormModal from '@/components/ui/FormModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useBonuses } from '@/hooks/useBonuses';
 import { Bonus } from '@/services/bonusesService';
-import { useModal } from '@/hooks/useModal';
 import { UseFormReturn } from 'react-hook-form';
+import { ArrowPathIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
 
 export default function BonusesPage() {
-  const { data, refetch, create, update, remove } = useBonuses();
-  const modal = useModal();
+  const { data, isLoading, error, refetch, create, update, remove } = useBonuses();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Bonus | null>(null);
@@ -37,14 +37,14 @@ export default function BonusesPage() {
     try {
       if (editing) {
         await update(editing.id, values);
-        modal.showSuccess('Actualizado', 'Bonificación actualizada correctamente');
+        toast.success('Bonificación actualizada correctamente');
       } else {
         await create(values);
-        modal.showSuccess('Creado', 'Bonificación creada correctamente');
+        toast.success('Bonificación creada correctamente');
       }
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al guardar');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     }
   };
 
@@ -52,10 +52,10 @@ export default function BonusesPage() {
     if (!toDelete) return;
     try {
       await remove(toDelete.id);
-      modal.showSuccess('Eliminado', 'Bonificación eliminada correctamente');
+      toast.success('Bonificación eliminada correctamente');
       refetch();
     } catch (err: unknown) {
-      modal.showError('Error', err instanceof Error ? err.message : 'Error al eliminar');
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar');
     } finally {
       setConfirmOpen(false);
       setToDelete(null);
@@ -72,55 +72,67 @@ export default function BonusesPage() {
   ];
 
   return (
-    <div className="p-6 min-h-screen bg-[#E7DCC1] dark:bg-[#121212]">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 p-6">
+      <div className="mb-2">
+        <p className="text-xs text-zinc-400 uppercase tracking-widest">Nómina / Bonificaciones</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100">Bonificaciones</h1>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold text-[#3B4D36] dark:text-white">Bonificaciones</h2>
-        <div>
-          <button onClick={() => refetch()} className="mr-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Recargar</button>
-          <button onClick={openCreate} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">Nueva bonificación</button>
+        <div />
+        <div className="flex gap-2">
+          <button onClick={() => refetch()} className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-2">
+            <ArrowPathIcon className="h-4 w-4" />
+            Recargar
+          </button>
+          <button onClick={openCreate} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors flex items-center gap-2">
+            <PlusIcon className="h-4 w-4" />
+            Nueva bonificación
+          </button>
         </div>
       </div>
 
-      <Table columns={columns} data={data || []} onEdit={openEdit} onDelete={openDelete} />
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+        <Table columns={columns} data={data || []} isLoading={isLoading} error={error} onRetry={refetch} onEdit={openEdit} onDelete={openDelete} />
+      </div>
 
       <FormModal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Editar Bonificación' : 'Nueva Bonificación'} initialValues={editing || undefined} onSubmit={handleSubmit}>
         {(methods: UseFormReturn<Partial<Bonus>>) => (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Empleado (ID)</label>
-              <input {...methods.register('employee_id', { valueAsNumber: true })} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Empleado (ID)</label>
+              <input {...methods.register('employee_id', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Payroll ID</label>
-              <input {...methods.register('payroll_id', { valueAsNumber: true })} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Payroll ID</label>
+              <input {...methods.register('payroll_id', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Año</label>
-              <input {...methods.register('year', { valueAsNumber: true })} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Año</label>
+              <input {...methods.register('year', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Mes</label>
-              <input {...methods.register('month', { valueAsNumber: true })} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Mes</label>
+              <input {...methods.register('month', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Descripción</label>
-              <input {...methods.register('description')} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Descripción</label>
+              <input {...methods.register('description')} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium mb-1 text-[#3B4D36] dark:text-white">Monto</label>
-              <input {...methods.register('amount', { valueAsNumber: true })} className="w-full border border-[#E0D6B7] dark:border-gray-600 px-2 py-1 rounded bg-white dark:bg-[#2a2a2a] text-[#3B4D36] dark:text-white" />
+              <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-100">Monto</label>
+              <input {...methods.register('amount', { valueAsNumber: true })} className="w-full border border-zinc-300 dark:border-zinc-700 px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100" />
             </div>
           </div>
         )}
       </FormModal>
 
       <ConfirmDialog open={confirmOpen} title="Eliminar bonificación" description="¿Confirma eliminar esta bonificación?" onCancel={() => setConfirmOpen(false)} onConfirm={handleConfirmDelete} />
-
     </div>
   );
 }

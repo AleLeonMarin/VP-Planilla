@@ -247,10 +247,8 @@ router.post("/refresh", asyncHandler(AuthController.refreshToken));
  *       '500':
  *         description: Internal server error
  */
-router.post(
-  "/change-password",
-  asyncHandler(AuthMiddleware.verifyToken),
-  asyncHandler(AuthController.changePassword)
-);
+// Password change endpoints (email-based flow) - no auth required
+router.post('/password-request', asyncHandler(AuthController.requestPasswordChange));
+router.post('/password-confirm', asyncHandler(AuthController.confirmPasswordChange));
 
 export default router;

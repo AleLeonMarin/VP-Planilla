@@ -5,6 +5,10 @@
 // Auth
 export * from './authService';
 
+// Clock Aliases
+export { ClockAliasService } from './clockAliasService';
+export type { ClockAlias } from './clockAliasService';
+
 // Employees
 export * from './employeeService';
 
@@ -39,6 +43,10 @@ export type { PayrollType, PayrollTypePayload } from './payrollTypesService';
 // Nominee
 export { NomineeService } from './nomineeService';
 export type { ClockLog, EmployeeDeduction } from './nomineeService';
+
+// Enterprise
+export { EnterpriseService, MinuteRoundingPolicy, ShiftType } from './enterpriseService';
+export type { EnterpriseConfig } from './enterpriseService';
 
 // Reports
 export { ReportsService } from './reportsService';
