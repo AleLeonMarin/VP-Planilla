@@ -57,8 +57,8 @@ describe('ClockLogEffectiveService.getPaginatedEffectiveMarks', () => {
     // Mock branch data query - use mockResolvedValueOnce for sequential calls
     mockPrisma.$queryRaw
       .mockResolvedValueOnce([
-        { employee_branch_employee_id: 1, branch_name: 'Main Branch' },
-        { employee_branch_employee_id: 2, branch_name: 'North Branch' }
+        { employee_id: 1, branch_name: 'Main Branch' },
+        { employee_id: 2, branch_name: 'North Branch' }
       ]);
     
     jest.doMock('../../../lib/prisma', () => ({
@@ -102,7 +102,7 @@ describe('ClockLogEffectiveService.getPaginatedEffectiveMarks', () => {
     expect(result.total).toBe(2);
     expect(result.data).toHaveLength(1);
     expect(result.data[0].employee_name).toBe('John Doe');
-    expect(result.data[0].branch_name).toBe('Sin Sucursal'); // Fallback when branch lookup returns empty in test
+    expect(result.data[0].branch_name).toBe('Main Branch');
     expect(result.data[0].original.status).toBe('valid');
   });
 
