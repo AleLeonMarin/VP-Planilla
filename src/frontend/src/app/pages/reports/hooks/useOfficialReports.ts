@@ -7,6 +7,7 @@ export const useOfficialReports = (payrollId: number | null) => {
   const [history, setHistory] = useState<ReportLogEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isGenerating, setIsGenerating] = useState<'CCSS' | 'HACIENDA' | null>(null);
+  const [isDownloading, setIsDownloading] = useState<'CCSS' | 'INS' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadHistory = useCallback(async () => {
@@ -52,5 +53,57 @@ export const useOfficialReports = (payrollId: number | null) => {
     [payrollId, loadHistory]
   );
 
-  return { history, isLoadingHistory, isGenerating, error, generate, reloadHistory: loadHistory };
+  const downloadCCSS = useCallback(async () => {
+    if (!payrollId) return;
+    setIsDownloading('CCSS');
+    try {
+      const { blob, fileName } = await ReportsService.downloadCCSSReport(payrollId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Reporte CCSS descargado exitosamente');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al descargar reporte CCSS';
+      toast.error(msg);
+    } finally {
+      setIsDownloading(null);
+    }
+  }, [payrollId]);
+
+  const downloadINS = useCallback(async () => {
+    if (!payrollId) return;
+    setIsDownloading('INS');
+    try {
+      const { blob, fileName } = await ReportsService.downloadINSReport(payrollId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Reporte INS descargado exitosamente');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al descargar reporte INS';
+      toast.error(msg);
+    } finally {
+      setIsDownloading(null);
+    }
+  }, [payrollId]);
+
+  return {
+    history,
+    isLoadingHistory,
+    isGenerating,
+    isDownloading,
+    error,
+    generate,
+    downloadCCSS,
+    downloadINS,
+    reloadHistory: loadHistory,
+  };
 };
