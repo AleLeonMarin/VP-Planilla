@@ -414,6 +414,129 @@ export class ReportsService {
     });
   }
 
+  /**
+   * Generates a CCSS (SICERE) compliant CSV report for a specific payroll.
+   * @param payrollId The ID of the payroll to process.
+   * @returns filename and CSV content.
+   * @throws Error if payroll is not found.
+   */
+  static async generateCCSSReportCSV(payrollId: number): Promise<{ filename: string; content: string }> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId },
+    });
+
+    if (!payroll) {
+      throw new Error("Planilla no encontrada");
+    }
+
+    const data = await prisma.vpg_payroll_employee.findMany({
+      where: { payroll_employee_payroll_id: payrollId },
+      include: {
+        vpg_employees: true,
+      },
+      orderBy: {
+        vpg_employees: {
+          employee_last_name: 'asc'
+        }
+      }
+    });
+
+    const rows = data.map((row) => {
+      const emp = row.vpg_employees;
+      return [
+        "1", // Default to National ID type
+        emp.employee_national_id,
+        this.buildEmployeeName(emp.employee_first_name, emp.employee_last_name, emp.employee_middle_name),
+        row.payroll_employee_gross_salary.toFixed(2),
+        row.payroll_employee_worked_days.toString(),
+        (Number(row.payroll_employee_overtime_pay) || 0).toFixed(2),
+        emp.employee_social_code || "",
+      ];
+    });
+
+    const headers = [
+      "Tipo Identificación",
+      "Identificación",
+      "Nombre Completo",
+      "Salario Bruto",
+      "Días Trabajados",
+      "Pago Horas Extra",
+      "Código Asegurado",
+    ];
+
+    const content = this.generateCSV(headers, rows);
+    const filename = `CCSS_SICERE_Payroll_${payrollId}_${Date.now()}.csv`;
+
+    return { filename, content };
+  }
+
+  /**
+   * Generates an INS (Riesgos del Trabajo) compliant CSV report for a specific payroll.
+   * @param payrollId The ID of the payroll to process.
+   * @returns filename and CSV content.
+   * @throws Error if payroll is not found.
+   */
+  static async generateINSReportCSV(payrollId: number): Promise<{ filename: string; content: string }> {
+    const payroll = await prisma.vpg_payrolls.findUnique({
+      where: { payrolls_id: payrollId },
+    });
+
+    if (!payroll) {
+      throw new Error("Planilla no encontrada");
+    }
+
+    const data = await prisma.vpg_payroll_employee.findMany({
+      where: { payroll_employee_payroll_id: payrollId },
+      include: {
+        vpg_employees: {
+          include: {
+            vpg_positions: true,
+          },
+        },
+      },
+      orderBy: {
+        vpg_employees: {
+          employee_last_name: 'asc'
+        }
+      }
+    });
+
+    const rows = data.map((row) => {
+      const emp = row.vpg_employees;
+      const pos = emp.vpg_positions;
+      return [
+        emp.employee_national_id,
+        this.buildEmployeeName(emp.employee_first_name, emp.employee_last_name, emp.employee_middle_name),
+        pos.position_occupation_code || "",
+        pos.position_risk_class || "",
+        row.payroll_employee_gross_salary.toFixed(2),
+      ];
+    });
+
+    const headers = [
+      "Identificación",
+      "Nombre Completo",
+      "Código Ocupación",
+      "Clase Riesgo",
+      "Salario Bruto",
+    ];
+
+    const content = this.generateCSV(headers, rows);
+    const filename = `INS_RT_Payroll_${payrollId}_${Date.now()}.csv`;
+
+    return { filename, content };
+  }
+
+  /**
+   * Helper to generate a CSV string from headers and rows.
+   */
+  private static generateCSV(headers: string[], rows: string[][]): string {
+    const escape = (val: string) => `"${val.replace(/"/g, '""')}"`;
+    const headerLine = headers.map(escape).join(",");
+    const rowLines = rows.map((row) => row.map(escape).join(","));
+    return [headerLine, ...rowLines].join("\n");
+  }
+
   static async sendReports(input: SendReportsInput): Promise<ReportDispatchSummary> {
     const normalizedTypes = this.normalizeReportTypes(input.reportTypes);
     if (normalizedTypes.length === 0) {
