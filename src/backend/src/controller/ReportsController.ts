@@ -151,4 +151,44 @@ export class ReportsController {
       res.status(500).json({ success: false, message });
     }
   }
+
+  static async downloadCCSSReport(req: Request, res: Response) {
+    const payrollId = Number(req.params.id);
+    if (Number.isNaN(payrollId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID de planilla inválido" });
+    }
+
+    try {
+      const { filename, content } = await ReportsService.generateCCSSReportCSV(payrollId);
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+      res.send(content);
+    } catch (error) {
+      console.error("Failed to generate CCSS report:", error);
+      const message = error instanceof Error ? error.message : "No se pudo generar el reporte CCSS";
+      res.status(500).json({ success: false, message });
+    }
+  }
+
+  static async downloadINSReport(req: Request, res: Response) {
+    const payrollId = Number(req.params.id);
+    if (Number.isNaN(payrollId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID de planilla inválido" });
+    }
+
+    try {
+      const { filename, content } = await ReportsService.generateINSReportCSV(payrollId);
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+      res.send(content);
+    } catch (error) {
+      console.error("Failed to generate INS report:", error);
+      const message = error instanceof Error ? error.message : "No se pudo generar el reporte INS";
+      res.status(500).json({ success: false, message });
+    }
+  }
 }
