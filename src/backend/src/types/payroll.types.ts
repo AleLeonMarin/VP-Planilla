@@ -84,8 +84,8 @@ export interface PayrollCalculationResult {
 }
 
 export interface LegalParamSet {
-  regularHoursPerDay: number; // TODO: Phase 66 (Jornadas)
-  regularHoursPerWeek: number; // TODO: Phase 66
+  regularHoursPerDay: number;
+  regularHoursPerWeek: number;
   otFactor: number;
   holidayMandatoryFactor: number;
   holidayTripleFactor: number;
@@ -95,4 +95,9 @@ export interface LegalParamSet {
   minuteRoundingPolicy: MinuteRoundingPolicy;
   globalMinWageRate?: number;
   payUnworkedHolidays?: boolean;
+  workingDaysPerWeek: number;
+  weeklyRestNumerator: number;
+  weeklyRestDenominator: number;
+  weeklyRestMultiplier: number;
+  aguinaldoDivisor: number;
 }

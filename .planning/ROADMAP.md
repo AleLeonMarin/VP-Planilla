@@ -9,23 +9,21 @@
 - [v1.5 (Gestión de Marcas y Planilla para Producción)](.planning/milestones/v1.5-ROADMAP.md) — 2026-04-24
 - [v1.6 (Mejoras en Auditoría de Marcas y UX)](.planning/milestones/v1.6-ROADMAP.md) — 2026-04-26
 - [v1.7 (Robustez y Parámetros Legales)](.planning/milestones/v1.7-ROADMAP.md) — 2026-05-09
+- [v1.8 (Stabilization & Planning Sync)](.planning/milestones/v1.8-ROADMAP.md) — 2026-05-11
 
-## Current Milestone: v1.8 — Stabilization & Planning Sync
+## Current Milestone: v1.9 — Advanced Reporting & Hacienda Prep
 
-**Goal:** Resolve technical debt, fix environment issues, and synchronize planning documents.
+**Goal:** Provide specialized reporting for CCSS/INS and prepare official export formats for Hacienda (D-151).
 
-**Plans:** 9 plans
+**Plans:** TBD
 
 ### Phases
-- [x] **Phase 68: Recovery & Sync**
-  - [x] 68-01-PLAN.md — Repair node_modules and verify base state
-  - [x] 68-02-PLAN.md — Synchronize MILESTONES.md and ROADMAP.md
-  - [x] 68-03-PLAN.md — Audit and verify resolved debug sessions
-- [x] **Phase 69: Wizard Refactor**
-  - [x] 69-01-PLAN.md — Decompose Step 1 (Period Selection)
-  - [x] 69-02-PLAN.md — Decompose Step 2 (Employee Selection)
-  - [x] 69-03-PLAN.md — Decompose Step 3 (Calculation & Review)
-  - [x] 69-04-PLAN.md — Orchestrator Wiring & Quality Audit
-- [ ] **Phase 70: Quality Audit**
-  - [ ] 70-01-PLAN.md — Audit payrollUtils.ts and Legal Engine
-  - [ ] 70-02-PLAN.md — Final full system verification (TSC + Tests)
+- [ ] **Phase 71: CCSS/INS Detailed Reporting**
+  - [ ] 71-01-PLAN.md — CCSS Payroll Summary Report (Backend + UI)
+  - [ ] 71-02-PLAN.md — INS Insurance Risk Report
+- [ ] **Phase 72: Hacienda Export Formats (D-151)**
+  - [ ] 72-01-PLAN.md — D-151 XML/CSV Generation
+  - [ ] 72-02-PLAN.md — Annual Salary Summary Export
+- [ ] **Phase 73: Data Integrity & Analytics**
+  - [ ] 73-01-PLAN.md — Data Integrity Dashboard
+  - [ ] 73-02-PLAN.md — Milestone Audit & Closure

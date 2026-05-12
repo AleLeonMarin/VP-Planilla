@@ -2,6 +2,23 @@
 
 ---
 
+## Milestone: v1.8 — Stabilization & Planning Sync
+
+**Shipped:** 2026-05-11
+**Phases:** 3 (68-70) | **Plans:** 9 | **Timeline:** 2 days (2026-05-10 → 2026-05-11)
+
+### What went well?
+1. **Engine Flexibility**: The Payroll and Aguinaldo engines are now 100% parameterizable. Hardcoded literals have been eliminated, allowing the system to adapt to different labor policies without code changes.
+2. **Modular Architecture**: The `PayrollWizard` refactor significantly reduced the complexity of the frontend payroll flow, making it easier to maintain and extend.
+3. **Documentation Hygiene**: Achieved 100% JSDoc coverage for core services, ensuring high-quality maintenance baseline.
+4. **Planning Integrity**: The new synchronization validator (`gsd-sync-validator.js`) successfully resolved inconsistencies between roadmaps and milestones.
+
+### Challenges & Learnings
+- **Timezone Awareness**: Found a minor regression in weekly rest calculations caused by ISO date parsing without explicit time (T12:00:00Z). This was caught by unit tests and reinforced the need for consistent timestamp handling in calculations.
+- **Dependency Drift**: A missing dependency (`recharts`) was found in the frontend. This highlights the importance of full project `npx tsc` checks even when only modifying backend logic.
+
+---
+
 ## Milestone: v1.5 — Gestión de Marcas y Planilla para Producción
 
 **Shipped:** 2026-04-25

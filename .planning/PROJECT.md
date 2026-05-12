@@ -8,11 +8,11 @@ Sistema de planilla (nómina) para Costa Rica. Maneja el ciclo completo: emplead
 
 Calcular y generar planillas correctas conforme a la ley laboral costarricense, con datos seguros y auditables.
 
-## Current State (v1.8 IN PROGRESS — 2026-05-09)
+## Current State (v1.9 IN PROGRESS — 2026-05-11)
 
-Milestone v1.8 focuses on system stabilization, planning document synchronization, and refactoring critical UI components like the Payroll Wizard.
+Milestone v1.9 focuses on Advanced Reporting for social security (CCSS/INS) and preparing official export formats for Hacienda (D-151).
 
-**Current milestone:** v1.8 — Stabilization & Planning Sync
+**Current milestone:** v1.9 — Advanced Reporting & Hacienda Prep
 
 ## Context
 
@@ -20,9 +20,19 @@ Milestone v1.8 focuses on system stabilization, planning document synchronizatio
 - **Arquitectura:** Route → Controller → Service → Prisma (backend) / Page → Hook → Service → http.ts (frontend)
 - **Dominio:** Semana laboral lunes–sábado · 8h regulares/día · 1.5× hasta 10h · 2× sobre 10h · descanso semanal 0.5×
 - **Legal Engine:** Dynamic parameters (OT, CCSS, Workday) via `vpg_legal_params` + historical snapshots.
-- **Tests:** 551+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 556+ passing.
+- **Tests:** 561+ backend tests (Jest) + 5 Java tests (JUnit 5). Total: 566+ passing.
 
 ## History
+
+<details>
+<summary>v1.8 SHIPPED (2026-05-11) — Stabilization & Planning Sync</summary>
+
+- Engine Parameterization: Eliminated all hardcoded literals in payroll and aguinaldo engines.
+- Wizard Refactor: Modularized the Payroll Wizard into a type-safe, multi-component architecture.
+- Documentation: Achieved 100% JSDoc coverage for core services.
+- Environment: Verified full project stability (TSC + 566 tests).
+
+</details>
 
 <details>
 <summary>v1.7 SHIPPED (2026-05-09) — Robustez y Parámetros Legales</summary>
@@ -118,4 +128,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-09 after v1.7 milestone shipped*
+*Last updated: 2026-05-11 after v1.8 milestone shipped*
