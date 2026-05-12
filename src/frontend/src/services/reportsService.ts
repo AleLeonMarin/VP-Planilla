@@ -66,4 +66,44 @@ export const ReportsService = {
       fileName: fileNameMatch ? fileNameMatch[1].trim().replace(/^"|"$/g, '') : fallbackName,
     };
   },
+
+  async downloadCCSSReport(payrollId: number): Promise<{ blob: Blob; fileName: string }> {
+    const response = await http.raw(`/reports/institutional/ccss/${payrollId}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al descargar reporte CCSS (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const fileNameMatch = disposition.match(/filename=([^;]+)/i);
+    const fallbackName = `reporte_ccss_planilla_${payrollId}.csv`;
+
+    return {
+      blob,
+      fileName: fileNameMatch ? fileNameMatch[1].trim().replace(/^"|"$/g, '') : fallbackName,
+    };
+  },
+
+  async downloadINSReport(payrollId: number): Promise<{ blob: Blob; fileName: string }> {
+    const response = await http.raw(`/reports/institutional/ins/${payrollId}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al descargar reporte INS (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const fileNameMatch = disposition.match(/filename=([^;]+)/i);
+    const fallbackName = `reporte_ins_planilla_${payrollId}.csv`;
+
+    return {
+      blob,
+      fileName: fileNameMatch ? fileNameMatch[1].trim().replace(/^"|"$/g, '') : fallbackName,
+    };
+  },
 };
