@@ -674,9 +674,10 @@ export class ReportsService {
       const dedName = ded.vpg_deductions?.deductions_name || '';
       const amount = Number(ded.employee_deductions_amount);
 
-      if (dedName.toUpperCase().includes('CCSS')) {
+      const category = this.categorizeDeduction(dedName);
+      if (category === 'CCSS') {
         existing.totalCCSS += amount;
-      } else if (dedName.toUpperCase().includes('ISR') || dedName.toUpperCase().includes('RENTA')) {
+      } else if (category === 'ISR') {
         existing.totalISR += amount;
       } else {
         existing.totalOthers += amount;
@@ -1218,5 +1219,30 @@ export class ReportsService {
       payrollId: this.extractPayrollIdFromPath(log.report_logs_file_path) ?? undefined,
       employeeId,
     };
+  }
+
+  /**
+   * Categorizes a deduction based on its name using a keyword-based mapping.
+   * This is more robust than simple single-word inclusion as it handles multiple variants
+   * and can be easily expanded without changing the database schema.
+   */
+  private static categorizeDeduction(name: string): 'CCSS' | 'ISR' | 'OTHER' {
+    const n = name.toUpperCase();
+    
+    // Configuration-driven keywords for CCSS (Social Security)
+    const CCSS_KEYWORDS = ['CCSS', 'C.C.S.S.', 'CAJA', 'SICERE', 'SEM', 'IVM', 'SOCIAL SECURITY'];
+    
+    // Configuration-driven keywords for ISR (Income Tax / Hacienda)
+    const ISR_KEYWORDS = ['ISR', 'I.S.R.', 'RENTA', 'HACIENDA', 'IMPUESTO'];
+
+    if (CCSS_KEYWORDS.some(key => n.includes(key))) {
+      return 'CCSS';
+    }
+
+    if (ISR_KEYWORDS.some(key => n.includes(key))) {
+      return 'ISR';
+    }
+
+    return 'OTHER';
   }
 }
