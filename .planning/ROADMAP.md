@@ -22,9 +22,9 @@
   - [x] 71-01-PLAN.md — Schema update & Metadata (INS codes, Risk Class, Worked Days)
   - [x] 71-02-PLAN.md — CCSS/INS CSV Generation logic in ReportsService
   - [x] 71-03-PLAN.md — Institutional Reports UI in Reports Page
-- [ ] **Phase 72: Hacienda Export Formats (D-151)**
-  - [ ] 72-01-PLAN.md — D-151 CSV Generation Logic
-  - [ ] 72-02-PLAN.md — Annual Salary Summary Export
-- [ ] **Phase 73: Data Integrity & Analytics**
-  - [ ] 73-01-PLAN.md — Data Integrity Dashboard
-  - [ ] 73-02-PLAN.md — Milestone Audit & Closure
+- [x] **Phase 72: Hacienda Export Formats (D-151)** (completed 2026-05-12)
+  - [x] 72-01-PLAN.md — D-151 CSV Generation Logic
+  - [x] 72-02-PLAN.md — Annual Salary Summary Export
+- [x] **Phase 73: Data Integrity & Analytics** (completed 2026-05-12)
+  - [x] 73-01-PLAN.md — Data Integrity Dashboard
+  - [x] 73-02-PLAN.md — Milestone Audit & Closure

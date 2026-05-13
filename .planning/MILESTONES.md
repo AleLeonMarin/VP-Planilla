@@ -1,5 +1,19 @@
 # Milestones
 
+## v1.9 — Advanced Reporting & Hacienda Prep (Completed: 2026-05-12)
+
+**Goal:** Provide specialized reporting for CCSS/INS and prepare official export formats for Hacienda (D-151).
+**Phases:** 71-73
+**Status:** ✅ Completed
+**Timeline:** 2026-05-11 → 2026-05-12
+
+**Key accomplishments:**
+1. **CCSS/INS Reporting**: Implemented specialized CSV exports for institutional reporting, including mandatory risk classes and worked day counts.
+2. **Hacienda D-151 Preparation**: Implemented annual salary aggregation and export formats (CSV/Excel) required for Costa Rican tax compliance.
+3. **Data Integrity Dashboard**: Built a robust rule engine and visualization tool to detect payroll drift, clock-log anomalies, and metadata gaps.
+
+---
+
 ## v1.8 — Stabilization & Planning Sync (Completed: 2026-05-11)
 
 **Goal:** Resolve technical debt, fix environment issues, and synchronize planning documents.
