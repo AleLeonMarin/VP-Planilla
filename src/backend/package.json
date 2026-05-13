@@ -11,7 +11,8 @@
     "build": "tsc",
     "start": "node --import ./instrument.js dist/index.js",
     "db:reset": "tsx src/scripts/resetDb.ts",
-    "dbml": "prisma generate"
+    "dbml": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -75,5 +76,17 @@
   "overrides": {
     "fsevents": "^2.3.3",
     "chokidar": "^3.5.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "@sentry-internal/node-cpu-profiler",
+      "bcrypt",
+      "core-js",
+      "esbuild",
+      "prisma",
+      "puppeteer"
+    ]
   }
 }

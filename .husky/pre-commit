@@ -1,1 +1,1 @@
-cd src/backend && npm test
+cd src/backend && pnpm test
