@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import { querySecurityMiddleware } from "./middleware/queryNormalizer";
 import authRoutes from "./routes/AuthRoute";
 import employeeRoutes from "./routes/EmployeeRoute";
 import laborEventsRoutes from "./routes/LaborEventsRoute";
@@ -48,6 +49,7 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(express.json());
+app.use(querySecurityMiddleware);
 
 console.log("Servidor en ejecución...");
 
@@ -102,6 +104,8 @@ app.get("/api/docs/swagger.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
+import * as Sentry from "@sentry/node";
+
 // ESM-only package: load dynamically to work under CommonJS runtime
 app.use("/api/docs", async (req, res, next) => {
   try {
@@ -113,6 +117,8 @@ app.use("/api/docs", async (req, res, next) => {
     res.status(500).json({ success: false, message: "Docs UI unavailable" });
   }
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌐 Servidor escuchando en http://0.0.0.0:${PORT}`);
