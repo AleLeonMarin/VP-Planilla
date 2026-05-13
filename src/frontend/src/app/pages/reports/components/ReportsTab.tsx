@@ -12,6 +12,9 @@ import { Select, SelectItem } from '@/components/ui/Select';
 import { ReportHistoryTable } from './ReportHistoryTable';
 import { ReportLogEntry } from '@/types/reports';
 
+const DOWNLOAD_BTN_DISABLED = 'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 cursor-not-allowed';
+const DOWNLOAD_BTN_ENABLED = 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/50';
+
 interface Props {
   payrollId: number | null;
   history: ReportLogEntry[];
@@ -84,8 +87,8 @@ const ReportsTabComponent: React.FC<Props> = ({
             data-testid="download-ccss-btn"
             className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
               downloadDisabled
-                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 cursor-not-allowed'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/50'
+                ? DOWNLOAD_BTN_DISABLED
+                : DOWNLOAD_BTN_ENABLED
             }`}
           >
             {isDownloading === 'CCSS' ? (
@@ -103,8 +106,8 @@ const ReportsTabComponent: React.FC<Props> = ({
             data-testid="download-ins-btn"
             className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
               downloadDisabled
-                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 cursor-not-allowed'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/50'
+                ? DOWNLOAD_BTN_DISABLED
+                : DOWNLOAD_BTN_ENABLED
             }`}
           >
             {isDownloading === 'INS' ? (
@@ -122,8 +125,8 @@ const ReportsTabComponent: React.FC<Props> = ({
             data-testid="download-d151-btn"
             className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
               isDownloadingD151
-                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 cursor-not-allowed'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/50'
+                ? DOWNLOAD_BTN_DISABLED
+                : DOWNLOAD_BTN_ENABLED
             }`}
           >
             {isDownloadingD151 ? (
@@ -141,8 +144,8 @@ const ReportsTabComponent: React.FC<Props> = ({
             data-testid="download-annual-salary-btn"
             className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
               isDownloadingAnnualSalary
-                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 cursor-not-allowed'
-                : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700/50'
+                ? DOWNLOAD_BTN_DISABLED
+                : DOWNLOAD_BTN_ENABLED
             }`}
           >
             {isDownloadingAnnualSalary ? (

@@ -291,6 +291,7 @@ export default function PayrollWizard() {
       {/* Step 2: Review */}
       {currentStep === 2 && calculationData && isAguinaldo && (
         <AguinaldoResults
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           results={calculationData as any}
           employees={aguinaldoEmployees}
           onBack={() => { reset(); goToStep(1); }}

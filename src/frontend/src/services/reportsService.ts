@@ -7,6 +7,8 @@ import {
   SendReportsPayload,
 } from '@/types/reports';
 
+const CONTENT_DISPOSITION_HEADER = 'content-disposition';
+
 export const ReportsService = {
   async getDashboard(): Promise<ReportsDashboardData> {
     return (await http.get('/reports/dashboard')) as ReportsDashboardData;
@@ -55,7 +57,7 @@ export const ReportsService = {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
+    const disposition = response.headers.get(CONTENT_DISPOSITION_HEADER) || '';
     const fileNameMatch = disposition.match(/filename=([^;]+)/i);
     const fallbackName = employeeIds && employeeIds.length === 1
       ? `comprobante_pago_${payrollId}_${employeeIds[0]}.pdf`
@@ -77,7 +79,7 @@ export const ReportsService = {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
+    const disposition = response.headers.get(CONTENT_DISPOSITION_HEADER) || '';
     const fileNameMatch = disposition.match(/filename=([^;]+)/i);
     const fallbackName = `reporte_ccss_planilla_${payrollId}.csv`;
 
@@ -97,7 +99,7 @@ export const ReportsService = {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
+    const disposition = response.headers.get(CONTENT_DISPOSITION_HEADER) || '';
     const fileNameMatch = disposition.match(/filename=([^;]+)/i);
     const fallbackName = `reporte_ins_planilla_${payrollId}.csv`;
 
@@ -117,7 +119,7 @@ export const ReportsService = {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
+    const disposition = response.headers.get(CONTENT_DISPOSITION_HEADER) || '';
     const fileNameMatch = disposition.match(/filename=([^;]+)/i);
     const fallbackName = `hacienda_d151_${year}.csv`;
 
@@ -137,7 +139,7 @@ export const ReportsService = {
     }
 
     const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
+    const disposition = response.headers.get(CONTENT_DISPOSITION_HEADER) || '';
     const fileNameMatch = disposition.match(/filename=([^;]+)/i);
     const fallbackName = `resumen_anual_salarios_${year}.xlsx`;
 

@@ -146,7 +146,7 @@ export function usePayrollWizard() {
   const toggleAll = useCallback(() => {
     const filteredEmployees = employees.filter(e => 
       e.name.toLowerCase().includes(filterText.toLowerCase()) ||
-      (e as any).position_name?.toLowerCase().includes(filterText.toLowerCase()) ||
+      e.position_name?.toLowerCase().includes(filterText.toLowerCase()) ||
       e.position?.toLowerCase().includes(filterText.toLowerCase())
     );
     

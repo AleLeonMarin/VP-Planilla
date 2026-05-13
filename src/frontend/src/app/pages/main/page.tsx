@@ -10,6 +10,7 @@ import { LegalParamAlertBanner } from "@/components/LegalParamAlertBanner";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { formatSalary, getStatusBadgeConfig } from "@/utils/employeeUtils";
 import { EmployeeLaborEvent } from "@/types/laborEvent";
+import { CompanyHoliday } from "@/services/holidaysService";
 import { Employee } from "@/types/employee";
 import {
   CalendarIcon,
@@ -36,6 +37,8 @@ const ACTIVE_BADGE_CLASSES = "bg-green-100 dark:bg-green-900/30 text-green-700 d
 const COMPLETED_BADGE_CLASSES = "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
 const TEXT_ZINC_400_10PX = "text-[10px] text-zinc-400";
 const NOT_ASSIGNED = "Sin asignar";
+const MANDATORY_LABEL = "Pago Obligatorio";
+const NON_MANDATORY_LABEL = "Pago No Obligatorio";
 
 interface CalendarEvent {
   date: number;
@@ -53,7 +56,7 @@ const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month
 const Home: React.FC = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [dayModal, setDayModal] = useState<{ date: Date; events: EmployeeLaborEvent[]; holidays: any[] } | null>(null);
+  const [dayModal, setDayModal] = useState<{ date: Date; events: EmployeeLaborEvent[]; holidays: CompanyHoliday[] } | null>(null);
   const [visibleRangeStart, setVisibleRangeStart] = useState<Date | null>(null);
   const [visibleRangeEnd, setVisibleRangeEnd] = useState<Date | null>(null);
 
@@ -130,7 +133,7 @@ const Home: React.FC = () => {
           date: d.getDate(),
           type: "holiday",
           title: h.company_holidays_name,
-          description: h.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"
+          description: h.company_holidays_is_mandatory ? MANDATORY_LABEL : NON_MANDATORY_LABEL
         });
       }
     });
@@ -161,6 +164,7 @@ const Home: React.FC = () => {
     for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
     while (calendarDays.length < 42) calendarDays.push(null);
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     return calendarDays.map((day, index) => {
       const isCurrentMonthDay = index >= firstDayIndex && index < daysInMonth + firstDayIndex;
       const dayEvents = isCurrentMonthDay ? calendarHighlights.filter((e) => e.date === day) : [];
@@ -362,7 +366,7 @@ const Home: React.FC = () => {
                             </p>
                           </div>
                           <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            {nextHoliday.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"}
+                            {nextHoliday.company_holidays_is_mandatory ? MANDATORY_LABEL : NON_MANDATORY_LABEL}
                           </p>
                           <p className={`${TEXT_ZINC_400_10PX} mt-0.5`}>
                             {new Date(nextHoliday.company_holidays_date).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}
@@ -492,7 +496,7 @@ const Home: React.FC = () => {
                         <p className="text-sm font-bold text-amber-800 dark:text-amber-200">{h.company_holidays_name}</p>
                       </div>
                       <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                        {h.company_holidays_is_mandatory ? "Pago Obligatorio" : "Pago No Obligatorio"}
+                        {h.company_holidays_is_mandatory ? MANDATORY_LABEL : NON_MANDATORY_LABEL}
                       </p>
                     </div>
                   ))}
